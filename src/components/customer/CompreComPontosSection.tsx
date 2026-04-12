@@ -89,9 +89,6 @@ function RedeemDealCard({ deal, highlight, primary, fontHeading, onClick }: {
         </div>
       </div>
       <div className="p-3">
-        {deal.store_name && (
-          <p className="text-[9px] font-medium mb-0.5 truncate text-muted-foreground">{deal.store_name}</p>
-        )}
         <h3 className="text-xs font-semibold line-clamp-2 mb-2" style={{ fontFamily: fontHeading }}>{deal.title}</h3>
         {pointsStr ? (
           <div className="flex items-baseline gap-1">
