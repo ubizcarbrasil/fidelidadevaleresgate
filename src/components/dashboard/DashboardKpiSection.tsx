@@ -1,4 +1,4 @@
-import { Car, Coins, MapPin, ReceiptText, ShoppingBag, Store, Tag, UserCheck } from "lucide-react";
+import { Car, Coins, MapPin, Package, ReceiptText, ShoppingBag, Store, Tag, UserCheck } from "lucide-react";
 import KpiCard from "@/components/dashboard/KpiCard";
 
 interface DashboardKpiSectionProps {
@@ -19,6 +19,9 @@ interface DashboardKpiSectionProps {
   achadinhosAtivas?: number;
   achadinhosLojas?: number;
   achadinhosCidades?: number;
+  // Resgates de Produtos
+  productRedemptionsPending?: number;
+  productRedemptionsMonth?: number;
   // Spark data
   recentRedemptions?: number[];
   recentEarnings?: number[];
@@ -32,6 +35,7 @@ export default function DashboardKpiSection({
   earningEventsPeriod, earningEventsTotal, offersActive, offersTotal,
   motoristasTotal, pontosMotoristas, pontosClientes,
   achadinhosAtivas, achadinhosLojas, achadinhosCidades,
+  productRedemptionsPending, productRedemptionsMonth,
   recentRedemptions, recentEarnings,
   isDriverEnabled = true, isPassengerEnabled = true,
 }: DashboardKpiSectionProps) {
@@ -78,6 +82,27 @@ export default function DashboardKpiSection({
           )}
         </div>
       )}
+
+      {/* KPIs Resgates de Produtos */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+        <div className="animate-slide-up delay-1">
+          <KpiCard
+            title="Resgates Produtos (Pendentes)"
+            value={productRedemptionsPending}
+            sub={`${productRedemptionsMonth ?? 0} este mês`}
+            icon={Package}
+            color={productRedemptionsPending && productRedemptionsPending > 0 ? "destructive" : "warning"}
+          />
+        </div>
+        <div className="animate-slide-up delay-2">
+          <KpiCard
+            title="Resgates Produtos (Mês)"
+            value={productRedemptionsMonth}
+            icon={Package}
+            color="primary"
+          />
+        </div>
+      </div>
 
       {/* KPIs Achadinhos — sempre visíveis */}
       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">

@@ -193,6 +193,11 @@ export default function Dashboard() {
   });
   const { data: achadinhosCidades } = useMetric("branches", true, (q) => q.eq("is_active", true), "branches-active", brandFilter);
 
+  // Product Redemption KPIs
+  const { data: productRedemptionsPending } = useMetric("product_redemption_orders", true, (q) => q.eq("status", "PENDING"), "prod-pending", brandFilter);
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+  const { data: productRedemptionsMonth } = useMetric("product_redemption_orders", true, (q) => q.gte("created_at", monthStart.toISOString()), `prod-month`, brandFilter);
+
   // Pontos summary via RPC
   const { data: pontosSummary } = useQuery({
     queryKey: ["pontos-summary", brandFilter ?? "global"],
@@ -316,6 +321,8 @@ export default function Dashboard() {
         achadinhosAtivas={achadinhosAtivas}
         achadinhosLojas={achadinhosLojas}
         achadinhosCidades={achadinhosCidades}
+        productRedemptionsPending={productRedemptionsPending}
+        productRedemptionsMonth={productRedemptionsMonth}
         recentRedemptions={recentRedemptions?.map(d => d.count)}
         recentEarnings={recentEarnings?.map(d => d.count)}
         isDriverEnabled={isDriverEnabled}
