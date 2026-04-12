@@ -165,36 +165,52 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
 
   return (
     <div className="pb-4">
-      {/* Hero: greeting + points */}
-      <div className="px-4 pt-4 pb-1 flex items-center justify-between">
-        <div>
-          <h1
-            className="text-lg font-extrabold leading-tight"
-            style={{ fontFamily: fontHeading, color: "hsl(var(--foreground))" }}
-          >
-            {greeting}, {firstName} 👋
-          </h1>
-          {cityName ? (
-            <p className="text-xs text-muted-foreground mt-0.5">📍 {cityName}</p>
-          ) : null}
-        </div>
-        {customer && (
-          <button
-            onClick={() => onOpenLedger?.()}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all active:scale-95 shadow-md"
-            style={{
-              background: accent
-                ? `linear-gradient(135deg, ${accent}, ${accent}dd)`
-                : "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.85))",
-              color: "hsl(var(--primary-foreground))",
-            }}
-          >
-            <Coins className="h-4 w-4" />
-            <AnimatedCounter value={customer.points_balance ?? 0} duration={600} suffix=" pts" />
-            <span className="text-[10px] font-medium opacity-80 ml-0.5">Ver extrato →</span>
-          </button>
-        )}
+      {/* Hero: greeting */}
+      <div className="px-4 pt-4 pb-1">
+        <h1
+          className="text-lg font-extrabold leading-tight"
+          style={{ fontFamily: fontHeading, color: "hsl(var(--foreground))" }}
+        >
+          {greeting}, {firstName} 👋
+        </h1>
+        {cityName ? (
+          <p className="text-xs text-muted-foreground mt-0.5">📍 {cityName}</p>
+        ) : null}
       </div>
+
+      {/* Points highlight card */}
+      {customer && (
+        <button
+          onClick={() => onOpenLedger?.()}
+          className="mx-4 mt-3 w-[calc(100%-2rem)] relative overflow-hidden rounded-2xl p-4 shadow-lg transition-all active:scale-[0.98] animate-fade-in text-left"
+          style={{
+            background: accent
+              ? `linear-gradient(135deg, ${accent}, ${accent}cc)`
+              : "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.75))",
+            color: "hsl(var(--primary-foreground))",
+          }}
+        >
+          {/* Decorative circles */}
+          <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full opacity-20" style={{ background: "hsl(var(--primary-foreground))" }} />
+          <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full opacity-10" style={{ background: "hsl(var(--primary-foreground))" }} />
+
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-1.5 text-xs font-medium opacity-80">
+                <Coins className="h-3.5 w-3.5" />
+                Meus Pontos
+              </div>
+              <div className="text-[28px] font-extrabold leading-tight mt-0.5 tracking-tight">
+                <AnimatedCounter value={customer.points_balance ?? 0} duration={600} />
+                <span className="text-base font-bold ml-1 opacity-80">pts</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 text-xs font-semibold opacity-90 bg-white/15 px-3 py-1.5 rounded-full backdrop-blur-sm">
+              Ver extrato →
+            </div>
+          </div>
+        </button>
+      )}
 
       {/* Render native sections in configured order */}
       {nativeSections.map((ns: NativeSectionConfig) => renderNativeSection(ns))}
