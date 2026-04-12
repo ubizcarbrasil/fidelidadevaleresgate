@@ -115,7 +115,7 @@ export default function CustomerRedemptionsPage() {
   const unifiedItems = useMemo(() => {
     const items: UnifiedItem[] = [];
     allRedemptions.forEach(r => items.push({ type: "redemption", data: r, created_at: r.created_at }));
-    productOrders.forEach(o => items.push({ type: "product", data: o, created_at: o.created_at }));
+    productOrders.forEach(o => items.push({ type: "product", data: o, created_at: o.created_at ?? "" }));
     items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     return items;
   }, [allRedemptions, productOrders]);
