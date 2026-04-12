@@ -13,6 +13,7 @@ import {
   Sparkles, Coins, Settings2, Image, Layers, Bell, BarChart3, Palette,
   Type, FileSpreadsheet, Globe, TrendingUp, ClipboardList, Plug,
 } from "lucide-react";
+import HomeSectionOrderEditor from "@/components/brand-modules/HomeSectionOrderEditor";
 
 const CATEGORY_META: Record<string, { label: string; emoji: string; description: string }> = {
   core:         { label: "Essencial",            emoji: "🔧", description: "Base da plataforma" },
@@ -219,6 +220,12 @@ export default function BrandModulesPage() {
               <strong className="text-primary">{enabledCount}</strong> de {totalCount} módulos ativos
             </span>
           </div>
+
+          <HomeSectionOrderEditor brandId={brandId} isModuleEnabled={(key) => {
+            const def = definitions?.find(d => d.key === key);
+            if (!def) return true;
+            return isEnabled(def.id);
+          }} />
 
           {sortedCategories.map((category) => {
             const mods = grouped[category]!;
