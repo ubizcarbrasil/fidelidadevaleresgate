@@ -202,6 +202,55 @@ const RedemptionOrderDetailDialog = memo(function RedemptionOrderDetailDialog({
                 <p className="text-sm font-mono">{order.tracking_code}</p>
               </div>
             )}
+
+            {/* Ações de status */}
+            <div className="rounded-xl border p-3 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Atualizar Status
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant={order.status === "APPROVED" ? "default" : "outline"}
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  disabled={updating !== null}
+                  onClick={() => updateStatus("APPROVED")}
+                >
+                  {updating === "APPROVED" ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+                  Aprovado
+                </Button>
+                <Button
+                  variant={order.status === "SHIPPED" ? "default" : "outline"}
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  disabled={updating !== null}
+                  onClick={() => updateStatus("SHIPPED")}
+                >
+                  {updating === "SHIPPED" ? <Loader2 className="h-3 w-3 animate-spin" /> : <ShoppingCart className="h-3 w-3" />}
+                  Comprado
+                </Button>
+                <Button
+                  variant={order.status === "DELIVERED" ? "default" : "outline"}
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  disabled={updating !== null}
+                  onClick={() => updateStatus("DELIVERED")}
+                >
+                  {updating === "DELIVERED" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Package className="h-3 w-3" />}
+                  Concluído
+                </Button>
+                <Button
+                  variant={order.status === "REJECTED" ? "destructive" : "outline"}
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  disabled={updating !== null}
+                  onClick={() => updateStatus("REJECTED")}
+                >
+                  {updating === "REJECTED" ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-3 w-3" />}
+                  Rejeitado
+                </Button>
+              </div>
+            </div>
           </div>
         ) : (
           <p className="text-sm text-muted-foreground text-center py-6">
