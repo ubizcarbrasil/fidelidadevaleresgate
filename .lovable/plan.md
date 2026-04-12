@@ -1,22 +1,24 @@
 
 
-## Plano: Trocar ícone Gift por Coins nos cards de "Compre com Pontos"
+## Plano: Remover nome da loja dos cards "Compre com Pontos"
 
-### Problema
-Nos cards da seção "Compre com Pontos", o ícone ao lado do preço em pontos e no fallback da imagem/logo ainda é o `Gift` (presente). O usuário quer que seja o ícone `Coins` (moedas).
+### Alteração
 
-### Alterações
+**Arquivo**: `src/components/customer/CompreComPontosSection.tsx` (linhas 93-95)
 
-**Arquivo**: `src/components/customer/CompreComPontosSection.tsx`
+Remover o bloco que exibe `deal.store_name` dentro do `RedeemDealCard`:
 
-Substituir as 3 ocorrências restantes de `<Gift>` por `<Coins>` dentro do componente `RedeemDealCard`:
-
-1. **Linha 75** — fallback quando não há imagem do produto → trocar `Gift` por `Coins`
-2. **Linha 87** — fallback quando não há logo da loja (canto superior direito) → trocar `Gift` por `Coins`
-3. **Linha 98** — ícone ao lado do preço em pontos → trocar `Gift` por `Coins`
-
-Remover `Gift` do import (já não será mais usado).
+```tsx
+// REMOVER:
+{deal.store_name && (
+  <p className="text-[9px] font-medium mb-0.5 truncate text-muted-foreground">{deal.store_name}</p>
+)}
+```
 
 ### Resultado
-Todos os ícones nos cards passam a ser moedas (🪙) em vez de presente (🎁), consistente com o tema "Compre com Pontos".
+Os cards de "Compre com Pontos" não exibirão mais o nome da loja (ex: "mercadolivre") abaixo da imagem do produto.
+
+| Arquivo | Ação |
+|---------|------|
+| `src/components/customer/CompreComPontosSection.tsx` | Remover exibição de `store_name` no card |
 
