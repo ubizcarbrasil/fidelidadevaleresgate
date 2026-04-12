@@ -1,60 +1,62 @@
 
 
-## Plano: Relatório e Indicadores de Resgates de Produtos
+## Plano: Corrigir resgate duplicado e tornar operação atômica
 
-### Objetivo
-Adicionar um relatório completo de resgates de produtos na página de relatórios existente (`ReportsPage.tsx`) e criar KPIs dedicados no dashboard, cobrindo métricas operacionais e analíticas.
+### Problema
+- O checkout debita pontos e cria o pedido em operações separadas (não-atômicas)
+- Sem proteção contra duplo clique — o usuário pode submeter múltiplas vezes
+- Resultado: pontos debitados sem pedido correspondente
 
-### 1. Novo tipo de relatório: "Resgates de Produtos"
+### Correção imediata dos dados
+Migração SQL para reverter o débito órfão (3.700 pts perdidos):
+- Deletar o registro de débito órfão do `points_ledger` (id: `bb0eefb0-...`, criado às 23:50)
+- Atualizar `points_balance` do customer para +3.700
 
-**Arquivo**: `src/pages/ReportsPage.tsx`
+### Correção estrutural: função SQL atômica
+Criar uma **database function** `process_product_redemption` que executa tudo numa única transação:
+1. Verifica saldo suficiente
+2. Insere débito no `points_ledger`
+3. Decrementa `points_balance`
+4. Cria o pedido em `product_redemption_orders`
+5. Se qualquer passo falha, faz rollback de tudo
 
-Adicionar `product_redemptions` como novo `ReportType` no seletor de relatórios:
-- Buscar dados de `product_redemption_orders` filtrado por `brand_id` e período
-- Colunas: Data, Produto, Cliente/Motorista, Origem (driver/customer), Pontos, Status, Cidade, Rastreio, Link ML
-- Exportação CSV completa com todos os campos
+```sql
+CREATE OR REPLACE FUNCTION public.process_product_redemption(
+  p_customer_id uuid, p_brand_id uuid, p_branch_id uuid,
+  p_deal_id uuid, p_deal_snapshot jsonb, p_affiliate_url text,
+  p_points_cost int, p_name text, p_phone text, p_cpf text,
+  p_cep text, p_address text, p_number text, p_complement text,
+  p_neighborhood text, p_city text, p_state text, p_order_source text
+) RETURNS uuid AS $$
+DECLARE
+  v_balance int;
+  v_order_id uuid;
+BEGIN
+  SELECT points_balance INTO v_balance FROM customers WHERE id = p_customer_id FOR UPDATE;
+  IF v_balance < p_points_cost THEN
+    RAISE EXCEPTION 'Saldo insuficiente';
+  END IF;
+  
+  -- Debit + update balance + create order atomically
+  INSERT INTO points_ledger (...) VALUES (...);
+  UPDATE customers SET points_balance = v_balance - p_points_cost WHERE id = p_customer_id;
+  INSERT INTO product_redemption_orders (...) VALUES (...) RETURNING id INTO v_order_id;
+  
+  RETURN v_order_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
 
-### 2. Painel de indicadores (Summary Card) para resgates de produtos
-
-**Arquivo**: `src/pages/ReportsPage.tsx` (novo componente inline `ProductRedemptionSummary`)
-
-Quando o relatório selecionado for `product_redemptions`, exibir cards com:
-- **Total de pedidos** no período
-- **Total de pontos gastos** (soma de `points_spent`)
-- **Por status**: quantos Pendentes, Aprovados, Enviados, Entregues, Rejeitados
-- **Por origem**: % Motorista vs % Cliente
-- **Tempo médio de processamento** (diff entre `created_at` e `reviewed_at`)
-- **Top 5 produtos mais resgatados** (agrupado por título do snapshot)
-
-### 3. Gráficos na aba "Gráficos"
-
-**Arquivo**: `src/pages/ReportsPage.tsx` (dentro de `ChartsTab`)
-
-Adicionar seção de gráficos específicos para resgates de produtos:
-- **Linha temporal**: resgates por dia no período selecionado
-- **Pizza**: distribuição por status
-- **Barras**: top 10 produtos mais resgatados
-- **Barras empilhadas**: motorista vs cliente por semana
-
-### 4. KPIs no Dashboard principal
-
-**Arquivo**: `src/components/dashboard/DashboardKpiSection.tsx`
-
-Adicionar card de KPI "Resgates de Produtos" com:
-- Total de pedidos pendentes (destaque vermelho se > 0)
-- Total do mês atual
-- Comparativo com mês anterior (trend)
+### Proteção contra duplo clique no frontend
+- Em `CustomerRedeemCheckout.tsx` e `DriverRedeemCheckout.tsx`:
+  - Substituir as 3 chamadas separadas por uma única chamada `supabase.rpc('process_product_redemption', {...})`
+  - Adicionar `disabled={loading}` no botão (já existe) + guard `if (loading) return` no handler
 
 ### Resumo de arquivos
 
 | Arquivo | Ação |
 |---------|------|
-| `src/pages/ReportsPage.tsx` | Novo tipo `product_redemptions` + Summary + gráficos |
-| `src/components/dashboard/DashboardKpiSection.tsx` | Novo KPI card de resgates de produto |
-
-### Detalhes técnicos
-- Sem migração SQL — todos os dados já existem em `product_redemption_orders`
-- Reutiliza o padrão de `ReportType` e `downloadCSV` existentes
-- Os gráficos usam Recharts já importado na página
-- O snapshot do produto é extraído de `deal_snapshot_json` (mesmo padrão usado em `ProductRedemptionOrdersPage`)
+| Migração SQL | Corrigir dados + criar função `process_product_redemption` |
+| `CustomerRedeemCheckout.tsx` | Usar RPC atômica, guard contra duplo clique |
+| `DriverRedeemCheckout.tsx` | Mesmo tratamento |
 
