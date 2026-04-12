@@ -81,7 +81,6 @@ export default function DriverPanelPage() {
     const branchSettings = (branchData?.branch_settings_json || {}) as Record<string, unknown>;
     const defaultTheme = (branchSettings.theme_driver_default as string) || "dark";
     document.documentElement.classList.toggle("dark", defaultTheme === "dark");
-    document.documentElement.classList.toggle("dark", defaultTheme !== "light");
     return () => { document.documentElement.classList.remove("dark"); };
   }, [branch]);
 
