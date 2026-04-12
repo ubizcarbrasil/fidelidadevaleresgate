@@ -1327,16 +1327,15 @@ async function fetchReport(reportType: ReportType, dateFrom: string, dateTo: str
     case "product_redemptions": {
       let q = supabase
         .from("product_redemption_orders")
-        .select("id, status, order_source, points_spent, deal_snapshot_json, customer_name, customer_cpf, customer_phone, delivery_address_json, tracking_code, created_at, reviewed_at, branch_id, branches(name)")
+        .select("id, status, order_source, points_spent, deal_snapshot_json, customer_name, customer_cpf, customer_phone, delivery_address, delivery_number, delivery_city, delivery_state, delivery_cep, tracking_code, created_at, reviewed_at, branch_id, branches(name)")
         .gte("created_at", from.toISOString())
         .lte("created_at", to.toISOString())
         .order("created_at", { ascending: false })
         .limit(500);
       if (currentBrandId) q = q.eq("brand_id", currentBrandId);
       const { data } = await q;
-      return (data || []).map(r => {
+      return (data || []).map((r: any) => {
         const snap = r.deal_snapshot_json as any;
-        const addr = r.delivery_address_json as any;
         return {
           "Data": formatDate(r.created_at),
           "Produto": snap?.title || "—",
@@ -1346,9 +1345,9 @@ async function fetchReport(reportType: ReportType, dateFrom: string, dateTo: str
           "Origem": r.order_source === "driver" ? "motorista" : "cliente",
           "Pontos": r.points_spent || 0,
           "Status": r.status || "PENDING",
-          "Cidade": (r.branches as any)?.name || "—",
-          "Endereço": addr ? `${addr.street || ""}, ${addr.number || ""} - ${addr.city || ""} / ${addr.state || ""}` : "—",
-          "CEP": addr?.zip_code || "—",
+          "Cidade": r.branches?.name || r.delivery_city || "—",
+          "Endereço": `${r.delivery_address || ""}, ${r.delivery_number || ""} - ${r.delivery_city || ""} / ${r.delivery_state || ""}`,
+          "CEP": r.delivery_cep || "—",
           "Rastreio": r.tracking_code || "—",
           "Link ML": snap?.affiliate_url || snap?.origin_url || "—",
           "Revisado em": r.reviewed_at ? formatDate(r.reviewed_at) : "—",
