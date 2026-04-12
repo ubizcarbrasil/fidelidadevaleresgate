@@ -181,11 +181,17 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
         {customer && (
           <button
             onClick={() => onOpenLedger?.()}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95"
-            style={{ backgroundColor: accent ? `${accent}20` : "hsl(var(--primary) / 0.1)", color: accent || "hsl(var(--primary))" }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all active:scale-95 shadow-md"
+            style={{
+              background: accent
+                ? `linear-gradient(135deg, ${accent}, ${accent}dd)`
+                : "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.85))",
+              color: "hsl(var(--primary-foreground))",
+            }}
           >
-            <Coins className="h-3.5 w-3.5" />
+            <Coins className="h-4 w-4" />
             <AnimatedCounter value={customer.points_balance ?? 0} duration={600} suffix=" pts" />
+            <span className="text-[10px] font-medium opacity-80 ml-0.5">Ver extrato →</span>
           </button>
         )}
       </div>
