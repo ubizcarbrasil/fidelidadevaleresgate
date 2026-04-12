@@ -1,27 +1,31 @@
 
 
-## Plano: Remover título e "Ver todos" da seção de Banners
+## Plano: Respeitar módulos desativados na tela do cliente
 
 ### Problema
-A seção de banners mostra um cabeçalho com o título "Banners" e o botão "Ver todos ›" que o usuário quer remover.
+Quando o empreendedor desativa o módulo "Achadinhos" (chave `affiliate_deals`) na tela de módulos, a seção continua aparecendo na Home do cliente. Isso acontece porque o `CustomerHomePage` renderiza as seções nativas baseado apenas na configuração de layout (`home_layout_json`), sem verificar se o módulo correspondente está ativo via `useBrandModules`.
+
+O mesmo problema afeta outras seções:
+- **Compre com Pontos** → módulo `customer_product_redeem`
+- **Compre e Pontue (Emissoras)** → módulo `offers`
 
 ### Alteração
 
-**Arquivo**: `src/components/HomeSectionsRenderer.tsx` (linhas 433-449)
+**Arquivo**: `src/pages/customer/CustomerHomePage.tsx`
 
-Adicionar uma condição para ocultar o header quando o tipo da seção for `BANNER_CAROUSEL`:
-
-```tsx
-{/* Section Header */}
-{(section.title || section.subtitle) && templateType !== "BANNER_CAROUSEL" && (
-  // ... header content remains unchanged
-)}
-```
+1. Importar `useBrandModules` e chamar `isModuleEnabled`
+2. Criar um mapeamento de seção nativa → chave de módulo:
+   ```
+   ACHADINHOS → affiliate_deals
+   COMPRE_COM_PONTOS → customer_product_redeem
+   EMISSORAS → offers
+   ```
+3. Na função `isNativeSectionVisible`, adicionar verificação: se a seção tem um módulo associado e esse módulo está desativado, retornar `false`
 
 ### Resultado
-A seção de banners não exibirá mais o título "Banners" nem o botão "Ver todos".
+Desativar um módulo no painel de módulos automaticamente oculta a seção correspondente na Home do cliente, sem necessidade de configuração adicional no page builder.
 
 | Arquivo | Ação |
 |---------|------|
-| `src/components/HomeSectionsRenderer.tsx` | Ocultar header para `BANNER_CAROUSEL` |
+| `src/pages/customer/CustomerHomePage.tsx` | Adicionar verificação de `isModuleEnabled` nas seções nativas |
 
