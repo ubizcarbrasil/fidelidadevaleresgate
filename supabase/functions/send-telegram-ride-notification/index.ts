@@ -48,6 +48,14 @@ Deno.serve(async (req) => {
       driver_points,
       driver_monthly_rides,
       driver_volume_tier,
+      // Redemption fields
+      is_redemption_notification,
+      product_title,
+      points_spent,
+      delivery_address,
+      product_url,
+      order_source,
+      customer_cpf,
     } = body;
 
     if (!chat_id) {
@@ -63,7 +71,23 @@ Deno.serve(async (req) => {
 
     let message: string;
 
-    if (is_driver_notification && driver_points) {
+    if (is_redemption_notification) {
+      // Product redemption template
+      message = [
+        "🛍️ <b>Novo resgate de produto!</b>",
+        "",
+        `👤 ${order_source === "driver" ? "Motorista" : "Cliente"}: ${customer_name || "Não identificado"}`,
+        customer_phone ? `📱 Telefone: ${customer_phone}` : null,
+        customer_cpf ? `📋 CPF: ${customer_cpf}` : null,
+        `📦 Produto: "${product_title || "—"}"`,
+        `🪙 Pontos: ${points_spent || 0} pts`,
+        delivery_address ? `📍 Enviar para: ${delivery_address}` : null,
+        product_url ? `🔗 Link: ${product_url}` : null,
+        `🕐 Resgatado em: ${dateStr}`,
+      ]
+        .filter(Boolean)
+        .join("\n");
+    } else if (is_driver_notification && driver_points) {
       // Driver notification template
       message = [
         city_name ? `📍 <b>${city_name}</b>` : null,
