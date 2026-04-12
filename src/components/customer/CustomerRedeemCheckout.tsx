@@ -76,6 +76,7 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
   };
 
   const handleSubmit = async () => {
+    if (loading) return;
     if (!customer) return;
     if (!canAfford) {
       toast.error("Saldo de pontos insuficiente!");
@@ -88,49 +89,34 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
 
     setLoading(true);
     try {
-      // 1. Debit points via ledger
-      const { error: ledgerError } = await supabase.from("points_ledger").insert({
-        customer_id: customer.id,
-        brand_id: customer.brand_id,
-        branch_id: customer.branch_id,
-        entry_type: "DEBIT",
-        points_amount: deal.redeem_points_cost,
-        reason: `Resgate: ${deal.title}`,
-        reference_type: "REDEMPTION",
-      } as any);
-      if (ledgerError) throw ledgerError;
-
-      // 1b. Decrement customer balance
-      await supabase.from("customers").update({
-        points_balance: pointsBalance - deal.redeem_points_cost,
-      }).eq("id", customer.id);
-
-      // 2. Create redemption order with order_source = 'customer'
-      const { error: orderError } = await supabase.from("product_redemption_orders").insert({
-        brand_id: customer.brand_id,
-        branch_id: customer.branch_id,
-        customer_id: customer.id,
-        deal_id: deal.id,
-        deal_snapshot_json: {
-          title: deal.title,
-          image_url: deal.image_url,
-          price: deal.price,
-        },
-        affiliate_url: deal.affiliate_url,
-        points_spent: deal.redeem_points_cost,
-        customer_name: form.name,
-        customer_phone: form.phone,
-        customer_cpf: form.cpf || null,
-        delivery_cep: form.cep,
-        delivery_address: form.address,
-        delivery_number: form.number,
-        delivery_complement: form.complement || null,
-        delivery_neighborhood: form.neighborhood,
-        delivery_city: form.city,
-        delivery_state: form.state,
-        order_source: "customer",
-      });
-      if (orderError) throw orderError;
+      const { data: orderId, error: rpcError } = await supabase.rpc(
+        "process_product_redemption" as any,
+        {
+          p_customer_id: customer.id,
+          p_brand_id: customer.brand_id,
+          p_branch_id: customer.branch_id,
+          p_deal_id: deal.id,
+          p_deal_snapshot: {
+            title: deal.title,
+            image_url: deal.image_url,
+            price: deal.price,
+          },
+          p_affiliate_url: deal.affiliate_url,
+          p_points_cost: deal.redeem_points_cost,
+          p_name: form.name,
+          p_phone: form.phone,
+          p_cpf: form.cpf || "",
+          p_cep: form.cep,
+          p_address: form.address,
+          p_number: form.number,
+          p_complement: form.complement || "",
+          p_neighborhood: form.neighborhood,
+          p_city: form.city,
+          p_state: form.state,
+          p_order_source: "customer",
+        }
+      );
+      if (rpcError) throw rpcError;
 
       // Refresh customer balance and product orders list
       await refetch();
