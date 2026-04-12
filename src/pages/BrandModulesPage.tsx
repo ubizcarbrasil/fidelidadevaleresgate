@@ -13,6 +13,7 @@ import {
   Sparkles, Coins, Settings2, Image, Layers, Bell, BarChart3, Palette,
   Type, FileSpreadsheet, Globe, TrendingUp, ClipboardList, Plug,
 } from "lucide-react";
+import HomeSectionOrderEditor from "@/components/brand-modules/HomeSectionOrderEditor";
 
 const CATEGORY_META: Record<string, { label: string; emoji: string; description: string }> = {
   core:         { label: "Essencial",            emoji: "🔧", description: "Base da plataforma" },
