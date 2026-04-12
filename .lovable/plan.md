@@ -1,45 +1,58 @@
 
 
-## Plano: Adicionar ordenação das seções na tela de Módulos
+## Plano: Controle de Modo Claro/Escuro por Cidade e por Tipo de Usuário
 
 ### Problema
-O usuário quer controlar a ordem de exibição das seções da Home do cliente diretamente na tela de Módulos (`/brand-modules`), sem precisar ir ao Page Builder.
+Atualmente o modo escuro é fixo (dark por padrão no app do cliente, dark forçado no painel do motorista). O empreendedor não tem controle sobre qual modo cada tipo de usuário (motorista/cliente) pode usar em cada cidade.
 
-### Alteração
+### Solução
+Adicionar configurações no `branch_settings_json` de cada cidade para controlar o tema padrão e a possibilidade de alternância, separado por motorista e cliente.
 
-**Arquivo**: `src/pages/BrandModulesPage.tsx`
+### Novas flags no `branch_settings_json`
 
-1. Importar `ArrowUp`, `ArrowDown` do lucide-react
-2. Adicionar query para buscar `home_layout_json` da marca atual
-3. Criar estado local `nativeSections` com as seções nativas (usando o mesmo `DEFAULT_NATIVE_SECTIONS`)
-4. Criar funções `handleMoveSection(idx, direction)` que reordenam e salvam no `brands.home_layout_json`
-5. Adicionar um bloco visual **acima** dos cards de módulos (após o summary bar) com:
-   - Título "Ordem de exibição na Home"
-   - Lista das seções nativas habilitadas com setas ↑ ↓ para reordenar
-   - Apenas seções cujo módulo está ativo aparecem na lista
-
-### UI da seção de ordenação
-
-```text
-┌─────────────────────────────────────┐
-│ 📱 Ordem de exibição na Home        │
-│                                     │
-│  1. Banners              [↑] [↓]   │
-│  2. Categorias           [↑] [↓]   │
-│  3. Selecionado para Você[↑] [↓]   │
-│  4. Compre e Pontue      [↑] [↓]   │
-│  5. Compre com Pontos    [↑] [↓]   │
-│  6. Achadinhos           [↑] [↓]   │
-└─────────────────────────────────────┘
+```json
+{
+  "theme_customer_default": "dark",
+  "theme_customer_allow_toggle": true,
+  "theme_driver_default": "dark",
+  "theme_driver_allow_toggle": false
+}
 ```
 
-### Detalhes técnicos
-- Reutiliza a mesma lógica de `handleMoveNativeSection` do `PageSectionsEditor`
-- Salva no campo `brands.home_layout_json.native_sections` (mesmo formato)
-- Seções com módulo desativado ficam ocultas da lista de ordenação
-- A mudança reflete imediatamente na Home do cliente
+### Alterações
 
 | Arquivo | Ação |
-|---|---|
-| `src/pages/BrandModulesPage.tsx` | Adicionar bloco de reordenação de seções |
+|---------|------|
+| `src/pages/BrandBranchForm.tsx` | Adicionar 4 novos campos (selects + switches) na seção de configuração da cidade |
+| `src/components/customer/CustomerLayout.tsx` | Ler `theme_customer_default` e `theme_customer_allow_toggle` do branch para definir o tema inicial |
+| `src/pages/customer/CustomerProfilePage.tsx` | Ocultar o toggle de dark mode quando `theme_customer_allow_toggle` é `false` |
+| `src/pages/DriverPanelPage.tsx` | Ler `theme_driver_default` do branch e respeitar `theme_driver_allow_toggle` |
+
+### Detalhes da UI no formulário de cidade
+
+Nova seção "Aparência do App" com:
+
+```text
+┌─────────────────────────────────────────────┐
+│ 🎨 Aparência do App                         │
+│                                             │
+│ Cliente                                     │
+│   Tema padrão:  [Escuro ▾]                 │
+│   Permitir alternar tema:  [ON]             │
+│                                             │
+│ Motorista                                   │
+│   Tema padrão:  [Escuro ▾]                 │
+│   Permitir alternar tema:  [OFF]            │
+└─────────────────────────────────────────────┘
+```
+
+### Lógica no app do cliente
+1. `CustomerLayout` busca as settings do branch selecionado
+2. Se `theme_customer_default` = `"light"`, inicia em modo claro (a menos que o usuário já tenha escolhido manualmente)
+3. Se `theme_customer_allow_toggle` = `false`, o `DarkModeToggle` no perfil fica oculto e o tema é forçado
+
+### Lógica no painel do motorista
+1. `DriverPanelPage` lê `theme_driver_default` do branch
+2. Se `theme_driver_allow_toggle` = `false`, força o tema configurado sem opção de mudança
+3. Se `true`, adiciona um toggle no painel (atualmente não existe)
 
