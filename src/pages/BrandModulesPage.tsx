@@ -14,6 +14,7 @@ import {
   Type, FileSpreadsheet, Globe, TrendingUp, ClipboardList, Plug,
 } from "lucide-react";
 import HomeSectionOrderEditor from "@/components/brand-modules/HomeSectionOrderEditor";
+import SidebarOrderEditor from "@/components/brand-modules/SidebarOrderEditor";
 
 const CATEGORY_META: Record<string, { label: string; emoji: string; description: string }> = {
   core:         { label: "Essencial",            emoji: "🔧", description: "Base da plataforma" },
@@ -226,6 +227,8 @@ export default function BrandModulesPage() {
             if (!def) return true;
             return isEnabled(def.id);
           }} />
+
+          <SidebarOrderEditor brandId={brandId} />
 
           {sortedCategories.map((category) => {
             const mods = grouped[category]!;

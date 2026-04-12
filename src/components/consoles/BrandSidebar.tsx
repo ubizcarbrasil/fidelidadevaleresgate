@@ -3,6 +3,7 @@ import { Store, MapPin, LayoutDashboard, LogOut, Palette, Users, FileSpreadsheet
 import { NavLink } from "@/components/NavLink";
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandInfo } from "@/hooks/useBrandName";
 import { useBrandModules } from "@/hooks/useBrandModules";
@@ -10,6 +11,7 @@ import { useMenuLabels } from "@/hooks/useMenuLabels";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
+import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -258,11 +260,33 @@ export function BrandSidebar() {
   const { user, signOut } = useAuth();
   const { isModuleEnabled } = useBrandModules();
   const { getLabel } = useMenuLabels("admin");
-  const { name: brandName, logoUrl: brandLogoUrl, subscriptionPlan } = useBrandInfo();
+  const { name: brandName, logoUrl: brandLogoUrl, subscriptionPlan, brandId: infoBrandId } = useBrandInfo();
   const { currentBrandId } = useBrandGuard();
   const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
   const badges = useSidebarBadges();
   const [openGroupLabel, setOpenGroupLabel] = useState<string | null>(null);
+
+  const effectiveBrandId = currentBrandId || infoBrandId;
+
+  // Fetch sidebar group order from brand settings
+  const { data: sidebarOrder } = useQuery({
+    queryKey: ["brand-sidebar-order", effectiveBrandId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("brands")
+        .select("brand_settings_json")
+        .eq("id", effectiveBrandId!)
+        .single();
+      if (error) throw error;
+      const settings = data?.brand_settings_json as Record<string, any> | null;
+      if (settings?.sidebar_group_order && Array.isArray(settings.sidebar_group_order)) {
+        return settings.sidebar_group_order as string[];
+      }
+      return null;
+    },
+    enabled: !!effectiveBrandId,
+    staleTime: 60_000,
+  });
 
   const isBasicPlan = !subscriptionPlan || subscriptionPlan === "basic" || subscriptionPlan === "free";
 
@@ -285,8 +309,17 @@ export function BrandSidebar() {
       }),
   }));
 
+  // Apply saved sidebar group order
+  const sortedGroups = sidebarOrder
+    ? [...resolvedGroups].sort((a, b) => {
+        const idxA = sidebarOrder.indexOf(a.label);
+        const idxB = sidebarOrder.indexOf(b.label);
+        return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+      })
+    : resolvedGroups;
+
   // Auto-open the group containing the active route
-  const activeGroupLabel = resolvedGroups.find(g =>
+  const activeGroupLabel = sortedGroups.find(g =>
     g.items.some(item => location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url)))
   )?.label || null;
 
@@ -343,7 +376,7 @@ export function BrandSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {resolvedGroups.map((group) => {
+        {sortedGroups.map((group) => {
           if (group.items.length === 0) return null;
           const alwaysOpen = group.label === "Resgate com Pontos";
           return (
