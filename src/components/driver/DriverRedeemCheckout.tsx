@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
 import { haptics } from "@/lib/haptics";
 import { formatPoints } from "@/lib/formatPoints";
+import { sendRedemptionTelegramNotification } from "@/lib/sendRedemptionTelegram";
 import DriverVerifyCodeStep from "./DriverVerifyCodeStep";
 
 interface RedeemDeal {

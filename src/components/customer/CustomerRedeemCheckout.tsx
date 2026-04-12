@@ -9,6 +9,7 @@ import { ArrowLeft, MapPin, Loader2, CheckCircle2, Package } from "lucide-react"
 import { toast } from "sonner";
 import { haptics } from "@/lib/haptics";
 import { formatPoints } from "@/lib/formatPoints";
+import { sendRedemptionTelegramNotification } from "@/lib/sendRedemptionTelegram";
 
 interface RedeemDeal {
   id: string;
