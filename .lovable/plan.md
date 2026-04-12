@@ -1,24 +1,39 @@
 
 
-## Plano: Mover indicadores de dots para fora do banner
+## Plano: Criar seção independente "Compre com Pontos"
 
 ### Problema
-Os dots indicadores do carrossel de banners ficam **dentro** da imagem (overlay), junto com um gradiente escuro. O usuário quer removê-los de dentro do banner e colocá-los **abaixo** da imagem, como pontos separados.
+A categoria "Resgatar com Pontos" está embutida dentro da seção Achadinhos como uma categoria virtual. O usuário quer que seja uma **seção separada** com o nome "COMPRE COM PONTOS", mantendo a mesma estética de categorias/carrosséis.
 
 ### Alterações
 
-**Arquivo**: `src/components/HomeSectionsRenderer.tsx` (função `BannerCarousel`, linhas 978-1005)
+**Arquivo novo**: `src/components/customer/CompreComPontosSection.tsx`
+- Seção independente que busca apenas deals com `is_redeemable = true` e `redeemable_by` compatível (customer/both)
+- Header com título "Compre com Pontos" e subtítulo
+- Categorias filtradas (pills horizontais) — mostra apenas categorias que possuem produtos resgatáveis
+- Carrosséis horizontais por categoria (mesma estética do Achadinhos)
+- Cards exibem preço em pontos (pts) em destaque
+- Reutiliza o `DealCard` e `AchadinhoDealDetail` existentes
+- Respeita configuração de linhas (`customer_redeem_rows`)
 
-1. Remover o overlay gradiente escuro (linha 985: `bg-gradient-to-t from-black/20`)
-2. Mover os dots para **fora** do `div` do banner (após o `rounded-2xl`), posicionados abaixo como elementos normais (não `absolute`)
-3. Dots ficam centralizados, com estilo de bolinhas redondas (círculos iguais, cor primária para ativo, cinza para inativo)
+**Arquivo**: `src/components/customer/AchadinhoSection.tsx`
+- Remover a categoria virtual "Resgatar com Pontos" (linhas 234-251)
+- Remover o filtro `REDEEMABLE_ID` e referências a `isVirtualRedeemable`
+- Deals resgatáveis não aparecem mais nos Achadinhos
 
-**Arquivo**: `src/components/driver/DriverBannerCarousel.tsx` (linhas 55-83)
-
-1. Mesma lógica: mover dots para fora do container da imagem, abaixo do banner
-2. Remover posicionamento `absolute` dos dots
+**Arquivo**: `src/pages/customer/CustomerHomePage.tsx`
+- Importar e renderizar `CompreComPontosSection` como seção separada (antes ou depois dos Achadinhos, conforme layout)
+- Passar callbacks de navegação necessários
 
 ### Resultado
-- Banner fica limpo, sem overlay ou dots por cima da imagem
-- Dots aparecem abaixo do banner como indicadores circulares centralizados
+- Achadinhos mostra apenas ofertas de afiliados normais
+- "Compre com Pontos" é uma seção própria, visualmente destacada, com categorias e carrosséis independentes
+
+### Arquivos
+
+| Arquivo | Ação |
+|---------|------|
+| `src/components/customer/CompreComPontosSection.tsx` | Novo — seção independente de resgate com pontos |
+| `src/components/customer/AchadinhoSection.tsx` | Remover categoria virtual "Resgatar com Pontos" |
+| `src/pages/customer/CustomerHomePage.tsx` | Adicionar nova seção ao layout da home |
 
