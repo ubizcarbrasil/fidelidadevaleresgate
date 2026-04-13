@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useBrand } from "@/contexts/BrandContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { MapPin, Locate, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+
+const PORTAL_HOSTNAME = "app.valeresgate.com.br";
 
 function hslToCss(hsl: string | undefined, fallback: string): string {
   if (!hsl) return fallback;
@@ -17,7 +20,11 @@ function withAlpha(hslColor: string, alpha: number): string {
 export default function BranchSelector() {
   const { brand, branches, selectedBranch, setSelectedBranch, detectBranchByLocation, theme } =
     useBrand();
+  const { user } = useAuth();
   const [detecting, setDetecting] = useState(false);
+
+  // Portal domain: don't show branch picker for unauthenticated users
+  if (window.location.hostname === PORTAL_HOSTNAME && !user) return null;
 
   if (!brand || branches.length <= 1 || selectedBranch) return null;
 
