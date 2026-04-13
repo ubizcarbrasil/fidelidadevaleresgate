@@ -122,22 +122,24 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
       try {
         const hostname = window.location.hostname;
 
-        // Skip resolution for dev/preview/root domains
+        // 1) Check for ?brandId= URL parameter on ANY domain (root admin impersonation)
+        const params = new URLSearchParams(window.location.search);
+        const brandIdParam = params.get("brandId");
+        if (brandIdParam) {
+          const brandData = await fetchBrandById(brandIdParam);
+          if (brandData) {
+            setBrand(brandData);
+          }
+          return;
+        }
+
+        // 2) Skip domain resolution for dev/preview/root domains
         const isLocal = hostname === "localhost"
           || hostname.includes("lovable.app")
           || hostname.includes("lovableproject.com")
           || hostname.startsWith("root.");
 
         if (isLocal) {
-          // Check for brandId URL parameter (root admin impersonation)
-          const params = new URLSearchParams(window.location.search);
-          const brandIdParam = params.get("brandId");
-          if (brandIdParam) {
-            const brandData = await fetchBrandById(brandIdParam);
-            if (brandData) {
-              setBrand(brandData);
-            }
-          }
           return;
         }
 
