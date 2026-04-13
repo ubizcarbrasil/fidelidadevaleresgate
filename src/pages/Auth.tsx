@@ -10,6 +10,8 @@ import { Store, Rocket } from "lucide-react";
 import PlatformLogo from "@/components/PlatformLogo";
 import { useBrand } from "@/contexts/BrandContext";
 
+const PORTAL_HOSTNAME = "app.valeresgate.com.br";
+
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [isForgot, setIsForgot] = useState(false);
@@ -19,9 +21,27 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { brand, theme } = useBrand();
+  const { user, roles: authRoles } = useAuth();
 
+  const isPortalDomain = window.location.hostname === PORTAL_HOSTNAME;
   const brandLogoUrl = (theme as any)?.logo_url || ((brand?.brand_settings_json as any)?.logo_url) || null;
   const brandName = brand?.name || null;
+
+  // If already logged in on portal domain, redirect to correct console
+  useEffect(() => {
+    if (!isPortalDomain || !user || authRoles.length === 0) return;
+
+    const hasAdminRole = authRoles.some((r) =>
+      ["root_admin", "tenant_admin", "brand_admin", "branch_admin", "branch_operator", "operator_pdv"].includes(r.role)
+    );
+    const isStoreOnly = !hasAdminRole && authRoles.some((r) => r.role === "store_admin");
+
+    if (hasAdminRole) {
+      navigate("/", { replace: true });
+    } else if (isStoreOnly) {
+      navigate("/store-panel", { replace: true });
+    }
+  }, [isPortalDomain, user, authRoles, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,21 +62,31 @@ export default function Auth() {
       if (error) {
         toast.error(error.message);
       } else {
-        // Check if user is a store owner (store_admin role) to redirect accordingly
         const userId = data.user?.id;
         if (userId) {
           const { data: roles } = await supabase
             .from("user_roles")
             .select("role")
             .eq("user_id", userId);
-          const isStoreAdmin = roles?.some(r => r.role === "store_admin");
           const hasAdminRole = roles?.some(r =>
             ["root_admin", "tenant_admin", "brand_admin", "branch_admin", "branch_operator", "operator_pdv"].includes(r.role)
           );
-          if (isStoreAdmin && !hasAdminRole) {
-            navigate("/store-panel");
+          const isStoreAdmin = roles?.some(r => r.role === "store_admin");
+
+          if (isPortalDomain) {
+            if (hasAdminRole) {
+              navigate("/");
+            } else if (isStoreAdmin) {
+              navigate("/store-panel");
+            } else {
+              navigate("/");
+            }
           } else {
-            navigate("/");
+            if (isStoreAdmin && !hasAdminRole) {
+              navigate("/store-panel");
+            } else {
+              navigate("/");
+            }
           }
         } else {
           navigate("/");
