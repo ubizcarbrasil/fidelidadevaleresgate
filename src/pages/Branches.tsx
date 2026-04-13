@@ -17,7 +17,7 @@ const PAGE_SIZE = 20;
 
 export default function Branches() {
   const queryClient = useQueryClient();
-  const { currentBrandId, isRootAdmin } = useBrandGuard();
+  const { currentBrandId, currentBranchId, isRootAdmin } = useBrandGuard();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
