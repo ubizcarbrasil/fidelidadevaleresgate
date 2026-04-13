@@ -1,43 +1,30 @@
 
 
-## Correção: Painel da cidade mostrando cidades de outras filiais
+## Adicionar botão "Criar Franqueado" nos cards de cidade
 
-### Causa
+### O que será feito
 
-A página `src/pages/Branches.tsx` (rota `/branches`) filtra apenas por `brand_id`, mas não aplica filtro de `branch_id`. Quando um franqueado (branch admin) de Araxá acessa essa página, vê todas as cidades da marca (Leme e Araxá), quando deveria ver apenas a sua.
+1. **Criar componente `DialogCriarFranqueado`** em `src/components/branch/DialogCriarFranqueado.tsx`
+   - Dialog com campos: email, senha, nome completo (opcional)
+   - Ao submeter, chama `supabase.functions.invoke("create-branch-admin", { body: { email, password, full_name, brand_id, branch_id } })`
+   - Mostra loading no botão, toast de sucesso/erro
+   - Fecha o dialog ao concluir
 
-### Correção
+2. **Adicionar botão no card** em `BrandBranchesPage.tsx`
+   - Novo botão "Criar Franqueado" com ícone `UserPlus` na linha de ações de cada card (ao lado de "Resetar pontos" e "Editar")
+   - State para controlar qual branch está com o dialog aberto
+   - Passa `brand_id` e `branch_id` para o dialog
 
-**Arquivo:** `src/pages/Branches.tsx` (linha 29)
+### Arquivos
 
-Adicionar filtro de `branch_id` usando `applyBranchFilter` do `useBrandGuard`, que já existe e faz exatamente isso — aplica `eq("branch_id", currentBranchId)` para usuários não-root que têm branch_id definido.
+| Arquivo | Ação |
+|---------|------|
+| `src/components/branch/DialogCriarFranqueado.tsx` | Criar |
+| `src/pages/BrandBranchesPage.tsx` | Adicionar botão + state + import do dialog |
 
-```typescript
-// ANTES (linha 28-29)
-let query = supabase.from("branches").select("*, brands(name, tenants(name))", { count: "exact" });
-if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
+### Detalhes técnicos
 
-// DEPOIS
-const { currentBrandId, currentBranchId, isRootAdmin } = useBrandGuard();
-// ...
-let query = supabase.from("branches").select("*, brands(name, tenants(name))", { count: "exact" });
-if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
-if (!isRootAdmin && currentBranchId) query = query.eq("id", currentBranchId);
-```
-
-Note: o filtro usa `eq("id", currentBranchId)` porque estamos filtrando a própria tabela `branches` — o `id` da branch é o campo correto, não `branch_id`.
-
-### Resultado
-
-| Usuário | Antes | Depois |
-|---------|-------|--------|
-| Root admin | Vê todas as cidades | Sem mudança |
-| Brand admin | Vê todas as cidades da marca | Sem mudança |
-| Branch admin (Araxá) | Vê Leme + Araxá | Vê apenas Araxá |
-
-### Arquivo alterado
-
-| Arquivo | Mudança |
-|---------|---------|
-| `src/pages/Branches.tsx` | Adicionar `currentBranchId` e filtrar `eq("id", currentBranchId)` para branch admins |
+- A edge function `create-branch-admin` já existe e aceita `{ email, password, full_name, brand_id, branch_id }` — não precisa de alteração
+- O dialog usará componentes existentes: `Dialog`, `Input`, `Button`, `Label`
+- Validação client-side: email obrigatório, senha mínimo 6 caracteres
 
