@@ -1,58 +1,25 @@
 
 
-## Plano: Criar RPC `credit_customer_points` que está faltando
+## Plano: Unificar fallback de logo com PlatformLogo
 
-### Problema
-O webhook `machine-webhook` chama `credit_customer_points` para creditar pontos aos motoristas e passageiros. Essa RPC **não existe** no banco de dados. Resultado: todas as corridas finalizadas após o reset não atualizam `points_balance`, e o ranking mostra vazio.
+### Escopo
+Apenas o Problema 1 — logo fallback. **Não** alterar `DriverPanelPage.tsx`.
 
-### Solução
+### Arquivos a alterar
 
-**Migração SQL** — Criar a RPC `credit_customer_points` que:
-1. Atualiza `customers.points_balance` atomicamente com lock de linha (`FOR UPDATE`)
-2. Insere registro no `points_ledger` para auditoria
+| Arquivo | Mudança |
+|---------|---------|
+| `BrandSidebar.tsx` (linhas 336-342) | Trocar bloco `{brandLogoUrl ? <img> : <div>}` por `<PlatformLogo src={brandLogoUrl} alt={brandName} className="h-8 w-8 rounded-lg" fallbackLabel={brandNameInitial} />` |
+| `StoreOwnerPanel.tsx` (linhas 242-246) | Idem — usar `<PlatformLogo>` no header do painel |
+| `StoreRegistrationWizard.tsx` (linhas 476-479) | Idem — usar `<PlatformLogo>` no logo do wizard |
+| `Dashboard.tsx` (linhas 121-125) | Idem — usar `<PlatformLogo>` no header do dashboard |
 
-```sql
-CREATE OR REPLACE FUNCTION public.credit_customer_points(
-  p_customer_id uuid,
-  p_brand_id uuid,
-  p_branch_id uuid,
-  p_points integer,
-  p_money numeric DEFAULT 0,
-  p_reason text DEFAULT '',
-  p_reference_type text DEFAULT 'MACHINE_RIDE'
-)
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-DECLARE
-  v_current_balance numeric;
-BEGIN
-  -- Lock row and update balance
-  SELECT points_balance INTO v_current_balance
-  FROM customers WHERE id = p_customer_id FOR UPDATE;
+### O que NÃO muda
+- `Auth.tsx` — já usa fallback correto (`/logo-vale-resgate.png`)
+- `BrandSettingsPage.tsx` — já usa `<PlatformLogo>`
+- `TenantSidebar.tsx` — usa ícone genérico `Building2`, não precisa de logo de brand
+- `DriverPanelPage.tsx` — fora do escopo
 
-  UPDATE customers
-  SET points_balance = points_balance + p_points
-  WHERE id = p_customer_id;
-
-  -- Audit entry
-  INSERT INTO points_ledger (
-    customer_id, brand_id, branch_id,
-    entry_type, points_amount, reason,
-    reference_type, created_by_user_id
-  ) VALUES (
-    p_customer_id, p_brand_id, p_branch_id,
-    'CREDIT', p_points, p_reason,
-    p_reference_type, NULL
-  );
-END;
-$$;
-```
-
-### Impacto
-- Nenhuma alteração no frontend ou no webhook — a assinatura da RPC corresponde exatamente ao que o webhook já chama
-- Corridas novas passarão a creditar pontos corretamente
-- O ranking voltará a funcionar automaticamente (já lê `points_balance`)
+### Resultado
+Todas as telas que exibem logo de brand passarão a usar `PlatformLogo`, que já tem fallback embutido para `/logo-vale-resgate.png`. Brands sem logo personalizada mostrarão a logo da plataforma em vez de ícones genéricos ou iniciais.
 
