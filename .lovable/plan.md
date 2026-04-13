@@ -1,51 +1,43 @@
 
 
-## Correção: Links Úteis mostrando "Sem domínio" para Ubiz Resgata
+## Correção: Painel da cidade mostrando cidades de outras filiais
 
 ### Causa
 
-No `DashboardQuickLinks.tsx` (linha 44), a query busca domínios da brand excluindo `app.valeresgate.com.br`. Para a Ubiz Resgata, esse é o **único** domínio — então a query retorna `null` e aparece "Sem domínio" + "Configure um domínio".
+A página `src/pages/Branches.tsx` (rota `/branches`) filtra apenas por `brand_id`, mas não aplica filtro de `branch_id`. Quando um franqueado (branch admin) de Araxá acessa essa página, vê todas as cidades da marca (Leme e Araxá), quando deveria ver apenas a sua.
 
 ### Correção
 
-**Arquivo:** `src/components/dashboard/DashboardQuickLinks.tsx` (linhas 35-51)
+**Arquivo:** `src/pages/Branches.tsx` (linha 29)
 
-Buscar **todos** os domínios ativos da brand (sem excluir nenhum), mas priorizar domínios que NÃO sejam o portal. Se o único disponível for `app.valeresgate.com.br`, usar esse mesmo.
+Adicionar filtro de `branch_id` usando `applyBranchFilter` do `useBrandGuard`, que já existe e faz exatamente isso — aplica `eq("branch_id", currentBranchId)` para usuários não-root que têm branch_id definido.
 
 ```typescript
-// Buscar todos os domínios ativos, ordenados: não-portal primeiro
-const { data: brandDomains } = useQuery({
-  queryKey: ["brand-domain-links", currentBrandId],
-  queryFn: async () => {
-    if (!currentBrandId) return [];
-    const { data } = await supabase
-      .from("brand_domains")
-      .select("domain")
-      .eq("brand_id", currentBrandId)
-      .eq("is_active", true)
-      .order("is_primary", { ascending: false });
-    return data || [];
-  },
-  enabled: !!currentBrandId,
-});
+// ANTES (linha 28-29)
+let query = supabase.from("branches").select("*, brands(name, tenants(name))", { count: "exact" });
+if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
 
-// Priorizar domínio não-portal; fallback para portal
-const PORTAL = "app.valeresgate.com.br";
-const nonPortal = brandDomains?.find(d => d.domain !== PORTAL);
-const brandDomain = nonPortal?.domain ?? brandDomains?.[0]?.domain ?? null;
+// DEPOIS
+const { currentBrandId, currentBranchId, isRootAdmin } = useBrandGuard();
+// ...
+let query = supabase.from("branches").select("*, brands(name, tenants(name))", { count: "exact" });
+if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
+if (!isRootAdmin && currentBranchId) query = query.eq("id", currentBranchId);
 ```
+
+Note: o filtro usa `eq("id", currentBranchId)` porque estamos filtrando a própria tabela `branches` — o `id` da branch é o campo correto, não `branch_id`.
 
 ### Resultado
 
-| Brand | Antes | Depois |
-|-------|-------|--------|
-| Ubiz Resgata | "Sem domínio" | `app.valeresgate.com.br` (links funcionais) |
-| Meu Mototáxi | `meu-mototaxi.valeresgate.com.br` | Sem mudança |
-| Ubiz Car | Domínio próprio | Sem mudança |
+| Usuário | Antes | Depois |
+|---------|-------|--------|
+| Root admin | Vê todas as cidades | Sem mudança |
+| Brand admin | Vê todas as cidades da marca | Sem mudança |
+| Branch admin (Araxá) | Vê Leme + Araxá | Vê apenas Araxá |
 
-### Arquivos alterados
+### Arquivo alterado
 
 | Arquivo | Mudança |
 |---------|---------|
-| `src/components/dashboard/DashboardQuickLinks.tsx` | Remover `.neq()`, buscar todos domínios e priorizar não-portal |
+| `src/pages/Branches.tsx` | Adicionar `currentBranchId` e filtrar `eq("id", currentBranchId)` para branch admins |
 
