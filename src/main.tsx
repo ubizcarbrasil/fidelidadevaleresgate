@@ -10,6 +10,9 @@ import { createRoot } from "react-dom/client";
 import { Suspense, useEffect, Component, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
+import { disableRuntimeCachesOnBoot } from "@/lib/pwaRecovery";
+
+disableRuntimeCachesOnBoot();
 
 const App = lazyWithRetry(() => {
   console.info("[boot] App dynamic import started");

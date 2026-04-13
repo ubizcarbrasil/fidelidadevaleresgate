@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { clearRuntimeCaches } from "@/lib/pwaRecovery";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -42,6 +43,10 @@ export function usePWA() {
   }, []);
 
   useEffect(() => {
+    void clearRuntimeCaches();
+  }, []);
+
+  useEffect(() => {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -63,9 +68,12 @@ export function usePWA() {
 
   const updateServiceWorker = useCallback(() => {
     const waiting = registration?.waiting;
-    if (!waiting) return;
+    if (!waiting) {
+      void clearRuntimeCaches().then(() => window.location.reload());
+      return;
+    }
     waiting.postMessage({ type: "SKIP_WAITING" });
-    window.location.reload();
+    void clearRuntimeCaches().then(() => window.location.reload());
   }, [registration]);
 
   const installApp = useCallback(async () => {

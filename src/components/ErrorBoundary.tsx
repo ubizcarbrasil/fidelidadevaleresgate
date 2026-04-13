@@ -3,6 +3,7 @@ import * as Sentry from "@sentry/react";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/lib/errorTracker";
 import { setBootPhase, dismissBootstrap } from "@/lib/bootState";
+import { recoverFromChunkError } from "@/lib/pwaRecovery";
 
 interface Props {
   children: React.ReactNode;
@@ -73,7 +74,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
             <p className="text-muted-foreground text-sm max-w-md">
               Uma nova versão do app foi publicada. Recarregue a página para continuar.
             </p>
-            <Button onClick={() => window.location.reload()}>
+            <Button onClick={() => void recoverFromChunkError()}>
               Recarregar página
             </Button>
           </div>

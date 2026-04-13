@@ -1,4 +1,5 @@
 import { lazy, type ComponentType } from "react";
+import { recoverFromChunkError } from "@/lib/pwaRecovery";
 
 /**
  * Wrapper around React.lazy that retries a failed dynamic import once.
@@ -33,7 +34,7 @@ export function lazyWithRetry<T extends ComponentType<any>>(
       }
 
       sessionStorage.setItem(key, String(now));
-      window.location.reload();
+      void recoverFromChunkError();
 
       // Return a never-resolving promise so React doesn't try to render
       return new Promise<{ default: T }>(() => {});
