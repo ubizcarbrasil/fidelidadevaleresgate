@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,16 +11,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Building2, Store, ShoppingBag, Car, ExternalLink, Copy, LogIn,
-  Globe, Eye, Smartphone, Search, Link2, Swords, Blocks, Gift, Settings2, ArrowLeftRight,
+  Globe, Eye, Smartphone, Search, Link2, Swords, Blocks, Gift, Settings2, ArrowLeftRight, AlertCircle,
 } from "lucide-react";
 import DemoStoresToggle from "@/components/DemoStoresToggle";
 import DemoAccessCard from "@/components/dashboard/DemoAccessCard";
-import { getPublicOrigin } from "@/lib/publicShareUrl";
 
 /* ── Brand Quick Links ── */
 function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: { isDriverEnabled?: boolean; isPassengerEnabled?: boolean }) {
   const navigate = useNavigate();
   const { currentBrandId } = useBrandGuard();
+
   const { data: brand } = useQuery({
     queryKey: ["brand-quick-links", currentBrandId],
     queryFn: async () => {
@@ -30,52 +30,61 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
     },
     enabled: !!currentBrandId,
   });
+
+  // Fetch brand's own domain (excluding the portal domain)
+  const { data: brandDomainData } = useQuery({
+    queryKey: ["brand-domain-links", currentBrandId],
+    queryFn: async () => {
+      if (!currentBrandId) return null;
+      const { data } = await supabase
+        .from("brand_domains")
+        .select("domain")
+        .eq("brand_id", currentBrandId)
+        .eq("is_active", true)
+        .neq("domain", "app.valeresgate.com.br")
+        .order("is_primary", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!currentBrandId,
+  });
+
+  const brandDomain = brandDomainData?.domain;
+  const baseUrl = brandDomain ? `https://${brandDomain.replace(/^https?:\/\//, "").replace(/\/+$/, "")}` : null;
+
   const settings = brand?.brand_settings_json as Record<string, unknown> | null;
   const testAccounts = (settings?.test_accounts ?? undefined) as { email: string; role: string; is_active: boolean }[] | undefined;
-  const origin = window.location.origin;
-  const PUBLISHED_ORIGIN = "https://fidelidadevaleresgate.lovable.app";
-
-  // Resolve canonical origin asynchronously
-  const [resolvedPublicBase, setResolvedPublicBase] = useState<string | null>(null);
-  useEffect(() => {
-    if (!currentBrandId) return;
-    getPublicOrigin(currentBrandId).then(setResolvedPublicBase);
-  }, [currentBrandId]);
-  const publicBase = resolvedPublicBase || PUBLISHED_ORIGIN;
 
   const roleLabel: Record<string, string> = { brand_admin: "Admin", customer: "Cliente", store_admin: "Parceiro", driver: "Motorista", branch_admin: "Franqueado" };
   const roleIcon: Record<string, string> = { brand_admin: "🔑", customer: "👤", store_admin: "🏪", driver: "🚗", branch_admin: "🏙️" };
   const copyText = (t: string) => { navigator.clipboard.writeText(t); toast.info("Copiado!"); };
-  // Links that should use SPA navigation (internal admin routes)
-  const internalLabels = new Set(["Cadastro Parceiro", "Painel Parceiro", "Painel Franqueado", "Gamificação", "Módulos", "Regras de Resgate", "Produtos de Resgate", "Conversão por Público"]);
-  const handleOpen = (label: string, path: string) => {
-    if (internalLabels.has(label)) {
-      navigate(path);
-    } else {
-      window.location.href = path;
-    }
-  };
 
   if (!brand) return null;
   const hasTestAccounts = testAccounts && testAccounts.length > 0 && testAccounts.some((a) => a.is_active);
 
-  const allQuickLinks = [
-    { label: "App do Cliente", path: currentBrandId ? `/customer-preview?brandId=${currentBrandId}` : "/customer-preview", prodPath: "/", icon: ExternalLink, description: "Visualizar o app", scoringFilter: "PASSENGER" as const },
-    { label: "Cadastro Parceiro", path: "/register-store", prodPath: "/register-store", icon: ShoppingBag, description: "Formulário de parceiros", scoringFilter: "PASSENGER" as const },
-    { label: "Painel Parceiro", path: "/store-panel", prodPath: "/store-panel", icon: Store, description: "Gestão das lojas", scoringFilter: "PASSENGER" as const },
-    { label: "Achadinho Motorista", path: currentBrandId ? `/driver?brandId=${currentBrandId}` : "/driver", prodPath: currentBrandId ? `/driver?brandId=${currentBrandId}` : "/driver", icon: Car, description: "Marketplace do motorista", scoringFilter: "DRIVER" as const },
-    { label: "Painel Franqueado", path: "/branch-wallet", prodPath: "/branch-wallet", icon: Building2, description: "Painel do gestor da cidade" },
-    { label: "Gamificação", path: "/gamificacao-admin", prodPath: "/gamificacao-admin", icon: Swords, description: "Duelos & Ranking", scoringFilter: "DRIVER" as const },
-    { label: "Módulos", path: "/brand-modules", prodPath: "/brand-modules", icon: Blocks, description: "Ativar/desativar módulos" },
-    { label: "Regras de Resgate", path: "/regras-resgate", prodPath: "/regras-resgate", icon: Settings2, description: "Conversão pontos/R$ e limites" },
-    { label: "Produtos de Resgate", path: "/produtos-resgate", prodPath: "/produtos-resgate", icon: Gift, description: "Catálogo de produtos resgatáveis" },
-    { label: "Conversão por Público", path: "/conversao-resgate", prodPath: "/conversao-resgate", icon: ArrowLeftRight, description: "Taxa pts/R$ por motorista e passageiro" },
-  ];
-
-  const quickLinks = allQuickLinks.filter((link) => {
-    if (!("scoringFilter" in link) || !link.scoringFilter) return true;
+  // External links — require brand domain
+  const linksExternos = [
+    { label: "App do Cliente", path: "/", icon: ExternalLink, description: "Visualizar o aplicativo", scoringFilter: "PASSENGER" as const },
+    { label: "Cadastro Parceiro", path: "/register-store", icon: ShoppingBag, description: "Formulário de parceiros", scoringFilter: "PASSENGER" as const },
+    { label: "Painel Parceiro", path: "/store-panel", icon: Store, description: "Gestão das lojas", scoringFilter: "PASSENGER" as const },
+    { label: "Achadinho Motorista", path: `/driver?brandId=${currentBrandId}`, icon: Car, description: "Marketplace do motorista", scoringFilter: "DRIVER" as const },
+  ].filter((link) => {
     if (link.scoringFilter === "DRIVER") return isDriverEnabled;
     if (link.scoringFilter === "PASSENGER") return isPassengerEnabled;
+    return true;
+  });
+
+  // Internal links — admin panel routes (SPA navigation)
+  const linksInternos = [
+    { label: "Painel Franqueado", path: "/branch-wallet", icon: Building2, description: "Painel do gestor da cidade" },
+    { label: "Gamificação", path: "/gamificacao-admin", icon: Swords, description: "Duelos & Ranking", scoringFilter: "DRIVER" as const },
+    { label: "Módulos", path: "/brand-modules", icon: Blocks, description: "Ativar/desativar módulos" },
+    { label: "Regras de Resgate", path: "/regras-resgate", icon: Settings2, description: "Conversão pontos/R$ e limites" },
+    { label: "Produtos de Resgate", path: "/produtos-resgate", icon: Gift, description: "Catálogo de produtos resgatáveis" },
+    { label: "Conversão por Público", path: "/conversao-resgate", icon: ArrowLeftRight, description: "Taxa pts/R$ por motorista e passageiro" },
+  ].filter((link) => {
+    if ("scoringFilter" in link && link.scoringFilter === "DRIVER") return isDriverEnabled;
     return true;
   });
 
@@ -87,21 +96,22 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Link2 className="h-4 w-4 text-primary" /> Links Úteis
             </CardTitle>
-          {resolvedPublicBase ? (
+            {baseUrl ? (
               <Badge variant="outline" className="text-[10px] gap-1">
-                <Globe className="h-3 w-3" /> URL configurada
+                <Globe className="h-3 w-3" /> {brandDomain}
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-[10px]">Usando domínio atual</Badge>
+              <Badge variant="outline" className="text-[10px] gap-1 text-amber-500 border-amber-500/30">
+                <AlertCircle className="h-3 w-3" /> Sem domínio
+              </Badge>
             )}
           </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            {quickLinks.map((link) => {
-              const internalUrl = `${origin}${link.path}`;
-              const isInternal = internalLabels.has(link.label);
-               const prodUrl = link.label === "Achadinho Motorista" ? `${publicBase}${link.prodPath}` : null;
+            {/* External links */}
+            {linksExternos.map((link) => {
+              const fullUrl = baseUrl ? `${baseUrl}${link.path}` : null;
               return (
                 <div key={link.label} className="rounded-lg border border-border p-3 space-y-2 hover:border-primary/30 transition-colors">
                   <div className="flex items-center gap-2">
@@ -109,29 +119,51 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
                     <span className="text-sm font-medium">{link.label}</span>
                   </div>
                   <p className="text-xs text-muted-foreground">{link.description}</p>
-                  <div className="flex gap-1">
-                    <Button variant="default" size="sm" className="h-7 text-xs flex-1 gap-1" onClick={() => handleOpen(link.label, isInternal ? link.path : internalUrl)}>
-                      <ExternalLink className="h-3 w-3" /> Abrir
-                    </Button>
-                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => copyText(internalUrl)}>
-                      <Copy className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  {prodUrl && (
-                    <div className="flex gap-1 items-center">
-                      <Globe className="h-3 w-3 text-muted-foreground shrink-0" />
-                      <code className="text-[10px] text-muted-foreground truncate flex-1">{prodUrl}</code>
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => copyText(prodUrl)}>
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                    </div>
+                  {fullUrl ? (
+                    <>
+                      <div className="flex gap-1">
+                        <Button variant="default" size="sm" className="h-7 text-xs flex-1 gap-1" onClick={() => window.open(fullUrl, "_blank")}>
+                          <ExternalLink className="h-3 w-3" /> Abrir
+                        </Button>
+                        <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => copyText(fullUrl)}>
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <div className="flex gap-1 items-center">
+                        <Globe className="h-3 w-3 text-muted-foreground shrink-0" />
+                        <code className="text-[10px] text-muted-foreground truncate flex-1">{fullUrl}</code>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-[10px] text-amber-500 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3 shrink-0" />
+                      Configure um domínio em Meus Domínios para ativar
+                    </p>
                   )}
                 </div>
               );
             })}
+
+            {/* Internal links */}
+            {linksInternos.map((link) => (
+              <div key={link.label} className="rounded-lg border border-border p-3 space-y-2 hover:border-primary/30 transition-colors">
+                <div className="flex items-center gap-2">
+                  <link.icon className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">{link.label}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">{link.description}</p>
+                <div className="flex gap-1">
+                  <Button variant="default" size="sm" className="h-7 text-xs flex-1 gap-1" onClick={() => navigate(link.path)}>
+                    <ExternalLink className="h-3 w-3" /> Abrir
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
+
+      {/* Test accounts */}
       {hasTestAccounts && (
         <Card>
           <CardHeader className="pb-3">
