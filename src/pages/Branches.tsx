@@ -27,6 +27,7 @@ export default function Branches() {
     queryFn: async () => {
       let query = supabase.from("branches").select("*, brands(name, tenants(name))", { count: "exact" });
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
+      if (!isRootAdmin && currentBranchId) query = query.eq("id", currentBranchId);
       if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,slug.ilike.%${debouncedSearch}%,city.ilike.%${debouncedSearch}%`);
       query = query.order("created_at", { ascending: false }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
       const { data, error, count } = await query;
