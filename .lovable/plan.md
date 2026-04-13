@@ -1,23 +1,39 @@
 
 
-## Plano: Fallback de brandId no DriverPanelPage para portal domain
+## Plano: Fix do botão "Resetar Pontos" não clicável
 
-### Problema
-Linha 67: `brandId` vem exclusivamente de `searchParams.get("brandId")`. No portal domain não há query param, resultando no erro da linha 89.
+### Diagnóstico
+
+O `DialogResetPontos` usa dois modais empilhados:
+1. `Dialog` (principal, com as opções de escopo)
+2. `ConfirmDialog` (AlertDialog de confirmação)
+
+Quando o botão "Resetar Pontos" é clicado, `showConfirm` vira `true` e o `ConfirmDialog` abre **por trás** do `Dialog` principal. O overlay do Dialog principal bloqueia os cliques no AlertDialog.
 
 ### Correção
 
-**Arquivo:** `src/pages/DriverPanelPage.tsx`
+**Arquivo:** `src/components/branch/DialogResetPontos.tsx`
 
-Adicionar fallback para o portal domain entre as linhas 67 e 87:
+Fechar temporariamente o Dialog principal ao abrir o ConfirmDialog, ou (solução mais simples e robusta) mover o `ConfirmDialog` para dentro do `DialogContent` e usar `portal` adequado.
 
-```typescript
-const PORTAL_HOSTNAME = "app.valeresgate.com.br";
-const PORTAL_BRAND_ID = "db15bd21-9137-4965-a0fb-540d8e8b26f1";
-const isPortalDomain = window.location.hostname === PORTAL_HOSTNAME;
+**Abordagem escolhida:** Ao clicar em "Resetar Pontos", fechar o Dialog pai antes de abrir o ConfirmDialog. Ao cancelar o confirm, reabrir o Dialog pai.
 
-const brandId = searchParams.get("brandId") || (isPortalDomain ? PORTAL_BRAND_ID : null);
+Alternativamente (mais limpo): adicionar `style={{ zIndex: 100 }}` ou usar a prop `forceMount` no AlertDialogContent para garantir que fique acima. A solução mais confiável é controlar o estado para fechar o Dialog pai quando o confirm abre:
+
+```text
+// onClick do botão "Resetar Pontos":
+// 1. Fechar o dialog principal (onClose)
+// 2. Abrir o confirm dialog (setShowConfirm(true))
+
+// No onClose do ConfirmDialog:
+// 1. Se cancelou, reabrir o dialog principal
 ```
 
-Apenas a linha 67 muda — o resto do fluxo (fetch da brand, branch, etc.) continua igual. Nenhum outro domínio é afetado.
+Mas isso é complexo. A solução mais simples: adicionar `className="z-[200]"` no `AlertDialogContent` do `ConfirmDialog` para garantir que fique acima do Dialog.
+
+### Alteração
+
+| Arquivo | Mudança |
+|---------|---------|
+| `src/components/ui/confirm-dialog.tsx` | Adicionar classe de z-index elevado (`z-[200]`) no `AlertDialogContent` e no overlay para garantir que fique acima de qualquer Dialog aberto |
 
