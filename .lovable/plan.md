@@ -1,44 +1,51 @@
 
 
-## Plano: Corrigir resolução de brand no portal `app.valeresgate.com.br`
+## Correção: Links Úteis mostrando "Sem domínio" para Ubiz Resgata
 
-### Causa raiz (compartilhada pelos 2 bugs)
+### Causa
 
-O `BrandContext` só verifica o parâmetro `?brandId=` da URL quando o hostname é "local" (lovable.app, localhost). No domínio `app.valeresgate.com.br`, ele resolve a brand pelo hostname → **sempre Ubiz Resgata**, ignorando o `?brandId=` na URL.
-
-Resultado: quando o root admin acessa `app.valeresgate.com.br/?brandId=<meu-mototaxi-id>`, o `currentBrandId` do `useBrandGuard` retorna o ID da Ubiz Resgata, pois `brand` no contexto é Ubiz Resgata. Isso faz com que Links Úteis e Acessos de Teste mostrem dados da brand errada.
+No `DashboardQuickLinks.tsx` (linha 44), a query busca domínios da brand excluindo `app.valeresgate.com.br`. Para a Ubiz Resgata, esse é o **único** domínio — então a query retorna `null` e aparece "Sem domínio" + "Configure um domínio".
 
 ### Correção
 
-**Arquivo:** `src/contexts/BrandContext.tsx` (linhas 122-142)
+**Arquivo:** `src/components/dashboard/DashboardQuickLinks.tsx` (linhas 35-51)
 
-Alterar a lógica de resolução: no domínio `app.valeresgate.com.br` (portal), se houver `?brandId=` na URL, **priorizar o brandId da URL** sobre a resolução por domínio. Isso permite que o root admin impersone qualquer brand no portal.
+Buscar **todos** os domínios ativos da brand (sem excluir nenhum), mas priorizar domínios que NÃO sejam o portal. Se o único disponível for `app.valeresgate.com.br`, usar esse mesmo.
 
-```text
-ANTES:
-  if (isLocal) → verifica ?brandId=
-  else         → resolve por domínio (ignora ?brandId=)
+```typescript
+// Buscar todos os domínios ativos, ordenados: não-portal primeiro
+const { data: brandDomains } = useQuery({
+  queryKey: ["brand-domain-links", currentBrandId],
+  queryFn: async () => {
+    if (!currentBrandId) return [];
+    const { data } = await supabase
+      .from("brand_domains")
+      .select("domain")
+      .eq("brand_id", currentBrandId)
+      .eq("is_active", true)
+      .order("is_primary", { ascending: false });
+    return data || [];
+  },
+  enabled: !!currentBrandId,
+});
 
-DEPOIS:
-  1. Verificar ?brandId= na URL (qualquer domínio)
-  2. Se encontrou, carregar brand por ID e retornar
-  3. Se não, se isLocal → sem brand
-  4. Se não, resolve por domínio
+// Priorizar domínio não-portal; fallback para portal
+const PORTAL = "app.valeresgate.com.br";
+const nonPortal = brandDomains?.find(d => d.domain !== PORTAL);
+const brandDomain = nonPortal?.domain ?? brandDomains?.[0]?.domain ?? null;
 ```
 
-Isso é suficiente para corrigir ambos os bugs:
-- **Bug 1 (Links Úteis):** O `DashboardQuickLinks` já busca domínio pela `currentBrandId` — com o ID correto, os links serão montados com `meu-mototaxi.valeresgate.com.br`
-- **Bug 2 (Acessos de Teste):** O `DashboardQuickLinks` já busca `brand_settings_json` pela `currentBrandId` — com o ID correto, mostrará as contas do Meu Mototáxi
+### Resultado
+
+| Brand | Antes | Depois |
+|-------|-------|--------|
+| Ubiz Resgata | "Sem domínio" | `app.valeresgate.com.br` (links funcionais) |
+| Meu Mototáxi | `meu-mototaxi.valeresgate.com.br` | Sem mudança |
+| Ubiz Car | Domínio próprio | Sem mudança |
 
 ### Arquivos alterados
 
 | Arquivo | Mudança |
 |---------|---------|
-| `src/contexts/BrandContext.tsx` | Priorizar `?brandId=` sobre resolução por domínio em qualquer hostname |
-
-### O que NÃO muda
-- `DashboardQuickLinks.tsx` — já tem a lógica correta, só precisa do `currentBrandId` certo
-- `DemoAccessCard.tsx` — idem
-- Nenhuma migração SQL necessária
-- Nenhuma alteração no fluxo de clientes/motoristas (eles não usam `?brandId=`)
+| `src/components/dashboard/DashboardQuickLinks.tsx` | Remover `.neq()`, buscar todos domínios e priorizar não-portal |
 
