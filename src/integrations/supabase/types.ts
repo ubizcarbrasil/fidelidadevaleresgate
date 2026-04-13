@@ -8012,6 +8012,18 @@ export type Database = {
         }
         Returns: Json
       }
+      credit_customer_points: {
+        Args: {
+          p_branch_id: string
+          p_brand_id: string
+          p_customer_id: string
+          p_money?: number
+          p_points: number
+          p_reason?: string
+          p_reference_type?: string
+        }
+        Returns: undefined
+      }
       debit_branch_wallet: {
         Args: { p_amount: number; p_branch_id: string; p_description?: string }
         Returns: Json
