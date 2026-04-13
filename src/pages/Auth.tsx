@@ -28,6 +28,9 @@ export default function Auth() {
   const brandLogoUrl = (theme as any)?.logo_url || ((brand?.brand_settings_json as any)?.logo_url) || null;
   const brandName = brand?.name || null;
 
+  const displayName = isPortalDomain ? "Vale Resgate" : (brandName || "Vale Resgate");
+  const displayLogo = isPortalDomain ? "/logo-vale-resgate.png" : (brandLogoUrl || "/logo-vale-resgate.png");
+
   // If already logged in on portal domain, redirect to correct console
   useEffect(() => {
     if (!isPortalDomain || !user || authRoles.length === 0) return;
@@ -117,12 +120,12 @@ export default function Auth() {
         <CardHeader className="text-center space-y-2">
           <div className="mx-auto overflow-hidden rounded-2xl shadow-md" style={{ width: 64, height: 64 }}>
             <img
-              src={brandLogoUrl || "/logo-vale-resgate.png"}
-              alt={brandName || "Vale Resgate"}
+              src={displayLogo}
+              alt={displayName}
               style={{ width: 64, height: 64, objectFit: "contain", display: "block" }}
             />
           </div>
-          <CardTitle className="text-2xl font-bold">{brandName || "Vale Resgate"}</CardTitle>
+          <CardTitle className="text-2xl font-bold">{displayName}</CardTitle>
           <span className="text-[10px] text-muted-foreground">beta v2.1 • Lovable</span>
           <CardDescription>
             {isForgot ? "Recuperar senha" : isLogin ? "Acesse sua conta" : "Crie sua conta"}
