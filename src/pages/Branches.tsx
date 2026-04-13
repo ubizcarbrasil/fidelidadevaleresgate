@@ -23,7 +23,7 @@ export default function Branches() {
   const debouncedSearch = useDebounce(search, 300);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["branches", debouncedSearch, page, currentBrandId],
+    queryKey: ["branches", debouncedSearch, page, currentBrandId, currentBranchId],
     queryFn: async () => {
       let query = supabase.from("branches").select("*, brands(name, tenants(name))", { count: "exact" });
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
