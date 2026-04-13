@@ -1,42 +1,48 @@
 
 
-## Correção: Layout mobile dos cards de cidade
+## Correção: App do motorista vazio — "Nenhuma oferta disponível"
 
-### Problemas identificados
+### Causa raiz
 
-1. **Botões de ação cortados**: Os 3 botões ("Criar Franqueado", "Resetar pontos", "Editar") estão em uma linha sem `flex-wrap`, causando overflow horizontal no mobile.
-2. **Padding esquerdo excessivo**: `pl-12` nos badges e botões desperdiça espaço em telas pequenas.
+O problema é de **permissão no banco de dados (RLS)**, não de módulos da cidade.
+
+A tabela `affiliate_deals` tem apenas duas políticas RLS:
+1. **Admin** — permite tudo para root_admin e brand_admin
+2. **Customers can view redeemable deals** — apenas para `authenticated` e somente `is_redeemable = true`
+
+O app do motorista usa login por CPF (não autenticação do banco), então acessa como **anônimo**. Nenhuma política permite leitura anônima → resultado: **zero ofertas**.
+
+A tabela `affiliate_deal_categories` já tem uma política pública (`Anyone can read active categories`), mas `affiliate_deals` não tem equivalente.
+
+### Dados confirmados
+
+- Existem **310 ofertas ativas** com `visible_driver = true` para Ubiz Resgata
+- **63** são resgatáveis, **247** não são
+- Todas com `branch_id = NULL` (visíveis para todas as cidades)
+- As cidades Araxá e Leme estão com módulos habilitados corretamente
 
 ### Correção
 
-**Arquivo:** `src/pages/BrandBranchesPage.tsx`
+**Migração SQL** — Criar política RLS pública para leitura de ofertas ativas:
 
-1. **Linha dos botões (linha 139)**: Adicionar `flex-wrap` para que os botões quebrem linha no mobile:
-   ```
-   // De:
-   <div className="flex items-center gap-2 pl-12">
-   
-   // Para:
-   <div className="flex items-center gap-2 flex-wrap pl-0 sm:pl-12">
-   ```
+```sql
+CREATE POLICY "Public can view active driver deals"
+ON public.affiliate_deals
+FOR SELECT
+TO public
+USING (is_active = true AND visible_driver = true);
+```
 
-2. **Linha dos badges (linha 114)**: Reduzir padding no mobile:
-   ```
-   // De:
-   <div className="flex items-center gap-2 flex-wrap pl-12">
-   
-   // Para:
-   <div className="flex items-center gap-2 flex-wrap pl-0 sm:pl-12">
-   ```
+Isso permite que o app do motorista (acesso anônimo) veja as ofertas marcadas como visíveis para motoristas, sem expor ofertas inativas ou não-driver.
 
-### Resultado
+### Resultado esperado
 
-- Mobile: botões empilham em 2 linhas, sem corte, sem padding excessivo
-- Desktop/tablet: layout inalterado com `pl-12`
+| Antes | Depois |
+|-------|--------|
+| "Nenhuma oferta disponível" | 310 ofertas visíveis no marketplace do motorista |
+| Categorias carregam, deals não | Tudo funciona normalmente |
 
 ### Arquivo alterado
 
-| Arquivo | Mudança |
-|---------|---------|
-| `src/pages/BrandBranchesPage.tsx` | `flex-wrap` nos botões + padding responsivo |
+Nenhum arquivo de código precisa ser alterado — apenas uma migração de banco de dados.
 
