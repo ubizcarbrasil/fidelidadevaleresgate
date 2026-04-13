@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import BranchDashboardSection from "@/components/dashboard/BranchDashboardSection";
+import PlatformLogo from "@/components/PlatformLogo";
 
 import DashboardKpiSection from "@/components/dashboard/DashboardKpiSection";
 import DashboardChartsSection from "@/components/dashboard/DashboardChartsSection";
@@ -118,13 +119,9 @@ function DashboardHeader({ consoleScope, scopeLabels, isCityScopedView, viewingB
 
   return (
     <div className="flex items-center gap-3">
-      {showBrandLogo && brandLogoUrl ? (
-        <img src={brandLogoUrl} alt={brandName} className="h-10 w-10 rounded-xl object-cover ring-1 ring-border shrink-0" />
-      ) : showBrandLogo && brandName ? (
-        <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-          <span className="text-sm font-bold text-primary">{brandName.substring(0, 2).toUpperCase()}</span>
-        </div>
-      ) : null}
+      {showBrandLogo && (
+        <PlatformLogo src={brandLogoUrl} alt={brandName} className="h-10 w-10 rounded-xl ring-1 ring-border" fallbackLabel={brandName?.substring(0, 2).toUpperCase()} />
+      )}
       <div>
         <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
           {greeting} 👋

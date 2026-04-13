@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import PlatformLogo from "@/components/PlatformLogo";
 import {
   Loader2, ChevronRight, ChevronLeft, Check, Store, MapPin,
   FileText, Lock, Upload, Phone, Mail, Building2, Tag,
@@ -473,13 +474,7 @@ export default function StoreRegistrationWizard() {
         <div className="max-w-lg mx-auto px-5 py-4 space-y-4">
           {/* Brand logo */}
           <div className="flex flex-col items-center gap-1.5">
-            {brandLogoUrl ? (
-              <img src={brandLogoUrl} alt={brandName || "Marca"} className="h-10 w-10 rounded-xl object-contain shadow-sm" />
-            ) : brandName ? (
-              <div className="h-10 w-10 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center shadow-sm">
-                {brandName.substring(0, 2).toUpperCase()}
-              </div>
-            ) : null}
+            <PlatformLogo src={brandLogoUrl} alt={brandName || "Marca"} className="h-10 w-10 rounded-xl shadow-sm" fallbackLabel={brandName?.substring(0, 2).toUpperCase()} />
             {brandName && <p className="text-xs font-medium text-muted-foreground">{brandName}</p>}
           </div>
           <StepIndicator currentStep={step} />
