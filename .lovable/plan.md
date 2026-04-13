@@ -1,90 +1,44 @@
 
 
-## Plano: 3 Correções — Domínio, Rota Pública de Loja, Links Úteis
+## Plano: Corrigir resolução de brand no portal `app.valeresgate.com.br`
 
----
+### Causa raiz (compartilhada pelos 2 bugs)
 
-### 1. Domínio `.com.br` no provisionamento
+O `BrandContext` só verifica o parâmetro `?brandId=` da URL quando o hostname é "local" (lovable.app, localhost). No domínio `app.valeresgate.com.br`, ele resolve a brand pelo hostname → **sempre Ubiz Resgata**, ignorando o `?brandId=` na URL.
 
-**Arquivo:** `supabase/functions/provision-brand/index.ts` (linha 495)
+Resultado: quando o root admin acessa `app.valeresgate.com.br/?brandId=<meu-mototaxi-id>`, o `currentBrandId` do `useBrandGuard` retorna o ID da Ubiz Resgata, pois `brand` no contexto é Ubiz Resgata. Isso faz com que Links Úteis e Acessos de Teste mostrem dados da brand errada.
 
-Trocar `valeresgate.com` → `valeresgate.com.br`:
+### Correção
 
-```typescript
-// ANTES
-const domainValue = subdomain ? `${subdomain}.valeresgate.com` : `${brand_slug}.valeresgate.com`;
-// DEPOIS
-const domainValue = subdomain ? `${subdomain}.valeresgate.com.br` : `${brand_slug}.valeresgate.com.br`;
+**Arquivo:** `src/contexts/BrandContext.tsx` (linhas 122-142)
+
+Alterar a lógica de resolução: no domínio `app.valeresgate.com.br` (portal), se houver `?brandId=` na URL, **priorizar o brandId da URL** sobre a resolução por domínio. Isso permite que o root admin impersone qualquer brand no portal.
+
+```text
+ANTES:
+  if (isLocal) → verifica ?brandId=
+  else         → resolve por domínio (ignora ?brandId=)
+
+DEPOIS:
+  1. Verificar ?brandId= na URL (qualquer domínio)
+  2. Se encontrou, carregar brand por ID e retornar
+  3. Se não, se isLocal → sem brand
+  4. Se não, resolve por domínio
 ```
 
-Apenas brands novas serão afetadas.
+Isso é suficiente para corrigir ambos os bugs:
+- **Bug 1 (Links Úteis):** O `DashboardQuickLinks` já busca domínio pela `currentBrandId` — com o ID correto, os links serão montados com `meu-mototaxi.valeresgate.com.br`
+- **Bug 2 (Acessos de Teste):** O `DashboardQuickLinks` já busca `brand_settings_json` pela `currentBrandId` — com o ID correto, mostrará as contas do Meu Mototáxi
 
----
+### Arquivos alterados
 
-### 2. Nova rota pública `/loja/:slug`
+| Arquivo | Mudança |
+|---------|---------|
+| `src/contexts/BrandContext.tsx` | Priorizar `?brandId=` sobre resolução por domínio em qualquer hostname |
 
-Criar feature `src/features/loja_publica/` com:
-
-| Arquivo | Responsabilidade |
-|---------|-----------------|
-| `pagina_loja_publica.tsx` | Página principal — resolve slug, busca store, renderiza |
-| `components/cabecalho_loja.tsx` | Logo, nome, segmento, descrição |
-| `components/info_contato_loja.tsx` | WhatsApp, Instagram, Site, Endereço |
-| `components/horario_funcionamento.tsx` | Renderiza `operating_hours_json` |
-| `components/galeria_loja.tsx` | Grid de fotos da `gallery_urls` |
-| `components/faq_loja.tsx` | Accordion com `faq_json` |
-
-**Lógica:**
-- Rota pública, sem autenticação
-- Pega `:slug` da URL + `brand_id` do `BrandContext`
-- Query: `stores` onde `slug = :slug AND brand_id = brand.id AND is_active = true AND approval_status = 'APPROVED'`
-- Se não encontrar → 404 estilizado
-- Usa tema da brand (cores do BrandContext)
-- Botão "Voltar" → `/`
-
-**Colunas utilizadas:** `name`, `logo_url`, `segment`, `category`, `description`, `address`, `whatsapp`, `instagram`, `site_url`, `operating_hours_json`, `gallery_urls`, `faq_json`, `banner_url`
-
-**Registro em `App.tsx`:** Adicionar rota `/loja/:slug` com `lazyWithRetry`, no bloco de rotas públicas.
-
----
-
-### 3. Links Úteis — URLs dinâmicas por brand
-
-**Arquivo:** `src/components/dashboard/DashboardQuickLinks.tsx` — componente `BrandQuickLinks`
-
-**Mudanças:**
-- Buscar domínio primário da brand (excluindo `app.valeresgate.com.br`) via query em `brand_domains`
-- Separar links em **externos** (usam domínio da brand) e **internos** (rotas do painel admin)
-- Links externos: App Cliente, Cadastro Parceiro, Painel Parceiro, Achadinho Motorista
-- Links internos: Painel Franqueado, Gamificação, Módulos, Regras de Resgate, Produtos de Resgate, Conversão por Público
-- Se brand sem domínio → mostrar aviso "Configure um domínio em Meus Domínios para ativar este link" e desabilitar botões Abrir/Copiar dos links externos
-- Botão "Abrir" de links externos → `window.open(url, "_blank")`
-- Botão "Copiar" → copia URL completa resolvida com domínio da brand
-
-**Estrutura dos links externos:**
-```typescript
-const linksExternos = [
-  { label: "App do Cliente", path: "/", icon: ExternalLink },
-  { label: "Cadastro Parceiro", path: "/partner-landing", icon: ShoppingBag },
-  { label: "Painel Parceiro", path: "/store-panel", icon: Store },
-  { label: "Achadinho Motorista", path: `/driver?brandId=${currentBrandId}`, icon: Car },
-];
-// URL = `https://${brandDomain}${path}`
-```
-
----
-
-### Resumo de arquivos
-
-| Ação | Arquivo |
-|------|---------|
-| Editar | `supabase/functions/provision-brand/index.ts` |
-| Criar | `src/features/loja_publica/pagina_loja_publica.tsx` |
-| Criar | `src/features/loja_publica/components/cabecalho_loja.tsx` |
-| Criar | `src/features/loja_publica/components/info_contato_loja.tsx` |
-| Criar | `src/features/loja_publica/components/horario_funcionamento.tsx` |
-| Criar | `src/features/loja_publica/components/galeria_loja.tsx` |
-| Criar | `src/features/loja_publica/components/faq_loja.tsx` |
-| Editar | `src/App.tsx` (adicionar rota `/loja/:slug`) |
-| Editar | `src/components/dashboard/DashboardQuickLinks.tsx` |
+### O que NÃO muda
+- `DashboardQuickLinks.tsx` — já tem a lógica correta, só precisa do `currentBrandId` certo
+- `DemoAccessCard.tsx` — idem
+- Nenhuma migração SQL necessária
+- Nenhuma alteração no fluxo de clientes/motoristas (eles não usam `?brandId=`)
 
