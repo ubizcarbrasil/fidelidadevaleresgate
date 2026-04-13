@@ -1,50 +1,36 @@
 
 
-## Plano: Portal de Login Universal em `app.valeresgate.com.br`
+## Plano: Fix do redirect no portal `app.valeresgate.com.br`
 
-### Problema
-Quando um usuário acessa `app.valeresgate.com.br`, o sistema resolve como white-label da Ubiz Resgata e exibe o `WhiteLabelLayout` (app do cliente). O comportamento desejado é que esse domínio funcione como um portal de login universal, redirecionando cada tipo de usuário para seu painel correto.
+### Diagnóstico
 
-### Solução
+Analisando o `AppContent` (linhas 329-427 do App.tsx), a lógica do portal está na posição correta (linha 371, antes do bloco white-label genérico na linha 400). Porém há um problema sutil:
 
-Duas alterações principais:
+1. **Linha 362**: O guard `(loading || authLoading) && !isPublicPath` mostra spinner enquanto carrega. `/` não é public path, então espera corretamente.
+2. **Linha 371-398**: O bloco portal verifica `isPortalDomain && isWhiteLabel`.
+3. **Problema potencial**: Quando `authLoading` termina com `user = null`, o `loading` do brand pode ainda estar `true` (o safety timeout é 3s). Nesse caso, o spinner fica preso até o brand resolver. Se o brand falhar ou demorar, o usuário fica no spinner e nunca é redirecionado.
+4. **Outro problema**: A checagem `!user || authLoading` na linha 378 pode causar flash — se `authLoading` ainda é true quando o brand já resolveu, ele redireciona para `/auth` prematuramente, e depois quando auth resolve com user logado, faz outro redirect.
 
-#### 1. `AppContent` em `src/App.tsx`
-Detectar o hostname `app.valeresgate.com.br` e tratá-lo como "portal mode":
+### Correção
 
-- **Não logado** + rota `/` → redirecionar para `/auth`
-- **Logado** + rota `/` → redirecionar baseado nas roles:
-  - `root_admin` → `/` (AnimatedRoutes/AppLayout normal)
-  - `tenant_admin` → `/` (AppLayout)
-  - `brand_admin` → `/` (AppLayout)
-  - `branch_admin` → `/` (AppLayout)
-  - `branch_operator` / `operator_pdv` → `/` (AppLayout)
-  - `store_admin` (sem admin role) → `/store-panel`
-  - sem role admin → `/auth` (ou WhiteLabelLayout como fallback)
-- Quando logado como admin, renderizar `AnimatedRoutes` em vez de `WhiteLabelLayout`
-
-A lógica será inserida dentro do bloco `if (isWhiteLabel)` do `AppContent`, antes do fallback para `WhiteLabelLayout`. Extrair a constante `PORTAL_HOSTNAME = "app.valeresgate.com.br"` para facilitar manutenção.
-
-#### 2. `src/pages/Auth.tsx` — Redirect pós-login
-Expandir a lógica de redirect após `signInWithPassword` para considerar o portal domain:
-
-- Se `window.location.hostname === PORTAL_HOSTNAME`:
-  - `root_admin` / `tenant_admin` / `brand_admin` / `branch_admin` / `branch_operator` / `operator_pdv` → `navigate("/")`
-  - `store_admin` (sem admin role) → `navigate("/store-panel")`
-  - Apenas `customer` ou sem role → `navigate("/")` (WhiteLabelLayout normal)
-
-- Se já logado ao acessar `/auth` no portal domain → redirecionar imediatamente pro console correto (adicionar check no topo do componente Auth)
-
-### Arquivos alterados
+Tornar o portal check mais robusto, movendo-o para ANTES do guard de loading para o caso específico do redirect `/` → `/auth`:
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/App.tsx` (`AppContent`) | Adicionar detecção de portal domain dentro do bloco `isWhiteLabel`, forçar redirect `/` → `/auth` quando não logado, e garantir `AnimatedRoutes` para admins |
-| `src/pages/Auth.tsx` | Adicionar redirect automático se já logado no portal domain; expandir lógica pós-login para role-based redirect |
+| `src/App.tsx` | Mover a detecção do portal domain para antes do loading guard. Se `isPortalDomain` e o path é `/` e não há sessão, redirecionar para `/auth` imediatamente (sem esperar brand resolver). Manter o bloco existente para usuários logados. |
 
-### Regras respeitadas
-- Lógica exclusiva para `app.valeresgate.com.br` via `window.location.hostname`
-- Nenhum outro domínio white-label é afetado
-- BrandContext continua resolvendo normalmente (o domínio já aponta para Ubiz Resgata)
-- Compatibilidade total com fluxo existente
+### Lógica atualizada no AppContent
+
+```text
+1. Partner landing / Driver panel (existente, sem mudança)
+2. Public paths check (existente, sem mudança)
+3. ** NOVO: Portal domain + não logado + path não-público → Navigate /auth **
+   - Não precisa esperar brand loading
+   - Apenas checa hostname + !user + !authLoading
+4. Loading guard (existente)
+5. Portal domain + logado → role-based routing (existente, sem mudança)
+6. White-label genérico (existente, sem mudança)
+```
+
+A mudança é mínima: adicionar um early return antes da linha 362 que detecta o portal e redireciona para `/auth` sem aguardar o brand resolver, eliminando o problema de timing.
 
