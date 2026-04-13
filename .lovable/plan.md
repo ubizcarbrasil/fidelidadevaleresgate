@@ -1,43 +1,58 @@
 
 
-## Plano: Dashboard da cidade zerar após reset de pontos
+## Plano: Criar RPC `credit_customer_points` que está faltando
 
 ### Problema
-A RPC `get_branch_dashboard_stats_v2` calcula `points_total`, `points_today`, `points_month` e `points_avg_per_driver` somando `driver_points_credited` de **todo o histórico** de `machine_rides`. Após o reset, as corridas históricas permanecem, então o painel continua mostrando os valores antigos.
+O webhook `machine-webhook` chama `credit_customer_points` para creditar pontos aos motoristas e passageiros. Essa RPC **não existe** no banco de dados. Resultado: todas as corridas finalizadas após o reset não atualizam `points_balance`, e o ranking mostra vazio.
 
 ### Solução
 
-Adicionar uma coluna `last_points_reset_at` na tabela `branches` e usá-la como filtro temporal na RPC.
+**Migração SQL** — Criar a RPC `credit_customer_points` que:
+1. Atualiza `customers.points_balance` atomicamente com lock de linha (`FOR UPDATE`)
+2. Insere registro no `points_ledger` para auditoria
 
-### Alterações
-
-| Recurso | Mudança |
-|---------|---------|
-| Migração SQL (schema) | Adicionar coluna `last_points_reset_at timestamptz` na tabela `branches` (default null) |
-| Migração SQL (RPC) | Reescrever `get_branch_dashboard_stats_v2` para filtrar `machine_rides` onde `finalized_at >= last_points_reset_at` (quando não-nulo) nos campos de pontos |
-| Edge Function | No `reset_branch_points`, após zerar saldos, atualizar `branches.last_points_reset_at = now()` |
-
-### Detalhes técnicos
-
-**Coluna nova:**
 ```sql
-ALTER TABLE public.branches
-  ADD COLUMN last_points_reset_at timestamptz DEFAULT NULL;
-```
+CREATE OR REPLACE FUNCTION public.credit_customer_points(
+  p_customer_id uuid,
+  p_brand_id uuid,
+  p_branch_id uuid,
+  p_points integer,
+  p_money numeric DEFAULT 0,
+  p_reason text DEFAULT '',
+  p_reference_type text DEFAULT 'MACHINE_RIDE'
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_current_balance numeric;
+BEGIN
+  -- Lock row and update balance
+  SELECT points_balance INTO v_current_balance
+  FROM customers WHERE id = p_customer_id FOR UPDATE;
 
-**RPC — lógica de filtro:**
-Dentro de `get_branch_dashboard_stats_v2`, declarar variável `v_reset_at` lida da branch. Nos 4 campos de pontos (`points_total`, `points_today`, `points_month`, `points_avg_per_driver`), adicionar condição `AND (v_reset_at IS NULL OR finalized_at >= v_reset_at)`.
+  UPDATE customers
+  SET points_balance = points_balance + p_points
+  WHERE id = p_customer_id;
 
-**Edge Function — gravar timestamp:**
-Após o bulk update de `customers.points_balance = 0`, executar:
-```typescript
-await adminClient.from("branches")
-  .update({ last_points_reset_at: new Date().toISOString() })
-  .eq("id", branch_id);
+  -- Audit entry
+  INSERT INTO points_ledger (
+    customer_id, brand_id, branch_id,
+    entry_type, points_amount, reason,
+    reference_type, created_by_user_id
+  ) VALUES (
+    p_customer_id, p_brand_id, p_branch_id,
+    'CREDIT', p_points, p_reason,
+    p_reference_type, NULL
+  );
+END;
+$$;
 ```
 
 ### Impacto
-- Nenhuma alteração no frontend — a RPC mantém a mesma assinatura
-- Corridas e resgates (que não dependem de pontos) continuam inalterados
-- Apenas os KPIs de pontuação são afetados pelo filtro temporal
+- Nenhuma alteração no frontend ou no webhook — a assinatura da RPC corresponde exatamente ao que o webhook já chama
+- Corridas novas passarão a creditar pontos corretamente
+- O ranking voltará a funcionar automaticamente (já lê `points_balance`)
 
