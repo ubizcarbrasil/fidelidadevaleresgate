@@ -415,25 +415,35 @@ Deno.serve(async (req) => {
 
       const affected = affectedCustomers || [];
 
-      // Insert DEBIT ledger entries for audit trail
-      for (const c of affected) {
-        await adminClient.from("points_ledger").insert({
+      if (affected.length > 0) {
+        const reasonLabel = target === "all" ? "todos" : target === "drivers" ? "motoristas" : target === "clients" ? "clientes" : "individual";
+
+        // Batch insert DEBIT ledger entries (chunks of 500)
+        const ledgerRows = affected.map((c: any) => ({
           customer_id: c.id,
           brand_id: branch.brand_id,
           branch_id: branch_id,
           entry_type: "DEBIT",
           points_amount: c.points_balance,
-          reason: `Reset de pontos (${target === "all" ? "todos" : target === "drivers" ? "motoristas" : target === "clients" ? "clientes" : "individual"})`,
+          reason: `Reset de pontos (${reasonLabel})`,
           reference_type: "BRANCH_RESET",
-        });
-      }
+        }));
+        const CHUNK = 500;
+        for (let i = 0; i < ledgerRows.length; i += CHUNK) {
+          const chunk = ledgerRows.slice(i, i + CHUNK);
+          const { error: ledgerErr } = await adminClient.from("points_ledger").insert(chunk);
+          if (ledgerErr) throw ledgerErr;
+        }
 
-      // Zero out balances
-      if (affected.length > 0) {
+        // Bulk zero out balances using .in() in chunks
         const ids = affected.map((c: any) => c.id);
-        // Supabase JS doesn't have bulk .in() update, so we do batches
-        for (const id of ids) {
-          await adminClient.from("customers").update({ points_balance: 0 }).eq("id", id);
+        for (let i = 0; i < ids.length; i += CHUNK) {
+          const chunk = ids.slice(i, i + CHUNK);
+          const { error: updateErr } = await adminClient
+            .from("customers")
+            .update({ points_balance: 0 })
+            .in("id", chunk);
+          if (updateErr) throw updateErr;
         }
       }
 
