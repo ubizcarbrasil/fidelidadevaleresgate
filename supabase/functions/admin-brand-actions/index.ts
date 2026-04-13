@@ -422,8 +422,8 @@ Deno.serve(async (req) => {
         if (batch.length < PAGE) break;
         page++;
       }
-
       const affected = allAffected;
+      console.log(`reset_branch_points: branch=${branch_id}, target=${target}, affected=${affected.length}`);
 
       if (affected.length > 0) {
         const reasonLabel = target === "all" ? "todos" : target === "drivers" ? "motoristas" : target === "clients" ? "clientes" : "individual";
