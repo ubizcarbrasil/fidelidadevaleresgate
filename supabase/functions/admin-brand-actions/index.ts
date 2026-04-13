@@ -395,23 +395,33 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Build query to find affected customers
-      let query = adminClient
-        .from("customers")
-        .select("id, name, points_balance")
-        .eq("branch_id", branch_id)
-        .gt("points_balance", 0);
+      // Fetch ALL affected customers (paginated to avoid 1000-row limit)
+      const allAffected: any[] = [];
+      const PAGE = 1000;
+      let page = 0;
+      while (true) {
+        let query = adminClient
+          .from("customers")
+          .select("id, name, points_balance")
+          .eq("branch_id", branch_id)
+          .gt("points_balance", 0)
+          .range(page * PAGE, (page + 1) * PAGE - 1);
 
-      if (target === "drivers") {
-        query = query.ilike("name", "%[MOTORISTA]%");
-      } else if (target === "clients") {
-        query = query.not("name", "ilike", "%[MOTORISTA]%");
-      } else if (target === "single") {
-        query = query.eq("id", customer_id);
+        if (target === "drivers") {
+          query = query.ilike("name", "%[MOTORISTA]%");
+        } else if (target === "clients") {
+          query = query.not("name", "ilike", "%[MOTORISTA]%");
+        } else if (target === "single") {
+          query = query.eq("id", customer_id);
+        }
+
+        const { data: batch, error: fetchErr } = await query;
+        if (fetchErr) throw fetchErr;
+        if (!batch || batch.length === 0) break;
+        allAffected.push(...batch);
+        if (batch.length < PAGE) break;
+        page++;
       }
-
-      const { data: affectedCustomers, error: fetchErr } = await query;
-      if (fetchErr) throw fetchErr;
 
       const affected = affectedCustomers || [];
 
