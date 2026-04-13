@@ -324,10 +324,14 @@ const App = () => (
   </ErrorBoundary>
 );
 
+const PORTAL_HOSTNAME = "app.valeresgate.com.br";
+
 function AppContent() {
   const { isWhiteLabel, loading, brand } = useBrand();
   const { user, roles, loading: authLoading } = useAuth();
   const location = useLocation();
+
+  const isPortalDomain = window.location.hostname === PORTAL_HOSTNAME;
 
   // Partner landing page is a public route that works regardless of white-label mode
   const isPartnerLanding = /^\/[^/]+\/parceiro\/?$/.test(location.pathname);
@@ -361,6 +365,36 @@ function AppContent() {
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
+  }
+
+  // Portal mode: app.valeresgate.com.br
+  if (isPortalDomain && isWhiteLabel) {
+    // Public paths always render normally
+    if (isPublicPath) {
+      return <AnimatedRoutes />;
+    }
+
+    // Not logged in → redirect to /auth
+    if (!user || authLoading) {
+      return <Navigate to="/auth" replace />;
+    }
+
+    // Logged in → check roles for routing
+    const hasAdminRole = roles.some((r) =>
+      ["root_admin", "tenant_admin", "brand_admin", "branch_admin", "branch_operator", "operator_pdv"].includes(r.role)
+    );
+    const isStoreOnly = !hasAdminRole && roles.some((r) => r.role === "store_admin");
+
+    if (isStoreOnly && location.pathname === "/") {
+      return <Navigate to="/store-panel" replace />;
+    }
+
+    if (hasAdminRole || isStoreOnly) {
+      return <AnimatedRoutes />;
+    }
+
+    // Customer or no role → WhiteLabelLayout
+    return <WhiteLabelLayout />;
   }
 
   if (isWhiteLabel) {
