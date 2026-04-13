@@ -359,6 +359,11 @@ function AppContent() {
   const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store", "/p/", "/driver"];
   const isPublicPath = publicPaths.some(p => location.pathname.startsWith(p));
 
+  // Portal domain: redirect unauthenticated users to /auth immediately (before loading guard)
+  if (isPortalDomain && !isPublicPath && !authLoading && !user) {
+    return <Navigate to="/auth" replace />;
+  }
+
   if ((loading || authLoading) && !isPublicPath) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
