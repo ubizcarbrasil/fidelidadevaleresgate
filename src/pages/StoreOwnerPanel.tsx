@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { LayoutDashboard, Tag, QrCode, User, FileText, Users, BookOpen, Building2, HelpCircle, BarChart3, Clock, Check, X, TrendingUp, Store, Plus, ClipboardList, ArrowRight, LogOut, RefreshCw, AlertCircle, CheckCircle2, Loader2, Menu, ChevronLeft, Bell, Lock } from "lucide-react";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
+import PlatformLogo from "@/components/PlatformLogo";
 import StoreVoucherWizard from "@/components/store-voucher-wizard/StoreVoucherWizard";
 import StoreProfileWizard from "@/components/store-owner/StoreProfileWizard";
 import { useStoreProfileCompleteness } from "@/hooks/useStoreProfileCompleteness";
@@ -239,13 +240,7 @@ export default function StoreOwnerPanel() {
             )}
             <div className="flex items-center gap-3 min-w-0">
               {/* Brand logo (small) */}
-              {brandLogoUrl ? (
-                <img src={brandLogoUrl} alt={brandName || "Marca"} className="h-7 w-7 rounded-lg object-contain shrink-0 ring-1 ring-border/40" />
-              ) : brandName ? (
-                <div className="h-7 w-7 rounded-lg bg-primary text-primary-foreground font-bold text-[10px] flex items-center justify-center shrink-0 ring-1 ring-border/40">
-                  {brandName.substring(0, 2).toUpperCase()}
-                </div>
-              ) : null}
+              <PlatformLogo src={brandLogoUrl} alt={brandName || "Marca"} className="h-7 w-7 rounded-lg ring-1 ring-border/40" fallbackLabel={brandName?.substring(0, 2).toUpperCase()} />
               <div className="h-10 w-10 rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 ring-2 ring-primary/10">
                 {store.logo_url ? (
                   <img src={store.logo_url} className="h-full w-full object-cover" alt={store.name} />

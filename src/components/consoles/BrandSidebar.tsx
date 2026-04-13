@@ -13,6 +13,7 @@ import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import PlatformLogo from "@/components/PlatformLogo";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -333,13 +334,7 @@ export function BrandSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         <div className="flex items-center gap-3">
-          {brandLogoUrl ? (
-            <img src={brandLogoUrl} alt={brandName} className="h-8 w-8 shrink-0 rounded-lg object-cover ring-1 ring-border" />
-          ) : (
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15">
-              <Store className="h-4 w-4 text-primary" />
-            </div>
-          )}
+          <PlatformLogo src={brandLogoUrl} alt={brandName} className="h-8 w-8 rounded-lg ring-1 ring-border" fallbackLabel={brandName?.substring(0, 2).toUpperCase()} />
           {!collapsed && (
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-semibold text-foreground truncate">{brandName || "Carregando..."}</span>
