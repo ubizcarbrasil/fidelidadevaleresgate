@@ -1,52 +1,43 @@
 
 
-## Plano: Corrigir ranking para respeitar reset de pontos
+## Plano: Dashboard da cidade zerar após reset de pontos
 
 ### Problema
-As RPCs `get_points_ranking` e `get_branch_points_ranking` calculam o ranking somando `driver_points_credited` e `points_credited` da tabela `machine_rides` (histórico completo). Quando os pontos são resetados, o histórico permanece — então o ranking nunca zera.
+A RPC `get_branch_dashboard_stats_v2` calcula `points_total`, `points_today`, `points_month` e `points_avg_per_driver` somando `driver_points_credited` de **todo o histórico** de `machine_rides`. Após o reset, as corridas históricas permanecem, então o painel continua mostrando os valores antigos.
 
-### Correção
+### Solução
 
-**Migração SQL** — Reescrever ambas as RPCs para usar `customers.points_balance` (saldo real) em vez de somar o histórico:
+Adicionar uma coluna `last_points_reset_at` na tabela `branches` e usá-la como filtro temporal na RPC.
 
-#### `get_branch_points_ranking(p_branch_id, p_limit)`
+### Alterações
+
+| Recurso | Mudança |
+|---------|---------|
+| Migração SQL (schema) | Adicionar coluna `last_points_reset_at timestamptz` na tabela `branches` (default null) |
+| Migração SQL (RPC) | Reescrever `get_branch_dashboard_stats_v2` para filtrar `machine_rides` onde `finalized_at >= last_points_reset_at` (quando não-nulo) nos campos de pontos |
+| Edge Function | No `reset_branch_points`, após zerar saldos, atualizar `branches.last_points_reset_at = now()` |
+
+### Detalhes técnicos
+
+**Coluna nova:**
 ```sql
-SELECT
-  COALESCE(c.name, 'Motorista') AS participant_name,
-  'driver'::text AS participant_type,
-  c.points_balance::bigint AS total_points
-FROM customers c
-WHERE c.branch_id = p_branch_id
-  AND c.customer_type = 'driver'
-  AND c.points_balance > 0
-ORDER BY c.points_balance DESC
-LIMIT p_limit;
+ALTER TABLE public.branches
+  ADD COLUMN last_points_reset_at timestamptz DEFAULT NULL;
 ```
 
-#### `get_points_ranking(p_brand_id, p_limit)`
-```sql
--- Passageiros
-(SELECT COALESCE(c.name, 'Passageiro'), 'passenger', c.points_balance::bigint
- FROM customers c
- JOIN branches b ON b.id = c.branch_id
- WHERE b.brand_id = p_brand_id
-   AND c.customer_type = 'passenger'
-   AND c.points_balance > 0
-   AND LOWER(c.name) != 'maçaneta'
- ORDER BY c.points_balance DESC LIMIT p_limit)
-UNION ALL
--- Motoristas
-(SELECT COALESCE(c.name, 'Motorista'), 'driver', c.points_balance::bigint
- FROM customers c
- JOIN branches b ON b.id = c.branch_id
- WHERE b.brand_id = p_brand_id
-   AND c.customer_type = 'driver'
-   AND c.points_balance > 0
- ORDER BY c.points_balance DESC LIMIT p_limit);
+**RPC — lógica de filtro:**
+Dentro de `get_branch_dashboard_stats_v2`, declarar variável `v_reset_at` lida da branch. Nos 4 campos de pontos (`points_total`, `points_today`, `points_month`, `points_avg_per_driver`), adicionar condição `AND (v_reset_at IS NULL OR finalized_at >= v_reset_at)`.
+
+**Edge Function — gravar timestamp:**
+Após o bulk update de `customers.points_balance = 0`, executar:
+```typescript
+await adminClient.from("branches")
+  .update({ last_points_reset_at: new Date().toISOString() })
+  .eq("id", branch_id);
 ```
 
 ### Impacto
-- Ranking passa a refletir o saldo real (que zera no reset)
-- Nenhuma alteração no frontend — as RPCs mantêm a mesma assinatura e formato de retorno
-- Um único arquivo alterado: migração SQL
+- Nenhuma alteração no frontend — a RPC mantém a mesma assinatura
+- Corridas e resgates (que não dependem de pontos) continuam inalterados
+- Apenas os KPIs de pontuação são afetados pelo filtro temporal
 
