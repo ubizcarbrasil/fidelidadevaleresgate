@@ -423,7 +423,7 @@ Deno.serve(async (req) => {
         page++;
       }
 
-      const affected = affectedCustomers || [];
+      const affected = allAffected;
 
       if (affected.length > 0) {
         const reasonLabel = target === "all" ? "todos" : target === "drivers" ? "motoristas" : target === "clients" ? "clientes" : "individual";
