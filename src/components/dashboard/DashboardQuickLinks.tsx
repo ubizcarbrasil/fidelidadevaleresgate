@@ -32,25 +32,24 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
   });
 
   // Fetch brand's own domain (excluding the portal domain)
-  const { data: brandDomainData } = useQuery({
+  const { data: brandDomains } = useQuery({
     queryKey: ["brand-domain-links", currentBrandId],
     queryFn: async () => {
-      if (!currentBrandId) return null;
+      if (!currentBrandId) return [];
       const { data } = await supabase
         .from("brand_domains")
         .select("domain")
         .eq("brand_id", currentBrandId)
         .eq("is_active", true)
-        .neq("domain", "app.valeresgate.com.br")
-        .order("is_primary", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
+        .order("is_primary", { ascending: false });
+      return data || [];
     },
     enabled: !!currentBrandId,
   });
 
-  const brandDomain = brandDomainData?.domain;
+  const PORTAL_DOMAIN = "app.valeresgate.com.br";
+  const nonPortal = brandDomains?.find(d => d.domain !== PORTAL_DOMAIN);
+  const brandDomain = nonPortal?.domain ?? brandDomains?.[0]?.domain ?? null;
   const baseUrl = brandDomain ? `https://${brandDomain.replace(/^https?:\/\//, "").replace(/\/+$/, "")}` : null;
 
   const settings = brand?.brand_settings_json as Record<string, unknown> | null;
