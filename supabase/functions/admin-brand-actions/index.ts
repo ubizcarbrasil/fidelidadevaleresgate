@@ -457,6 +457,12 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Record reset timestamp on the branch
+      await adminClient
+        .from("branches")
+        .update({ last_points_reset_at: new Date().toISOString() })
+        .eq("id", branch_id);
+
       // Cancel active duels and side bets when resetting drivers or all
       if (target === "all" || target === "drivers") {
         await adminClient

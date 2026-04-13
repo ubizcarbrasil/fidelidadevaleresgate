@@ -625,6 +625,7 @@ export type Database = {
           id: string
           is_active: boolean
           is_city_redemption_enabled: boolean
+          last_points_reset_at: string | null
           latitude: number | null
           longitude: number | null
           name: string
@@ -641,6 +642,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_city_redemption_enabled?: boolean
+          last_points_reset_at?: string | null
           latitude?: number | null
           longitude?: number | null
           name: string
@@ -657,6 +659,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_city_redemption_enabled?: boolean
+          last_points_reset_at?: string | null
           latitude?: number | null
           longitude?: number | null
           name?: string
