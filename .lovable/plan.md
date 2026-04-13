@@ -1,30 +1,42 @@
 
 
-## Adicionar botão "Criar Franqueado" nos cards de cidade
+## Correção: Layout mobile dos cards de cidade
 
-### O que será feito
+### Problemas identificados
 
-1. **Criar componente `DialogCriarFranqueado`** em `src/components/branch/DialogCriarFranqueado.tsx`
-   - Dialog com campos: email, senha, nome completo (opcional)
-   - Ao submeter, chama `supabase.functions.invoke("create-branch-admin", { body: { email, password, full_name, brand_id, branch_id } })`
-   - Mostra loading no botão, toast de sucesso/erro
-   - Fecha o dialog ao concluir
+1. **Botões de ação cortados**: Os 3 botões ("Criar Franqueado", "Resetar pontos", "Editar") estão em uma linha sem `flex-wrap`, causando overflow horizontal no mobile.
+2. **Padding esquerdo excessivo**: `pl-12` nos badges e botões desperdiça espaço em telas pequenas.
 
-2. **Adicionar botão no card** em `BrandBranchesPage.tsx`
-   - Novo botão "Criar Franqueado" com ícone `UserPlus` na linha de ações de cada card (ao lado de "Resetar pontos" e "Editar")
-   - State para controlar qual branch está com o dialog aberto
-   - Passa `brand_id` e `branch_id` para o dialog
+### Correção
 
-### Arquivos
+**Arquivo:** `src/pages/BrandBranchesPage.tsx`
 
-| Arquivo | Ação |
-|---------|------|
-| `src/components/branch/DialogCriarFranqueado.tsx` | Criar |
-| `src/pages/BrandBranchesPage.tsx` | Adicionar botão + state + import do dialog |
+1. **Linha dos botões (linha 139)**: Adicionar `flex-wrap` para que os botões quebrem linha no mobile:
+   ```
+   // De:
+   <div className="flex items-center gap-2 pl-12">
+   
+   // Para:
+   <div className="flex items-center gap-2 flex-wrap pl-0 sm:pl-12">
+   ```
 
-### Detalhes técnicos
+2. **Linha dos badges (linha 114)**: Reduzir padding no mobile:
+   ```
+   // De:
+   <div className="flex items-center gap-2 flex-wrap pl-12">
+   
+   // Para:
+   <div className="flex items-center gap-2 flex-wrap pl-0 sm:pl-12">
+   ```
 
-- A edge function `create-branch-admin` já existe e aceita `{ email, password, full_name, brand_id, branch_id }` — não precisa de alteração
-- O dialog usará componentes existentes: `Dialog`, `Input`, `Button`, `Label`
-- Validação client-side: email obrigatório, senha mínimo 6 caracteres
+### Resultado
+
+- Mobile: botões empilham em 2 linhas, sem corte, sem padding excessivo
+- Desktop/tablet: layout inalterado com `pl-12`
+
+### Arquivo alterado
+
+| Arquivo | Mudança |
+|---------|---------|
+| `src/pages/BrandBranchesPage.tsx` | `flex-wrap` nos botões + padding responsivo |
 
