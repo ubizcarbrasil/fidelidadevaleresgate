@@ -111,7 +111,7 @@ export default function BrandBranchesPage() {
                     />
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap pl-12">
+                <div className="flex items-center gap-2 flex-wrap pl-0 sm:pl-12">
                   {(branch as any).scoring_model === "DRIVER_ONLY" && (
                     <Badge variant="outline" className="text-[10px] gap-1">
                       <Car className="h-3 w-3" /> Motorista
@@ -136,7 +136,7 @@ export default function BrandBranchesPage() {
                     {branch.is_active ? "Ativa" : "Inativa"}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-2 pl-12">
+                <div className="flex items-center gap-2 flex-wrap pl-0 sm:pl-12">
                   <Button
                     variant="outline"
                     size="sm"
