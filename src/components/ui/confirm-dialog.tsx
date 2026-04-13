@@ -37,7 +37,7 @@ export function ConfirmDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <AlertDialogContent>
+      <AlertDialogContent className="z-[200]" style={{ zIndex: 200 }}>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
