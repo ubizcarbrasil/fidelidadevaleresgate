@@ -1,36 +1,42 @@
 
 
-## Plano: Fix do redirect no portal `app.valeresgate.com.br`
+## Plano: Bypass do branch picker no portal domain para usuários não autenticados
 
 ### Diagnóstico
 
-Analisando o `AppContent` (linhas 329-427 do App.tsx), a lógica do portal está na posição correta (linha 371, antes do bloco white-label genérico na linha 400). Porém há um problema sutil:
-
-1. **Linha 362**: O guard `(loading || authLoading) && !isPublicPath` mostra spinner enquanto carrega. `/` não é public path, então espera corretamente.
-2. **Linha 371-398**: O bloco portal verifica `isPortalDomain && isWhiteLabel`.
-3. **Problema potencial**: Quando `authLoading` termina com `user = null`, o `loading` do brand pode ainda estar `true` (o safety timeout é 3s). Nesse caso, o spinner fica preso até o brand resolver. Se o brand falhar ou demorar, o usuário fica no spinner e nunca é redirecionado.
-4. **Outro problema**: A checagem `!user || authLoading` na linha 378 pode causar flash — se `authLoading` ainda é true quando o brand já resolveu, ele redireciona para `/auth` prematuramente, e depois quando auth resolve com user logado, faz outro redirect.
+O redirect na linha 363 do `AppContent` funciona corretamente em teoria, mas há uma condição de corrida: o `BranchSelector` dentro de `WhiteLabelLayout` pode renderizar brevemente antes do redirect executar, especialmente se `authLoading` terminar depois de `loading` do brand. Além disso, se por qualquer motivo o fluxo chegar ao `WhiteLabelLayout` (linha 402) sem usuário logado, o branch picker bloqueia a tela.
 
 ### Correção
 
-Tornar o portal check mais robusto, movendo-o para ANTES do guard de loading para o caso específico do redirect `/` → `/auth`:
+Duas alterações defensivas:
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/App.tsx` | Mover a detecção do portal domain para antes do loading guard. Se `isPortalDomain` e o path é `/` e não há sessão, redirecionar para `/auth` imediatamente (sem esperar brand resolver). Manter o bloco existente para usuários logados. |
+| `src/components/BranchSelector.tsx` | Adicionar check: se `hostname === "app.valeresgate.com.br"` e não há usuário autenticado (`useAuth`), retornar `null` — não renderizar o picker |
+| `src/components/WhiteLabelLayout.tsx` | Adicionar check similar: se é portal domain e não há usuário, não mostrar branch picker — redirecionar para `/auth` via `Navigate` |
 
-### Lógica atualizada no AppContent
+### Lógica no WhiteLabelLayout
 
 ```text
-1. Partner landing / Driver panel (existente, sem mudança)
-2. Public paths check (existente, sem mudança)
-3. ** NOVO: Portal domain + não logado + path não-público → Navigate /auth **
-   - Não precisa esperar brand loading
-   - Apenas checa hostname + !user + !authLoading
-4. Loading guard (existente)
-5. Portal domain + logado → role-based routing (existente, sem mudança)
-6. White-label genérico (existente, sem mudança)
+const isPortalDomain = window.location.hostname === "app.valeresgate.com.br";
+
+// Se portal e não logado, redirecionar para /auth em vez de mostrar branch picker
+if (isPortalDomain && !authLoading && !user) {
+  return <Navigate to="/auth" replace />;
+}
+
+// Resto do fluxo normal...
 ```
 
-A mudança é mínima: adicionar um early return antes da linha 362 que detecta o portal e redireciona para `/auth` sem aguardar o brand resolver, eliminando o problema de timing.
+### Lógica no BranchSelector (defesa extra)
+
+```text
+// Já importa useAuth ou recebe como prop
+if (isPortalDomain && !user) return null;
+```
+
+### Impacto
+- Apenas `app.valeresgate.com.br` é afetado
+- Outros domínios white-label continuam com branch picker normal
+- Usuários logados no portal continuam vendo o picker se necessário
 
