@@ -18,6 +18,7 @@ return ({
   plugins: [
     react(),
     !isDevelopment && VitePWA({
+      injectRegister: false,
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "pwa-192x192.png", "pwa-512x512.png", "logo-vale-resgate.png"],
       manifest: {
