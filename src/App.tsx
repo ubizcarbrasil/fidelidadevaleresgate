@@ -358,7 +358,7 @@ function AppContent() {
   }
 
   // Public paths that don't need brand resolution
-  const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store", "/p/", "/driver"];
+  const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store", "/p/", "/driver", "/loja/"];
   const isPublicPath = publicPaths.some(p => location.pathname.startsWith(p));
 
   // Portal domain: redirect unauthenticated users to /auth immediately (before loading guard)
