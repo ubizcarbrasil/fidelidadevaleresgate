@@ -2,96 +2,264 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 
-const DEFAULT_LABELS: Record<string, Record<string, string>> = {
-  admin: {
-    "sidebar.dashboard": "Visão Geral",
-    "sidebar.jornada": "Guia do Empreendedor",
-    "sidebar.jornada_emissor": "Guia do Emissor",
-    "sidebar.tema_marca": "Aparência da Marca",
-    "sidebar.dominios": "Domínios",
-    "sidebar.galeria_icones": "Biblioteca de Ícones",
-    "sidebar.secoes_home": "Seções Iniciais",
-    "sidebar.central_banners": "Mídia & Banners",
-    "sidebar.nomes_rotulos": "Nomenclaturas",
-    "sidebar.page_builder": "Editor de Páginas",
-    "sidebar.partner_landing": "Landing Page Parceiros",
-    "sidebar.welcome_tour": "Boas-Vindas",
-    "sidebar.profile_links": "Links do Perfil",
-    "sidebar.branches": "Cidades",
-    "sidebar.parceiros": "Parceiros",
-    "sidebar.ofertas": "Ofertas",
-    "sidebar.clientes": "Clientes",
-    "sidebar.resgates": "Resgates",
-    "sidebar.cupons": "Cupons",
-    "sidebar.aprovacao_lojas": "Aprovar Parceiros",
-    "sidebar.aprovar_regras": "Validar Regras",
-    "sidebar.solicitacoes_emissor": "Solicitações de Upgrade",
-    "sidebar.importar_csv": "Importação de Dados",
-    "sidebar.achadinhos": "Achadinhos",
-    "sidebar.categorias_achadinhos": "Categorias de Achadinhos",
-    "sidebar.catalogo": "Catálogo",
-    "sidebar.enviar_notificacao": "Enviar Notificação",
-    "sidebar.operador_pdv": "Caixa PDV",
-    "sidebar.pontuar": "Pontuar",
-    "sidebar.regras_pontos": "Regras de Fidelidade",
-    "sidebar.regra_parceiro": "Regra de Pontos do Parceiro",
-    "sidebar.tier_pontos": "Pontuação por Tier",
-    "sidebar.extrato_pontos": "Extrato de Fidelidade",
-    "sidebar.gg_config": "Config. Cashback",
-    "sidebar.gg_billing": "Financeiro Cashback",
-    "sidebar.gg_closing": "Fechamento Financeiro",
-    "sidebar.usuarios": "Usuários",
-    "sidebar.modulos": "Módulos",
-    "sidebar.perm_parceiros": "Permissão de Parceiros",
-    "sidebar.auditoria": "Auditoria",
-    "sidebar.relatorios": "Relatórios",
-    "sidebar.taxonomia": "Taxonomia",
-    "sidebar.patrocinados": "Patrocinados",
-    "sidebar.api_keys": "APIs & Integrações",
-    "sidebar.api_docs": "Documentação API",
-    "sidebar.machine": "Integração Mobilidade",
-    "sidebar.machine_test": "Lab Webhook",
-    "sidebar.offer_card_config": "Layout de Ofertas",
-    "sidebar.configuracoes": "Configurações",
-    "sidebar.central_acessos": "Gestão de Acessos",
-    "sidebar.crm": "Inteligência CRM",
-    "sidebar.crm_contacts": "Contatos",
-    "sidebar.crm_customers": "Clientes CRM",
-    "sidebar.crm_tiers": "Tiers",
-    "sidebar.crm_opportunities": "Oportunidades",
-    "sidebar.crm_pareto": "Análise Pareto",
-    "sidebar.crm_journey": "Jornada CRM",
-    "sidebar.crm_audiences": "Públicos",
-    "sidebar.crm_campaigns": "Campanhas",
-    "sidebar.crm_analytics": "Analytics",
-    "sidebar.crm_lost": "Clientes Perdidos",
-    "sidebar.crm_potential": "Clientes Potenciais",
-    "sidebar.painel_motorista": "Painel do Motorista",
-    "sidebar.espelhamento": "Espelhamento Achadinho",
-    "sidebar.governanca_ofertas": "Governança Achadinho",
-     "sidebar.motoristas": "Motoristas",
-     "sidebar.driver_points_rules": "Regras de Pontuação Motorista",
-     "sidebar.produtos_resgate": "Produtos de Resgate",
-     "sidebar.regras_resgate": "Regras de Resgate",
-     "sidebar.pedidos_resgate": "Pedidos de Resgate",
-     "sidebar.carteira_pontos": "Carteira de Pontos",
-     "sidebar.regras_motorista": "Regras de Pontuação",
-     "sidebar.relatorios_cidade": "Relatórios",
-     "sidebar.manuais": "Manuais",
-     "sidebar.gamificacao": "Duelos & Ranking",
-  },
-  customer_app: {
-    "app.ofertas": "Ofertas",
-    "app.cupons": "Cupons",
-    "app.lojas": "Lojas",
-    "app.pontos": "Pontos",
-    "app.carteira": "Carteira",
-    "app.perfil": "Perfil",
-    "app.favoritos": "Favoritos",
-  },
-};
+export interface LabelGroup {
+  groupLabel: string;
+  items: { key: string; defaultLabel: string }[];
+}
 
-export function useMenuLabels(context: "admin" | "customer_app") {
+const BRAND_SIDEBAR_GROUPS: LabelGroup[] = [
+  {
+    groupLabel: "Guias Inteligentes",
+    items: [
+      { key: "sidebar.jornada", defaultLabel: "Guia do Empreendedor" },
+      { key: "sidebar.jornada_emissor", defaultLabel: "Guia do Emissor" },
+      { key: "sidebar.modulos", defaultLabel: "Módulos" },
+    ],
+  },
+  {
+    groupLabel: "Manuais",
+    items: [
+      { key: "sidebar.manuais", defaultLabel: "Manuais da Plataforma" },
+    ],
+  },
+  {
+    groupLabel: "Cidades",
+    items: [
+      { key: "sidebar.branches", defaultLabel: "Minhas Cidades" },
+      { key: "sidebar.pacotes_pontos", defaultLabel: "Pacotes de Pontos" },
+      { key: "sidebar.regras_resgate", defaultLabel: "Regras de Resgate" },
+      { key: "sidebar.conversao_resgate", defaultLabel: "Conversão por Público" },
+      { key: "sidebar.jornada_cidades", defaultLabel: "Guia de Cidades" },
+      { key: "sidebar.onboarding_cidade", defaultLabel: "Onboarding Cidade" },
+    ],
+  },
+  {
+    groupLabel: "Personalização & Vitrine",
+    items: [
+      { key: "sidebar.tema_marca", defaultLabel: "Identidade Visual" },
+      { key: "sidebar.galeria_icones", defaultLabel: "Biblioteca de Ícones" },
+      { key: "sidebar.partner_landing", defaultLabel: "Landing Page Parceiros" },
+      { key: "sidebar.welcome_tour", defaultLabel: "Boas-Vindas" },
+      { key: "sidebar.profile_links", defaultLabel: "Links do Perfil" },
+      { key: "sidebar.offer_card_config", defaultLabel: "Layout de Ofertas" },
+      { key: "sidebar.page_builder", defaultLabel: "Editor de Páginas" },
+      { key: "sidebar.central_banners", defaultLabel: "Mídia & Banners" },
+    ],
+  },
+  {
+    groupLabel: "Achadinhos",
+    items: [
+      { key: "sidebar.achadinhos", defaultLabel: "Achadinhos" },
+      { key: "sidebar.categorias_achadinhos", defaultLabel: "Categorias de Achadinhos" },
+      { key: "sidebar.espelhamento", defaultLabel: "Espelhamento Achadinho" },
+      { key: "sidebar.governanca_ofertas", defaultLabel: "Governança Achadinho" },
+      { key: "sidebar.driver_points_rules", defaultLabel: "Regras de Pontuação Motorista" },
+    ],
+  },
+  {
+    groupLabel: "Resgate com Pontos",
+    items: [
+      { key: "sidebar.produtos_resgate", defaultLabel: "Produtos de Resgate" },
+      { key: "sidebar.pedidos_resgate", defaultLabel: "Pedidos de Resgate" },
+    ],
+  },
+  {
+    groupLabel: "Aprovações",
+    items: [
+      { key: "sidebar.solicitacoes_emissor", defaultLabel: "Solicitações de Upgrade" },
+      { key: "sidebar.aprovar_regras", defaultLabel: "Validar Regras" },
+      { key: "sidebar.catalogo", defaultLabel: "Catálogo" },
+    ],
+  },
+  {
+    groupLabel: "Comunicação",
+    items: [
+      { key: "sidebar.enviar_notificacao", defaultLabel: "Enviar Notificação" },
+    ],
+  },
+  {
+    groupLabel: "Gestão Comercial",
+    items: [
+      { key: "sidebar.operador_pdv", defaultLabel: "Caixa PDV" },
+      { key: "sidebar.ofertas", defaultLabel: "Ofertas" },
+      { key: "sidebar.resgates", defaultLabel: "Resgates" },
+      { key: "sidebar.cupons", defaultLabel: "Cupons" },
+      { key: "sidebar.parceiros", defaultLabel: "Parceiros" },
+      { key: "sidebar.clientes", defaultLabel: "Clientes" },
+      { key: "sidebar.motoristas", defaultLabel: "Motoristas" },
+      { key: "sidebar.patrocinados", defaultLabel: "Patrocinados" },
+    ],
+  },
+  {
+    groupLabel: "Programa de Fidelidade",
+    items: [
+      { key: "sidebar.pontuar", defaultLabel: "Pontuar" },
+      { key: "sidebar.regras_pontos", defaultLabel: "Regras de Fidelidade" },
+      { key: "sidebar.tier_pontos", defaultLabel: "Pontuação por Tier" },
+      { key: "sidebar.extrato_pontos", defaultLabel: "Extrato de Fidelidade" },
+    ],
+  },
+  {
+    groupLabel: "Gamificação",
+    items: [
+      { key: "sidebar.gamificacao", defaultLabel: "Duelos & Ranking" },
+    ],
+  },
+  {
+    groupLabel: "Cashback Inteligente",
+    items: [
+      { key: "sidebar.gg_config", defaultLabel: "Config. Cashback" },
+      { key: "sidebar.gg_billing", defaultLabel: "Financeiro Cashback" },
+      { key: "sidebar.gg_closing", defaultLabel: "Fechamento Financeiro" },
+    ],
+  },
+  {
+    groupLabel: "Equipe & Acessos",
+    items: [
+      { key: "sidebar.usuarios", defaultLabel: "Usuários" },
+      { key: "sidebar.perm_parceiros", defaultLabel: "Permissão de Parceiros" },
+      { key: "sidebar.central_acessos", defaultLabel: "Gestão de Acessos" },
+    ],
+  },
+  {
+    groupLabel: "Inteligência & Dados",
+    items: [
+      { key: "sidebar.crm", defaultLabel: "Inteligência CRM" },
+      { key: "sidebar.relatorios", defaultLabel: "Relatórios" },
+      { key: "sidebar.auditoria", defaultLabel: "Auditoria" },
+      { key: "sidebar.importar_csv", defaultLabel: "Importação de Dados" },
+      { key: "sidebar.taxonomia", defaultLabel: "Taxonomia" },
+    ],
+  },
+  {
+    groupLabel: "Integrações & API",
+    items: [
+      { key: "sidebar.api_keys", defaultLabel: "APIs & Integrações" },
+      { key: "sidebar.api_docs", defaultLabel: "Documentação API" },
+      { key: "sidebar.machine", defaultLabel: "Integração Mobilidade" },
+      { key: "sidebar.machine_test", defaultLabel: "Lab Webhook" },
+      { key: "sidebar.api_journey", defaultLabel: "Guia da API" },
+    ],
+  },
+  {
+    groupLabel: "Configurações",
+    items: [
+      { key: "sidebar.dominios_marca", defaultLabel: "Meus Domínios" },
+      { key: "sidebar.configuracoes", defaultLabel: "Configurações" },
+      { key: "sidebar.painel_motorista", defaultLabel: "Painel do Motorista" },
+      { key: "sidebar.subscription", defaultLabel: "Meu Plano" },
+    ],
+  },
+];
+
+const BRANCH_SIDEBAR_GROUPS: LabelGroup[] = [
+  {
+    groupLabel: "Gestão Comercial",
+    items: [
+      { key: "sidebar.operador_pdv", defaultLabel: "Caixa PDV" },
+      { key: "sidebar.parceiros", defaultLabel: "Parceiros" },
+      { key: "sidebar.ofertas", defaultLabel: "Ofertas" },
+      { key: "sidebar.clientes", defaultLabel: "Clientes" },
+      { key: "sidebar.resgates", defaultLabel: "Resgates" },
+      { key: "sidebar.cupons", defaultLabel: "Cupons" },
+    ],
+  },
+  {
+    groupLabel: "Aprovações",
+    items: [
+      { key: "sidebar.aprovar_regras", defaultLabel: "Validar Regras" },
+      { key: "sidebar.catalogo", defaultLabel: "Catálogo" },
+    ],
+  },
+  {
+    groupLabel: "Achadinhos",
+    items: [
+      { key: "sidebar.achadinhos", defaultLabel: "Achadinhos" },
+      { key: "sidebar.categorias_achadinhos", defaultLabel: "Categorias de Achadinhos" },
+    ],
+  },
+  {
+    groupLabel: "Comunicação",
+    items: [
+      { key: "sidebar.enviar_notificacao", defaultLabel: "Enviar Notificação" },
+    ],
+  },
+  {
+    groupLabel: "Motoristas & Resgate",
+    items: [
+      { key: "sidebar.carteira_pontos", defaultLabel: "Carteira de Pontos" },
+      { key: "sidebar.comprar_pontos", defaultLabel: "Comprar Pontos" },
+      { key: "sidebar.regras_motorista", defaultLabel: "Regras de Pontuação" },
+      { key: "sidebar.produtos_resgate", defaultLabel: "Produtos de Resgate" },
+      { key: "sidebar.pedidos_resgate", defaultLabel: "Pedidos de Resgate" },
+      { key: "sidebar.motoristas", defaultLabel: "Motoristas" },
+      { key: "sidebar.relatorios_cidade", defaultLabel: "Relatórios" },
+      { key: "sidebar.manuais", defaultLabel: "Manuais" },
+    ],
+  },
+  {
+    groupLabel: "Programa de Fidelidade",
+    items: [
+      { key: "sidebar.pontuar", defaultLabel: "Pontuar" },
+      { key: "sidebar.regras_pontos", defaultLabel: "Regras de Fidelidade" },
+      { key: "sidebar.extrato_pontos", defaultLabel: "Extrato de Fidelidade" },
+    ],
+  },
+  {
+    groupLabel: "Gamificação",
+    items: [
+      { key: "sidebar.gamificacao", defaultLabel: "Duelos & Ranking" },
+    ],
+  },
+  {
+    groupLabel: "Inteligência & Dados",
+    items: [
+      { key: "sidebar.relatorios", defaultLabel: "Relatórios" },
+      { key: "sidebar.auditoria", defaultLabel: "Auditoria" },
+      { key: "sidebar.importar_csv", defaultLabel: "Importação de Dados" },
+    ],
+  },
+];
+
+const APP_GROUPS: LabelGroup[] = [
+  {
+    groupLabel: "App do Cliente",
+    items: [
+      { key: "app.ofertas", defaultLabel: "Ofertas" },
+      { key: "app.cupons", defaultLabel: "Cupons" },
+      { key: "app.lojas", defaultLabel: "Lojas" },
+      { key: "app.pontos", defaultLabel: "Pontos" },
+      { key: "app.carteira", defaultLabel: "Carteira" },
+      { key: "app.perfil", defaultLabel: "Perfil" },
+      { key: "app.favoritos", defaultLabel: "Favoritos" },
+    ],
+  },
+];
+
+function buildDefaultsMap(groups: LabelGroup[]): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const g of groups) {
+    for (const item of g.items) {
+      map[item.key] = item.defaultLabel;
+    }
+  }
+  return map;
+}
+
+export type MenuLabelContext = "admin" | "customer_app";
+
+export function getGroupsForTab(tab: "brand" | "branch" | "customer_app"): LabelGroup[] {
+  if (tab === "brand") return BRAND_SIDEBAR_GROUPS;
+  if (tab === "branch") return BRANCH_SIDEBAR_GROUPS;
+  return APP_GROUPS;
+}
+
+export function getContextForTab(tab: "brand" | "branch" | "customer_app"): MenuLabelContext {
+  if (tab === "customer_app") return "customer_app";
+  return "admin";
+}
+
+export function useMenuLabels(context: MenuLabelContext) {
   const { currentBrandId } = useBrandGuard();
 
   const { data: customLabels } = useQuery({
@@ -108,13 +276,17 @@ export function useMenuLabels(context: "admin" | "customer_app") {
     enabled: !!currentBrandId,
   });
 
+  const allDefaults = {
+    ...buildDefaultsMap(BRAND_SIDEBAR_GROUPS),
+    ...buildDefaultsMap(BRANCH_SIDEBAR_GROUPS),
+    ...buildDefaultsMap(APP_GROUPS),
+  };
+
   const getLabel = (key: string): string => {
     const custom = customLabels?.find((l) => l.key === key);
     if (custom) return custom.custom_label;
-    return DEFAULT_LABELS[context]?.[key] || key;
+    return allDefaults[key] || key;
   };
-
-  const allDefaults = DEFAULT_LABELS[context] || {};
 
   return { getLabel, allDefaults, customLabels };
 }
