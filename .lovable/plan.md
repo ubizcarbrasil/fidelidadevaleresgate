@@ -1,50 +1,50 @@
 
 
-## Plano: Melhorar a página de edição de nomes do sidebar
+## Plano: Portal de Login Universal em `app.valeresgate.com.br`
 
 ### Problema
-A página `/menu-labels` existe mas exibe os itens como uma tabela plana com chaves técnicas (`sidebar.dashboard`, etc.), sem agrupamento visual. O usuário quer uma experiência melhor para editar os nomes de todos os menus do sidebar.
+Quando um usuário acessa `app.valeresgate.com.br`, o sistema resolve como white-label da Ubiz Resgata e exibe o `WhiteLabelLayout` (app do cliente). O comportamento desejado é que esse domínio funcione como um portal de login universal, redirecionando cada tipo de usuário para seu painel correto.
 
 ### Solução
-Refatorar a `MenuLabelsPage` para exibir os itens organizados por grupo (seção do sidebar), com 3 abas: **Sidebar Empreendedor**, **Sidebar Cidade** e **App do Cliente**. Cada aba mostra os itens agrupados em cards por seção, com o nome padrão e um campo para o nome personalizado.
 
-### UI proposta
+Duas alterações principais:
 
-```text
-┌──────────────────────────────────────────────┐
-│ Nomes e Rótulos                              │
-│ Personalize os nomes dos menus...            │
-│                                              │
-│ [Sidebar Empreendedor] [Sidebar Cidade] [App]│
-│                                              │
-│ ┌─ Guias Inteligentes ─────────────────────┐ │
-│ │  Guia do Empreendedor  [______________]  │ │
-│ │  Guia do Emissor       [______________]  │ │
-│ │  Módulos               [______________]  │ │
-│ └──────────────────────────────────────────┘ │
-│                                              │
-│ ┌─ Cidades ────────────────────────────────┐ │
-│ │  Minhas Cidades        [______________]  │ │
-│ │  Pacotes de Pontos     [______________]  │ │
-│ └──────────────────────────────────────────┘ │
-│                                              │
-│                          [💾 Salvar Rótulos]  │
-└──────────────────────────────────────────────┘
-```
+#### 1. `AppContent` em `src/App.tsx`
+Detectar o hostname `app.valeresgate.com.br` e tratá-lo como "portal mode":
 
-### Alterações
+- **Não logado** + rota `/` → redirecionar para `/auth`
+- **Logado** + rota `/` → redirecionar baseado nas roles:
+  - `root_admin` → `/` (AnimatedRoutes/AppLayout normal)
+  - `tenant_admin` → `/` (AppLayout)
+  - `brand_admin` → `/` (AppLayout)
+  - `branch_admin` → `/` (AppLayout)
+  - `branch_operator` / `operator_pdv` → `/` (AppLayout)
+  - `store_admin` (sem admin role) → `/store-panel`
+  - sem role admin → `/auth` (ou WhiteLabelLayout como fallback)
+- Quando logado como admin, renderizar `AnimatedRoutes` em vez de `WhiteLabelLayout`
 
-| Arquivo | Ação |
-|---------|------|
-| `src/pages/MenuLabelsPage.tsx` | Refatorar — adicionar 3 abas (admin/brand, admin/branch, customer_app), agrupar itens por seção do sidebar usando os mesmos grupos definidos nos sidebars, exibir em cards com label amigável |
-| `src/hooks/useMenuLabels.ts` | Adicionar as chaves faltantes do BranchSidebar nos defaults (ex: `sidebar.comprar_pontos`, `sidebar.pacotes_pontos`, etc.) |
+A lógica será inserida dentro do bloco `if (isWhiteLabel)` do `AppContent`, antes do fallback para `WhiteLabelLayout`. Extrair a constante `PORTAL_HOSTNAME = "app.valeresgate.com.br"` para facilitar manutenção.
 
-### Detalhes técnicos
-- Extrair os grupos e itens dos sidebars (BrandSidebar e BranchSidebar) como constantes reutilizáveis para alimentar a página de edição
-- A aba "Sidebar Empreendedor" usa os grupos do `BrandSidebar`
-- A aba "Sidebar Cidade" usa os grupos do `BranchSidebar`  
-- A aba "App do Cliente" mantém os itens atuais do `customer_app`
-- Todas as abas salvam no mesmo `menu_labels` com context `"admin"` (brand+branch compartilham o mesmo context pois usam as mesmas keys) ou `"customer_app"`
-- Remover a coluna "Chave" da tabela — mostrar apenas o nome padrão e o campo de edição
-- Agrupar visualmente por seção usando Cards com título do grupo
+#### 2. `src/pages/Auth.tsx` — Redirect pós-login
+Expandir a lógica de redirect após `signInWithPassword` para considerar o portal domain:
+
+- Se `window.location.hostname === PORTAL_HOSTNAME`:
+  - `root_admin` / `tenant_admin` / `brand_admin` / `branch_admin` / `branch_operator` / `operator_pdv` → `navigate("/")`
+  - `store_admin` (sem admin role) → `navigate("/store-panel")`
+  - Apenas `customer` ou sem role → `navigate("/")` (WhiteLabelLayout normal)
+
+- Se já logado ao acessar `/auth` no portal domain → redirecionar imediatamente pro console correto (adicionar check no topo do componente Auth)
+
+### Arquivos alterados
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/App.tsx` (`AppContent`) | Adicionar detecção de portal domain dentro do bloco `isWhiteLabel`, forçar redirect `/` → `/auth` quando não logado, e garantir `AnimatedRoutes` para admins |
+| `src/pages/Auth.tsx` | Adicionar redirect automático se já logado no portal domain; expandir lógica pós-login para role-based redirect |
+
+### Regras respeitadas
+- Lógica exclusiva para `app.valeresgate.com.br` via `window.location.hostname`
+- Nenhum outro domínio white-label é afetado
+- BrandContext continua resolvendo normalmente (o domínio já aponta para Ubiz Resgata)
+- Compatibilidade total com fluxo existente
 
