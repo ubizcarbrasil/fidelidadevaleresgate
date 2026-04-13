@@ -492,7 +492,7 @@ Deno.serve(async (req) => {
     }
 
     // ─── 4. Domain ───────────────────────────────────────────────
-    const domainValue = subdomain ? `${subdomain}.valeresgate.com` : `${brand_slug}.valeresgate.com`;
+    const domainValue = subdomain ? `${subdomain}.valeresgate.com.br` : `${brand_slug}.valeresgate.com.br`;
     const { data: existingDomain } = await supabaseAdmin
       .from("brand_domains").select("id").eq("brand_id", brand.id).eq("domain", domainValue).maybeSingle();
     if (!existingDomain) {
