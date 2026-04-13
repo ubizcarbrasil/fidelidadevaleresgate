@@ -63,8 +63,12 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
 }
 
 export default function DriverPanelPage() {
+  const PORTAL_HOSTNAME = "app.valeresgate.com.br";
+  const PORTAL_BRAND_ID = "db15bd21-9137-4965-a0fb-540d8e8b26f1";
+
   const [searchParams] = useSearchParams();
-  const brandId = searchParams.get("brandId");
+  const isPortalDomain = window.location.hostname === PORTAL_HOSTNAME;
+  const brandId = searchParams.get("brandId") || (isPortalDomain ? PORTAL_BRAND_ID : null);
   const branchId = searchParams.get("branchId") || null;
   const initialCategoryId = searchParams.get("categoryId") || null;
   const initialDealId = searchParams.get("dealId") || null;
