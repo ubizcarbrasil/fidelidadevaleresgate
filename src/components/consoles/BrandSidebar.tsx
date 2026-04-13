@@ -334,7 +334,7 @@ export function BrandSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         <div className="flex items-center gap-3">
-          <PlatformLogo src={brandLogoUrl} alt={brandName} className="h-8 w-8 rounded-lg ring-1 ring-border" fallbackLabel={brandNameInitial} />
+          <PlatformLogo src={brandLogoUrl} alt={brandName} className="h-8 w-8 rounded-lg ring-1 ring-border" fallbackLabel={brandName?.substring(0, 2).toUpperCase()} />
           {!collapsed && (
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-semibold text-foreground truncate">{brandName || "Carregando..."}</span>
