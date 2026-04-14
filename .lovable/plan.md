@@ -1,37 +1,71 @@
 
 
-## Problema: Imagens da marca não salvam (logo, favicon, etc.)
+## Problema: Motoristas não recebem pontos — Causa raiz encontrada
 
 ### Diagnóstico
-Analisei o fluxo completo de salvamento no `BrandForm.tsx`:
+Os logs do banco mostram **dezenas de erros repetidos**:
 
-1. O upload da imagem para o storage funciona corretamente (políticas de storage permitem `brand_admin`)
-2. A URL da imagem é atualizada no estado local (`theme.logo_url`)
-3. Ao clicar "Salvar", o `handleSubmit` faz `supabase.from("brands").update(...)` 
-4. **Problema**: Se a atualização falha silenciosamente por RLS (0 linhas afetadas), o código mostra `toast.success("Marca atualizada!")` mesmo assim — porque o Supabase não retorna erro quando o UPDATE afeta 0 linhas por RLS
+```text
+column "reference_type" is of type ledger_reference_type but expression is of type text
+```
 
-A política de UPDATE em `brands` exige:
-- `user_has_permission(auth.uid(), 'brands.update')` **E**
-- `id IN (SELECT get_user_brand_ids(auth.uid()))`
+A função `credit_customer_points` recebe o parâmetro `p_reference_type` como `text`, mas a coluna `points_ledger.reference_type` é do tipo enum `ledger_reference_type`. O PostgreSQL não faz cast implícito de `text` para enum, então o INSERT falha silenciosamente — o webhook não verifica o erro retornado pelo RPC.
 
-Se o `user_roles` do admin da marca "Jerry Mototáxi" não tiver o `brand_id` correto associado, a atualização falha silenciosamente.
+**Resultado**: a corrida é registrada em `machine_rides` com `driver_points_credited: 7`, mas o saldo do motorista fica em 0 e nenhuma entrada aparece no `points_ledger`.
 
 ### Solução (2 partes)
 
-**1. Detectar falha silenciosa no salvamento**
-No `BrandForm.tsx`, adicionar verificação de linhas afetadas usando `.select()` após o update, e mostrar erro claro quando nada é salvo.
+**1. Migração SQL — Corrigir a função `credit_customer_points`**
 
-**2. Garantir permissão do brand_admin**
-Criar migração SQL que garante que todo `brand_admin` com `brand_id` preenchido tenha a permissão `brands.update` via `role_permissions`. Também verificar se a função `get_user_brand_ids` está retornando o brand correto para o usuário.
+Adicionar cast explícito de `text` para `ledger_reference_type`:
+
+```sql
+CREATE OR REPLACE FUNCTION public.credit_customer_points(
+  p_customer_id uuid, p_brand_id uuid, p_branch_id uuid,
+  p_points integer, p_money numeric DEFAULT 0,
+  p_reason text DEFAULT '', p_reference_type text DEFAULT 'MACHINE_RIDE'
+) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE v_current_balance numeric;
+BEGIN
+  SELECT points_balance INTO v_current_balance
+  FROM customers WHERE id = p_customer_id FOR UPDATE;
+
+  UPDATE customers
+  SET points_balance = points_balance + p_points
+  WHERE id = p_customer_id;
+
+  INSERT INTO points_ledger (
+    customer_id, brand_id, branch_id,
+    entry_type, points_amount, reason,
+    reference_type, created_by_user_id
+  ) VALUES (
+    p_customer_id, p_brand_id, p_branch_id,
+    'CREDIT', p_points, p_reason,
+    p_reference_type::ledger_reference_type, NULL  -- ← CAST ADICIONADO
+  );
+END; $$;
+```
+
+**2. Webhook — Adicionar verificação de erro no RPC**
+
+No `machine-webhook/index.ts`, verificar o retorno do RPC para logar erros futuros:
+
+```ts
+const { error: rpcErr } = await sb.rpc("credit_customer_points", { ... });
+if (rpcErr) {
+  logger.error("credit_customer_points RPC failed", { machineRideId, driverCustomerId, error: rpcErr });
+}
+```
 
 ### Arquivos alterados
 
 | Arquivo | Mudança |
 |---------|---------|
-| `src/pages/BrandForm.tsx` | Detectar update silencioso (0 rows) e mostrar erro claro + botão de retry |
-| Nova migração SQL | Garantir que `brand_admin` tem `brands.update` em `role_permissions` e verificar integridade |
+| Nova migração SQL | Recriar `credit_customer_points` com `::ledger_reference_type` cast |
+| `supabase/functions/machine-webhook/index.ts` | Checar erro do RPC e logar |
 
 ### Resultado esperado
-- Se o salvamento falhar por falta de permissão, o usuário verá uma mensagem clara em vez de "Marca atualizada!"
-- As permissões serão corrigidas para que brand_admin sempre consiga salvar alterações na própria marca
+- Motoristas passarão a acumular pontos normalmente nas próximas corridas finalizadas
+- Erros de RPC serão logados para diagnóstico futuro
+- Os pontos de corridas passadas que falharam precisarão de um ajuste manual ou reprocessamento
 
