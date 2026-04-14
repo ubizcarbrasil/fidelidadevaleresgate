@@ -1,0 +1,1 @@
+GRANT SELECT ON public.public_brand_modules_safe TO anon, authenticated;
