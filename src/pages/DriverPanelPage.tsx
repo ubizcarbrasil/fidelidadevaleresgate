@@ -36,10 +36,10 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
     queryKey: ["driver-hub-enabled", brand.id],
     queryFn: async () => {
       const { data } = await supabase
-        .from("brand_modules")
-        .select("is_enabled, module_definitions!inner(key)")
+        .from("public_brand_modules_safe")
+        .select("is_enabled")
         .eq("brand_id", brand.id)
-        .eq("module_definitions.key", "driver_hub")
+        .eq("module_key", "driver_hub")
         .maybeSingle();
       return data?.is_enabled ?? false;
     },
