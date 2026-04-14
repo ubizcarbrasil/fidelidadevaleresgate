@@ -76,6 +76,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   }, [branchFromUrl, driver?.branch_id]);
 
   const effectiveBranch = branchFromUrl || derivedBranch;
+  const achadinhosEnabled = (effectiveBranch?.branch_settings_json as any)?.enable_achadinhos_module !== false;
 
   // When deep-link params exist, go straight to marketplace
   useEffect(() => {
@@ -113,6 +114,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             onOpenRedeemStore={() => setHubOverlay({ type: "redeemStore" })}
             onOpenCityRedeem={() => setShowHub(false)}
             onActivateSearch={() => setShowHub(false)}
+            achadinhosEnabled={achadinhosEnabled}
           />
         ) : (
           <DriverMarketplace
@@ -122,6 +124,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             initialCategoryId={initialCategoryId}
             initialDealId={initialDealId}
             isAdminSession={isAdminSession}
+            achadinhosEnabled={achadinhosEnabled}
           />
         )}
 

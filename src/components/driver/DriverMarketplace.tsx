@@ -65,6 +65,7 @@ interface Props {
   initialCategoryId?: string | null;
   initialDealId?: string | null;
   isAdminSession?: boolean;
+  achadinhosEnabled?: boolean;
 }
 
 function getPublicShareUrl(brandId: string, opts?: { categoryId?: string; dealId?: string }) {
@@ -138,7 +139,7 @@ export const formatPrice = (val: number | null | undefined) => {
   return Number(val).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 };
 
-export default function DriverMarketplace({ brand, branch, theme, initialCategoryId, initialDealId, isAdminSession }: Props) {
+export default function DriverMarketplace({ brand, branch, theme, initialCategoryId, initialDealId, isAdminSession, achadinhosEnabled = true }: Props) {
   const [openCategory, setOpenCategory] = useState<DealCategory | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -397,7 +398,9 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
     );
   }
 
-  if (!viableCategories.length && !uncategorized.length) {
+  if (!achadinhosEnabled && !viableCategories.length && !uncategorized.length) {
+    // When achadinhos is disabled, don't show empty state — just render the shell
+  } else if (achadinhosEnabled && !viableCategories.length && !uncategorized.length) {
     return (
       <div className="max-w-lg mx-auto px-4 pt-12 text-center">
         <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
@@ -518,6 +521,8 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           )}
 
           {/* Search Bar — customer style */}
+          {achadinhosEnabled && (
+            <>
           {searchTerm ? (
             <div className="relative mb-3">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/50" />
@@ -544,13 +549,15 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
               </span>
             </button>
           )}
+            </>
+          )}
         </div>
         {/* Bottom divider */}
         <div className="h-px" style={{ backgroundColor: "hsl(var(--border))" }} />
       </header>
 
       {/* Banners */}
-      {showBanners && <DriverBannerCarousel brandId={brand.id} />}
+      {achadinhosEnabled && showBanners && <DriverBannerCarousel brandId={brand.id} />}
 
       {/* Banner duelo ao vivo — visível para todos */}
       {!debouncedSearch.trim() && configDuelos.duelosAtivos && (
@@ -569,7 +576,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       )}
 
       {/* Redeemable section */}
-      {!debouncedSearch.trim() && redeemableDeals.length > 0 && (
+      {achadinhosEnabled && !debouncedSearch.trim() && redeemableDeals.length > 0 && (
         <section className="pt-4">
           <div className="px-5 mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -663,7 +670,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       )}
 
       {/* WhatsApp CTA Banner for ML affiliate link */}
-      {!debouncedSearch.trim() && whatsappNumber && (
+      {achadinhosEnabled && !debouncedSearch.trim() && whatsappNumber && (
         <section className="px-5 pt-4">
           <a
             href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent("Olá! Gostaria de enviar um link de produto do Mercado Livre para gerar pontos.")}`}
@@ -690,8 +697,8 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         </section>
       )}
 
-      {/* Search results */}
-      {debouncedSearch.trim() ? (
+      {/* Search results + categories — only when achadinhos enabled */}
+      {achadinhosEnabled && (debouncedSearch.trim() ? (
         <div className="px-4 pt-4 pb-8">
           <p className="text-xs text-muted-foreground mb-3">
             {searchResults.length} resultado{searchResults.length !== 1 ? "s" : ""} para "{debouncedSearch}"
@@ -811,7 +818,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         )}
       </div>
         </>
-      )}
+      ))}
 
       {/* Category page (Ver todos) */}
       {openCategory && (
