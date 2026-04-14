@@ -227,7 +227,7 @@ export default function Dashboard() {
       countByDate[key] = 0;
     }
     for (const row of rows || []) {
-      const created = (row as Record<string, unknown>).created_at;
+      const created = (row as unknown as Record<string, unknown>).created_at;
       const key = typeof created === "string" ? created.slice(0, 10) : null;
       if (key && key in countByDate) countByDate[key]++;
     }
