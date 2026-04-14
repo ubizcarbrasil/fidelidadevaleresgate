@@ -7680,6 +7680,29 @@ export type Database = {
           },
         ]
       }
+      public_brand_modules_safe: {
+        Row: {
+          brand_id: string | null
+          is_enabled: boolean | null
+          module_key: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_modules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_modules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_brands_safe: {
         Row: {
           brand_settings_json: Json | null
