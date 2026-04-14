@@ -1,27 +1,37 @@
 
 
-## Ativar o módulo "Home do Motorista" para Ubiz Resgata
+## Problema: Toggle do módulo "Home do Motorista" não aparece
 
-### Problema
-O módulo `driver_hub` está cadastrado em `module_definitions`, mas não existe registro em `brand_modules` para a marca Ubiz Resgata (`db15bd21-9137-4965-a0fb-540d8e8b26f1`). Por isso, a query no `DriverPanelPage` retorna `false` e o Hub nunca é exibido.
+### Causa raiz
+
+O módulo `driver_hub` existe no banco e está ativo, mas há dois problemas:
+
+1. **Para Root Admin**: a página de Módulos (`/brand-modules`) exige que o usuário selecione uma marca no dropdown antes de mostrar qualquer módulo. Sem selecionar, nada aparece.
+
+2. **Falta ícone dedicado**: o módulo `driver_hub` não tem ícone no mapa `MODULE_ICONS`, usando o genérico `Blocks`, o que dificulta identificá-lo visualmente.
+
+3. **Usabilidade**: o toggle está "escondido" dentro da página genérica de módulos. O ideal é ter também um **toggle direto** na configuração do painel do motorista.
 
 ### Solução
-Executar uma migração SQL que insere o registro em `brand_modules` com `is_enabled = true` para a marca Ubiz Resgata.
 
-```sql
-INSERT INTO public.brand_modules (brand_id, module_definition_id, is_enabled)
-SELECT 
-  'db15bd21-9137-4965-a0fb-540d8e8b26f1',
-  id,
-  true
-FROM public.module_definitions
-WHERE key = 'driver_hub'
-ON CONFLICT DO NOTHING;
-```
+#### 1. Adicionar ícone do módulo
+Adicionar `driver_hub: Home` (ou `LayoutDashboard`) ao mapa `MODULE_ICONS` em `BrandModulesPage.tsx`.
+
+#### 2. Adicionar toggle direto na config do painel do motorista
+Verificar se existe uma página de configuração do painel do motorista (tipo `DriverPanelConfigPage`) e adicionar um switch "Ativar Home do Motorista" diretamente nela, para que o empreendedor/root admin não precise ir até a página de módulos.
+
+#### 3. Garantir visibilidade na página de módulos
+- O módulo já está com `customer_facing: true`, `is_core: false` e `is_active: true`
+- Para root admin: funciona ao selecionar a marca no dropdown
+- Para brand admin: já deve aparecer (o registro existe em `brand_modules`)
+
+### Arquivos alterados
+
+| Arquivo | Mudança |
+|---------|---------|
+| `src/pages/BrandModulesPage.tsx` | Adicionar `driver_hub` ao `MODULE_ICONS` |
+| `src/pages/DriverPanelPage.tsx` ou config equivalente | Adicionar switch inline para ativar/desativar o hub diretamente |
 
 ### Resultado
-O Driver Hub aparecera imediatamente no app do motorista da Ubiz Resgata ao acessar o painel. O empreendedor podera desativar o módulo a qualquer momento pela tela de Módulos no admin.
-
-### Arquivo alterado
-Nenhum arquivo de codigo — apenas uma migração de banco de dados.
+O empreendedor verá o toggle "Home do Motorista" tanto na página de módulos quanto diretamente na configuração do painel do motorista, com um ícone claro e identificável.
 
