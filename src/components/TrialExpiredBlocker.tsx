@@ -26,6 +26,10 @@ export default function TrialExpiredBlocker() {
       return data;
     },
     enabled: !!currentBrandId,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
   });
 
   if (isLoading || !brand) return null;

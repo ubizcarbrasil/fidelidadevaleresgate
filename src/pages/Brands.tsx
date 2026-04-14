@@ -147,8 +147,11 @@ export default function Brands() {
         trial_days: renewStatus === "TRIAL" ? Number(renewTrialDays) : undefined,
       });
       queryClient.invalidateQueries({ queryKey: ["brands"] });
+      queryClient.invalidateQueries({ queryKey: ["brand-trial-blocker", renewTarget.id] });
+      queryClient.invalidateQueries({ queryKey: ["brand-trial-status", renewTarget.id] });
       const statusLabel = STATUS_OPTIONS.find(s => s.key === renewStatus)?.label || renewStatus;
-      toast.success(`Assinatura atualizada para ${statusLabel}!`);
+      const trialMsg = renewStatus === "TRIAL" ? ` (${renewTrialDays} dias)` : "";
+      toast.success(`Assinatura atualizada para ${statusLabel}${trialMsg}!`);
       setRenewTarget(null);
     } catch (e: any) {
       toast.error(e.message);
