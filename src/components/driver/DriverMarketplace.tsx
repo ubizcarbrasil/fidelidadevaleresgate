@@ -574,7 +574,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       )}
 
       {/* Redeemable section */}
-      {!debouncedSearch.trim() && redeemableDeals.length > 0 && (
+      {achadinhosEnabled && !debouncedSearch.trim() && redeemableDeals.length > 0 && (
         <section className="pt-4">
           <div className="px-5 mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
