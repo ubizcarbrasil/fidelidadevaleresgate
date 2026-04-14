@@ -65,6 +65,7 @@ interface Props {
   initialCategoryId?: string | null;
   initialDealId?: string | null;
   isAdminSession?: boolean;
+  achadinhosEnabled?: boolean;
 }
 
 function getPublicShareUrl(brandId: string, opts?: { categoryId?: string; dealId?: string }) {

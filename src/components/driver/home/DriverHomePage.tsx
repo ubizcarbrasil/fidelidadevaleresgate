@@ -28,6 +28,7 @@ interface Props {
   onOpenRedeemStore: () => void;
   onOpenCityRedeem: () => void;
   onActivateSearch: () => void;
+  achadinhosEnabled?: boolean;
 }
 
 export default function DriverHomePage({
