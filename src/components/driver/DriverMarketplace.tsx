@@ -668,7 +668,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       )}
 
       {/* WhatsApp CTA Banner for ML affiliate link */}
-      {!debouncedSearch.trim() && whatsappNumber && (
+      {achadinhosEnabled && !debouncedSearch.trim() && whatsappNumber && (
         <section className="px-5 pt-4">
           <a
             href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent("Olá! Gostaria de enviar um link de produto do Mercado Livre para gerar pontos.")}`}
