@@ -32,18 +32,22 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   const logoUrl = settings?.logo_url;
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  const { data: driverHubEnabled } = useQuery({
-    queryKey: ["driver-hub-enabled", brand.id],
+  const { data: brandModulesFlags } = useQuery({
+    queryKey: ["driver-brand-modules", brand.id],
     queryFn: async () => {
       const { data } = await supabase
         .from("public_brand_modules_safe")
-        .select("is_enabled")
+        .select("module_key, is_enabled")
         .eq("brand_id", brand.id)
-        .eq("module_key", "driver_hub")
-        .maybeSingle();
-      return data?.is_enabled ?? false;
+        .in("module_key", ["driver_hub", "affiliate_deals"]);
+      const map: Record<string, boolean> = {};
+      (data || []).forEach((r: any) => { map[r.module_key] = r.is_enabled; });
+      return map;
     },
   });
+
+  const driverHubEnabled = brandModulesFlags?.driver_hub ?? false;
+  const brandAchadinhosEnabled = brandModulesFlags?.affiliate_deals ?? true;
 
   // Hub view state
   const [showHub, setShowHub] = useState(true);
