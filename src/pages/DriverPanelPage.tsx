@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
@@ -30,7 +31,19 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   const settings = brand?.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
-  const driverHubEnabled = settings?.driver_hub_enabled === true;
+
+  const { data: driverHubEnabled } = useQuery({
+    queryKey: ["driver-hub-enabled", brand.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("brand_modules")
+        .select("is_enabled, module_definitions!inner(key)")
+        .eq("brand_id", brand.id)
+        .eq("module_definitions.key", "driver_hub")
+        .maybeSingle();
+      return data?.is_enabled ?? false;
+    },
+  });
 
   // Hub view state
   const [showHub, setShowHub] = useState(true);
