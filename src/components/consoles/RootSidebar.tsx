@@ -1,8 +1,6 @@
 import {
-  Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
-  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, PackageSearch, BarChart3, Bell, Type, FolderTree, Layers, ScanLine, Zap, Handshake, Eye,
-  TrendingUp, FlaskConical, ChevronRight, FileText, Key, BookOpen, Car, ExternalLink,
-  Palette, AppWindow, GalleryHorizontal, CreditCard, DollarSign, ShoppingCart, FolderHeart,
+  LayoutDashboard, LogOut, ExternalLink, ChevronRight, Palette, Shield,
+  ShieldCheck, ScrollText, Copy, FileText,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -20,166 +18,120 @@ import {
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import PlatformLogo from "@/components/PlatformLogo";
+import {
+  MENU_REGISTRY,
+  buildSidebarGroups,
+  type RegistroItemMenu,
+  type DefinicaoGrupoSidebar,
+} from "@/compartilhados/constants/constantes_menu_sidebar";
 
-interface MenuItem {
-  key: string;
-  defaultTitle: string;
-  url: string;
-  icon: any;
-}
+const dashboardItem = MENU_REGISTRY["sidebar.dashboard"];
 
-const dashboardItem: MenuItem = {
-  key: "sidebar.dashboard", defaultTitle: "Visão Geral", url: "/", icon: LayoutDashboard,
-};
-
-const groups: { label: string; items: MenuItem[] }[] = [
+const rootGroupDefs: DefinicaoGrupoSidebar[] = [
   {
     label: "Guias Inteligentes",
-    items: [
-      { key: "sidebar.jornada_root", defaultTitle: "Guia Completo", url: "/root-journey", icon: Rocket },
-      { key: "sidebar.jornada", defaultTitle: "Guia do Empreendedor", url: "/brand-journey", icon: Store },
-      { key: "sidebar.jornada_emissor", defaultTitle: "Guia do Emissor", url: "/emitter-journey", icon: Zap },
-    ],
+    items: ["sidebar.jornada_root", "sidebar.jornada", "sidebar.jornada_emissor"],
   },
   {
     label: "Organização",
     items: [
-      { key: "sidebar.empresas", defaultTitle: "Empresas", url: "/tenants", icon: Building2 },
-      { key: "sidebar.marcas", defaultTitle: "Marcas", url: "/brands", icon: Store },
-      { key: "sidebar.branches", defaultTitle: "Cidades", url: "/branches", icon: MapPin },
-      { key: "sidebar.clonar_cidade", defaultTitle: "Duplicar Região", url: "/clone-branch", icon: Copy },
-      { key: "sidebar.dominios", defaultTitle: "Domínios", url: "/domains", icon: Globe },
-      { key: "sidebar.painel_motorista", defaultTitle: "Painel do Motorista", url: "/driver-config", icon: Car },
-      { key: "sidebar.provisionar_marca", defaultTitle: "Nova Marca", url: "/provision-brand", icon: Rocket },
-      { key: "sidebar.central_acessos", defaultTitle: "Gestão de Acessos", url: "/access-hub", icon: Eye },
+      "sidebar.empresas", "sidebar.marcas",
+      { key: "sidebar.branches", overrides: { url: "/branches" } },
+      "sidebar.clonar_cidade", "sidebar.dominios", "sidebar.painel_motorista",
+      "sidebar.provisionar_marca", "sidebar.central_acessos",
     ],
   },
   {
     label: "Personalização & Vitrine",
     items: [
-      { key: "sidebar.galeria_icones", defaultTitle: "Biblioteca de Ícones", url: "/icon-library", icon: Palette },
-      { key: "sidebar.app_icons", defaultTitle: "Ícones do Aplicativo", url: "/app-icons", icon: AppWindow },
-      { key: "sidebar.central_banners", defaultTitle: "Mídia & Banners", url: "/banner-manager", icon: GalleryHorizontal },
-      { key: "sidebar.nomes_rotulos", defaultTitle: "Nomenclaturas", url: "/menu-labels", icon: Type },
-      { key: "sidebar.page_builder", defaultTitle: "Editor de Páginas", url: "/page-builder-v2", icon: Layers },
-      { key: "sidebar.tema_plataforma", defaultTitle: "Tema da Plataforma", url: "/platform-theme", icon: Settings2 },
-      { key: "sidebar.welcome_tour", defaultTitle: "Boas-Vindas", url: "/welcome-tour", icon: Rocket },
-      { key: "sidebar.profile_links", defaultTitle: "Links do Perfil", url: "/profile-links", icon: FileText },
-      { key: "sidebar.partner_landing", defaultTitle: "Landing Page Parceiros", url: "/partner-landing-config", icon: FileText },
+      { key: "sidebar.galeria_icones", overrides: { icon: Palette } },
+      "sidebar.app_icons", "sidebar.central_banners", "sidebar.nomes_rotulos",
+      "sidebar.page_builder", "sidebar.tema_plataforma", "sidebar.welcome_tour",
+      "sidebar.profile_links",
+      { key: "sidebar.partner_landing", overrides: { icon: FileText } },
     ],
   },
   {
     label: "Gestão Comercial",
     items: [
-      { key: "sidebar.operador_pdv", defaultTitle: "Caixa PDV", url: "/pdv", icon: ScanLine },
-      { key: "sidebar.parceiros", defaultTitle: "Parceiros", url: "/stores", icon: ShoppingBag },
-      { key: "sidebar.ofertas", defaultTitle: "Ofertas", url: "/offers", icon: Tag },
-      { key: "sidebar.clientes", defaultTitle: "Clientes", url: "/customers", icon: UserCheck },
-      { key: "sidebar.resgates", defaultTitle: "Resgates", url: "/redemptions", icon: ReceiptText },
-      { key: "sidebar.cupons", defaultTitle: "Cupons", url: "/vouchers", icon: Ticket },
-      { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: ShoppingCart },
-      { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: FolderHeart },
-      { key: "sidebar.importar_csv", defaultTitle: "Importação de Dados", url: "/csv-import", icon: FileSpreadsheet },
-      { key: "sidebar.patrocinados", defaultTitle: "Patrocinados", url: "/sponsored-placements", icon: Zap },
+      "sidebar.operador_pdv", "sidebar.parceiros", "sidebar.ofertas",
+      "sidebar.clientes", "sidebar.resgates", "sidebar.cupons",
+      "sidebar.achadinhos", "sidebar.categorias_achadinhos",
+      "sidebar.importar_csv", "sidebar.patrocinados",
     ],
   },
   {
     label: "Aprovações",
     items: [
-      { key: "sidebar.aprovar_regras", defaultTitle: "Validar Regras", url: "/approve-store-rules", icon: Shield },
-      { key: "sidebar.solicitacoes_emissor", defaultTitle: "Solicitações de Upgrade", url: "/emitter-requests", icon: Zap },
-      { key: "sidebar.catalogo", defaultTitle: "Catálogo", url: "/store-catalog", icon: PackageSearch },
-      { key: "sidebar.espelhamento", defaultTitle: "Espelhamento", url: "/mirror-sync", icon: Copy },
-      { key: "sidebar.governanca_ofertas", defaultTitle: "Governança de Ofertas", url: "/offer-governance", icon: Shield },
+      { key: "sidebar.aprovar_regras", overrides: { icon: Shield } },
+      "sidebar.solicitacoes_emissor", "sidebar.catalogo",
+      { key: "sidebar.espelhamento", overrides: { icon: Copy } },
+      "sidebar.governanca_ofertas",
     ],
   },
   {
     label: "Comunicação",
-    items: [
-      { key: "sidebar.enviar_notificacao", defaultTitle: "Enviar Notificação", url: "/send-notification", icon: Bell },
-    ],
+    items: ["sidebar.enviar_notificacao"],
   },
   {
     label: "Programa de Fidelidade",
-    items: [
-      { key: "sidebar.pontuar", defaultTitle: "Pontuar", url: "/earn-points", icon: Coins },
-      { key: "sidebar.regras_pontos", defaultTitle: "Regras de Fidelidade", url: "/points-rules", icon: Settings2 },
-      { key: "sidebar.extrato_pontos", defaultTitle: "Extrato de Fidelidade", url: "/points-ledger", icon: ScrollText },
-    ],
+    items: ["sidebar.pontuar", "sidebar.regras_pontos", "sidebar.extrato_pontos"],
   },
   {
     label: "Cashback Inteligente",
     items: [
-      { key: "sidebar.gg_dashboard", defaultTitle: "Painel Cashback", url: "/ganha-ganha-dashboard", icon: Handshake },
-      { key: "sidebar.gg_config", defaultTitle: "Config. Cashback", url: "/ganha-ganha-config", icon: Settings2 },
-      { key: "sidebar.gg_billing", defaultTitle: "Financeiro Cashback", url: "/ganha-ganha-billing", icon: ReceiptText },
-      { key: "sidebar.gg_closing", defaultTitle: "Fechamento Financeiro", url: "/ganha-ganha-closing", icon: ScrollText },
-      { key: "sidebar.gg_store_summary", defaultTitle: "Resumo por Parceiro", url: "/ganha-ganha-store-summary", icon: Handshake },
+      "sidebar.gg_dashboard", "sidebar.gg_config", "sidebar.gg_billing",
+      { key: "sidebar.gg_closing", overrides: { icon: ScrollText } },
+      "sidebar.gg_store_summary",
     ],
   },
   {
     label: "Equipe & Acessos",
     items: [
-      { key: "sidebar.usuarios", defaultTitle: "Usuários", url: "/users", icon: Users },
-      { key: "sidebar.perm_parceiros", defaultTitle: "Permissão de Parceiros", url: "/brand-permissions", icon: ShieldCheck },
+      "sidebar.usuarios",
+      { key: "sidebar.perm_parceiros", overrides: { icon: ShieldCheck } },
     ],
   },
   {
     label: "Inteligência & Dados",
     items: [
-      { key: "sidebar.crm", defaultTitle: "Inteligência CRM", url: "/crm", icon: TrendingUp },
-      { key: "sidebar.relatorios", defaultTitle: "Relatórios", url: "/reports", icon: BarChart3 },
-      { key: "sidebar.auditoria", defaultTitle: "Auditoria", url: "/audit", icon: ScrollText },
-      { key: "sidebar.taxonomia", defaultTitle: "Taxonomia", url: "/taxonomy", icon: FolderTree },
+      "sidebar.crm", "sidebar.relatorios",
+      { key: "sidebar.auditoria", overrides: { icon: ScrollText } },
+      "sidebar.taxonomia",
     ],
   },
   {
     label: "Integrações & API",
-    items: [
-      { key: "sidebar.api_keys", defaultTitle: "APIs & Integrações", url: "/api-keys", icon: Key },
-      { key: "sidebar.api_docs", defaultTitle: "Documentação API", url: "/api-docs", icon: BookOpen },
-      { key: "sidebar.machine", defaultTitle: "Integração Mobilidade", url: "/machine-integration", icon: Car },
-      { key: "sidebar.teste_webhook", defaultTitle: "Lab Webhook", url: "/machine-webhook-test", icon: FlaskConical },
-    ],
+    items: ["sidebar.api_keys", "sidebar.api_docs", "sidebar.machine", "sidebar.teste_webhook"],
   },
   {
     label: "Configurações",
     items: [
-      { key: "sidebar.funcionalidades", defaultTitle: "Tipos de Módulo", url: "/modules", icon: Blocks },
-      { key: "sidebar.modulos", defaultTitle: "Módulos das Marcas", url: "/brand-modules", icon: Blocks },
-      { key: "sidebar.permissoes_globais", defaultTitle: "Políticas de Acesso", url: "/permissions", icon: Shield },
-      { key: "sidebar.secoes_home", defaultTitle: "Seções Iniciais", url: "/templates", icon: Layout },
-      { key: "sidebar.modelos_home", defaultTitle: "Templates", url: "/home-templates", icon: LayoutList },
-      { key: "sidebar.controle_recursos", defaultTitle: "Feature Flags", url: "/flags", icon: Flag },
-      { key: "sidebar.atualizacoes", defaultTitle: "Novidades", url: "/releases", icon: Rocket },
-      { key: "sidebar.kit_inicial", defaultTitle: "Starter Kit", url: "/starter-kit", icon: PackageSearch },
-      { key: "sidebar.configuracoes", defaultTitle: "Configurações", url: "/brand-settings", icon: Settings2 },
-      { key: "sidebar.subscription", defaultTitle: "Assinatura", url: "/subscription", icon: CreditCard },
-      { key: "sidebar.plan_templates", defaultTitle: "Perfil de Planos", url: "/plan-templates", icon: LayoutList },
-      { key: "sidebar.plan_pricing", defaultTitle: "Preços dos Planos", url: "/plan-pricing", icon: DollarSign },
+      "sidebar.funcionalidades",
+      { key: "sidebar.modulos", overrides: { defaultTitle: "Módulos das Marcas" } },
+      "sidebar.permissoes_globais", "sidebar.secoes_home", "sidebar.modelos_home",
+      "sidebar.controle_recursos", "sidebar.atualizacoes", "sidebar.kit_inicial",
+      "sidebar.configuracoes",
+      { key: "sidebar.subscription", overrides: { defaultTitle: "Assinatura" } },
+      "sidebar.plan_templates", "sidebar.plan_pricing",
     ],
   },
 ];
 
+const groups = buildSidebarGroups(rootGroupDefs);
+
 function CollapsibleGroup({
-  label,
-  items,
-  collapsed,
-  location,
-  getLabel,
-  badges,
+  label, items, collapsed, location, getLabel, badges,
 }: {
   label: string;
-  items: MenuItem[];
+  items: RegistroItemMenu[];
   collapsed: boolean;
   location: { pathname: string };
   getLabel: (key: string) => string;
   badges: Record<string, number>;
 }) {
   const hasActiveRoute = items.some(
-    (item) =>
-      location.pathname === item.url ||
-      (item.url !== "/" && location.pathname.startsWith(item.url))
+    (item) => location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url))
   );
 
   return (
@@ -194,23 +146,14 @@ function CollapsibleGroup({
             <SidebarMenu>
               {items.map((item) => {
                 const badgeCount = badges[item.key];
-
                 return (
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
                       asChild
-                      isActive={
-                        location.pathname === item.url ||
-                        (item.url !== "/" && location.pathname.startsWith(item.url))
-                      }
+                      isActive={location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url))}
                       tooltip={getLabel(item.key)}
                     >
-                      <NavLink
-                        to={item.url}
-                        end={item.url === "/"}
-                        className="hover:bg-sidebar-accent/50"
-                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      >
+                      <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
                         {badgeCount && badgeCount > 0 && (
@@ -242,11 +185,7 @@ export function RootSidebar() {
   const { data: brands } = useQuery({
     queryKey: ["brands-for-sidebar"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("brands")
-        .select("id, name, slug")
-        .eq("is_active", true)
-        .order("name");
+      const { data } = await supabase.from("brands").select("id, name, slug").eq("is_active", true).order("name");
       return data ?? [];
     },
     staleTime: 5 * 60 * 1000,
@@ -270,17 +209,8 @@ export function RootSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/"}
-                  tooltip={getLabel(dashboardItem.key)}
-                >
-                  <NavLink
-                    to="/"
-                    end
-                    className="hover:bg-sidebar-accent/50"
-                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                  >
+                <SidebarMenuButton asChild isActive={location.pathname === "/"} tooltip={getLabel(dashboardItem.key)}>
+                  <NavLink to="/" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
                     <LayoutDashboard className="h-4 w-4" />
                     {!collapsed && <span className="flex-1">{getLabel(dashboardItem.key)}</span>}
                   </NavLink>
@@ -291,15 +221,7 @@ export function RootSidebar() {
         </SidebarGroup>
 
         {groups.map((group) => (
-          <CollapsibleGroup
-            key={group.label}
-            label={group.label}
-            items={group.items}
-            collapsed={collapsed}
-            location={location}
-            getLabel={getLabel}
-            badges={badges}
-          />
+          <CollapsibleGroup key={group.label} label={group.label} items={group.items} collapsed={collapsed} location={location} getLabel={getLabel} badges={badges} />
         ))}
 
         <Collapsible defaultOpen={false} className="group/collapsible">
@@ -313,12 +235,7 @@ export function RootSidebar() {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild tooltip="Landing Empreendedor">
-                      <a
-                        href={`${window.location.origin}/landing`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:bg-sidebar-accent/50 flex items-center gap-2"
-                      >
+                      <a href={`${window.location.origin}/landing`} target="_blank" rel="noopener noreferrer" className="hover:bg-sidebar-accent/50 flex items-center gap-2">
                         <ExternalLink className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">Landing Empreendedor</span>}
                         {!collapsed && <Badge variant="outline" className="ml-auto h-5 px-1.5 text-[10px] font-medium text-sidebar-foreground/60 border-sidebar-foreground/20">Externo</Badge>}
@@ -328,12 +245,7 @@ export function RootSidebar() {
                   {brands && brands.length === 1 ? (
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild tooltip="Landing Parceiros">
-                        <a
-                          href={`${window.location.origin}/${brands[0].slug}/parceiro`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:bg-sidebar-accent/50 flex items-center gap-2"
-                        >
+                        <a href={`${window.location.origin}/${brands[0].slug}/parceiro`} target="_blank" rel="noopener noreferrer" className="hover:bg-sidebar-accent/50 flex items-center gap-2">
                           <ExternalLink className="h-4 w-4" />
                           {!collapsed && <span className="flex-1">Landing Parceiros</span>}
                           {!collapsed && <Badge variant="outline" className="ml-auto h-5 px-1.5 text-[10px] font-medium text-sidebar-foreground/60 border-sidebar-foreground/20">Externo</Badge>}
@@ -344,12 +256,7 @@ export function RootSidebar() {
                     brands?.map((brand) => (
                       <SidebarMenuItem key={brand.id}>
                         <SidebarMenuButton asChild tooltip={`Parceiros – ${brand.name}`}>
-                          <a
-                            href={`${window.location.origin}/${brand.slug}/parceiro`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:bg-sidebar-accent/50 flex items-center gap-2"
-                          >
+                          <a href={`${window.location.origin}/${brand.slug}/parceiro`} target="_blank" rel="noopener noreferrer" className="hover:bg-sidebar-accent/50 flex items-center gap-2">
                             <ExternalLink className="h-4 w-4" />
                             {!collapsed && <span className="flex-1 truncate">{brand.name}</span>}
                             {!collapsed && <Badge variant="outline" className="ml-auto h-5 px-1.5 text-[10px] font-medium text-sidebar-foreground/60 border-sidebar-foreground/20">Externo</Badge>}
