@@ -1,27 +1,44 @@
 
 
-## Problema: Módulo Achadinhos não é respeitado no app do motorista
+## Problema: Não é possível renovar/reativar assinatura pelo painel Root
 
 ### Diagnóstico
-A configuração `enable_achadinhos_module: false` já está salva na cidade Ipatinga, e o sidebar do franqueado já esconde o grupo corretamente. Porém, o **app do motorista** (DriverHomePage e DriverMarketplace) nunca consulta essa configuração — ele sempre carrega e exibe os achadinhos.
+
+O menu "Mudar Plano" na listagem de Marcas (`/brands`) apenas atualiza o campo `subscription_plan` (ex: free → starter → pro). Porém, quando uma marca tem o `subscription_status` como `EXPIRED` ou `TRIAL` expirado, **não existe nenhuma ação no painel Root para mudar o status da assinatura para `ACTIVE`** nem para estender o `trial_expires_at`.
+
+O `TrialExpiredBlocker` bloqueia a marca quando `subscription_status = EXPIRED` ou quando o trial venceu — e o Root Admin não tem como desbloquear isso manualmente.
 
 ### Solução
-Fazer o app do motorista respeitar `enable_achadinhos_module` da branch, escondendo as seções de achadinhos quando desabilitado.
+
+**1. Nova ação na Edge Function `admin-brand-actions`**: `renew_subscription`
+
+Receberá: `brand_id`, `new_status` (ACTIVE, TRIAL, NONE), e opcionalmente `trial_days` (para estender trial).
+
+```sql
+UPDATE brands SET
+  subscription_status = new_status,
+  trial_expires_at = CASE WHEN new_status = 'TRIAL' THEN now() + interval 'X days' ELSE NULL END
+WHERE id = brand_id;
+```
+
+**2. Novo item no dropdown de ações da marca** (`src/pages/Brands.tsx`)
+
+Adicionar opção "Renovar Assinatura" no menu de contexto de cada marca, abrindo um dialog simples com:
+- Select: status (Ativo, Trial, Expirado)
+- Input condicional: dias de trial (quando status = Trial)
+- Botão confirmar
+
+**3. Exibir `subscription_status` na tabela de marcas**
+
+Adicionar uma coluna mostrando o status atual (ACTIVE/TRIAL/EXPIRED) para o Root Admin ter visibilidade.
 
 ### Arquivos alterados
 
 | Arquivo | Mudança |
 |---------|---------|
-| `src/pages/DriverPanelPage.tsx` | Passar flag `achadinhosEnabled` para DriverHomePage e DriverMarketplace, lida do `branch.branch_settings_json` |
-| `src/components/driver/home/DriverHomePage.tsx` | Receber prop `achadinhosEnabled` e esconder categorias, vitrines de ofertas e busca quando `false` |
-| `src/components/driver/DriverMarketplace.tsx` | Receber prop `achadinhosEnabled` e esconder seção de achadinhos/ofertas afiliadas quando `false`, mantendo apenas "Resgate na Cidade" e Duelos |
-
-### Como funciona
-1. O `DriverPanelPage` já tem acesso ao `branch` (com `branch_settings_json`)
-2. Extrair `enable_achadinhos_module` do JSON (default `true` se não definido)
-3. Passar como prop para os componentes filhos
-4. Quando `false`: esconder categorias, vitrine de ofertas, busca por achadinhos no Hub; no Marketplace, esconder a listagem de affiliate_deals
+| `supabase/functions/admin-brand-actions/index.ts` | Nova ação `renew_subscription` |
+| `src/pages/Brands.tsx` | Novo item no dropdown + dialog de renovação + coluna de status da assinatura |
 
 ### Resultado
-Ao desabilitar "Achadinhos" na configuração da cidade, o motorista não verá mais ofertas afiliadas no app, tanto no Hub quanto no Marketplace.
+O Root Admin poderá renovar/reativar qualquer marca diretamente pela listagem de marcas, escolhendo entre ativar a assinatura ou estender o período de trial.
 
