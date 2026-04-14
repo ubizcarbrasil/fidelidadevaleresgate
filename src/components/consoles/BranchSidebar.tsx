@@ -1,5 +1,5 @@
 import React from "react";
-import { ShoppingBag, Tag, UserCheck, ReceiptText, LayoutDashboard, LogOut, Ticket, FileSpreadsheet, Coins, ScrollText, Settings2, ClipboardCheck, ClipboardList, ScanLine, PackageSearch, BarChart3, Bell, ChevronRight, BookOpen, ShoppingCart, FolderHeart, Swords } from "lucide-react";
+import { LayoutDashboard, LogOut, ChevronRight } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,123 +19,87 @@ import { Button } from "@/components/ui/button";
 import PlatformLogo from "@/components/PlatformLogo";
 import { useBrandInfo } from "@/hooks/useBrandName";
 import { useBranchCityName } from "@/hooks/hook_branch_city";
-
-interface MenuItem {
-  key: string;
-  defaultTitle: string;
-  url: string;
-  icon: any;
-  moduleKey?: string;
-  scoringFilter?: "DRIVER" | "PASSENGER";
-}
+import {
+  MENU_REGISTRY,
+  buildSidebarGroups,
+  type RegistroItemMenu,
+  type DefinicaoGrupoSidebar,
+} from "@/compartilhados/constants/constantes_menu_sidebar";
 
 type BranchModuleKey = "enable_duels_module" | "enable_achadinhos_module" | "enable_marketplace_module" | "enable_race_earn_module" | "enable_customer_scoring_module";
 
-const dashboardItem: MenuItem = {
-  key: "sidebar.dashboard", defaultTitle: "Visão Geral", url: "/", icon: LayoutDashboard,
-};
+const dashboardItem = MENU_REGISTRY["sidebar.dashboard"];
 
-const groups: { label: string; scoringFilter?: "DRIVER" | "PASSENGER"; branchModuleKey?: BranchModuleKey; items: MenuItem[] }[] = [
+const branchGroupDefs: DefinicaoGrupoSidebar[] = [
   {
     label: "Gestão Comercial",
     scoringFilter: "PASSENGER",
     branchModuleKey: "enable_customer_scoring_module",
     items: [
-      { key: "sidebar.operador_pdv", defaultTitle: "Caixa PDV", url: "/pdv", icon: ScanLine, moduleKey: "earn_points_store" },
-      { key: "sidebar.parceiros", defaultTitle: "Parceiros", url: "/stores", icon: ShoppingBag, moduleKey: "stores" },
-      { key: "sidebar.ofertas", defaultTitle: "Ofertas", url: "/offers", icon: Tag, moduleKey: "offers" },
-      { key: "sidebar.clientes", defaultTitle: "Clientes", url: "/customers", icon: UserCheck, moduleKey: "wallet" },
-      { key: "sidebar.resgates", defaultTitle: "Resgates", url: "/redemptions", icon: ReceiptText, moduleKey: "redemption_qr" },
-      { key: "sidebar.cupons", defaultTitle: "Cupons", url: "/vouchers", icon: Ticket, moduleKey: "vouchers" },
+      "sidebar.operador_pdv", "sidebar.parceiros", "sidebar.ofertas",
+      "sidebar.clientes", "sidebar.resgates", "sidebar.cupons",
     ],
   },
   {
     label: "Aprovações",
     scoringFilter: "PASSENGER",
     branchModuleKey: "enable_customer_scoring_module",
-    items: [
-      { key: "sidebar.aprovar_regras", defaultTitle: "Validar Regras", url: "/approve-store-rules", icon: ClipboardCheck, moduleKey: "earn_points_store" },
-      { key: "sidebar.catalogo", defaultTitle: "Catálogo", url: "/store-catalog", icon: PackageSearch, moduleKey: "catalog" },
-    ],
+    items: ["sidebar.aprovar_regras", "sidebar.catalogo"],
   },
   {
     label: "Achadinhos",
     scoringFilter: "PASSENGER",
     branchModuleKey: "enable_achadinhos_module",
-    items: [
-      { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: ShoppingCart, moduleKey: "affiliate_deals" },
-      { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: FolderHeart, moduleKey: "affiliate_deals" },
-    ],
+    items: ["sidebar.achadinhos", "sidebar.categorias_achadinhos"],
   },
   {
     label: "Comunicação",
     scoringFilter: "PASSENGER",
-    items: [
-      { key: "sidebar.enviar_notificacao", defaultTitle: "Enviar Notificação", url: "/send-notification", icon: Bell, moduleKey: "notifications" },
-    ],
+    items: ["sidebar.enviar_notificacao"],
   },
   {
     label: "Motoristas & Resgate",
     scoringFilter: "DRIVER",
     branchModuleKey: "enable_race_earn_module",
     items: [
-      { key: "sidebar.carteira_pontos", defaultTitle: "Carteira de Pontos", url: "/branch-wallet", icon: Coins, moduleKey: "achadinhos_motorista" },
-      { key: "sidebar.comprar_pontos", defaultTitle: "Comprar Pontos", url: "/points-packages-store", icon: ShoppingCart, moduleKey: "achadinhos_motorista" },
-      { key: "sidebar.regras_motorista", defaultTitle: "Regras de Pontuação", url: "/driver-points-rules", icon: Settings2, moduleKey: "achadinhos_motorista" },
-      { key: "sidebar.produtos_resgate", defaultTitle: "Produtos de Resgate", url: "/produtos-resgate", icon: ShoppingBag, moduleKey: "achadinhos_motorista" },
-      { key: "sidebar.pedidos_resgate", defaultTitle: "Pedidos de Resgate", url: "/product-redemption-orders", icon: ReceiptText, moduleKey: "achadinhos_motorista" },
-      { key: "sidebar.motoristas", defaultTitle: "Motoristas", url: "/motoristas", icon: UserCheck, moduleKey: "achadinhos_motorista" },
-      { key: "sidebar.relatorios_cidade", defaultTitle: "Relatórios", url: "/branch-reports", icon: BarChart3, moduleKey: "achadinhos_motorista" },
-      { key: "sidebar.manuais", defaultTitle: "Manuais", url: "/manuais", icon: BookOpen, moduleKey: "achadinhos_motorista" },
+      "sidebar.carteira_pontos", "sidebar.comprar_pontos", "sidebar.regras_motorista",
+      "sidebar.produtos_resgate", "sidebar.pedidos_resgate",
+      { key: "sidebar.motoristas", overrides: { moduleKey: "achadinhos_motorista" } },
+      "sidebar.relatorios_cidade", "sidebar.manuais",
     ],
   },
   {
     label: "Programa de Fidelidade",
     scoringFilter: "PASSENGER",
     branchModuleKey: "enable_customer_scoring_module",
-    items: [
-      { key: "sidebar.pontuar", defaultTitle: "Pontuar", url: "/earn-points", icon: Coins, moduleKey: "earn_points_store" },
-      { key: "sidebar.regras_pontos", defaultTitle: "Regras de Fidelidade", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store" },
-      { key: "sidebar.extrato_pontos", defaultTitle: "Extrato de Fidelidade", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store" },
-    ],
+    items: ["sidebar.pontuar", "sidebar.regras_pontos", "sidebar.extrato_pontos"],
   },
   {
     label: "Gamificação",
     scoringFilter: "DRIVER",
     branchModuleKey: "enable_duels_module",
-    items: [
-      { key: "sidebar.gamificacao", defaultTitle: "Duelos & Ranking", url: "/gamificacao-admin", icon: Swords, moduleKey: "achadinhos_motorista" },
-    ],
+    items: ["sidebar.gamificacao"],
   },
   {
     label: "Inteligência & Dados",
-    items: [
-      { key: "sidebar.relatorios", defaultTitle: "Relatórios", url: "/reports", icon: BarChart3, moduleKey: "reports" },
-      { key: "sidebar.auditoria", defaultTitle: "Auditoria", url: "/audit", icon: ClipboardList, moduleKey: "audit" },
-      { key: "sidebar.importar_csv", defaultTitle: "Importação de Dados", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores" },
-    ],
+    items: ["sidebar.relatorios", "sidebar.auditoria", "sidebar.importar_csv"],
   },
 ];
 
+const groups = buildSidebarGroups(branchGroupDefs);
+
 function CollapsibleGroup({
-  label,
-  items,
-  collapsed,
-  location,
-  getLabel,
-  badges,
+  label, items, collapsed, location, getLabel, badges,
 }: {
   label: string;
-  items: MenuItem[];
+  items: RegistroItemMenu[];
   collapsed: boolean;
   location: { pathname: string };
   getLabel: (key: string) => string;
   badges: Record<string, number>;
 }) {
   const hasActiveRoute = items.some(
-    (item) =>
-      location.pathname === item.url ||
-      (item.url !== "/" && location.pathname.startsWith(item.url))
+    (item) => location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url))
   );
 
   return (
@@ -154,18 +118,10 @@ function CollapsibleGroup({
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
                       asChild
-                      isActive={
-                        location.pathname === item.url ||
-                        (item.url !== "/" && location.pathname.startsWith(item.url))
-                      }
+                      isActive={location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url))}
                       tooltip={getLabel(item.key)}
                     >
-                      <NavLink
-                        to={item.url}
-                        end={item.url === "/"}
-                        className="hover:bg-sidebar-accent/50"
-                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      >
+                      <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
                         {badgeCount && badgeCount > 0 && (
@@ -203,7 +159,7 @@ export function BranchSidebar() {
     .filter((group) => {
       if (group.scoringFilter === "DRIVER" && !isDriverEnabled) return false;
       if (group.scoringFilter === "PASSENGER" && !isPassengerEnabled) return false;
-      if (group.branchModuleKey && !isBranchModuleEnabled(group.branchModuleKey)) return false;
+      if (group.branchModuleKey && !isBranchModuleEnabled(group.branchModuleKey as BranchModuleKey)) return false;
       return true;
     })
     .map((group) => ({
@@ -231,17 +187,8 @@ export function BranchSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/"}
-                  tooltip={getLabel(dashboardItem.key)}
-                >
-                  <NavLink
-                    to="/"
-                    end
-                    className="hover:bg-sidebar-accent/50"
-                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                  >
+                <SidebarMenuButton asChild isActive={location.pathname === "/"} tooltip={getLabel(dashboardItem.key)}>
+                  <NavLink to="/" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
                     <LayoutDashboard className="h-4 w-4" />
                     {!collapsed && <span className="flex-1">{getLabel(dashboardItem.key)}</span>}
                   </NavLink>

@@ -1,5 +1,6 @@
 import {
-  LayoutDashboard, LogOut, ExternalLink, ChevronRight,
+  LayoutDashboard, LogOut, ExternalLink, ChevronRight, Palette, Shield,
+  ShieldCheck, ScrollText, Copy, FileText,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -29,128 +30,90 @@ const dashboardItem = MENU_REGISTRY["sidebar.dashboard"];
 const rootGroupDefs: DefinicaoGrupoSidebar[] = [
   {
     label: "Guias Inteligentes",
-    items: [
-      "sidebar.jornada_root",
-      { key: "sidebar.jornada", overrides: { moduleKey: undefined } },
-      { key: "sidebar.jornada_emissor", overrides: { moduleKey: undefined } },
-    ],
+    items: ["sidebar.jornada_root", "sidebar.jornada", "sidebar.jornada_emissor"],
   },
   {
     label: "Organização",
     items: [
-      "sidebar.empresas",
-      "sidebar.marcas",
+      "sidebar.empresas", "sidebar.marcas",
       { key: "sidebar.branches", overrides: { url: "/branches" } },
-      "sidebar.clonar_cidade",
-      "sidebar.dominios",
-      "sidebar.painel_motorista",
-      "sidebar.provisionar_marca",
-      { key: "sidebar.central_acessos", overrides: { moduleKey: undefined } },
+      "sidebar.clonar_cidade", "sidebar.dominios", "sidebar.painel_motorista",
+      "sidebar.provisionar_marca", "sidebar.central_acessos",
     ],
   },
   {
     label: "Personalização & Vitrine",
     items: [
-      { key: "sidebar.galeria_icones", overrides: { icon: (await import("lucide-react")).Palette, moduleKey: undefined } },
-      "sidebar.app_icons",
-      { key: "sidebar.central_banners", overrides: { moduleKey: undefined } },
-      "sidebar.nomes_rotulos",
-      { key: "sidebar.page_builder", overrides: { moduleKey: undefined } },
-      "sidebar.tema_plataforma",
-      { key: "sidebar.welcome_tour", overrides: { moduleKey: undefined } },
-      { key: "sidebar.profile_links", overrides: { moduleKey: undefined } },
-      { key: "sidebar.partner_landing", overrides: { icon: (await import("lucide-react")).FileText, moduleKey: undefined } },
+      { key: "sidebar.galeria_icones", overrides: { icon: Palette } },
+      "sidebar.app_icons", "sidebar.central_banners", "sidebar.nomes_rotulos",
+      "sidebar.page_builder", "sidebar.tema_plataforma", "sidebar.welcome_tour",
+      "sidebar.profile_links",
+      { key: "sidebar.partner_landing", overrides: { icon: FileText } },
     ],
   },
   {
     label: "Gestão Comercial",
     items: [
-      { key: "sidebar.operador_pdv", overrides: { moduleKey: undefined } },
-      { key: "sidebar.parceiros", overrides: { moduleKey: undefined } },
-      { key: "sidebar.ofertas", overrides: { moduleKey: undefined } },
-      { key: "sidebar.clientes", overrides: { moduleKey: undefined } },
-      { key: "sidebar.resgates", overrides: { moduleKey: undefined } },
-      { key: "sidebar.cupons", overrides: { moduleKey: undefined } },
-      { key: "sidebar.achadinhos", overrides: { moduleKey: undefined } },
-      { key: "sidebar.categorias_achadinhos", overrides: { moduleKey: undefined } },
-      { key: "sidebar.importar_csv", overrides: { moduleKey: undefined } },
-      { key: "sidebar.patrocinados", overrides: { moduleKey: undefined } },
+      "sidebar.operador_pdv", "sidebar.parceiros", "sidebar.ofertas",
+      "sidebar.clientes", "sidebar.resgates", "sidebar.cupons",
+      "sidebar.achadinhos", "sidebar.categorias_achadinhos",
+      "sidebar.importar_csv", "sidebar.patrocinados",
     ],
   },
   {
     label: "Aprovações",
     items: [
-      { key: "sidebar.aprovar_regras", overrides: { icon: (await import("lucide-react")).Shield, moduleKey: undefined } },
-      { key: "sidebar.solicitacoes_emissor", overrides: { moduleKey: undefined } },
-      { key: "sidebar.catalogo", overrides: { moduleKey: undefined } },
-      { key: "sidebar.espelhamento", overrides: { icon: (await import("lucide-react")).Copy, moduleKey: undefined } },
-      { key: "sidebar.governanca_ofertas", overrides: { moduleKey: undefined } },
+      { key: "sidebar.aprovar_regras", overrides: { icon: Shield } },
+      "sidebar.solicitacoes_emissor", "sidebar.catalogo",
+      { key: "sidebar.espelhamento", overrides: { icon: Copy } },
+      "sidebar.governanca_ofertas",
     ],
   },
   {
     label: "Comunicação",
-    items: [
-      { key: "sidebar.enviar_notificacao", overrides: { moduleKey: undefined } },
-    ],
+    items: ["sidebar.enviar_notificacao"],
   },
   {
     label: "Programa de Fidelidade",
-    items: [
-      { key: "sidebar.pontuar", overrides: { moduleKey: undefined } },
-      { key: "sidebar.regras_pontos", overrides: { moduleKey: undefined } },
-      { key: "sidebar.extrato_pontos", overrides: { moduleKey: undefined } },
-    ],
+    items: ["sidebar.pontuar", "sidebar.regras_pontos", "sidebar.extrato_pontos"],
   },
   {
     label: "Cashback Inteligente",
     items: [
-      "sidebar.gg_dashboard",
-      { key: "sidebar.gg_config", overrides: { moduleKey: undefined } },
-      { key: "sidebar.gg_billing", overrides: { moduleKey: undefined } },
-      { key: "sidebar.gg_closing", overrides: { icon: (await import("lucide-react")).ScrollText, moduleKey: undefined } },
+      "sidebar.gg_dashboard", "sidebar.gg_config", "sidebar.gg_billing",
+      { key: "sidebar.gg_closing", overrides: { icon: ScrollText } },
       "sidebar.gg_store_summary",
     ],
   },
   {
     label: "Equipe & Acessos",
     items: [
-      { key: "sidebar.usuarios", overrides: { moduleKey: undefined } },
-      { key: "sidebar.perm_parceiros", overrides: { icon: (await import("lucide-react")).ShieldCheck, moduleKey: undefined } },
+      "sidebar.usuarios",
+      { key: "sidebar.perm_parceiros", overrides: { icon: ShieldCheck } },
     ],
   },
   {
     label: "Inteligência & Dados",
     items: [
-      { key: "sidebar.crm", overrides: { moduleKey: undefined } },
-      { key: "sidebar.relatorios", overrides: { moduleKey: undefined } },
-      { key: "sidebar.auditoria", overrides: { icon: (await import("lucide-react")).ScrollText, moduleKey: undefined } },
-      { key: "sidebar.taxonomia", overrides: { moduleKey: undefined } },
+      "sidebar.crm", "sidebar.relatorios",
+      { key: "sidebar.auditoria", overrides: { icon: ScrollText } },
+      "sidebar.taxonomia",
     ],
   },
   {
     label: "Integrações & API",
-    items: [
-      { key: "sidebar.api_keys", overrides: { moduleKey: undefined } },
-      { key: "sidebar.api_docs", overrides: { moduleKey: undefined } },
-      { key: "sidebar.machine", overrides: { moduleKey: undefined } },
-      { key: "sidebar.teste_webhook", overrides: { moduleKey: undefined } },
-    ],
+    items: ["sidebar.api_keys", "sidebar.api_docs", "sidebar.machine", "sidebar.teste_webhook"],
   },
   {
     label: "Configurações",
     items: [
       "sidebar.funcionalidades",
       { key: "sidebar.modulos", overrides: { defaultTitle: "Módulos das Marcas" } },
-      "sidebar.permissoes_globais",
-      "sidebar.secoes_home",
-      "sidebar.modelos_home",
-      "sidebar.controle_recursos",
-      "sidebar.atualizacoes",
-      "sidebar.kit_inicial",
-      { key: "sidebar.configuracoes", overrides: { moduleKey: undefined } },
-      { key: "sidebar.subscription", overrides: { defaultTitle: "Assinatura", moduleKey: undefined } },
-      "sidebar.plan_templates",
-      "sidebar.plan_pricing",
+      "sidebar.permissoes_globais", "sidebar.secoes_home", "sidebar.modelos_home",
+      "sidebar.controle_recursos", "sidebar.atualizacoes", "sidebar.kit_inicial",
+      "sidebar.configuracoes",
+      { key: "sidebar.subscription", overrides: { defaultTitle: "Assinatura" } },
+      "sidebar.plan_templates", "sidebar.plan_pricing",
     ],
   },
 ];
@@ -158,12 +121,7 @@ const rootGroupDefs: DefinicaoGrupoSidebar[] = [
 const groups = buildSidebarGroups(rootGroupDefs);
 
 function CollapsibleGroup({
-  label,
-  items,
-  collapsed,
-  location,
-  getLabel,
-  badges,
+  label, items, collapsed, location, getLabel, badges,
 }: {
   label: string;
   items: RegistroItemMenu[];
@@ -173,9 +131,7 @@ function CollapsibleGroup({
   badges: Record<string, number>;
 }) {
   const hasActiveRoute = items.some(
-    (item) =>
-      location.pathname === item.url ||
-      (item.url !== "/" && location.pathname.startsWith(item.url))
+    (item) => location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url))
   );
 
   return (
@@ -190,23 +146,14 @@ function CollapsibleGroup({
             <SidebarMenu>
               {items.map((item) => {
                 const badgeCount = badges[item.key];
-
                 return (
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
                       asChild
-                      isActive={
-                        location.pathname === item.url ||
-                        (item.url !== "/" && location.pathname.startsWith(item.url))
-                      }
+                      isActive={location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url))}
                       tooltip={getLabel(item.key)}
                     >
-                      <NavLink
-                        to={item.url}
-                        end={item.url === "/"}
-                        className="hover:bg-sidebar-accent/50"
-                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      >
+                      <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
                         {badgeCount && badgeCount > 0 && (
@@ -238,11 +185,7 @@ export function RootSidebar() {
   const { data: brands } = useQuery({
     queryKey: ["brands-for-sidebar"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("brands")
-        .select("id, name, slug")
-        .eq("is_active", true)
-        .order("name");
+      const { data } = await supabase.from("brands").select("id, name, slug").eq("is_active", true).order("name");
       return data ?? [];
     },
     staleTime: 5 * 60 * 1000,
@@ -266,17 +209,8 @@ export function RootSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/"}
-                  tooltip={getLabel(dashboardItem.key)}
-                >
-                  <NavLink
-                    to="/"
-                    end
-                    className="hover:bg-sidebar-accent/50"
-                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                  >
+                <SidebarMenuButton asChild isActive={location.pathname === "/"} tooltip={getLabel(dashboardItem.key)}>
+                  <NavLink to="/" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
                     <LayoutDashboard className="h-4 w-4" />
                     {!collapsed && <span className="flex-1">{getLabel(dashboardItem.key)}</span>}
                   </NavLink>
@@ -287,15 +221,7 @@ export function RootSidebar() {
         </SidebarGroup>
 
         {groups.map((group) => (
-          <CollapsibleGroup
-            key={group.label}
-            label={group.label}
-            items={group.items}
-            collapsed={collapsed}
-            location={location}
-            getLabel={getLabel}
-            badges={badges}
-          />
+          <CollapsibleGroup key={group.label} label={group.label} items={group.items} collapsed={collapsed} location={location} getLabel={getLabel} badges={badges} />
         ))}
 
         <Collapsible defaultOpen={false} className="group/collapsible">
@@ -309,12 +235,7 @@ export function RootSidebar() {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild tooltip="Landing Empreendedor">
-                      <a
-                        href={`${window.location.origin}/landing`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:bg-sidebar-accent/50 flex items-center gap-2"
-                      >
+                      <a href={`${window.location.origin}/landing`} target="_blank" rel="noopener noreferrer" className="hover:bg-sidebar-accent/50 flex items-center gap-2">
                         <ExternalLink className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">Landing Empreendedor</span>}
                         {!collapsed && <Badge variant="outline" className="ml-auto h-5 px-1.5 text-[10px] font-medium text-sidebar-foreground/60 border-sidebar-foreground/20">Externo</Badge>}
@@ -324,12 +245,7 @@ export function RootSidebar() {
                   {brands && brands.length === 1 ? (
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild tooltip="Landing Parceiros">
-                        <a
-                          href={`${window.location.origin}/${brands[0].slug}/parceiro`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:bg-sidebar-accent/50 flex items-center gap-2"
-                        >
+                        <a href={`${window.location.origin}/${brands[0].slug}/parceiro`} target="_blank" rel="noopener noreferrer" className="hover:bg-sidebar-accent/50 flex items-center gap-2">
                           <ExternalLink className="h-4 w-4" />
                           {!collapsed && <span className="flex-1">Landing Parceiros</span>}
                           {!collapsed && <Badge variant="outline" className="ml-auto h-5 px-1.5 text-[10px] font-medium text-sidebar-foreground/60 border-sidebar-foreground/20">Externo</Badge>}
@@ -340,12 +256,7 @@ export function RootSidebar() {
                     brands?.map((brand) => (
                       <SidebarMenuItem key={brand.id}>
                         <SidebarMenuButton asChild tooltip={`Parceiros – ${brand.name}`}>
-                          <a
-                            href={`${window.location.origin}/${brand.slug}/parceiro`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:bg-sidebar-accent/50 flex items-center gap-2"
-                          >
+                          <a href={`${window.location.origin}/${brand.slug}/parceiro`} target="_blank" rel="noopener noreferrer" className="hover:bg-sidebar-accent/50 flex items-center gap-2">
                             <ExternalLink className="h-4 w-4" />
                             {!collapsed && <span className="flex-1 truncate">{brand.name}</span>}
                             {!collapsed && <Badge variant="outline" className="ml-auto h-5 px-1.5 text-[10px] font-medium text-sidebar-foreground/60 border-sidebar-foreground/20">Externo</Badge>}
