@@ -83,6 +83,60 @@ function SortableCategoryItem({ cat, rows, onToggle, onRowsChange }: SortableCat
   );
 }
 
+function DriverHubToggle({ brandId }: { brandId: string | null }) {
+  const qc = useQueryClient();
+  const { data: hubModule, isLoading } = useQuery({
+    queryKey: ["driver-hub-module", brandId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("brand_modules")
+        .select("id, is_enabled, module_definition_id, module_definitions!inner(key)")
+        .eq("brand_id", brandId!)
+        .eq("module_definitions.key", "driver_hub")
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!brandId,
+  });
+
+  const toggleMut = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (hubModule) {
+        const { error } = await supabase.from("brand_modules").update({ is_enabled: enabled }).eq("id", hubModule.id);
+        if (error) throw error;
+      } else {
+        // Need to find the definition first
+        const { data: def } = await supabase.from("module_definitions").select("id").eq("key", "driver_hub").single();
+        if (!def) throw new Error("Módulo driver_hub não encontrado");
+        const { error } = await supabase.from("brand_modules").insert({ brand_id: brandId!, module_definition_id: def.id, is_enabled: enabled });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["driver-hub-module", brandId] });
+      qc.invalidateQueries({ queryKey: ["brand-modules-active", brandId] });
+      toast({ title: "Home do Motorista atualizada" });
+    },
+  });
+
+  const enabled = hubModule?.is_enabled ?? false;
+
+  return (
+    <div className="flex items-center justify-between rounded-lg border p-3">
+      <div>
+        <span className="font-medium text-sm">Ativar Home do Motorista</span>
+        <p className="text-xs text-muted-foreground">Exibe a tela inicial antes do marketplace de ofertas</p>
+      </div>
+      <Switch
+        checked={enabled}
+        disabled={isLoading || toggleMut.isPending}
+        onCheckedChange={(v) => toggleMut.mutate(v)}
+      />
+    </div>
+  );
+}
+
 export default function DriverPanelConfigPage() {
   const { currentBrandId } = useBrandGuard();
   const queryClient = useQueryClient();
