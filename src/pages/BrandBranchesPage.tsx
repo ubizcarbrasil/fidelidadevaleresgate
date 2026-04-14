@@ -20,6 +20,7 @@ export default function BrandBranchesPage() {
   const queryClient = useQueryClient();
   const [resetBranch, setResetBranch] = useState<{ id: string; name: string } | null>(null);
   const [franqueadoBranch, setFranqueadoBranch] = useState<{ id: string; name: string } | null>(null);
+  const [reprocessBranch, setReprocessBranch] = useState<{ id: string; name: string } | null>(null);
 
   const { data: branches = [], isLoading } = useQuery({
     queryKey: ["brand-branches", currentBrandId],
