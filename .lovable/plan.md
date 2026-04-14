@@ -1,44 +1,43 @@
 
+## Diagnóstico
+- Revisei o fluxo da renovação manual em `src/pages/Brands.tsx`, a action `renew_subscription` em `supabase/functions/admin-brand-actions/index.ts` e a lógica do bloqueio em `src/components/TrialExpiredBlocker.tsx`.
+- O backend já renovou a marca corretamente: `Ubiz Resgata` está com `subscription_status = TRIAL`, `subscription_plan = profissional` e `trial_expires_at` em **2027-04-14**.
+- Então o problema não é mais a renovação em si. O que está falhando é a **atualização da interface**.
+- Hoje o bloqueio e o banner usam React Query com cache padrão de 30s e sem atualização agressiva. Se a tela já estava aberta, ela pode continuar mostrando o valor antigo de 2026.
+- A invalidação do cache hoje acontece no checkout da página `/subscription`, mas **não acontece na renovação manual pelo painel root**. Além disso, o bloqueio não faz refetch frequente para refletir uma reativação feita em outra aba/dispositivo.
 
-## Problema: Não é possível renovar/reativar assinatura pelo painel Root
+## Plano
+1. **Corrigir a atualização do bloqueio**
+   - Ajustar `src/components/TrialExpiredBlocker.tsx` para não depender de cache antigo.
+   - Forçar refetch ao montar a tela, ao voltar foco e com atualização periódica leve enquanto a marca estiver em `TRIAL` ou `EXPIRED`.
 
-### Diagnóstico
+2. **Corrigir o banner de trial**
+   - Aplicar a mesma lógica em `src/components/TrialBanner.tsx`, para ele refletir o status novo sem atraso.
 
-O menu "Mudar Plano" na listagem de Marcas (`/brands`) apenas atualiza o campo `subscription_plan` (ex: free → starter → pro). Porém, quando uma marca tem o `subscription_status` como `EXPIRED` ou `TRIAL` expirado, **não existe nenhuma ação no painel Root para mudar o status da assinatura para `ACTIVE`** nem para estender o `trial_expires_at`.
+3. **Invalidar as queries certas após renovar**
+   - Em `src/pages/Brands.tsx`, depois de `renew_subscription`, invalidar também:
+     - `["brand-trial-blocker", brandId]`
+     - `["brand-trial-status", brandId]`
+     - além da lista `["brands"]`
 
-O `TrialExpiredBlocker` bloqueia a marca quando `subscription_status = EXPIRED` ou quando o trial venceu — e o Root Admin não tem como desbloquear isso manualmente.
+4. **Melhorar o feedback operacional**
+   - No retorno da renovação, mostrar no toast o status aplicado e, se for `TRIAL`, a nova validade, para deixar claro que a ação realmente foi salva.
 
-### Solução
+## Arquivos a ajustar
+- `src/components/TrialExpiredBlocker.tsx`
+- `src/components/TrialBanner.tsx`
+- `src/pages/Brands.tsx`
 
-**1. Nova ação na Edge Function `admin-brand-actions`**: `renew_subscription`
+## Resultado esperado
+- A Ubiz Resgata vai sair do bloqueio de “Período gratuito encerrado”.
+- A renovação manual feita no painel root passará a aparecer quase imediatamente na interface.
+- Abas/dispositivos já abertos deixarão de ficar presos no valor antigo do cache.
 
-Receberá: `brand_id`, `new_status` (ACTIVE, TRIAL, NONE), e opcionalmente `trial_days` (para estender trial).
+## Detalhe técnico
+```text
+Hoje:
+renovação salva no banco -> query antiga continua em cache -> blocker mostra vencimento antigo
 
-```sql
-UPDATE brands SET
-  subscription_status = new_status,
-  trial_expires_at = CASE WHEN new_status = 'TRIAL' THEN now() + interval 'X days' ELSE NULL END
-WHERE id = brand_id;
+Depois:
+renovação salva -> invalidation + refetch no blocker/banner -> UI lê 2027 -> bloqueio some
 ```
-
-**2. Novo item no dropdown de ações da marca** (`src/pages/Brands.tsx`)
-
-Adicionar opção "Renovar Assinatura" no menu de contexto de cada marca, abrindo um dialog simples com:
-- Select: status (Ativo, Trial, Expirado)
-- Input condicional: dias de trial (quando status = Trial)
-- Botão confirmar
-
-**3. Exibir `subscription_status` na tabela de marcas**
-
-Adicionar uma coluna mostrando o status atual (ACTIVE/TRIAL/EXPIRED) para o Root Admin ter visibilidade.
-
-### Arquivos alterados
-
-| Arquivo | Mudança |
-|---------|---------|
-| `supabase/functions/admin-brand-actions/index.ts` | Nova ação `renew_subscription` |
-| `src/pages/Brands.tsx` | Novo item no dropdown + dialog de renovação + coluna de status da assinatura |
-
-### Resultado
-O Root Admin poderá renovar/reativar qualquer marca diretamente pela listagem de marcas, escolhendo entre ativar a assinatura ou estender o período de trial.
-
