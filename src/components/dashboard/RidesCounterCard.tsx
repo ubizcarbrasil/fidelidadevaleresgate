@@ -37,8 +37,8 @@ export default function RidesCounterCard({ brandId }: RidesCounterCardProps) {
         .select("*", { count: "exact", head: true })
         .eq("brand_id", brandId)
         .eq("ride_status", "FINALIZED")
-        .gte("created_at", startOfDay(fromDate).toISOString())
-        .lte("created_at", endOfDay(toDate).toISOString());
+        .gte("finalized_at", startOfDay(fromDate).toISOString())
+        .lte("finalized_at", endOfDay(toDate).toISOString());
 
       if (error) {
         console.error("Erro ao buscar corridas:", error);

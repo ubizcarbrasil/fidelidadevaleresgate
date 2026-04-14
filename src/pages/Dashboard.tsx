@@ -172,7 +172,7 @@ export default function Dashboard() {
   const { data: redemptionsPending } = useMetric("redemptions", true, (q) => q.eq("status", "PENDING"), "pending", brandFilter);
   const { data: storeRulesPending } = useMetric("store_points_rules", true, (q) => q.eq("status", "PENDING_APPROVAL"), "pending", brandFilter);
   const { data: earningEventsTotal } = useMetric("machine_rides", true, (q: any) => q.eq("ride_status", "FINALIZED"), "finished", brandFilter);
-  const { data: earningEventsPeriod } = useMetric("machine_rides", true, (q: any) => q.eq("ride_status", "FINALIZED").gte("created_at", periodStart.toISOString()), `finished-period-${period}`, brandFilter);
+  const { data: earningEventsPeriod } = useMetric("machine_rides", true, (q: any) => q.eq("ride_status", "FINALIZED").gte("finalized_at", periodStart.toISOString()), `finished-period-${period}`, brandFilter);
   const { data: redemptionsPeriod } = useMetric("redemptions", true, (q) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
   const { data: motoristasTotal } = useMetric("customers", true, (q) => q.ilike("name", "%[MOTORISTA]%"), "motoristas", brandFilter);
 
@@ -212,24 +212,36 @@ export default function Dashboard() {
   });
 
   // Chart data
-  const fetchChartData = useCallback(async (table: string, extraFilter?: (q: any) => any) => {
+  const fetchChartData = useCallback(async (table: string, extraFilter?: (q: any) => any, dateColumn = "created_at") => {
     const startDate = getPeriodStart(period);
-    let q = fromTable(table).select("created_at").gte("created_at", startDate.toISOString());
-    if (brandFilter) q = q.eq("brand_id", brandFilter);
-    if (extraFilter) q = extraFilter(q);
-    q = q.order("created_at", { ascending: true }).limit(5000);
-    const { data: rows } = await q;
 
+    // Build the bucket map first
     const countByDate: Record<string, number> = {};
     for (let i = periodDays - 1; i >= 0; i--) {
       const d = new Date(); d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
-      countByDate[key] = 0;
+      countByDate[d.toISOString().slice(0, 10)] = 0;
     }
-    for (const row of rows || []) {
-      const created = (row as unknown as Record<string, unknown>).created_at;
-      const key = typeof created === "string" ? created.slice(0, 10) : null;
-      if (key && key in countByDate) countByDate[key]++;
+
+    // Paginated fetch to avoid the 5000-row truncation
+    const PAGE_SIZE = 1000;
+    let offset = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      let q = fromTable(table).select(dateColumn).gte(dateColumn, startDate.toISOString());
+      if (brandFilter) q = q.eq("brand_id", brandFilter);
+      if (extraFilter) q = extraFilter(q);
+      q = q.order(dateColumn, { ascending: true }).range(offset, offset + PAGE_SIZE - 1);
+      const { data: rows } = await q;
+
+      for (const row of rows || []) {
+        const val = (row as unknown as Record<string, unknown>)[dateColumn];
+        const key = typeof val === "string" ? val.slice(0, 10) : null;
+        if (key && key in countByDate) countByDate[key]++;
+      }
+
+      hasMore = (rows?.length ?? 0) === PAGE_SIZE;
+      offset += PAGE_SIZE;
     }
 
     return Object.entries(countByDate).map(([dateStr, count]) => {
