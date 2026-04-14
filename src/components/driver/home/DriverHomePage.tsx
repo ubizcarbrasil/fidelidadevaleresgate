@@ -35,7 +35,7 @@ export default function DriverHomePage({
   brand, branch, theme, fontHeading,
   onGoToMarketplace, onOpenCategory, onOpenDeal, onOpenRedeemDeal,
   onOpenProfile, onOpenLedger, onOpenProgramInfo, onOpenRedeemStore,
-  onOpenCityRedeem, onActivateSearch,
+  onOpenCityRedeem, onActivateSearch, achadinhosEnabled = true,
 }: Props) {
   const { driver } = useDriverSession();
   const settings = brand.brand_settings_json as any;
