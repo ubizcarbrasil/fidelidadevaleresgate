@@ -1,43 +1,64 @@
 
-## Diagnóstico
-- Revisei o fluxo da renovação manual em `src/pages/Brands.tsx`, a action `renew_subscription` em `supabase/functions/admin-brand-actions/index.ts` e a lógica do bloqueio em `src/components/TrialExpiredBlocker.tsx`.
-- O backend já renovou a marca corretamente: `Ubiz Resgata` está com `subscription_status = TRIAL`, `subscription_plan = profissional` e `trial_expires_at` em **2027-04-14**.
-- Então o problema não é mais a renovação em si. O que está falhando é a **atualização da interface**.
-- Hoje o bloqueio e o banner usam React Query com cache padrão de 30s e sem atualização agressiva. Se a tela já estava aberta, ela pode continuar mostrando o valor antigo de 2026.
-- A invalidação do cache hoje acontece no checkout da página `/subscription`, mas **não acontece na renovação manual pelo painel root**. Além disso, o bloqueio não faz refetch frequente para refletir uma reativação feita em outra aba/dispositivo.
 
-## Plano
-1. **Corrigir a atualização do bloqueio**
-   - Ajustar `src/components/TrialExpiredBlocker.tsx` para não depender de cache antigo.
-   - Forçar refetch ao montar a tela, ao voltar foco e com atualização periódica leve enquanto a marca estiver em `TRIAL` ou `EXPIRED`.
+## Revisão da contabilidade de corridas e pontos — Problemas encontrados
 
-2. **Corrigir o banner de trial**
-   - Aplicar a mesma lógica em `src/components/TrialBanner.tsx`, para ele refletir o status novo sem atraso.
+### Diagnóstico completo
 
-3. **Invalidar as queries certas após renovar**
-   - Em `src/pages/Brands.tsx`, depois de `renew_subscription`, invalidar também:
-     - `["brand-trial-blocker", brandId]`
-     - `["brand-trial-status", brandId]`
-     - além da lista `["brands"]`
+Após analisar o banco de dados, as RPCs, o webhook e o dashboard, encontrei **4 problemas** que explicam as inconsistências:
 
-4. **Melhorar o feedback operacional**
-   - No retorno da renovação, mostrar no toast o status aplicado e, se for `TRIAL`, a nova validade, para deixar claro que a ação realmente foi salva.
+---
 
-## Arquivos a ajustar
-- `src/components/TrialExpiredBlocker.tsx`
-- `src/components/TrialBanner.tsx`
-- `src/pages/Brands.tsx`
+### Problema 1: Gráficos do empreendedor cortam dados (limite de 5.000 linhas)
 
-## Resultado esperado
-- A Ubiz Resgata vai sair do bloqueio de “Período gratuito encerrado”.
-- A renovação manual feita no painel root passará a aparecer quase imediatamente na interface.
-- Abas/dispositivos já abertos deixarão de ficar presos no valor antigo do cache.
+O gráfico "Visão Geral" no dashboard do empreendedor busca corridas com `.limit(5000)`, mas só a marca principal já tem **10.720 corridas finalizadas nos últimos 30 dias**. Isso faz o gráfico mostrar valores menores que o real.
 
-## Detalhe técnico
-```text
-Hoje:
-renovação salva no banco -> query antiga continua em cache -> blocker mostra vencimento antigo
+**Correção:** Trocar a query de buscar linhas individuais para uma agregação `GROUP BY` no banco, ou usar `count: "exact"` agrupado por dia. Isso elimina o limite de linhas.
 
-Depois:
-renovação salva -> invalidation + refetch no blocker/banner -> UI lê 2027 -> bloqueio some
-```
+---
+
+### Problema 2: Filtro de período usa `created_at` em vez de `finalized_at`
+
+No dashboard do empreendedor, tanto o card "Corridas Realizadas" (`RidesCounterCard`) quanto as queries de gráfico (`fetchChartData`) filtram por `created_at`. Porém, uma corrida pode ser criada num dia e finalizada em outro. O correto para corridas é usar `finalized_at`, que é o campo usado nas RPCs do dashboard da cidade.
+
+**Correção:** Alterar os filtros de `created_at` para `finalized_at` em:
+- `RidesCounterCard.tsx` (linhas 40-41)
+- `Dashboard.tsx` → `fetchChartData` (linha 217)
+- `Dashboard.tsx` → `earningEventsPeriod` (linha 175)
+
+---
+
+### Problema 3: 2.608 corridas em Araxá sem pontos de motorista (histórico)
+
+De 17 a 29 de março, **todas as corridas** em Araxá tiveram 0 pontos para motorista — isso foi causado pelo bug anterior do `reference_type` (cast de enum que já corrigimos). A partir de ~30/março, o scoring funciona normalmente. Porém esses pontos **nunca foram creditados**.
+
+**Correção:** Criar uma RPC de reprocessamento que:
+1. Identifica corridas com `driver_points_credited = 0` E `driver_customer_id IS NOT NULL`
+2. Recalcula os pontos usando a regra ativa da cidade
+3. Credita via `credit_customer_points` e atualiza o campo `driver_points_credited`
+4. Registra como `MANUAL_ADJUSTMENT` no ledger
+
+---
+
+### Problema 4: KPI "Pontos Motoristas" no empreendedor soma ALL-TIME sem reset
+
+A RPC `get_points_summary` soma `driver_points_credited` de **todas** as corridas da marca, ignorando o campo `last_points_reset_at` da branch. Já a RPC da cidade (`get_branch_dashboard_stats_v2`) respeita esse reset. Isso cria divergência entre os dois dashboards.
+
+**Correção:** Atualizar `get_points_summary` para aceitar um parâmetro opcional de data mínima ou somar respeitando o reset de cada branch.
+
+---
+
+### Arquivos a alterar
+
+| Arquivo | Mudança |
+|---------|---------|
+| `src/pages/Dashboard.tsx` | Trocar `created_at` por `finalized_at` nos filtros de corrida; refatorar `fetchChartData` para agregar no banco em vez de puxar 5000+ linhas |
+| `src/components/dashboard/RidesCounterCard.tsx` | Trocar `created_at` por `finalized_at` |
+| Nova migração SQL | Atualizar `get_points_summary` para respeitar `last_points_reset_at` |
+| Nova migração SQL | Criar RPC `reprocess_missing_driver_points` para recuperar os 2.608 pontos não creditados |
+
+### Resultado esperado
+- Dashboard do empreendedor mostrará números corretos e consistentes com os dashboards das cidades
+- Gráficos não serão mais truncados independente do volume
+- Corridas históricas sem pontos poderão ser reprocessadas
+- Filtros de período refletirão a data real de finalização
+
