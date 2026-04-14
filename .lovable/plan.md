@@ -1,46 +1,27 @@
 
 
-## Problema: Driver Hub não aparece no painel do motorista
+## Corrigir acesso anônimo à view `public_brand_modules_safe`
+
+### Problema
+A view `public_brand_modules_safe` existe no banco e retorna dados corretamente, mas as permissões GRANT para os roles `anon` e `authenticated` **não foram aplicadas**. A consulta de permissões retorna vazio. Por isso, o PostgREST retorna 404 quando o painel do motorista (acesso anônimo) tenta consultar a view.
 
 ### Causa raiz
-A query que verifica se o módulo `driver_hub` está ativo consulta a tabela `brand_modules`, que tem RLS exigindo autenticação (`auth.uid()`). O painel do motorista é acessado anonimamente (sem login Supabase), então a query retorna vazio e o Hub nunca aparece.
+O GRANT estava na mesma migração que criou a view, mas aparentemente não foi executado com sucesso ou foi revertido.
 
 ### Solução
-Criar uma **view pública segura** (como já existe `public_brands_safe`) para expor apenas a informação necessária — se um módulo está ativo para uma marca — sem exigir autenticação.
-
-### Passos
-
-1. **Migração SQL**: criar uma view `public_brand_modules_safe` que expõe apenas `brand_id`, `module_key` e `is_enabled`, usando `security_invoker = false` (security definer) para bypassar RLS.
+Criar uma nova migração SQL dedicada apenas ao GRANT:
 
 ```sql
-CREATE OR REPLACE VIEW public.public_brand_modules_safe
-WITH (security_invoker = false)
-AS
-SELECT bm.brand_id, md.key AS module_key, bm.is_enabled
-FROM brand_modules bm
-JOIN module_definitions md ON md.id = bm.module_definition_id;
-
 GRANT SELECT ON public.public_brand_modules_safe TO anon, authenticated;
-```
-
-2. **Alterar `DriverPanelPage.tsx`**: trocar a query de `brand_modules` para usar a nova view `public_brand_modules_safe`.
-
-```ts
-const { data } = await supabase
-  .from("public_brand_modules_safe")
-  .select("is_enabled")
-  .eq("brand_id", brand.id)
-  .eq("module_key", "driver_hub")
-  .maybeSingle();
-return data?.is_enabled ?? false;
 ```
 
 ### Arquivos alterados
 | Arquivo | Mudança |
 |---------|---------|
-| Nova migração SQL | Criar view `public_brand_modules_safe` |
-| `src/pages/DriverPanelPage.tsx` | Usar a nova view na query do hub |
+| Nova migração SQL | GRANT SELECT para anon e authenticated |
+
+Nenhum arquivo de código precisa mudar — o `DriverPanelPage.tsx` já usa a view corretamente.
 
 ### Resultado
-O Driver Hub aparecerá corretamente no painel do motorista quando estiver ativado, mesmo sem sessão autenticada.
+O painel do motorista conseguirá consultar se o módulo `driver_hub` está ativo, e a Home do Motorista aparecerá quando habilitada.
 
