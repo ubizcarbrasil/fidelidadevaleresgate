@@ -114,6 +114,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             onOpenRedeemStore={() => setHubOverlay({ type: "redeemStore" })}
             onOpenCityRedeem={() => setShowHub(false)}
             onActivateSearch={() => setShowHub(false)}
+            achadinhosEnabled={achadinhosEnabled}
           />
         ) : (
           <DriverMarketplace
@@ -123,6 +124,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             initialCategoryId={initialCategoryId}
             initialDealId={initialDealId}
             isAdminSession={isAdminSession}
+            achadinhosEnabled={achadinhosEnabled}
           />
         )}
 
