@@ -12,6 +12,7 @@ import { MapPin, Plus, Pencil, Globe, Car, Users, RefreshCw, HandCoins, RotateCc
 import { toast } from "sonner";
 import DialogResetPontos from "@/components/branch/DialogResetPontos";
 import DialogCriarFranqueado from "@/components/branch/DialogCriarFranqueado";
+import DialogReprocessarPontos from "@/components/branch/DialogReprocessarPontos";
 
 export default function BrandBranchesPage() {
   const navigate = useNavigate();
