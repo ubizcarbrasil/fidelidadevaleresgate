@@ -398,7 +398,9 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
     );
   }
 
-  if (!viableCategories.length && !uncategorized.length) {
+  if (!achadinhosEnabled && !viableCategories.length && !uncategorized.length) {
+    // When achadinhos is disabled, don't show empty state — just render the shell
+  } else if (achadinhosEnabled && !viableCategories.length && !uncategorized.length) {
     return (
       <div className="max-w-lg mx-auto px-4 pt-12 text-center">
         <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
