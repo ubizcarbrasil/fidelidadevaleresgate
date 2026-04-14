@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import {
   Blocks, Shield, Store, MapPin, Users, Tag, Ticket, PackageSearch,
   Sparkles, Coins, Settings2, Image, Layers, Bell, BarChart3, Palette,
-  Type, FileSpreadsheet, Globe, TrendingUp, ClipboardList, Plug,
+  Type, FileSpreadsheet, Globe, TrendingUp, ClipboardList, Plug, Home,
 } from "lucide-react";
 import HomeSectionOrderEditor from "@/components/brand-modules/HomeSectionOrderEditor";
 import SidebarOrderEditor from "@/components/brand-modules/SidebarOrderEditor";
@@ -76,6 +76,7 @@ const MODULE_ICONS: Record<string, any> = {
   machine_integration: Settings2,
   api_keys: Settings2,
   taxonomy: Settings2,
+  driver_hub: Home,
 };
 
 export default function BrandModulesPage() {
