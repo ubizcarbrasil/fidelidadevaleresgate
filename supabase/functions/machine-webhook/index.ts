@@ -432,7 +432,7 @@ async function processFinalized(
 
     if (points > 0) {
       // Atomic credit via RPC
-      await sb.rpc("credit_customer_points", {
+      const { error: rpcErr } = await sb.rpc("credit_customer_points", {
         p_customer_id: customer.id,
         p_brand_id: brandId,
         p_branch_id: customer.branch_id,
@@ -441,6 +441,9 @@ async function processFinalized(
         p_reason: `Corrida TaxiMachine #${machineRideId} - R$ ${rideValue.toFixed(2)} (${customerTier} ×${pointsPerReal})`,
         p_reference_type: "MACHINE_RIDE",
       });
+      if (rpcErr) {
+        logger.error("credit_customer_points RPC failed (passenger)", { machineRideId, customerId: customer.id, error: rpcErr });
+      }
 
       // Update ride_count and recalculate tier (balance already updated by RPC)
       const newRideCount = (customer.ride_count || 0) + 1;
@@ -700,7 +703,7 @@ async function processFinalized(
 
         if (driverPoints > 0) {
           // Atomic credit via RPC
-          await sb.rpc("credit_customer_points", {
+          const { error: driverRpcErr } = await sb.rpc("credit_customer_points", {
             p_customer_id: driverCustomer.id,
             p_brand_id: brandId,
             p_branch_id: driverCustomer.branch_id,
@@ -709,6 +712,9 @@ async function processFinalized(
             p_reason: `Corrida TaxiMachine #${machineRideId} - Motorista (${reasonDetail})`,
             p_reference_type: "MACHINE_RIDE",
           });
+          if (driverRpcErr) {
+            logger.error("credit_customer_points RPC failed (driver)", { machineRideId, driverCustomerId: driverCustomer.id, error: driverRpcErr });
+          }
 
           // Update ride_count, tier, monthly rides (balance already updated by RPC)
           const newRideCount = (driverCustomer.ride_count || 0) + 1;
