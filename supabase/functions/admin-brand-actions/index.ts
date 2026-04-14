@@ -561,6 +561,49 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ACTION: renew_subscription — update subscription status and trial dates
+    if (action === "renew_subscription") {
+      const rootAdminError = requireRootAdmin();
+      if (rootAdminError) return rootAdminError;
+
+      const { brand_id, new_status, trial_days } = body;
+      if (!brand_id || !new_status) {
+        return new Response(JSON.stringify({ error: "brand_id and new_status required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!["ACTIVE", "TRIAL", "EXPIRED"].includes(new_status)) {
+        return new Response(JSON.stringify({ error: "new_status must be ACTIVE, TRIAL, or EXPIRED" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const updatePayload: Record<string, unknown> = {
+        subscription_status: new_status,
+      };
+
+      if (new_status === "TRIAL") {
+        const days = Number(trial_days) || 14;
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + days);
+        updatePayload.trial_expires_at = expiresAt.toISOString();
+      } else if (new_status === "ACTIVE") {
+        updatePayload.trial_expires_at = null;
+      }
+
+      const { error } = await adminClient
+        .from("brands")
+        .update(updatePayload)
+        .eq("id", brand_id);
+      if (error) throw error;
+
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Unknown action" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
