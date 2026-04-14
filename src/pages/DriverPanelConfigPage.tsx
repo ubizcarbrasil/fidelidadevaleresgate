@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ExternalLink, Copy, Check, Car, Sparkles, Image, Minus, Plus, Trash2, GripVertical, Video, Gift } from "lucide-react";
+import { ExternalLink, Copy, Check, Car, Sparkles, Image, Minus, Plus, Trash2, GripVertical, Video, Gift, Home } from "lucide-react";
 import { buildDriverUrl } from "@/lib/publicShareUrl";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -79,6 +79,60 @@ function SortableCategoryItem({ cat, rows, onToggle, onRowsChange }: SortableCat
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function DriverHubToggle({ brandId }: { brandId: string | null }) {
+  const qc = useQueryClient();
+  const { data: hubModule, isLoading } = useQuery({
+    queryKey: ["driver-hub-module", brandId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("brand_modules")
+        .select("id, is_enabled, module_definition_id, module_definitions!inner(key)")
+        .eq("brand_id", brandId!)
+        .eq("module_definitions.key", "driver_hub")
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!brandId,
+  });
+
+  const toggleMut = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (hubModule) {
+        const { error } = await supabase.from("brand_modules").update({ is_enabled: enabled }).eq("id", hubModule.id);
+        if (error) throw error;
+      } else {
+        // Need to find the definition first
+        const { data: def } = await supabase.from("module_definitions").select("id").eq("key", "driver_hub").single();
+        if (!def) throw new Error("Módulo driver_hub não encontrado");
+        const { error } = await supabase.from("brand_modules").insert({ brand_id: brandId!, module_definition_id: def.id, is_enabled: enabled });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["driver-hub-module", brandId] });
+      qc.invalidateQueries({ queryKey: ["brand-modules-active", brandId] });
+      toast({ title: "Home do Motorista atualizada" });
+    },
+  });
+
+  const enabled = hubModule?.is_enabled ?? false;
+
+  return (
+    <div className="flex items-center justify-between rounded-lg border p-3">
+      <div>
+        <span className="font-medium text-sm">Ativar Home do Motorista</span>
+        <p className="text-xs text-muted-foreground">Exibe a tela inicial antes do marketplace de ofertas</p>
+      </div>
+      <Switch
+        checked={enabled}
+        disabled={isLoading || toggleMut.isPending}
+        onCheckedChange={(v) => toggleMut.mutate(v)}
+      />
     </div>
   );
 }
@@ -247,7 +301,21 @@ export default function DriverPanelConfigPage() {
     <div className="space-y-4 sm:space-y-6 px-1 sm:px-0">
       <PageHeader title="Painel do Motorista" description="Configure o marketplace de achadinhos que os motoristas visualizam" />
 
-      {/* Link de acesso */}
+      {/* Toggle Home do Motorista */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Home className="h-5 w-5 text-primary" />
+            Home do Motorista
+          </CardTitle>
+          <CardDescription>Ative a tela inicial inteligente com saldo de pontos, atalhos e vitrines antes do marketplace.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DriverHubToggle brandId={currentBrandId} />
+        </CardContent>
+      </Card>
+
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
