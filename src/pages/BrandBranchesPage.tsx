@@ -12,6 +12,7 @@ import { MapPin, Plus, Pencil, Globe, Car, Users, RefreshCw, HandCoins, RotateCc
 import { toast } from "sonner";
 import DialogResetPontos from "@/components/branch/DialogResetPontos";
 import DialogCriarFranqueado from "@/components/branch/DialogCriarFranqueado";
+import DialogReprocessarPontos from "@/components/branch/DialogReprocessarPontos";
 
 export default function BrandBranchesPage() {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ export default function BrandBranchesPage() {
   const queryClient = useQueryClient();
   const [resetBranch, setResetBranch] = useState<{ id: string; name: string } | null>(null);
   const [franqueadoBranch, setFranqueadoBranch] = useState<{ id: string; name: string } | null>(null);
+  const [reprocessBranch, setReprocessBranch] = useState<{ id: string; name: string } | null>(null);
 
   const { data: branches = [], isLoading } = useQuery({
     queryKey: ["brand-branches", currentBrandId],
@@ -150,6 +152,15 @@ export default function BrandBranchesPage() {
                     variant="outline"
                     size="sm"
                     className="h-8 text-xs gap-1.5"
+                    onClick={() => setReprocessBranch({ id: branch.id, name: branch.city || branch.name })}
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    Reprocessar Pontos
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs gap-1.5"
                     onClick={() => setResetBranch({ id: branch.id, name: branch.city || branch.name })}
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
@@ -184,6 +195,13 @@ export default function BrandBranchesPage() {
         brandId={currentBrandId || ""}
         branchId={franqueadoBranch?.id || ""}
         branchName={franqueadoBranch?.name || ""}
+      />
+
+      <DialogReprocessarPontos
+        open={!!reprocessBranch}
+        onClose={() => setReprocessBranch(null)}
+        branchId={reprocessBranch?.id || ""}
+        branchName={reprocessBranch?.name || ""}
       />
     </div>
   );
