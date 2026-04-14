@@ -1,40 +1,46 @@
 
-## Fazer a opção aparecer de forma confiável
 
-### Diagnóstico confirmado
-O toggle já existe em `DriverPanelConfigPage`, então o problema é de acesso/visibilidade. Hoje há 4 bloqueios no código:
+## Problema: Driver Hub não aparece no painel do motorista
 
-1. `src/components/consoles/BrandSidebar.tsx` oculta “Painel do Motorista” quando a marca não está com contexto `DRIVER` por causa de `scoringFilter: "DRIVER"`.
-2. `src/App.tsx` protege `/driver-config` com `ModuleGuard moduleKey="machine_integration"`, criando um bloqueio circular: a pessoa precisa abrir a tela para ativar/configurar, mas a rota pode sumir antes.
-3. `src/pages/BrandModulesPage.tsx` para empreendedor só mostra módulos que já têm vínculo em `brand_modules`; se não houver linha ainda, o módulo não aparece para ser ativado.
-4. Para root admin, a página de módulos não reaproveita automaticamente a marca já aberta no contexto, então a lista pode ficar vazia até selecionar manualmente.
+### Causa raiz
+A query que verifica se o módulo `driver_hub` está ativo consulta a tabela `brand_modules`, que tem RLS exigindo autenticação (`auth.uid()`). O painel do motorista é acessado anonimamente (sem login Supabase), então a query retorna vazio e o Hub nunca aparece.
 
-### Plano de implementação
-1. **Liberar o acesso ao Painel do Motorista**
-   - Remover o `scoringFilter: "DRIVER"` do item “Painel do Motorista” no sidebar da marca.
-   - Ajustar a rota `/driver-config` para não depender apenas de `machine_integration`.
+### Solução
+Criar uma **view pública segura** (como já existe `public_brands_safe`) para expor apenas a informação necessária — se um módulo está ativo para uma marca — sem exigir autenticação.
 
-2. **Fazer o módulo aparecer na tela de Módulos**
-   - Alterar `BrandModulesPage` para o empreendedor ver todos os módulos `customer_facing` e `!is_core`, mesmo sem registro prévio em `brand_modules`.
-   - Manter a lógica de inserir em `brand_modules` na primeira ativação.
+### Passos
 
-3. **Melhorar o fluxo do root admin**
-   - Pré-selecionar automaticamente a marca atual quando o root estiver operando dentro do contexto de uma marca.
-   - Melhorar o estado vazio com instrução clara quando nenhuma marca estiver selecionada.
+1. **Migração SQL**: criar uma view `public_brand_modules_safe` que expõe apenas `brand_id`, `module_key` e `is_enabled`, usando `security_invoker = false` (security definer) para bypassar RLS.
 
-4. **Reforçar o toggle direto**
-   - Manter o card “Home do Motorista” no topo de `DriverPanelConfigPage`.
-   - Ajustar o destaque visual/texto se necessário para ficar mais fácil de localizar.
+```sql
+CREATE OR REPLACE VIEW public.public_brand_modules_safe
+WITH (security_invoker = false)
+AS
+SELECT bm.brand_id, md.key AS module_key, bm.is_enabled
+FROM brand_modules bm
+JOIN module_definitions md ON md.id = bm.module_definition_id;
 
-### Arquivos envolvidos
-- `src/components/consoles/BrandSidebar.tsx`
-- `src/App.tsx`
-- `src/pages/BrandModulesPage.tsx`
-- `src/pages/DriverPanelConfigPage.tsx`
+GRANT SELECT ON public.public_brand_modules_safe TO anon, authenticated;
+```
 
-### Resultado esperado
-A opção de ativar/desativar a Home do Motorista ficará visível e utilizável:
-- no menu “Painel do Motorista”
-- na tela “Módulos”
+2. **Alterar `DriverPanelPage.tsx`**: trocar a query de `brand_modules` para usar a nova view `public_brand_modules_safe`.
 
-sem depender do scoring atual da marca, de um vínculo prévio no banco ou de seleção manual confusa da marca.
+```ts
+const { data } = await supabase
+  .from("public_brand_modules_safe")
+  .select("is_enabled")
+  .eq("brand_id", brand.id)
+  .eq("module_key", "driver_hub")
+  .maybeSingle();
+return data?.is_enabled ?? false;
+```
+
+### Arquivos alterados
+| Arquivo | Mudança |
+|---------|---------|
+| Nova migração SQL | Criar view `public_brand_modules_safe` |
+| `src/pages/DriverPanelPage.tsx` | Usar a nova view na query do hub |
+
+### Resultado
+O Driver Hub aparecerá corretamente no painel do motorista quando estiver ativado, mesmo sem sessão autenticada.
+
