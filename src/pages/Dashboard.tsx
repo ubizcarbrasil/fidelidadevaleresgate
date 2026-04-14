@@ -259,7 +259,7 @@ export default function Dashboard() {
   });
   const { data: recentEarnings } = useQuery({
     queryKey: ["earnings-chart", period, brandFilter ?? "global"],
-    queryFn: () => fetchChartData("machine_rides", (q: any) => q.eq("ride_status", "FINALIZED")),
+    queryFn: () => fetchChartData("machine_rides", (q: any) => q.eq("ride_status", "FINALIZED"), "finalized_at"),
   });
 
   const combinedChart = useMemo(() => {
