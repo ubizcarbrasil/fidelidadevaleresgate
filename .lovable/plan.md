@@ -1,41 +1,27 @@
 
 
-## Fazer o Driver Hub funcionar — Conectar ao sistema de módulos
+## Ativar o módulo "Home do Motorista" para Ubiz Resgata
 
 ### Problema
-O Hub do Motorista verifica `brand_settings_json.driver_hub_enabled`, mas o painel admin usa a tabela `brand_modules` para ligar/desligar módulos. As duas coisas não estão conectadas — por isso o Hub nunca aparece.
+O módulo `driver_hub` está cadastrado em `module_definitions`, mas não existe registro em `brand_modules` para a marca Ubiz Resgata (`db15bd21-9137-4965-a0fb-540d8e8b26f1`). Por isso, a query no `DriverPanelPage` retorna `false` e o Hub nunca é exibido.
 
 ### Solução
-Alterar o `DriverPanelPage` para consultar `brand_modules` + `module_definitions` (onde `key = 'driver_hub'`) em vez de depender de `brand_settings_json.driver_hub_enabled`.
+Executar uma migração SQL que insere o registro em `brand_modules` com `is_enabled = true` para a marca Ubiz Resgata.
 
-### Alteração
+```sql
+INSERT INTO public.brand_modules (brand_id, module_definition_id, is_enabled)
+SELECT 
+  'db15bd21-9137-4965-a0fb-540d8e8b26f1',
+  id,
+  true
+FROM public.module_definitions
+WHERE key = 'driver_hub'
+ON CONFLICT DO NOTHING;
+```
 
-**Arquivo:** `src/pages/DriverPanelPage.tsx`
-
-1. Adicionar uma query para verificar se o módulo `driver_hub` está habilitado para a marca:
-   ```ts
-   const { data: hubEnabled } = useQuery({
-     queryKey: ["driver-hub-enabled", brand.id],
-     queryFn: async () => {
-       const { data } = await supabase
-         .from("brand_modules")
-         .select("is_enabled, module_definitions!inner(key)")
-         .eq("brand_id", brand.id)
-         .eq("module_definitions.key", "driver_hub")
-         .maybeSingle();
-       return data?.is_enabled ?? false;
-     },
-   });
-   ```
-
-2. Substituir `const driverHubEnabled = settings?.driver_hub_enabled === true;` por `const driverHubEnabled = hubEnabled === true;`
-
-### Pré-requisito
-O módulo `driver_hub` já foi inserido na tabela `module_definitions` na migração anterior. Após esta alteração, basta o empreendedor ativar o módulo na tela de **Módulos** do admin para o Hub aparecer no app do motorista.
+### Resultado
+O Driver Hub aparecera imediatamente no app do motorista da Ubiz Resgata ao acessar o painel. O empreendedor podera desativar o módulo a qualquer momento pela tela de Módulos no admin.
 
 ### Arquivo alterado
-
-| Arquivo | Mudança |
-|---------|---------|
-| `src/pages/DriverPanelPage.tsx` | Query `brand_modules` para verificar `driver_hub` |
+Nenhum arquivo de codigo — apenas uma migração de banco de dados.
 
