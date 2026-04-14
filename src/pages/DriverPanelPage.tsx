@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
@@ -8,6 +8,15 @@ import { useBrandTheme } from "@/hooks/useBrandTheme";
 import { CustomerProvider } from "@/contexts/CustomerContext";
 import { DriverSessionProvider, useDriverSession } from "@/contexts/DriverSessionContext";
 import { resolveCanonicalOriginFromSettings } from "@/lib/publicShareUrl";
+import DriverHomePage from "@/components/driver/home/DriverHomePage";
+import type { DealCategory } from "@/components/driver/DriverMarketplace";
+import DriverProfileOverlay from "@/components/driver/DriverProfileOverlay";
+import DriverLedgerOverlay from "@/components/driver/DriverLedgerOverlay";
+import DriverProgramInfo from "@/components/driver/DriverProgramInfo";
+import DriverRedeemStorePage from "@/components/driver/DriverRedeemStorePage";
+import DriverRedeemCheckout from "@/components/driver/DriverRedeemCheckout";
+import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
+import DriverCategoryPage from "@/components/driver/DriverCategoryPage";
 
 function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, initialDealId, isAdminSession }: {
   brand: any;
@@ -17,10 +26,24 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   initialDealId: string | null;
   isAdminSession: boolean;
 }) {
-  const { driver, loading } = useDriverSession();
+  const { driver, loading, refreshDriver } = useDriverSession();
   const settings = brand?.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
-  const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : undefined;
+  const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
+  const driverHubEnabled = settings?.driver_hub_enabled === true;
+
+  // Hub view state
+  const [showHub, setShowHub] = useState(true);
+  const [hubOverlay, setHubOverlay] = useState<
+    | { type: "profile" }
+    | { type: "ledger" }
+    | { type: "programInfo" }
+    | { type: "redeemStore" }
+    | { type: "category"; cat: DealCategory }
+    | { type: "deal"; deal: any }
+    | { type: "redeemDeal"; deal: any }
+    | null
+  >(null);
 
   // Auto-fetch branch from driver's branch_id when URL doesn't include branchId
   const [derivedBranch, setDerivedBranch] = useState<any>(null);
@@ -41,6 +64,11 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
 
   const effectiveBranch = branchFromUrl || derivedBranch;
 
+  // When deep-link params exist, go straight to marketplace
+  useEffect(() => {
+    if (initialCategoryId || initialDealId) setShowHub(false);
+  }, [initialCategoryId, initialDealId]);
+
   if (loading || loadingBranch) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -56,12 +84,97 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   return (
     <CustomerProvider>
       <div className="min-h-screen bg-background text-foreground">
-        <DriverMarketplace brand={brand} branch={effectiveBranch} theme={theme} initialCategoryId={initialCategoryId} initialDealId={initialDealId} isAdminSession={isAdminSession} />
+        {driverHubEnabled && showHub ? (
+          <DriverHomePage
+            brand={brand}
+            branch={effectiveBranch}
+            theme={theme}
+            fontHeading={fontHeading}
+            onGoToMarketplace={() => setShowHub(false)}
+            onOpenCategory={(cat) => setHubOverlay({ type: "category", cat })}
+            onOpenDeal={(deal) => setHubOverlay({ type: "deal", deal })}
+            onOpenRedeemDeal={(deal) => setHubOverlay({ type: "redeemDeal", deal })}
+            onOpenProfile={() => setHubOverlay({ type: "profile" })}
+            onOpenLedger={() => setHubOverlay({ type: "ledger" })}
+            onOpenProgramInfo={() => setHubOverlay({ type: "programInfo" })}
+            onOpenRedeemStore={() => setHubOverlay({ type: "redeemStore" })}
+            onOpenCityRedeem={() => setShowHub(false)}
+            onActivateSearch={() => setShowHub(false)}
+          />
+        ) : (
+          <DriverMarketplace
+            brand={brand}
+            branch={effectiveBranch}
+            theme={theme}
+            initialCategoryId={initialCategoryId}
+            initialDealId={initialDealId}
+            isAdminSession={isAdminSession}
+          />
+        )}
+
+        {/* Hub overlays — rendered above both views */}
+        {hubOverlay?.type === "profile" && (
+          <DriverProfileOverlay fontHeading={fontHeading} onBack={() => setHubOverlay(null)} />
+        )}
+        {hubOverlay?.type === "ledger" && (
+          <DriverLedgerOverlay fontHeading={fontHeading} onBack={() => setHubOverlay(null)} />
+        )}
+        {hubOverlay?.type === "programInfo" && (
+          <DriverProgramInfo
+            whatsappNumber={settings?.whatsapp_number}
+            fontHeading={fontHeading}
+            onBack={() => setHubOverlay(null)}
+            videos={settings?.driver_info_videos || []}
+          />
+        )}
+        {hubOverlay?.type === "redeemStore" && (
+          <DriverRedeemStorePage
+            brandId={brand.id}
+            branchId={effectiveBranch?.id}
+            fontHeading={fontHeading}
+            onBack={() => setHubOverlay(null)}
+          />
+        )}
+        {hubOverlay?.type === "category" && (
+          <DriverCategoryPage
+            category={hubOverlay.cat}
+            brandId={brand.id}
+            branchId={effectiveBranch?.id || null}
+            fontHeading={fontHeading}
+            brandSettings={brand.brand_settings_json}
+            theme={theme}
+            onBack={() => setHubOverlay(null)}
+          />
+        )}
+        {hubOverlay?.type === "deal" && (
+          <AchadinhoDealDetail
+            deal={hubOverlay.deal}
+            brandId={brand.id}
+            branchId={effectiveBranch?.id}
+            theme={theme}
+            brandSettings={brand.brand_settings_json}
+            onBack={() => setHubOverlay(null)}
+            onSelectDeal={(d) => setHubOverlay({ type: "deal", deal: d })}
+          />
+        )}
+        {hubOverlay?.type === "redeemDeal" && (
+          <DriverRedeemCheckout
+            deal={{
+              id: hubOverlay.deal.id,
+              title: hubOverlay.deal.title,
+              image_url: hubOverlay.deal.image_url,
+              price: hubOverlay.deal.price,
+              affiliate_url: hubOverlay.deal.affiliate_url,
+              redeem_points_cost: hubOverlay.deal.redeem_points_cost || Math.ceil(hubOverlay.deal.price || 0),
+            }}
+            onClose={() => setHubOverlay(null)}
+            onSuccess={() => setHubOverlay(null)}
+          />
+        )}
       </div>
     </CustomerProvider>
   );
 }
-
 export default function DriverPanelPage() {
   const PORTAL_HOSTNAME = "app.valeresgate.com.br";
   const PORTAL_BRAND_ID = "db15bd21-9137-4965-a0fb-540d8e8b26f1";
