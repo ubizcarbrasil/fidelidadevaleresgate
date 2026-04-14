@@ -519,6 +519,8 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           )}
 
           {/* Search Bar — customer style */}
+          {achadinhosEnabled && (
+            <>
           {searchTerm ? (
             <div className="relative mb-3">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/50" />
@@ -545,13 +547,15 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
               </span>
             </button>
           )}
+            </>
+          )}
         </div>
         {/* Bottom divider */}
         <div className="h-px" style={{ backgroundColor: "hsl(var(--border))" }} />
       </header>
 
       {/* Banners */}
-      {showBanners && <DriverBannerCarousel brandId={brand.id} />}
+      {achadinhosEnabled && showBanners && <DriverBannerCarousel brandId={brand.id} />}
 
       {/* Banner duelo ao vivo — visível para todos */}
       {!debouncedSearch.trim() && configDuelos.duelosAtivos && (
