@@ -137,23 +137,31 @@ export default function BrandForm() {
     const mergedSettings = { ...existingSettings, ...(Object.keys(cleanTheme).length > 0 ? cleanTheme : {}), offer_card_config: offerCardConfig };
     const basePayload = { name, brand_settings_json: mergedSettings };
 
-    const { error } = isEdit
-      ? await supabase.from("brands").update({
-          ...basePayload,
-          ...(isRootAdmin ? { slug, tenant_id: tenantId, is_active: isActive, subscription_plan: subscriptionPlan } : {}),
-        }).eq("id", id!)
-      : await supabase.from("brands").insert([{ ...basePayload, slug, tenant_id: tenantId, is_active: isActive, subscription_plan: subscriptionPlan }]);
+    if (isEdit) {
+      const { data, error } = await supabase.from("brands").update({
+        ...basePayload,
+        ...(isRootAdmin ? { slug, tenant_id: tenantId, is_active: isActive, subscription_plan: subscriptionPlan } : {}),
+      }).eq("id", id!).select();
 
-    if (error) {
-      toast.error(error.message);
-    } else {
-      // Update tenant name if changed
-      if (isRootAdmin && tenantId && tenantName.trim()) {
-        await supabase.from("tenants").update({ name: tenantName.trim() }).eq("id", tenantId);
-        queryClient.invalidateQueries({ queryKey: ["tenants-select"] });
+      if (error) {
+        toast.error(error.message);
+      } else if (!data || data.length === 0) {
+        toast.error("Falha ao salvar: você não tem permissão para atualizar esta marca. Verifique suas credenciais ou entre em contato com o suporte.");
+      } else {
+        if (isRootAdmin && tenantId && tenantName.trim()) {
+          await supabase.from("tenants").update({ name: tenantName.trim() }).eq("id", tenantId);
+          queryClient.invalidateQueries({ queryKey: ["tenants-select"] });
+        }
+        toast.success("Marca atualizada!");
       }
-      toast.success(isEdit ? "Marca atualizada!" : "Marca criada!");
-      if (isRootAdmin && !isEdit) navigate("/brands");
+    } else {
+      const { error } = await supabase.from("brands").insert([{ ...basePayload, slug, tenant_id: tenantId, is_active: isActive, subscription_plan: subscriptionPlan }]);
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Marca criada!");
+        if (isRootAdmin) navigate("/brands");
+      }
     }
     setLoading(false);
   };
