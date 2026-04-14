@@ -8175,6 +8175,22 @@ export type Database = {
           score: number
         }[]
       }
+      get_rides_report_by_branch: {
+        Args: { p_brand_id: string }
+        Returns: {
+          branch_city: string
+          branch_id: string
+          branch_name: string
+          branch_state: string
+          rides_current_month: number
+          rides_prev_month: number
+          total_client_points: number
+          total_driver_points: number
+          total_drivers: number
+          total_ride_value: number
+          total_rides: number
+        }[]
+      }
       get_side_bet_ranking: {
         Args: { p_branch_id: string; p_limit?: number }
         Returns: {
