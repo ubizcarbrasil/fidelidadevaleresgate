@@ -816,7 +816,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         )}
       </div>
         </>
-      )}
+      ))}
 
       {/* Category page (Ver todos) */}
       {openCategory && (
