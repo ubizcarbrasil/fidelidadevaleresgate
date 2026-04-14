@@ -32,7 +32,7 @@ export default function GraficoCorridasCidade({ rows }: Props) {
               <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" />
               <Tooltip
                 contentStyle={{ borderRadius: 8, fontSize: 12 }}
-                formatter={(value: any, name: string) => [
+                formatter={(value: any, name: any) => [
                   Number(value).toLocaleString("pt-BR"),
                   name === "mesAtual" ? "Mês Atual" : "Mês Anterior",
                 ]}
