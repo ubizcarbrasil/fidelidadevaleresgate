@@ -174,7 +174,7 @@ const groups: { label: string; items: MenuItem[] }[] = [
     items: [
       { key: "sidebar.dominios_marca", defaultTitle: "Meus Domínios", url: "/brand-domains", icon: Globe },
       { key: "sidebar.configuracoes", defaultTitle: "Configurações", url: "/brand-settings", icon: Settings2, moduleKey: "brand_settings" },
-      { key: "sidebar.painel_motorista", defaultTitle: "Painel do Motorista", url: "/driver-config", icon: Car, scoringFilter: "DRIVER" },
+      { key: "sidebar.painel_motorista", defaultTitle: "Painel do Motorista", url: "/driver-config", icon: Car },
       { key: "sidebar.subscription", defaultTitle: "Meu Plano", url: "/subscription", icon: CreditCard, moduleKey: "subscription" },
     ],
   },
