@@ -1,8 +1,5 @@
 import {
-  Building2, Store, MapPin, Users, LayoutDashboard, LogOut, Ticket, Globe,
-  ShoppingBag, Tag, UserCheck, ReceiptText, Blocks, Layout, Flag, ScrollText, Rocket, LayoutList, FileSpreadsheet, Copy, Shield, Coins, Settings2, ShieldCheck, PackageSearch, BarChart3, Bell, Type, FolderTree, Layers, ScanLine, Zap, Handshake, Eye,
-  TrendingUp, FlaskConical, ChevronRight, FileText, Key, BookOpen, Car, ExternalLink,
-  Palette, AppWindow, GalleryHorizontal, CreditCard, DollarSign, ShoppingCart, FolderHeart,
+  LayoutDashboard, LogOut, ExternalLink, ChevronRight,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -20,146 +17,145 @@ import {
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import PlatformLogo from "@/components/PlatformLogo";
+import {
+  MENU_REGISTRY,
+  buildSidebarGroups,
+  type RegistroItemMenu,
+  type DefinicaoGrupoSidebar,
+} from "@/compartilhados/constants/constantes_menu_sidebar";
 
-interface MenuItem {
-  key: string;
-  defaultTitle: string;
-  url: string;
-  icon: any;
-}
+const dashboardItem = MENU_REGISTRY["sidebar.dashboard"];
 
-const dashboardItem: MenuItem = {
-  key: "sidebar.dashboard", defaultTitle: "Visão Geral", url: "/", icon: LayoutDashboard,
-};
-
-const groups: { label: string; items: MenuItem[] }[] = [
+const rootGroupDefs: DefinicaoGrupoSidebar[] = [
   {
     label: "Guias Inteligentes",
     items: [
-      { key: "sidebar.jornada_root", defaultTitle: "Guia Completo", url: "/root-journey", icon: Rocket },
-      { key: "sidebar.jornada", defaultTitle: "Guia do Empreendedor", url: "/brand-journey", icon: Store },
-      { key: "sidebar.jornada_emissor", defaultTitle: "Guia do Emissor", url: "/emitter-journey", icon: Zap },
+      "sidebar.jornada_root",
+      { key: "sidebar.jornada", overrides: { moduleKey: undefined } },
+      { key: "sidebar.jornada_emissor", overrides: { moduleKey: undefined } },
     ],
   },
   {
     label: "Organização",
     items: [
-      { key: "sidebar.empresas", defaultTitle: "Empresas", url: "/tenants", icon: Building2 },
-      { key: "sidebar.marcas", defaultTitle: "Marcas", url: "/brands", icon: Store },
-      { key: "sidebar.branches", defaultTitle: "Cidades", url: "/branches", icon: MapPin },
-      { key: "sidebar.clonar_cidade", defaultTitle: "Duplicar Região", url: "/clone-branch", icon: Copy },
-      { key: "sidebar.dominios", defaultTitle: "Domínios", url: "/domains", icon: Globe },
-      { key: "sidebar.painel_motorista", defaultTitle: "Painel do Motorista", url: "/driver-config", icon: Car },
-      { key: "sidebar.provisionar_marca", defaultTitle: "Nova Marca", url: "/provision-brand", icon: Rocket },
-      { key: "sidebar.central_acessos", defaultTitle: "Gestão de Acessos", url: "/access-hub", icon: Eye },
+      "sidebar.empresas",
+      "sidebar.marcas",
+      { key: "sidebar.branches", overrides: { url: "/branches" } },
+      "sidebar.clonar_cidade",
+      "sidebar.dominios",
+      "sidebar.painel_motorista",
+      "sidebar.provisionar_marca",
+      { key: "sidebar.central_acessos", overrides: { moduleKey: undefined } },
     ],
   },
   {
     label: "Personalização & Vitrine",
     items: [
-      { key: "sidebar.galeria_icones", defaultTitle: "Biblioteca de Ícones", url: "/icon-library", icon: Palette },
-      { key: "sidebar.app_icons", defaultTitle: "Ícones do Aplicativo", url: "/app-icons", icon: AppWindow },
-      { key: "sidebar.central_banners", defaultTitle: "Mídia & Banners", url: "/banner-manager", icon: GalleryHorizontal },
-      { key: "sidebar.nomes_rotulos", defaultTitle: "Nomenclaturas", url: "/menu-labels", icon: Type },
-      { key: "sidebar.page_builder", defaultTitle: "Editor de Páginas", url: "/page-builder-v2", icon: Layers },
-      { key: "sidebar.tema_plataforma", defaultTitle: "Tema da Plataforma", url: "/platform-theme", icon: Settings2 },
-      { key: "sidebar.welcome_tour", defaultTitle: "Boas-Vindas", url: "/welcome-tour", icon: Rocket },
-      { key: "sidebar.profile_links", defaultTitle: "Links do Perfil", url: "/profile-links", icon: FileText },
-      { key: "sidebar.partner_landing", defaultTitle: "Landing Page Parceiros", url: "/partner-landing-config", icon: FileText },
+      { key: "sidebar.galeria_icones", overrides: { icon: (await import("lucide-react")).Palette, moduleKey: undefined } },
+      "sidebar.app_icons",
+      { key: "sidebar.central_banners", overrides: { moduleKey: undefined } },
+      "sidebar.nomes_rotulos",
+      { key: "sidebar.page_builder", overrides: { moduleKey: undefined } },
+      "sidebar.tema_plataforma",
+      { key: "sidebar.welcome_tour", overrides: { moduleKey: undefined } },
+      { key: "sidebar.profile_links", overrides: { moduleKey: undefined } },
+      { key: "sidebar.partner_landing", overrides: { icon: (await import("lucide-react")).FileText, moduleKey: undefined } },
     ],
   },
   {
     label: "Gestão Comercial",
     items: [
-      { key: "sidebar.operador_pdv", defaultTitle: "Caixa PDV", url: "/pdv", icon: ScanLine },
-      { key: "sidebar.parceiros", defaultTitle: "Parceiros", url: "/stores", icon: ShoppingBag },
-      { key: "sidebar.ofertas", defaultTitle: "Ofertas", url: "/offers", icon: Tag },
-      { key: "sidebar.clientes", defaultTitle: "Clientes", url: "/customers", icon: UserCheck },
-      { key: "sidebar.resgates", defaultTitle: "Resgates", url: "/redemptions", icon: ReceiptText },
-      { key: "sidebar.cupons", defaultTitle: "Cupons", url: "/vouchers", icon: Ticket },
-      { key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: ShoppingCart },
-      { key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: FolderHeart },
-      { key: "sidebar.importar_csv", defaultTitle: "Importação de Dados", url: "/csv-import", icon: FileSpreadsheet },
-      { key: "sidebar.patrocinados", defaultTitle: "Patrocinados", url: "/sponsored-placements", icon: Zap },
+      { key: "sidebar.operador_pdv", overrides: { moduleKey: undefined } },
+      { key: "sidebar.parceiros", overrides: { moduleKey: undefined } },
+      { key: "sidebar.ofertas", overrides: { moduleKey: undefined } },
+      { key: "sidebar.clientes", overrides: { moduleKey: undefined } },
+      { key: "sidebar.resgates", overrides: { moduleKey: undefined } },
+      { key: "sidebar.cupons", overrides: { moduleKey: undefined } },
+      { key: "sidebar.achadinhos", overrides: { moduleKey: undefined } },
+      { key: "sidebar.categorias_achadinhos", overrides: { moduleKey: undefined } },
+      { key: "sidebar.importar_csv", overrides: { moduleKey: undefined } },
+      { key: "sidebar.patrocinados", overrides: { moduleKey: undefined } },
     ],
   },
   {
     label: "Aprovações",
     items: [
-      { key: "sidebar.aprovar_regras", defaultTitle: "Validar Regras", url: "/approve-store-rules", icon: Shield },
-      { key: "sidebar.solicitacoes_emissor", defaultTitle: "Solicitações de Upgrade", url: "/emitter-requests", icon: Zap },
-      { key: "sidebar.catalogo", defaultTitle: "Catálogo", url: "/store-catalog", icon: PackageSearch },
-      { key: "sidebar.espelhamento", defaultTitle: "Espelhamento", url: "/mirror-sync", icon: Copy },
-      { key: "sidebar.governanca_ofertas", defaultTitle: "Governança de Ofertas", url: "/offer-governance", icon: Shield },
+      { key: "sidebar.aprovar_regras", overrides: { icon: (await import("lucide-react")).Shield, moduleKey: undefined } },
+      { key: "sidebar.solicitacoes_emissor", overrides: { moduleKey: undefined } },
+      { key: "sidebar.catalogo", overrides: { moduleKey: undefined } },
+      { key: "sidebar.espelhamento", overrides: { icon: (await import("lucide-react")).Copy, moduleKey: undefined } },
+      { key: "sidebar.governanca_ofertas", overrides: { moduleKey: undefined } },
     ],
   },
   {
     label: "Comunicação",
     items: [
-      { key: "sidebar.enviar_notificacao", defaultTitle: "Enviar Notificação", url: "/send-notification", icon: Bell },
+      { key: "sidebar.enviar_notificacao", overrides: { moduleKey: undefined } },
     ],
   },
   {
     label: "Programa de Fidelidade",
     items: [
-      { key: "sidebar.pontuar", defaultTitle: "Pontuar", url: "/earn-points", icon: Coins },
-      { key: "sidebar.regras_pontos", defaultTitle: "Regras de Fidelidade", url: "/points-rules", icon: Settings2 },
-      { key: "sidebar.extrato_pontos", defaultTitle: "Extrato de Fidelidade", url: "/points-ledger", icon: ScrollText },
+      { key: "sidebar.pontuar", overrides: { moduleKey: undefined } },
+      { key: "sidebar.regras_pontos", overrides: { moduleKey: undefined } },
+      { key: "sidebar.extrato_pontos", overrides: { moduleKey: undefined } },
     ],
   },
   {
     label: "Cashback Inteligente",
     items: [
-      { key: "sidebar.gg_dashboard", defaultTitle: "Painel Cashback", url: "/ganha-ganha-dashboard", icon: Handshake },
-      { key: "sidebar.gg_config", defaultTitle: "Config. Cashback", url: "/ganha-ganha-config", icon: Settings2 },
-      { key: "sidebar.gg_billing", defaultTitle: "Financeiro Cashback", url: "/ganha-ganha-billing", icon: ReceiptText },
-      { key: "sidebar.gg_closing", defaultTitle: "Fechamento Financeiro", url: "/ganha-ganha-closing", icon: ScrollText },
-      { key: "sidebar.gg_store_summary", defaultTitle: "Resumo por Parceiro", url: "/ganha-ganha-store-summary", icon: Handshake },
+      "sidebar.gg_dashboard",
+      { key: "sidebar.gg_config", overrides: { moduleKey: undefined } },
+      { key: "sidebar.gg_billing", overrides: { moduleKey: undefined } },
+      { key: "sidebar.gg_closing", overrides: { icon: (await import("lucide-react")).ScrollText, moduleKey: undefined } },
+      "sidebar.gg_store_summary",
     ],
   },
   {
     label: "Equipe & Acessos",
     items: [
-      { key: "sidebar.usuarios", defaultTitle: "Usuários", url: "/users", icon: Users },
-      { key: "sidebar.perm_parceiros", defaultTitle: "Permissão de Parceiros", url: "/brand-permissions", icon: ShieldCheck },
+      { key: "sidebar.usuarios", overrides: { moduleKey: undefined } },
+      { key: "sidebar.perm_parceiros", overrides: { icon: (await import("lucide-react")).ShieldCheck, moduleKey: undefined } },
     ],
   },
   {
     label: "Inteligência & Dados",
     items: [
-      { key: "sidebar.crm", defaultTitle: "Inteligência CRM", url: "/crm", icon: TrendingUp },
-      { key: "sidebar.relatorios", defaultTitle: "Relatórios", url: "/reports", icon: BarChart3 },
-      { key: "sidebar.auditoria", defaultTitle: "Auditoria", url: "/audit", icon: ScrollText },
-      { key: "sidebar.taxonomia", defaultTitle: "Taxonomia", url: "/taxonomy", icon: FolderTree },
+      { key: "sidebar.crm", overrides: { moduleKey: undefined } },
+      { key: "sidebar.relatorios", overrides: { moduleKey: undefined } },
+      { key: "sidebar.auditoria", overrides: { icon: (await import("lucide-react")).ScrollText, moduleKey: undefined } },
+      { key: "sidebar.taxonomia", overrides: { moduleKey: undefined } },
     ],
   },
   {
     label: "Integrações & API",
     items: [
-      { key: "sidebar.api_keys", defaultTitle: "APIs & Integrações", url: "/api-keys", icon: Key },
-      { key: "sidebar.api_docs", defaultTitle: "Documentação API", url: "/api-docs", icon: BookOpen },
-      { key: "sidebar.machine", defaultTitle: "Integração Mobilidade", url: "/machine-integration", icon: Car },
-      { key: "sidebar.teste_webhook", defaultTitle: "Lab Webhook", url: "/machine-webhook-test", icon: FlaskConical },
+      { key: "sidebar.api_keys", overrides: { moduleKey: undefined } },
+      { key: "sidebar.api_docs", overrides: { moduleKey: undefined } },
+      { key: "sidebar.machine", overrides: { moduleKey: undefined } },
+      { key: "sidebar.teste_webhook", overrides: { moduleKey: undefined } },
     ],
   },
   {
     label: "Configurações",
     items: [
-      { key: "sidebar.funcionalidades", defaultTitle: "Tipos de Módulo", url: "/modules", icon: Blocks },
-      { key: "sidebar.modulos", defaultTitle: "Módulos das Marcas", url: "/brand-modules", icon: Blocks },
-      { key: "sidebar.permissoes_globais", defaultTitle: "Políticas de Acesso", url: "/permissions", icon: Shield },
-      { key: "sidebar.secoes_home", defaultTitle: "Seções Iniciais", url: "/templates", icon: Layout },
-      { key: "sidebar.modelos_home", defaultTitle: "Templates", url: "/home-templates", icon: LayoutList },
-      { key: "sidebar.controle_recursos", defaultTitle: "Feature Flags", url: "/flags", icon: Flag },
-      { key: "sidebar.atualizacoes", defaultTitle: "Novidades", url: "/releases", icon: Rocket },
-      { key: "sidebar.kit_inicial", defaultTitle: "Starter Kit", url: "/starter-kit", icon: PackageSearch },
-      { key: "sidebar.configuracoes", defaultTitle: "Configurações", url: "/brand-settings", icon: Settings2 },
-      { key: "sidebar.subscription", defaultTitle: "Assinatura", url: "/subscription", icon: CreditCard },
-      { key: "sidebar.plan_templates", defaultTitle: "Perfil de Planos", url: "/plan-templates", icon: LayoutList },
-      { key: "sidebar.plan_pricing", defaultTitle: "Preços dos Planos", url: "/plan-pricing", icon: DollarSign },
+      "sidebar.funcionalidades",
+      { key: "sidebar.modulos", overrides: { defaultTitle: "Módulos das Marcas" } },
+      "sidebar.permissoes_globais",
+      "sidebar.secoes_home",
+      "sidebar.modelos_home",
+      "sidebar.controle_recursos",
+      "sidebar.atualizacoes",
+      "sidebar.kit_inicial",
+      { key: "sidebar.configuracoes", overrides: { moduleKey: undefined } },
+      { key: "sidebar.subscription", overrides: { defaultTitle: "Assinatura", moduleKey: undefined } },
+      "sidebar.plan_templates",
+      "sidebar.plan_pricing",
     ],
   },
 ];
+
+const groups = buildSidebarGroups(rootGroupDefs);
 
 function CollapsibleGroup({
   label,
@@ -170,7 +166,7 @@ function CollapsibleGroup({
   badges,
 }: {
   label: string;
-  items: MenuItem[];
+  items: RegistroItemMenu[];
   collapsed: boolean;
   location: { pathname: string };
   getLabel: (key: string) => string;
