@@ -8,9 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Pencil, Power, MoreHorizontal, Trash2, Key, ArrowUpDown, Blocks } from "lucide-react";
+import { Plus, Pencil, Power, MoreHorizontal, Trash2, Key, ArrowUpDown, Blocks, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -22,6 +23,12 @@ const PLAN_OPTIONS = [
   { key: "free", label: "Free" },
   { key: "starter", label: "Starter" },
   { key: "profissional", label: "Profissional" },
+];
+
+const STATUS_OPTIONS = [
+  { key: "ACTIVE", label: "Ativo" },
+  { key: "TRIAL", label: "Trial" },
+  { key: "EXPIRED", label: "Expirado" },
 ];
 
 export default function Brands() {
@@ -45,6 +52,9 @@ export default function Brands() {
   const [passwordTarget, setPasswordTarget] = useState<{ brandId: string; brandName: string; userId: string | null } | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [renewTarget, setRenewTarget] = useState<{ id: string; name: string; currentStatus: string } | null>(null);
+  const [renewStatus, setRenewStatus] = useState("ACTIVE");
+  const [renewTrialDays, setRenewTrialDays] = useState("14");
   const [actionLoading, setActionLoading] = useState(false);
 
   const { data, isLoading } = useQuery({
@@ -126,8 +136,28 @@ export default function Brands() {
     }
   };
 
+  const handleRenewSubscription = async () => {
+    if (!renewTarget) return;
+    try {
+      setActionLoading(true);
+      await invokeAdminAction({
+        action: "renew_subscription",
+        brand_id: renewTarget.id,
+        new_status: renewStatus,
+        trial_days: renewStatus === "TRIAL" ? Number(renewTrialDays) : undefined,
+      });
+      queryClient.invalidateQueries({ queryKey: ["brands"] });
+      const statusLabel = STATUS_OPTIONS.find(s => s.key === renewStatus)?.label || renewStatus;
+      toast.success(`Assinatura atualizada para ${statusLabel}!`);
+      setRenewTarget(null);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const openPasswordDialog = async (brandId: string, brandName: string) => {
-    // Find the brand_admin user for this brand
     const { data: roleData } = await supabase
       .from("user_roles")
       .select("user_id")
@@ -146,6 +176,12 @@ export default function Brands() {
     free: { label: "Free", variant: "outline" },
     starter: { label: "Starter", variant: "secondary" },
     profissional: { label: "Profissional", variant: "default" },
+  };
+
+  const subStatusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+    ACTIVE: { label: "Ativo", variant: "default" },
+    TRIAL: { label: "Trial", variant: "secondary" },
+    EXPIRED: { label: "Expirado", variant: "destructive" },
   };
 
   return (
@@ -169,20 +205,23 @@ export default function Brands() {
                 <TableHead>Organização</TableHead>
                 <TableHead>Identificador</TableHead>
                 <TableHead>Plano</TableHead>
+                <TableHead>Assinatura</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data?.rows?.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhuma marca cadastrada</TableCell></TableRow>}
+              {data?.rows?.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Nenhuma marca cadastrada</TableCell></TableRow>}
               {data?.rows?.map((b) => {
                 const plan = planMap[b.subscription_plan] || { label: b.subscription_plan, variant: "outline" as const };
+                const subStatus = subStatusMap[b.subscription_status] || { label: b.subscription_status, variant: "outline" as const };
                 return (
                   <TableRow key={b.id}>
                     <TableCell className="font-medium">{b.name}</TableCell>
                     <TableCell className="text-muted-foreground">{(b.tenants as any)?.name || "—"}</TableCell>
                     <TableCell className="text-muted-foreground">{b.slug}</TableCell>
                     <TableCell><Badge variant={plan.variant}>{plan.label}</Badge></TableCell>
+                    <TableCell><Badge variant={subStatus.variant}>{subStatus.label}</Badge></TableCell>
                     <TableCell><Badge variant={b.is_active ? "default" : "destructive"}>{b.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
@@ -198,6 +237,12 @@ export default function Brands() {
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => openPasswordDialog(b.id, b.name)}>
                             <Key className="h-4 w-4 mr-2" />Redefinir Senha
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            setRenewTarget({ id: b.id, name: b.name, currentStatus: b.subscription_status });
+                            setRenewStatus(b.subscription_status === "EXPIRED" ? "ACTIVE" : b.subscription_status);
+                          }}>
+                            <RefreshCw className="h-4 w-4 mr-2" />Renovar Assinatura
                           </DropdownMenuItem>
                           <DropdownMenuSub>
                             <DropdownMenuSubTrigger>
@@ -285,6 +330,45 @@ export default function Brands() {
               disabled={!newPassword || !confirmPassword || newPassword !== confirmPassword || newPassword.length < 6 || actionLoading}
             >
               {actionLoading ? "Salvando..." : "Redefinir Senha"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Subscription renewal dialog */}
+      <AlertDialog open={!!renewTarget} onOpenChange={(open) => { if (!open) setRenewTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Renovar Assinatura — {renewTarget?.name}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Status atual: <strong>{subStatusMap[renewTarget?.currentStatus || ""]?.label || renewTarget?.currentStatus}</strong>. Escolha o novo status da assinatura.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-2">
+              <Label>Novo status</Label>
+              <Select value={renewStatus} onValueChange={setRenewStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map(s => (
+                    <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {renewStatus === "TRIAL" && (
+              <div className="space-y-2">
+                <Label>Dias de trial</Label>
+                <Input type="number" min={1} max={365} value={renewTrialDays} onChange={e => setRenewTrialDays(e.target.value)} placeholder="14" />
+              </div>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRenewSubscription} disabled={actionLoading}>
+              {actionLoading ? "Salvando..." : "Confirmar"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
