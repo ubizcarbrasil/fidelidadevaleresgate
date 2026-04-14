@@ -84,7 +84,7 @@ export default function BrandModulesPage() {
   const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
 
-  const brandId = isRootAdmin ? selectedBrandId : currentBrandId;
+  const brandId = isRootAdmin ? (selectedBrandId || currentBrandId) : currentBrandId;
 
   const { data: allBrands } = useQuery({
     queryKey: ["brands-list"],
@@ -148,10 +148,10 @@ export default function BrandModulesPage() {
   // Filter definitions: non-ROOT users only see modules allocated to their brand
   const visibleDefinitions = definitions?.filter(d => {
     if (isRootAdmin) return true;
-    // Non-ROOT: only show customer-facing, non-core modules
+    // Non-ROOT: show all customer-facing, non-core modules (even without brand_modules row)
     if (!(d as any).customer_facing) return false;
-    if (d.is_core) return false; // core modules are always on, hide from brand admin
-    return brandModules?.some(bm => bm.module_definition_id === d.id);
+    if (d.is_core) return false;
+    return true;
   });
 
   const grouped = visibleDefinitions?.reduce((acc, d) => {
