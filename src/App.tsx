@@ -108,6 +108,7 @@ const DriverPointsRulesPage = lazyWithRetry(() => import("@/pages/DriverPointsRu
 const DriverManagementPage = lazyWithRetry(() => import("@/pages/DriverManagementPage"));
 const BranchWalletPage = lazyWithRetry(() => import("@/pages/BranchWalletPage"));
 const BranchReportsPage = lazyWithRetry(() => import("@/pages/BranchReportsPage"));
+const PaginaRelatorioCorridas = lazyWithRetry(() => import("@/features/relatorio_corridas/pagina_relatorio_corridas"));
 
 const TaxonomyPage = lazyWithRetry(() => import("@/pages/TaxonomyPage"));
 const CustomPage = lazyWithRetry(() => import("@/pages/customer/CustomPage"));
@@ -276,6 +277,7 @@ function AnimatedRoutes() {
               <Route path="branch-wallet" element={<BranchWalletPage />} />
               <Route path="branch-reports" element={<BranchReportsPage />} />
               <Route path="brand-branches" element={<BrandBranchesPage />} />
+              <Route path="relatorio-corridas" element={<PaginaRelatorioCorridas />} />
               <Route path="brand-branches/new" element={<BrandBranchForm />} />
               <Route path="brand-branches/:id" element={<BrandBranchForm />} />
               <Route path="brand-cidades-journey" element={<BrandCidadesJourneyPage />} />
