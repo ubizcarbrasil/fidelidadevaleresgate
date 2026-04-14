@@ -115,7 +115,7 @@ export default function DriverHomePage({
       )}
 
       {/* Busca */}
-      <HomeSearchBar onActivate={onActivateSearch} />
+      {achadinhosEnabled && <HomeSearchBar onActivate={onActivateSearch} />}
 
       {/* Blocos estratégicos */}
       <QuickActionCards
@@ -126,30 +126,34 @@ export default function DriverHomePage({
       />
 
       {/* Categorias ativas */}
-      <ActiveCategoriesSection
-        categories={categoriesWithDeals}
-        fontHeading={fontHeading}
-        onSelectCategory={(cat) => onOpenCategory(cat)}
-      />
+      {achadinhosEnabled && (
+        <ActiveCategoriesSection
+          categories={categoriesWithDeals}
+          fontHeading={fontHeading}
+          onSelectCategory={(cat) => onOpenCategory(cat)}
+        />
+      )}
 
       {/* Vitrine: Resgatar com pontos */}
-      <HomeVitrine
-        title="Resgatar com Pontos"
-        subtitle={`${redeemableDeals.length} produto${redeemableDeals.length !== 1 ? "s" : ""} disponíveis`}
-        icon={
-          <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "hsl(var(--primary) / 0.15)" }}>
-            <Gift className="h-4 w-4" style={{ color: "hsl(var(--primary))" }} />
-          </div>
-        }
-        deals={redeemableDeals}
-        fontHeading={fontHeading}
-        onVerTodos={onOpenRedeemStore}
-        onClickDeal={onOpenRedeemDeal}
-        showPointsCost
-      />
+      {achadinhosEnabled && (
+        <HomeVitrine
+          title="Resgatar com Pontos"
+          subtitle={`${redeemableDeals.length} produto${redeemableDeals.length !== 1 ? "s" : ""} disponíveis`}
+          icon={
+            <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "hsl(var(--primary) / 0.15)" }}>
+              <Gift className="h-4 w-4" style={{ color: "hsl(var(--primary))" }} />
+            </div>
+          }
+          deals={redeemableDeals}
+          fontHeading={fontHeading}
+          onVerTodos={onOpenRedeemStore}
+          onClickDeal={onOpenRedeemDeal}
+          showPointsCost
+        />
+      )}
 
       {/* Vitrine: Novas Ofertas */}
-      {newDeals.length > 0 && (
+      {achadinhosEnabled && newDeals.length > 0 && (
         <HomeVitrine
           title="Novas Ofertas"
           subtitle={`${newDeals.length} nova${newDeals.length !== 1 ? "s" : ""}`}
