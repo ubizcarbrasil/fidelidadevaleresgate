@@ -32,9 +32,6 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   const logoUrl = settings?.logo_url;
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  const branchSettings = (effectiveBranch?.branch_settings_json || {}) as Record<string, any>;
-  const achadinhosEnabled = branchSettings.enable_achadinhos_module !== false;
-
   const { data: driverHubEnabled } = useQuery({
     queryKey: ["driver-hub-enabled", brand.id],
     queryFn: async () => {
