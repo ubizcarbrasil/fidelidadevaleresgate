@@ -270,7 +270,7 @@ function AnimatedRoutes() {
               <Route path="offer-card-config" element={<ModuleGuard moduleKey="offer_card_config"><OfferCardConfigPage /></ModuleGuard>} />
               <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
               <Route path="plan-pricing" element={<RootGuard><SubscriptionPlansAdminPage /></RootGuard>} />
-              <Route path="driver-config" element={<ModuleGuard moduleKey="machine_integration"><ErrorBoundary><DriverPanelConfigPage /></ErrorBoundary></ModuleGuard>} />
+              <Route path="driver-config" element={<ErrorBoundary><DriverPanelConfigPage /></ErrorBoundary>} />
               <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
               <Route path="manuais" element={<ManuaisPage />} />
               <Route path="branch-wallet" element={<BranchWalletPage />} />
