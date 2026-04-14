@@ -80,7 +80,8 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   }, [branchFromUrl, driver?.branch_id]);
 
   const effectiveBranch = branchFromUrl || derivedBranch;
-  const achadinhosEnabled = (effectiveBranch?.branch_settings_json as any)?.enable_achadinhos_module !== false;
+  const branchAchadinhosEnabled = (effectiveBranch?.branch_settings_json as any)?.enable_achadinhos_module !== false;
+  const achadinhosEnabled = brandAchadinhosEnabled && branchAchadinhosEnabled;
 
   // When deep-link params exist, go straight to marketplace
   useEffect(() => {
