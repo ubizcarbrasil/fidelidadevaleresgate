@@ -152,6 +152,15 @@ export default function BrandBranchesPage() {
                     variant="outline"
                     size="sm"
                     className="h-8 text-xs gap-1.5"
+                    onClick={() => setReprocessBranch({ id: branch.id, name: branch.city || branch.name })}
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    Reprocessar Pontos
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs gap-1.5"
                     onClick={() => setResetBranch({ id: branch.id, name: branch.city || branch.name })}
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
@@ -186,6 +195,13 @@ export default function BrandBranchesPage() {
         brandId={currentBrandId || ""}
         branchId={franqueadoBranch?.id || ""}
         branchName={franqueadoBranch?.name || ""}
+      />
+
+      <DialogReprocessarPontos
+        open={!!reprocessBranch}
+        onClose={() => setReprocessBranch(null)}
+        branchId={reprocessBranch?.id || ""}
+        branchName={reprocessBranch?.name || ""}
       />
     </div>
   );
