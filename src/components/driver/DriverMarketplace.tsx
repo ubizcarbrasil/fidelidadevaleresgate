@@ -695,8 +695,8 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         </section>
       )}
 
-      {/* Search results */}
-      {debouncedSearch.trim() ? (
+      {/* Search results + categories — only when achadinhos enabled */}
+      {achadinhosEnabled && (debouncedSearch.trim() ? (
         <div className="px-4 pt-4 pb-8">
           <p className="text-xs text-muted-foreground mb-3">
             {searchResults.length} resultado{searchResults.length !== 1 ? "s" : ""} para "{debouncedSearch}"
