@@ -8290,6 +8290,10 @@ export type Database = {
         }
         Returns: Json
       }
+      reprocess_missing_driver_points: {
+        Args: { p_branch_id: string }
+        Returns: Json
+      }
       respond_counter_proposal: {
         Args: { p_accept: boolean; p_customer_id: string; p_duel_id: string }
         Returns: Json
