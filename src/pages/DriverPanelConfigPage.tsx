@@ -247,7 +247,21 @@ export default function DriverPanelConfigPage() {
     <div className="space-y-4 sm:space-y-6 px-1 sm:px-0">
       <PageHeader title="Painel do Motorista" description="Configure o marketplace de achadinhos que os motoristas visualizam" />
 
-      {/* Link de acesso */}
+      {/* Toggle Home do Motorista */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Home className="h-5 w-5 text-primary" />
+            Home do Motorista
+          </CardTitle>
+          <CardDescription>Ative a tela inicial inteligente com saldo de pontos, atalhos e vitrines antes do marketplace.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DriverHubToggle brandId={currentBrandId} />
+        </CardContent>
+      </Card>
+
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
