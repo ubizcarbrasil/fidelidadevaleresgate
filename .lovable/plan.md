@@ -1,37 +1,40 @@
 
+## Fazer a opção aparecer de forma confiável
 
-## Problema: Toggle do módulo "Home do Motorista" não aparece
+### Diagnóstico confirmado
+O toggle já existe em `DriverPanelConfigPage`, então o problema é de acesso/visibilidade. Hoje há 4 bloqueios no código:
 
-### Causa raiz
+1. `src/components/consoles/BrandSidebar.tsx` oculta “Painel do Motorista” quando a marca não está com contexto `DRIVER` por causa de `scoringFilter: "DRIVER"`.
+2. `src/App.tsx` protege `/driver-config` com `ModuleGuard moduleKey="machine_integration"`, criando um bloqueio circular: a pessoa precisa abrir a tela para ativar/configurar, mas a rota pode sumir antes.
+3. `src/pages/BrandModulesPage.tsx` para empreendedor só mostra módulos que já têm vínculo em `brand_modules`; se não houver linha ainda, o módulo não aparece para ser ativado.
+4. Para root admin, a página de módulos não reaproveita automaticamente a marca já aberta no contexto, então a lista pode ficar vazia até selecionar manualmente.
 
-O módulo `driver_hub` existe no banco e está ativo, mas há dois problemas:
+### Plano de implementação
+1. **Liberar o acesso ao Painel do Motorista**
+   - Remover o `scoringFilter: "DRIVER"` do item “Painel do Motorista” no sidebar da marca.
+   - Ajustar a rota `/driver-config` para não depender apenas de `machine_integration`.
 
-1. **Para Root Admin**: a página de Módulos (`/brand-modules`) exige que o usuário selecione uma marca no dropdown antes de mostrar qualquer módulo. Sem selecionar, nada aparece.
+2. **Fazer o módulo aparecer na tela de Módulos**
+   - Alterar `BrandModulesPage` para o empreendedor ver todos os módulos `customer_facing` e `!is_core`, mesmo sem registro prévio em `brand_modules`.
+   - Manter a lógica de inserir em `brand_modules` na primeira ativação.
 
-2. **Falta ícone dedicado**: o módulo `driver_hub` não tem ícone no mapa `MODULE_ICONS`, usando o genérico `Blocks`, o que dificulta identificá-lo visualmente.
+3. **Melhorar o fluxo do root admin**
+   - Pré-selecionar automaticamente a marca atual quando o root estiver operando dentro do contexto de uma marca.
+   - Melhorar o estado vazio com instrução clara quando nenhuma marca estiver selecionada.
 
-3. **Usabilidade**: o toggle está "escondido" dentro da página genérica de módulos. O ideal é ter também um **toggle direto** na configuração do painel do motorista.
+4. **Reforçar o toggle direto**
+   - Manter o card “Home do Motorista” no topo de `DriverPanelConfigPage`.
+   - Ajustar o destaque visual/texto se necessário para ficar mais fácil de localizar.
 
-### Solução
+### Arquivos envolvidos
+- `src/components/consoles/BrandSidebar.tsx`
+- `src/App.tsx`
+- `src/pages/BrandModulesPage.tsx`
+- `src/pages/DriverPanelConfigPage.tsx`
 
-#### 1. Adicionar ícone do módulo
-Adicionar `driver_hub: Home` (ou `LayoutDashboard`) ao mapa `MODULE_ICONS` em `BrandModulesPage.tsx`.
+### Resultado esperado
+A opção de ativar/desativar a Home do Motorista ficará visível e utilizável:
+- no menu “Painel do Motorista”
+- na tela “Módulos”
 
-#### 2. Adicionar toggle direto na config do painel do motorista
-Verificar se existe uma página de configuração do painel do motorista (tipo `DriverPanelConfigPage`) e adicionar um switch "Ativar Home do Motorista" diretamente nela, para que o empreendedor/root admin não precise ir até a página de módulos.
-
-#### 3. Garantir visibilidade na página de módulos
-- O módulo já está com `customer_facing: true`, `is_core: false` e `is_active: true`
-- Para root admin: funciona ao selecionar a marca no dropdown
-- Para brand admin: já deve aparecer (o registro existe em `brand_modules`)
-
-### Arquivos alterados
-
-| Arquivo | Mudança |
-|---------|---------|
-| `src/pages/BrandModulesPage.tsx` | Adicionar `driver_hub` ao `MODULE_ICONS` |
-| `src/pages/DriverPanelPage.tsx` ou config equivalente | Adicionar switch inline para ativar/desativar o hub diretamente |
-
-### Resultado
-O empreendedor verá o toggle "Home do Motorista" tanto na página de módulos quanto diretamente na configuração do painel do motorista, com um ícone claro e identificável.
-
+sem depender do scoring atual da marca, de um vínculo prévio no banco ou de seleção manual confusa da marca.
