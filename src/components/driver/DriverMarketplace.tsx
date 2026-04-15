@@ -66,6 +66,8 @@ interface Props {
   initialDealId?: string | null;
   isAdminSession?: boolean;
   achadinhosEnabled?: boolean;
+  marketplaceEnabled?: boolean;
+  whatsappNumber?: string;
 }
 
 function getPublicShareUrl(brandId: string, opts?: { categoryId?: string; dealId?: string }) {
@@ -139,7 +141,7 @@ export const formatPrice = (val: number | null | undefined) => {
   return Number(val).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 };
 
-export default function DriverMarketplace({ brand, branch, theme, initialCategoryId, initialDealId, isAdminSession, achadinhosEnabled = false }: Props) {
+export default function DriverMarketplace({ brand, branch, theme, initialCategoryId, initialDealId, isAdminSession, achadinhosEnabled = false, marketplaceEnabled = false, whatsappNumber: whatsappNumberProp }: Props) {
   const [openCategory, setOpenCategory] = useState<DealCategory | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -167,7 +169,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const settings = brand.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
   const { driver, refreshDriver } = useDriverSession();
-  const whatsappNumber = settings?.whatsapp_number as string | undefined;
+  const whatsappNumber = whatsappNumberProp;
   const showBanners = settings?.driver_show_banners !== false;
   const categoryLayout: Record<string, { rows?: number; order?: number }> = settings?.driver_category_layout || {};
   const interstitialBanners: Array<{ id: string; image_url: string; title: string; link_url: string; after_category_id: string; is_active: boolean }> = settings?.driver_interstitial_banners || [];
@@ -218,9 +220,9 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["driver-marketplace", brand.id, branch?.id, achadinhosEnabled],
+    queryKey: ["driver-marketplace", brand.id, branch?.id, achadinhosEnabled, marketplaceEnabled],
     queryFn: async () => {
-      if (!achadinhosEnabled) {
+      if (!achadinhosEnabled && !marketplaceEnabled) {
         return { categories: [] as DealCategory[], dealsByCategory: new Map<string, AffiliateDeal[]>(), uncategorized: [] as AffiliateDeal[], allDeals: [] as AffiliateDeal[] };
       }
       let dealsQ = supabase
@@ -578,8 +580,8 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         </div>
       )}
 
-      {/* Redeemable section */}
-      {achadinhosEnabled && !debouncedSearch.trim() && redeemableDeals.length > 0 && (
+      {/* Redeemable section — visible when marketplace (Compre com Pontos) is enabled */}
+      {marketplaceEnabled && !debouncedSearch.trim() && redeemableDeals.length > 0 && (
         <section className="pt-4">
           <div className="px-5 mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -672,8 +674,8 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         />
       )}
 
-      {/* WhatsApp CTA Banner for ML affiliate link */}
-      {achadinhosEnabled && !debouncedSearch.trim() && whatsappNumber && (
+      {/* WhatsApp CTA Banner for ML affiliate link — respects city toggle */}
+      {achadinhosEnabled && !debouncedSearch.trim() && !!whatsappNumber && (
         <section className="px-5 pt-4">
           <a
             href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent("Olá! Gostaria de enviar um link de produto do Mercado Livre para gerar pontos.")}`}
