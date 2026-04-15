@@ -49,9 +49,11 @@ function getReferenceLabel(refType: string | null, entryType: string) {
 interface Props {
   fontHeading?: string;
   onBack: () => void;
+  buyPointsEnabled?: boolean;
+  onBuyPoints?: () => void;
 }
 
-export default function DriverLedgerOverlay({ fontHeading, onBack }: Props) {
+export default function DriverLedgerOverlay({ fontHeading, onBack, buyPointsEnabled, onBuyPoints }: Props) {
   const { driver } = useDriverSession();
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
