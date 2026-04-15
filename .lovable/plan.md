@@ -1,58 +1,37 @@
 
 
-## Compra de Pontos pelo Motorista
+## Diagnóstico
 
-### Contexto atual
-- Já existe um sistema de **Pacotes de Pontos** (`points_packages`) usado para cidades comprarem pontos do empreendedor.
-- O painel do motorista já tem a flag `enable_points_purchase` no `branch_settings_json`, mas ela só controla a visibilidade da seção "Compre com Pontos" (produtos resgatáveis).
-- Não existe ainda: preço por milheiro configurável pelo empreendedor, nem tela de compra de pontos no app do motorista.
+Após investigar todo o código, **tudo já está implementado corretamente**:
 
-### O que será feito
+### No painel do empreendedor (sidebar)
+- "Venda de Pontos" está registrado no menu (`sidebar.compra_pontos_motorista`) dentro do grupo "Gestão Comercial"
+- A rota `/driver-points-purchase` está configurada no `App.tsx`
+- A página `pagina_compra_pontos_config.tsx` tem: configuração do preço do milheiro, mínimo/máximo, toggle ativar/desativar, e lista de pedidos com botões Confirmar/Cancelar
 
-**1. Banco de dados — nova tabela e configuração**
+### No app do motorista
+- O botão "Comprar Pontos" está no `QuickActionCards.tsx`
+- O overlay de compra (`DriverBuyPointsOverlay.tsx`) está integrado no `DriverPanelPage.tsx`
+- O botão só aparece quando a flag `enable_driver_points_purchase` está ativa na cidade
 
-- Criar tabela `driver_points_purchase_config` com:
-  - `brand_id` (FK), `price_per_thousand_cents` (integer — preço do milheiro em centavos), `min_points` (default 1000), `max_points` (default 300000), `is_active` (boolean)
-  - RLS: leitura pública (motorista anônimo precisa ver), escrita somente para admins autenticados
-- Criar tabela `driver_points_orders` para registrar os pedidos:
-  - `id`, `brand_id`, `branch_id`, `customer_id` (motorista), `points_amount`, `price_cents`, `status` (PENDING/CONFIRMED/CANCELLED), `created_at`, `confirmed_at`
-  - RLS: leitura pública filtrada por `customer_id`, inserção pública
+### Na configuração da cidade
+- O toggle "Motorista compra pontos?" já existe em `constantes_toggles.ts` com a key `enable_driver_points_purchase`
 
-**2. Painel do Empreendedor — Configuração do preço**
+## Por que você não está vendo
 
-- Nova página/seção acessível pelo sidebar (dentro do grupo de Motoristas ou Pontos):
-  - Campo para definir o **valor do milheiro** (ex: R$ 70,00 = 70_00 cents)
-  - Mínimo e máximo de pontos por compra
-  - Toggle ativar/desativar
-- Listagem de pedidos de compra de pontos feitos pelos motoristas, com botão de confirmar (crédito manual)
+Você está acessando `app.valeresgate.com.br` (URL de produção). As mudanças existem apenas no **Preview** — ainda não foram publicadas.
 
-**3. App do Motorista — Tela "Comprar Pontos"**
+Além disso, para o botão aparecer no app do motorista, é necessário:
+1. Ativar o toggle "Motorista compra pontos?" na configuração da cidade
+2. Configurar o preço do milheiro na página "Venda de Pontos" do admin
 
-- Novo botão no `QuickActionCards` e/ou `DriverHomePage`: "Comprar Pontos" (ícone Coins)
-- Tela de compra (overlay) inspirada na imagem enviada:
-  - Seletor "Pra mim" (pré-selecionado, motorista logado)
-  - Input de quantidade de pontos com botões rápidos (+1.000, +10.000, +50.000)
-  - Validação min/max
-  - Cálculo automático do valor: `(pontos / 1000) * preço_milheiro`
-  - Botão "Continuar compra" → cria o pedido na tabela `driver_points_orders` com status PENDING
-  - Toast de sucesso: "Pedido enviado! Aguarde confirmação."
+## Plano
 
-**4. Flag de ativação por cidade**
+Não há código novo a implementar — tudo já está pronto. O que precisa ser feito:
 
-- Adicionar novo toggle `enable_driver_points_purchase` no `constantes_toggles.ts` para controle granular por cidade
-- O botão "Comprar Pontos" só aparece se a config existir e estiver ativa, e se a cidade tiver a flag ligada
+1. **Publicar o app** para que as mudanças cheguem à URL de produção
+2. **Ativar o toggle** "Motorista compra pontos?" na configuração da cidade desejada
+3. **Configurar o preço** do milheiro na página "Venda de Pontos" do sidebar
 
-### Arquivos principais
-
-| Área | Arquivos |
-|------|----------|
-| Banco | Migration: `driver_points_purchase_config`, `driver_points_orders` |
-| Admin | Nova feature em `src/features/compra_pontos_motorista/` |
-| Driver | `QuickActionCards.tsx`, `DriverHomePage.tsx`, `DriverPanelPage.tsx`, novo overlay de compra |
-| Config cidade | `constantes_toggles.ts` |
-
-### Resultado esperado
-- Empreendedor define preço do milheiro no painel
-- Motorista vê botão "Comprar Pontos" no app → escolhe quantidade → envia pedido
-- Empreendedor vê pedido pendente → confirma → pontos creditados
+Se após publicar e ativar o toggle você ainda não encontrar o item "Venda de Pontos" no sidebar, pode ser que o filtro de scoring model esteja escondendo — nesse caso precisaria ajustar o `scoringFilter` do item no menu registry. Confirme se quer que eu remova essa restrição para que o item apareça sempre.
 
