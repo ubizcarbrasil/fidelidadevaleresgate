@@ -49,8 +49,7 @@ export default function DriverVerifyCodeStep({ onVerified, onBack }: Props) {
     setCodeSent(true);
     setSending(false);
 
-    // MVP: show code via toast since no email infra yet
-    toast.info(`Seu código de verificação: ${newCode}`, { duration: 30000 });
+    // Code stored in DB and state — no local exposure for security
   }, [driver]);
 
   // Auto-send on mount

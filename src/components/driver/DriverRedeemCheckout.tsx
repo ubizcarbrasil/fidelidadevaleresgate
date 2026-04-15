@@ -27,13 +27,14 @@ interface Props {
   onSuccess: () => void;
 }
 
+type Step = "form" | "otp" | "success";
+
 export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props) {
   const { driver, refreshDriver } = useDriverSession();
   const { celebrate: celebrateRedeem } = useRedeemCelebration();
   const [loading, setLoading] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [verified, setVerified] = useState(false);
+  const [step, setStep] = useState<Step>("form");
 
   const cleanName = (name?: string | null) =>
     name?.replace(/\[MOTORISTA\]\s*/i, "").replace(/\s*\(D\)\s*$/i, "").trim() || "";
@@ -80,18 +81,27 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
     setCepLoading(false);
   };
 
-  const handleSubmit = async () => {
-    if (loading) return;
-    if (!driver) return;
+  const validateForm = (): boolean => {
+    if (!driver) return false;
     if (!canAfford) {
       toast.error("Saldo de pontos insuficiente!");
-      return;
+      return false;
     }
     if (!form.name || !form.phone || !form.cep || !form.address || !form.number || !form.neighborhood || !form.city || !form.state) {
       toast.error("Preencha todos os campos obrigatórios!");
-      return;
+      return false;
     }
+    return true;
+  };
 
+  const handleProceedToOtp = () => {
+    if (validateForm()) {
+      setStep("otp");
+    }
+  };
+
+  const handleVerifiedAndSubmit = async () => {
+    if (loading || !driver) return;
     setLoading(true);
     try {
       const { data: orderId, error: rpcError } = await supabase.rpc(
@@ -123,10 +133,8 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
       );
       if (rpcError) throw rpcError;
 
-      // Refresh driver balance
       await refreshDriver();
 
-      // Send Telegram notification (fire & forget)
       sendRedemptionTelegramNotification({
         brandId: driver.brand_id,
         branchId: driver.branch_id,
@@ -140,26 +148,28 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
         orderSource: "driver",
       });
 
-      setSuccess(true);
+      setStep("success");
       celebrateRedeem({ title: "Resgate solicitado! 🎉", description: "Seu pedido foi registrado com sucesso." });
     } catch (err: any) {
       haptics.error();
       toast.error(err.message || "Erro ao processar resgate");
+      setStep("form");
     }
     setLoading(false);
   };
 
-  // Step 1: Verification
-  if (!verified) {
+  // Step: OTP verification (after form validated)
+  if (step === "otp") {
     return (
       <DriverVerifyCodeStep
-        onVerified={() => setVerified(true)}
-        onBack={onClose}
+        onVerified={handleVerifiedAndSubmit}
+        onBack={() => setStep("form")}
       />
     );
   }
 
-  if (success) {
+  // Step: Success
+  if (step === "success") {
     return (
       <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-6 text-center">
         <CheckCircle2 className="h-16 w-16 text-green-500 mb-4" />
@@ -175,6 +185,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
     );
   }
 
+  // Step: Form (default)
   return (
     <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
       <div className="max-w-lg mx-auto px-5 py-4">
@@ -291,7 +302,7 @@ export default function DriverRedeemCheckout({ deal, onClose, onSuccess }: Props
           <Button
             className="w-full h-12 text-base font-bold rounded-2xl"
             disabled={!canAfford || loading}
-            onClick={handleSubmit}
+            onClick={handleProceedToOtp}
           >
             {loading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
