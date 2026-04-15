@@ -3165,6 +3165,132 @@ export type Database = {
           },
         ]
       }
+      driver_points_orders: {
+        Row: {
+          branch_id: string | null
+          brand_id: string
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          points_amount: number
+          price_cents: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id?: string | null
+          brand_id: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          points_amount: number
+          price_cents: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string | null
+          brand_id?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          points_amount?: number
+          price_cents?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_points_orders_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_points_orders_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_points_orders_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_points_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_points_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_points_purchase_config: {
+        Row: {
+          brand_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          max_points: number
+          min_points: number
+          price_per_thousand_cents: number
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_points?: number
+          min_points?: number
+          price_per_thousand_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_points?: number
+          min_points?: number
+          price_per_thousand_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_points_purchase_config_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: true
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_points_purchase_config_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: true
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_points_rules: {
         Row: {
           branch_id: string | null
@@ -7972,6 +8098,10 @@ export type Database = {
           p_start_at: string
         }
         Returns: string[]
+      }
+      confirm_driver_points_order: {
+        Args: { p_confirmed_by: string; p_order_id: string }
+        Returns: Json
       }
       confirm_package_order: {
         Args: { p_confirmed_by: string; p_order_id: string }
