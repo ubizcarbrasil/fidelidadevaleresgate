@@ -1,31 +1,29 @@
 
 
-## Plano: Botão "Meus Resgates" → Abrir lista de parceiros da cidade
+## Correção: Botão "Resgate na Cidade" deve abrir lista de parceiros
 
 ### Problema
-Na seção "Resgate na Cidade", o botão "Meus Resgates" abre o histórico de resgates (`DriverCityRedemptionHistory`). O comportamento correto é abrir a **lista de lojas parceiras** da cidade.
+O botão "Resgate na Cidade" na Home do motorista executa `setShowHub(false)`, que apenas troca para a view do Marketplace. Não abre a lista de parceiros.
 
-### O que será feito
+### Solução
+Alterar `DriverPanelPage.tsx` para que `onOpenCityRedeem` abra o `DriverCityPartnersPage` como um hub overlay, igual aos outros overlays (profile, ledger, etc.).
 
-**1. Criar componente `DriverCityPartnersPage.tsx`**
-- Nova tela overlay (full-screen, z-50) com lista de lojas parceiras da cidade
-- Busca na tabela `stores` filtrando por `branch_id`, `is_active = true`, `approval_status = 'APPROVED'`
-- Exibe: logo, nome, categoria de cada loja
-- Ao clicar numa loja, mostra as ofertas de resgate daquela loja (REDEEM/BOTH)
-- Inclui barra de busca
-- Segue o padrão visual de `CustomerEmissorasPage`/`DriverRedeemStorePage`
+### Alterações
 
-**2. Alterar `SecaoResgateCidade.tsx`**
-- Renomear prop `onVerHistorico` → `onVerParceiros`
-- Alterar texto do botão de "Meus Resgates" → "Ver Parceiros"
+**`src/pages/DriverPanelPage.tsx`**
+1. Importar `DriverCityPartnersPage`
+2. Mudar `onOpenCityRedeem` de `() => setShowHub(false)` para `() => setHubOverlay({ type: "cityPartners" })`
+3. Adicionar renderização condicional do overlay:
+```tsx
+{hubOverlay?.type === "cityPartners" && effectiveBranch && (
+  <DriverCityPartnersPage
+    brandId={brand.id}
+    branchId={effectiveBranch.id}
+    fontHeading={fontHeading}
+    onBack={() => setHubOverlay(null)}
+  />
+)}
+```
 
-**3. Alterar `DriverMarketplace.tsx`**
-- Trocar o estado `showCityRedemptions` → `showCityPartners`
-- Conectar ao novo componente `DriverCityPartnersPage`
-- Manter o `DriverCityRedemptionHistory` acessível de outro ponto (ex: dentro da nova tela de parceiros ou no perfil)
-
-### Arquivos afetados
-- `src/components/driver/DriverCityPartnersPage.tsx` — novo
-- `src/components/driver/SecaoResgateCidade.tsx` — renomear prop e texto
-- `src/components/driver/DriverMarketplace.tsx` — trocar overlay
+Nenhuma outra alteração necessária. O componente `DriverCityPartnersPage` já existe e funciona.
 
