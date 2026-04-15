@@ -303,11 +303,10 @@ export default function AchadinhoDealDetail({
                   {priceStr && (
                     <button
                       onClick={handleBuyExternal}
-                      className="w-full py-3 rounded-xl text-sm font-semibold transition-transform active:scale-[0.97] flex items-center justify-center gap-2 border"
+                      className="w-full py-3 rounded-xl text-sm font-semibold transition-transform active:scale-[0.97] flex items-center justify-center gap-2"
                       style={{
-                        borderColor: "hsl(var(--border))",
-                        backgroundColor: "hsl(var(--card))",
-                        color: "hsl(var(--foreground))",
+                        backgroundColor: "hsl(142 71% 45%)",
+                        color: "#fff",
                       }}
                     >
                       <ExternalLink className="h-4 w-4" />
