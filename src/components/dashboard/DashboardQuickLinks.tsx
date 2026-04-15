@@ -132,6 +132,24 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Preview (Dev) */}
+            <div className="rounded-lg border-2 border-dashed border-primary/40 bg-primary/5 p-3 space-y-2 hover:border-primary/60 transition-colors">
+              <div className="flex items-center gap-2">
+                <Eye className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Preview (Dev)</span>
+                <Badge variant="outline" className="text-[10px] ml-auto">Teste</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">Versão de teste antes de publicar</p>
+              <div className="flex gap-1">
+                <Button variant="default" size="sm" className="h-7 text-xs flex-1 gap-1" onClick={() => window.open(previewUrl, "_blank")}>
+                  <Eye className="h-3 w-3" /> Abrir
+                </Button>
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => copyText(previewUrl)}>
+                  <Copy className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+
             {/* External links */}
             {linksExternos.map((link) => {
               const fullUrl = baseUrl ? `${baseUrl}${link.path}` : null;
