@@ -348,8 +348,8 @@ export default function Dashboard() {
             brandFilter={brandFilter}
             showBrand={showBrand}
             isRoot={isRoot}
-            redemptionsPending={redemptionsPending}
-            storeRulesPending={storeRulesPending}
+            redemptionsPending={kpis?.redemptions_pending}
+            storeRulesPending={kpis?.store_rules_pending}
             isDriverEnabled={isDriverEnabled}
             isPassengerEnabled={isPassengerEnabled}
           />
