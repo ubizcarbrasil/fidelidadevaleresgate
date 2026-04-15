@@ -81,6 +81,9 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
   if (!brand) return null;
   const hasTestAccounts = testAccounts && testAccounts.length > 0 && testAccounts.some((a) => a.is_active);
 
+  // Preview URL (always visible)
+  const previewUrl = `https://id-preview--3ff47979-b8b4-4666-bfef-7987c2d119c3.lovable.app?brandId=${currentBrandId}`;
+
   // External links — require brand domain
   const linksExternos = [
     { label: "App do Cliente", path: "/", icon: ExternalLink, description: "Visualizar o aplicativo", scoringFilter: "PASSENGER" as const },
