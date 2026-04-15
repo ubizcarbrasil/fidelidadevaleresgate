@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useBrand } from "@/contexts/BrandContext";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { formatPoints } from "@/lib/formatPoints";
 
 export default function PaginaCompraPontosConfig() {
-  const { currentBrandId } = useBrandContext();
+  const { currentBrandId } = useBrandGuard();
   const queryClient = useQueryClient();
 
   // Config
