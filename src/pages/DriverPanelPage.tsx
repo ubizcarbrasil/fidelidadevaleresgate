@@ -81,13 +81,16 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   }, [branchFromUrl, driver?.branch_id]);
 
   const effectiveBranch = branchFromUrl || derivedBranch;
-  const branchAchadinhosEnabled = (effectiveBranch?.branch_settings_json as any)?.enable_achadinhos_module !== false;
+  const branchSettings = effectiveBranch?.branch_settings_json as Record<string, any> | null;
+  const branchAchadinhosEnabled = branchSettings ? branchSettings.enable_achadinhos_module !== false : false;
+  const branchMarketplaceEnabled = branchSettings ? branchSettings.enable_marketplace_module !== false : false;
   const achadinhosEnabled = modulesLoaded ? (brandAchadinhosEnabled && branchAchadinhosEnabled) : false;
+  const marketplaceEnabled = modulesLoaded ? branchMarketplaceEnabled : false;
 
-  // When deep-link params exist, go straight to marketplace
+  // When deep-link params exist, go straight to marketplace — but only if module is on
   useEffect(() => {
-    if (initialCategoryId || initialDealId) setShowHub(false);
-  }, [initialCategoryId, initialDealId]);
+    if (achadinhosEnabled && (initialCategoryId || initialDealId)) setShowHub(false);
+  }, [initialCategoryId, initialDealId, achadinhosEnabled]);
 
   if (loading || loadingBranch) {
     return (
@@ -149,7 +152,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             videos={settings?.driver_info_videos || []}
           />
         )}
-        {hubOverlay?.type === "redeemStore" && (
+        {hubOverlay?.type === "redeemStore" && marketplaceEnabled && (
           <DriverRedeemStorePage
             brandId={brand.id}
             branchId={effectiveBranch?.id}
@@ -157,7 +160,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             onBack={() => setHubOverlay(null)}
           />
         )}
-        {hubOverlay?.type === "category" && (
+        {hubOverlay?.type === "category" && achadinhosEnabled && (
           <DriverCategoryPage
             category={hubOverlay.cat}
             brandId={brand.id}
@@ -168,7 +171,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             onBack={() => setHubOverlay(null)}
           />
         )}
-        {hubOverlay?.type === "deal" && (
+        {hubOverlay?.type === "deal" && achadinhosEnabled && (
           <AchadinhoDealDetail
             deal={hubOverlay.deal}
             brandId={brand.id}
@@ -179,7 +182,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             onSelectDeal={(d) => setHubOverlay({ type: "deal", deal: d })}
           />
         )}
-        {hubOverlay?.type === "redeemDeal" && (
+        {hubOverlay?.type === "redeemDeal" && marketplaceEnabled && (
           <DriverRedeemCheckout
             deal={{
               id: hubOverlay.deal.id,
