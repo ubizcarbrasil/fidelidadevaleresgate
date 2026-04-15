@@ -1,78 +1,75 @@
 
-Objetivo: corrigir de forma definitiva as permissões por cidade no app do motorista para que:
-- WhatsApp suma em todas as telas quando desativado
-- “Compre com Pontos” exiba os produtos resgatáveis mesmo com Achadinhos desligado
+Objetivo: corrigir de verdade os dois problemas reportados no app do motorista:
+- WhatsApp deve sumir quando a cidade estiver com esse acesso desligado
+- “Compre com Pontos” deve mostrar produtos resgatáveis mesmo com Achadinhos desligado
 
-Diagnóstico
-- O toggle do WhatsApp já foi aplicado na Home (`DriverHomePage`), mas o app também renderiza o botão no `DriverMarketplace`, onde hoje ele usa apenas `brand_settings_json` e ignora a configuração da cidade.
-- A separação Achadinhos vs Compre com Pontos foi feita na Home, mas o `DriverMarketplace` ainda continua acoplado ao `achadinhosEnabled`:
-  - a query de deals é abortada quando Achadinhos está desligado
-  - a seção “Resgatar com Pontos” só aparece se `achadinhosEnabled`
-  - o overlay da loja de resgate existe, mas a vitrine que leva até ele não aparece
+Diagnóstico do código
+1. A tela de configuração por cidade está com um ponto crítico no salvamento:
+- `src/features/configuracao_cidade/hooks/hook_configuracao_cidade.ts`
+- os `update()` são feitos sem `.select()`
+- neste projeto isso é perigoso porque update com RLS pode falhar silenciosamente e aparentar “sucesso”
+- hoje a UI já faz toast de sucesso e atualiza cache local mesmo sem garantir que a linha foi realmente alterada
+
+2. O “Compre com Pontos” ainda depende da query errada:
+- `DriverHomePage.tsx` e `DriverMarketplace.tsx` ainda buscam produtos a partir de uma lista filtrada por `visible_driver = true`
+- depois filtram `is_redeemable`
+- isso pode esconder produtos resgatáveis que existem para a loja de resgate, mas não devem aparecer na vitrine normal dos Achadinhos
+- prova disso: `DriverRedeemStorePage.tsx` já usa outra lógica melhor, buscando direto por `is_redeemable = true`
+
+3. O WhatsApp está parcialmente centralizado, mas o bug principal pode ser o save não persistindo de fato
+- a exibição no app do motorista já depende de `whatsappNumber`
+- se a configuração não grava no backend, o botão continua aparecendo no app
 
 O que vou ajustar
-1. Centralizar as flags finais no `DriverPanelPage`
-- Resolver explicitamente:
-  - `whatsappEnabled`
-  - `achadinhosEnabled`
-  - `marketplaceEnabled`
-- Derivar um `whatsappNumber` final já filtrado pela cidade e repassar isso aos filhos.
-- Passar `marketplaceEnabled` também para `DriverMarketplace`.
+1. Endurecer o salvamento da Configuração por Cidade
+- em `hook_configuracao_cidade.ts`
+- trocar os `update()` para `update(...).eq(...).select("id").single()`
+- validar retorno real antes de exibir sucesso
+- só atualizar cache local depois de confirmação real
+- em erro, mostrar mensagem correta e não fingir que salvou
 
-2. Corrigir WhatsApp em todo o app do motorista
-- `DriverMarketplace.tsx`
-  - parar de ler WhatsApp direto de `brand_settings_json`
-  - receber `whatsappNumber` por prop
-  - ocultar:
-    - ícone do cabeçalho
-    - banner/CTA de WhatsApp
-    - link dentro de `DriverProgramInfo`, passando o número já filtrado
-- `DriverPanelPage.tsx`
-  - passar o `whatsappNumber` controlado por cidade tanto para `DriverHomePage` quanto para `DriverMarketplace` e `DriverProgramInfo`
+2. Separar definitivamente Achadinhos de Compre com Pontos
+- em `DriverHomePage.tsx`
+- em `DriverMarketplace.tsx`
+- deixar a lista de “Achadinhos” vir da lógica de vitrine afiliada
+- deixar a lista de “Compre com Pontos” vir de uma query própria baseada em `is_redeemable = true`
+- não depender de `visible_driver` para os produtos de resgate
+- manter filtro por cidade (`branch_id.eq.<cidade> OR branch_id.is.null`)
 
-3. Desacoplar “Compre com Pontos” do Achadinhos também no marketplace
-- `DriverMarketplace.tsx`
-  - adicionar prop `marketplaceEnabled`
-  - mudar a query para carregar deals se pelo menos um estiver ativo:
-    - Achadinhos OU Compre com Pontos
-  - manter busca/categorias/banners dependentes de `achadinhosEnabled`
-  - exibir “Resgatar com Pontos” com base em `marketplaceEnabled && redeemableDeals.length > 0`
-  - manter “Novas Ofertas”, categorias e busca apenas para Achadinhos
-- Assim, mesmo sem Achadinhos, os itens homologados com `is_redeemable = true` continuarão aparecendo para troca com pontos.
+3. Garantir entrada visual quando só Compre com Pontos estiver ativo
+- a Home e o Marketplace devem continuar mostrando:
+  - seção “Resgatar com Pontos”
+  - botão “Ver todos”
+  - loja de resgate
+- mesmo quando:
+  - `enable_achadinhos_module = false`
+  - `enable_points_purchase = true`
 
-4. Evitar tela “vazia” quando só Compre com Pontos estiver ativo
-- Ajustar o estado visual do `DriverMarketplace` para não depender do ecossistema Achadinhos.
-- Quando:
-  - `achadinhosEnabled = false`
-  - `marketplaceEnabled = true`
-- a tela deve continuar mostrando a seção de resgate e o acesso à loja de resgate, sem ficar em branco.
+4. Manter o WhatsApp 100% subordinado à cidade
+- preservar a resolução central no `DriverPanelPage.tsx`
+- conferir que Home, Marketplace e overlay de informações usam apenas o valor filtrado
+- se `enable_whatsapp_access = false`, o número final deve virar `undefined` em toda a experiência
 
-Arquivos que serão alterados
-- `src/pages/DriverPanelPage.tsx`
+Arquivos que entram na correção
+- `src/features/configuracao_cidade/hooks/hook_configuracao_cidade.ts`
+- `src/components/driver/home/DriverHomePage.tsx`
 - `src/components/driver/DriverMarketplace.tsx`
-- possivelmente `src/components/driver/DriverProgramInfo.tsx` apenas para garantir o recebimento do número já filtrado, sem lógica própria adicional
+- `src/pages/DriverPanelPage.tsx` (revisão final das flags)
+- opcionalmente memória do projeto para registrar a regra definitiva
 
 Resultado esperado
-```text
-WhatsApp desligado na cidade
-→ some da Home
-→ some do Marketplace
-→ some do CTA/banner e links relacionados
+- WhatsApp desligado na cidade:
+  - some da Home
+  - some do Marketplace
+  - some dos CTAs e links relacionados
 
-Achadinhos desligado + Compre com Pontos ligado
-→ motorista não vê categorias/busca/ofertas de Achadinhos
-→ motorista vê os produtos resgatáveis homologados
-→ seção “Resgatar com Pontos” continua disponível
-→ loja de resgate abre normalmente
-```
+- Achadinhos desligado + Compre com Pontos ligado:
+  - categorias, busca e vitrine afiliada somem
+  - produtos resgatáveis continuam aparecendo
+  - loja de resgate continua acessível
 
-Detalhe técnico
-Hoje a Home já está quase correta, mas o Marketplace ainda usa regras antigas. A correção principal é aplicar a mesma separação lógica nas duas experiências do motorista:
-- Achadinhos = vitrine afiliada, busca, categorias, banners
-- Compre com Pontos = produtos resgatáveis (`affiliate_deals.is_redeemable = true`)
-
-Validação após implementação
-- Cidade com WhatsApp desligado: conferir Home, Marketplace e tela de informações
-- Cidade com Achadinhos desligado e Compre com Pontos ligado: conferir se aparecem os produtos resgatáveis
-- Cidade com ambos desligados: confirmar que nada de ofertas/resgate aparece
-- Cidade com ambos ligados: confirmar convivência normal dos dois blocos
+Validação após implementar
+1. Desligar WhatsApp na cidade e recarregar o app do motorista
+2. Ligar apenas “Compre com Pontos” e confirmar que os produtos resgatáveis aparecem
+3. Desligar Achadinhos e confirmar que só a vitrine afiliada some
+4. Testar uma cidade com ambos ligados e outra com ambos desligados
