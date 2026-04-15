@@ -33,6 +33,7 @@ import BannerPromoDuelos from "./duels/BannerPromoDuelos";
 import BannerDueloAoVivo from "./duels/BannerDueloAoVivo";
 import { useEscutaDesafiosRecebidos } from "./duels/hook_escuta_desafios_recebidos";
 import PopupDesafioRecebido from "./duels/PopupDesafioRecebido";
+import DriverBuyPointsOverlay from "./DriverBuyPointsOverlay";
 
 export interface AffiliateDeal {
   id: string;
@@ -158,6 +159,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const [showRedeemStore, setShowRedeemStore] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showLedger, setShowLedger] = useState(false);
+  const [showBuyPoints, setShowBuyPoints] = useState(false);
   const [selectedCityOffer, setSelectedCityOffer] = useState<OfertaCidade | null>(null);
   const [showCityPartners, setShowCityPartners] = useState(false);
   const [showCityRedemptions, setShowCityRedemptions] = useState(false);
