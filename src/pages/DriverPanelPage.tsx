@@ -46,8 +46,9 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
     },
   });
 
+  const modulesLoaded = brandModulesFlags !== undefined;
   const driverHubEnabled = brandModulesFlags?.driver_hub ?? false;
-  const brandAchadinhosEnabled = brandModulesFlags?.affiliate_deals ?? true;
+  const brandAchadinhosEnabled = brandModulesFlags?.affiliate_deals ?? false;
 
   // Hub view state
   const [showHub, setShowHub] = useState(true);
@@ -81,7 +82,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
 
   const effectiveBranch = branchFromUrl || derivedBranch;
   const branchAchadinhosEnabled = (effectiveBranch?.branch_settings_json as any)?.enable_achadinhos_module !== false;
-  const achadinhosEnabled = brandAchadinhosEnabled && branchAchadinhosEnabled;
+  const achadinhosEnabled = modulesLoaded ? (brandAchadinhosEnabled && branchAchadinhosEnabled) : false;
 
   // When deep-link params exist, go straight to marketplace
   useEffect(() => {

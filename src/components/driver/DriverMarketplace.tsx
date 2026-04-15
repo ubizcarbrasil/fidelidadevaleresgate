@@ -139,7 +139,7 @@ export const formatPrice = (val: number | null | undefined) => {
   return Number(val).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 };
 
-export default function DriverMarketplace({ brand, branch, theme, initialCategoryId, initialDealId, isAdminSession, achadinhosEnabled = true }: Props) {
+export default function DriverMarketplace({ brand, branch, theme, initialCategoryId, initialDealId, isAdminSession, achadinhosEnabled = false }: Props) {
   const [openCategory, setOpenCategory] = useState<DealCategory | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -218,8 +218,11 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["driver-marketplace", brand.id, branch?.id],
+    queryKey: ["driver-marketplace", brand.id, branch?.id, achadinhosEnabled],
     queryFn: async () => {
+      if (!achadinhosEnabled) {
+        return { categories: [] as DealCategory[], dealsByCategory: new Map<string, AffiliateDeal[]>(), uncategorized: [] as AffiliateDeal[], allDeals: [] as AffiliateDeal[] };
+      }
       let dealsQ = supabase
         .from("affiliate_deals")
         .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, is_featured, is_flash_promo, created_at, origin, is_redeemable, redeem_points_cost")

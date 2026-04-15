@@ -5,9 +5,10 @@ interface Props {
   showCityRedeem: boolean;
   whatsappNumber?: string;
   onCityRedeem: () => void;
+  achadinhosEnabled?: boolean;
 }
 
-export default function QuickActionCards({ fontHeading, showCityRedeem, whatsappNumber, onCityRedeem }: Props) {
+export default function QuickActionCards({ fontHeading, showCityRedeem, whatsappNumber, onCityRedeem, achadinhosEnabled = false }: Props) {
   return (
     <div className="px-4 space-y-3">
       {showCityRedeem && (
@@ -37,7 +38,7 @@ export default function QuickActionCards({ fontHeading, showCityRedeem, whatsapp
         </button>
       )}
 
-      {whatsappNumber && (
+      {achadinhosEnabled && whatsappNumber && (
         <a
           href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent("Olá! Gostaria de enviar um link de produto do Mercado Livre para gerar pontos.")}`}
           target="_blank"
