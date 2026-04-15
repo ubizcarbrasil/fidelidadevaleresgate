@@ -2,7 +2,7 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle, Gift, HelpCircle, Swords, ArrowLeft, Ticket } from "lucide-react";
+import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle, Gift, HelpCircle, Swords, ArrowLeft, Ticket, CreditCard } from "lucide-react";
 import { shareDriverUrl, buildDriverUrl } from "@/lib/publicShareUrl";
 import DriverCategoryPage from "./DriverCategoryPage";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
