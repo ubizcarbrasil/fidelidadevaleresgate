@@ -1,53 +1,48 @@
 
 
-## Central de Configuração por Cidade
+## Problema: "Compre com Pontos" desaparece ao desabilitar Achadinhos
 
-### O que será criado
+### Causa raiz
 
-Uma nova página dedicada (`/configuracao-cidade`) no painel do empreendedor, onde ele seleciona uma cidade e controla com toggles simples (Sim/Não) exatamente quais funcionalidades o motorista terá naquela cidade.
+Em `DriverHomePage.tsx` (linha 52), quando `achadinhosEnabled = false`, a query de deals retorna vazio (`{ deals: [], categories: [] }`). Como os produtos resgatáveis ("Compre com Pontos") vêm da **mesma query**, a lista `redeemableDeals` fica vazia — e a seção "Resgatar com Pontos" some, mesmo que `marketplaceEnabled` esteja ativo.
 
-### Toggles disponíveis
+### Correção
 
-| Funcionalidade | Chave em `branch_settings_json` |
-|---|---|
-| Motorista duela? | `enable_duels_module` |
-| Motorista aposta? | `enable_duel_guesses` |
-| Motorista compra no Mercado Livre? | `enable_marketplace_module` |
-| Motorista tem acesso ao WhatsApp? | `enable_whatsapp_access` (nova) |
-| Motorista pontua por viagem? | `enable_race_earn_module` |
-| Motorista resgata com estabelecimentos da cidade? | `is_city_redemption_enabled` (campo existente na tabela `branches`) |
-| Motorista compra com pontos? | `enable_achadinhos_module` |
-| Motorista acessa os Achadinhos? | `enable_achadinhos_module` (mesmo toggle — achadinhos = compra com pontos via marketplace) |
+Separar a lógica de fetch: a query de deals deve rodar se **qualquer** dos dois módulos estiver ativo (Achadinhos OU Marketplace). A condição de skip deve ser `!achadinhosEnabled && !marketplaceEnabled`.
 
-**Nota:** "Compra com pontos" e "Acessa os Achadinhos" são a mesma funcionalidade internamente. Se o usuário quiser separar, posso criar uma chave adicional. Vou tratar como dois toggles visuais distintos com chaves separadas: `enable_achadinhos_module` para Achadinhos e `enable_points_purchase` (nova) para compra com pontos.
+Depois, cada seção da UI continua usando sua própria flag para decidir visibilidade.
 
-### Estrutura de arquivos
+### Mudanças
 
-```
-src/features/configuracao_cidade/
-├── pagina_configuracao_cidade.tsx      — Página principal
-├── components/
-│   ├── seletor_cidade_config.tsx       — Dropdown de cidades
-│   └── painel_toggles_cidade.tsx       — Grid de toggles com ícones
-├── hooks/
-│   └── hook_configuracao_cidade.ts     — Fetch + save do branch_settings_json
-└── constants/
-    └── constantes_toggles.ts           — Definição dos toggles (label, chave, ícone, descrição)
-```
+**1. `src/components/driver/home/DriverHomePage.tsx`**
 
-### Como funciona
+- Linha 52: Alterar a condição de skip da query de:
+  ```typescript
+  if (!achadinhosEnabled) return { deals: [], categories: [] };
+  ```
+  Para:
+  ```typescript
+  if (!achadinhosEnabled && !marketplaceEnabled) return { deals: [], categories: [] };
+  ```
 
-1. Empreendedor seleciona a cidade no dropdown
-2. O sistema carrega o `branch_settings_json` + `is_city_redemption_enabled` da cidade
-3. Mostra uma lista de cards com switch (Sim/Não) para cada funcionalidade
-4. Ao alterar qualquer toggle, salva automaticamente (ou botão "Salvar")
-5. O `DriverPanelPage` e demais componentes já consomem essas chaves — as funcionalidades serão aplicadas imediatamente
+- Linha 50: Incluir `marketplaceEnabled` na queryKey para invalidar corretamente:
+  ```typescript
+  queryKey: ["driver-home-data", brand.id, branch?.id, achadinhosEnabled, marketplaceEnabled],
+  ```
 
-### Integração no sidebar
+**2. `src/features/configuracao_cidade/constants/constantes_toggles.ts`**
 
-Adicionar o item no `MENU_REGISTRY` e no grupo "Cidades" do `BrandSidebar`, acessível para o empreendedor.
+- Atualizar a descrição do toggle `enable_points_purchase` para deixar claro que controla a seção "Compre com Pontos" independentemente dos Achadinhos.
 
-### Arquivos modificados
+**3. `src/pages/DriverPanelPage.tsx`**
 
-- `src/compartilhados/constants/constantes_menu_sidebar.ts` — novo registro
-- `src/components
+- Adicionar leitura de `enable_points_purchase` do `branchSettings` como flag separada.
+- Passar para `DriverHomePage` se necessário (ou usar `marketplaceEnabled` que já existe e é independente).
+
+**4. Atualizar memória** (`mem://features/driver/affiliate-deals-visibility-logic`) para refletir a separação.
+
+### Resultado
+
+- Achadinhos desligado + Marketplace ligado → motorista vê "Resgatar com Pontos" normalmente
+- Achadinhos ligado + Marketplace desligado → motorista vê ofertas afiliadas mas não a loja de resgate
+- Ambos desligados → nenhuma query é feita
