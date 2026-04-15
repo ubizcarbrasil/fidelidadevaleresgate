@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import DriverBuyPointsOverlay from "@/components/driver/DriverBuyPointsOverlay";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,6 +62,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
     | { type: "redeemStore" }
     | { type: "cityPartners" }
     | { type: "cityRedemptions" }
+    | { type: "buyPoints" }
     | { type: "category"; cat: DealCategory }
     | { type: "deal"; deal: any }
     | { type: "redeemDeal"; deal: any }
@@ -93,6 +95,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   const branchWhatsappEnabled = branchSettings?.enable_whatsapp_access === true;
   const achadinhosEnabled = modulesLoaded ? (brandAchadinhosEnabled && branchAchadinhosEnabled) : false;
   const marketplaceEnabled = modulesLoaded ? (branchMarketplaceEnabled || branchPointsPurchaseEnabled) : false;
+  const buyPointsEnabled = branchSettings?.enable_driver_points_purchase === true;
 
   // Derive whatsappNumber filtered by city toggle
   const rawWhatsappNumber = settings?.whatsapp_number as string | undefined;
@@ -134,9 +137,11 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             onOpenRedeemStore={() => marketplaceEnabled && setHubOverlay({ type: "redeemStore" })}
             onOpenCityRedeem={() => marketplaceEnabled && setHubOverlay({ type: "cityPartners" })}
             onOpenCityRedemptions={() => setHubOverlay({ type: "cityRedemptions" })}
+            onOpenBuyPoints={() => buyPointsEnabled && setHubOverlay({ type: "buyPoints" })}
             onActivateSearch={() => achadinhosEnabled && setShowHub(false)}
             achadinhosEnabled={achadinhosEnabled}
             marketplaceEnabled={marketplaceEnabled}
+            buyPointsEnabled={buyPointsEnabled}
             whatsappNumber={whatsappNumber}
           />
         ) : (
@@ -222,6 +227,14 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
         )}
         {hubOverlay?.type === "cityRedemptions" && (
           <DriverCityRedemptionHistory
+            fontHeading={fontHeading}
+            onBack={() => setHubOverlay(null)}
+          />
+        )}
+        {hubOverlay?.type === "buyPoints" && buyPointsEnabled && (
+          <DriverBuyPointsOverlay
+            brandId={brand.id}
+            branchId={effectiveBranch?.id}
             fontHeading={fontHeading}
             onBack={() => setHubOverlay(null)}
           />

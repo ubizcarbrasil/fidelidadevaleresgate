@@ -153,6 +153,9 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
   "sidebar.motoristas": {
     key: "sidebar.motoristas", defaultTitle: "Motoristas", url: "/motoristas", icon: Truck, moduleKey: "machine_integration", scoringFilter: "DRIVER",
   },
+  "sidebar.compra_pontos_motorista": {
+    key: "sidebar.compra_pontos_motorista", defaultTitle: "Venda de Pontos", url: "/driver-points-purchase", icon: Coins, moduleKey: "machine_integration", scoringFilter: "DRIVER",
+  },
   "sidebar.painel_motorista_view": {
     key: "sidebar.painel_motorista_view", defaultTitle: "Painel do Motorista", url: "/driver", icon: Car, scoringFilter: "DRIVER",
   },

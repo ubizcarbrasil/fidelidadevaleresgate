@@ -106,6 +106,7 @@ const SubscriptionPlansAdminPage = lazyWithRetry(() => import("@/pages/Subscript
 const TierPointsRulesPage = lazyWithRetry(() => import("@/pages/TierPointsRulesPage"));
 const DriverPointsRulesPage = lazyWithRetry(() => import("@/pages/DriverPointsRulesPage"));
 const DriverManagementPage = lazyWithRetry(() => import("@/pages/DriverManagementPage"));
+const DriverPointsPurchaseConfigPage = lazyWithRetry(() => import("@/features/compra_pontos_motorista/pagina_compra_pontos_config"));
 const BranchWalletPage = lazyWithRetry(() => import("@/pages/BranchWalletPage"));
 const BranchReportsPage = lazyWithRetry(() => import("@/pages/BranchReportsPage"));
 const PaginaRelatorioCorridas = lazyWithRetry(() => import("@/features/relatorio_corridas/pagina_relatorio_corridas"));
@@ -269,6 +270,7 @@ function AnimatedRoutes() {
               <Route path="machine-webhook-test" element={<ModuleGuard moduleKey="machine_integration"><MachineWebhookTestPage /></ModuleGuard>} />
               <Route path="driver-points-rules" element={<ModuleGuard moduleKey="machine_integration|achadinhos_motorista"><DriverPointsRulesPage /></ModuleGuard>} />
               <Route path="motoristas" element={<ModuleGuard moduleKey="machine_integration|achadinhos_motorista"><DriverManagementPage /></ModuleGuard>} />
+              <Route path="driver-points-purchase" element={<ModuleGuard moduleKey="machine_integration|achadinhos_motorista"><DriverPointsPurchaseConfigPage /></ModuleGuard>} />
               <Route path="offer-card-config" element={<ModuleGuard moduleKey="offer_card_config"><OfferCardConfigPage /></ModuleGuard>} />
               <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
               <Route path="plan-pricing" element={<RootGuard><SubscriptionPlansAdminPage /></RootGuard>} />
