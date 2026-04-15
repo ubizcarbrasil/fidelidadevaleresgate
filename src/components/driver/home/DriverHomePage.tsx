@@ -138,6 +138,8 @@ export default function DriverHomePage({
           driverName={driver.name}
           pointsBalance={driver.points_balance}
           onClick={onOpenLedger}
+          showBuyPoints={buyPointsEnabled}
+          onBuyPoints={onOpenBuyPoints}
         />
       )}
 
