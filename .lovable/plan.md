@@ -1,62 +1,26 @@
 
 
-## Correção: Achadinhos no App do Cliente + Flags de Cidade
+## Acesso ao Preview do Lovable no Dashboard
 
-### Problema
+### O que será feito
 
-1. **RLS bloqueia `brand_modules` para anônimos** — O `useBrandModules` consulta `brand_modules`, mas a política RLS só permite `authenticated`. Clientes "Visitante" (anônimos) recebem array vazio, fazendo `isModuleEnabled("affiliate_deals")` retornar `false` e escondendo Achadinhos, Banners, Categorias, etc.
-
-2. **Toggles da cidade não afetam o app do cliente** — O admin altera `enable_achadinhos_module` no `branch_settings_json`, mas o `CustomerHomePage` só verifica `brand_modules` (nível marca). A flag da cidade é ignorada — só o app do motorista a usa.
+Adicionar um card/link no Dashboard que abre a URL de preview do Lovable (`https://id-preview--3ff47979-b8b4-4666-bfef-7987c2d119c3.lovable.app`) diretamente, permitindo testar mudanças antes de publicar.
 
 ### Solução
 
-**A) Migração: RLS pública para leitura de `brand_modules`**
+Adicionar um novo link externo na seção "Links Úteis" do `DashboardQuickLinks.tsx` com:
+- Label: **"Preview (Dev)"**
+- Descrição: "Versão de teste antes de publicar"
+- Ícone: `Eye`
+- URL fixa: `https://id-preview--3ff47979-b8b4-4666-bfef-7987c2d119c3.lovable.app`
+- Sem filtro de scoring (sempre visível)
+- Botões "Abrir" e "Copiar"
 
-Adicionar política `anon SELECT` na tabela `brand_modules` (não contém dados sensíveis).
+### Arquivo afetado
 
-```sql
-CREATE POLICY "Anon can read brand_modules"
-  ON brand_modules FOR SELECT TO anon USING (true);
-```
-
-**B) `CustomerHomePage.tsx`: respeitar flags da cidade**
-
-Adicionar mapeamento de flags de `branch_settings_json` por seção nativa:
-
-- `ACHADINHOS` → `enable_achadinhos_module === true`
-- `COMPRE_COM_PONTOS` → `enable_points_purchase === true`
-
-Se a flag estiver ausente (`undefined`), usar o fallback do módulo de marca (comportamento atual). Se estiver explicitamente `false`, esconder.
-
-### Arquivos afetados
-
-1. **Nova migração SQL** — Política RLS pública em `brand_modules`
-2. **`src/pages/customer/CustomerHomePage.tsx`** — Verificação de `branch_settings_json` em `isNativeSectionVisible`
+1. **`src/components/dashboard/DashboardQuickLinks.tsx`** — Adicionar card de preview na seção de links
 
 ### Detalhes técnicos
 
-```typescript
-// CustomerHomePage.tsx
-const branchSettings = selectedBranch?.branch_settings_json as Record<string, any> | null;
-
-const BRANCH_FLAG_MAP: Record<string, string> = {
-  ACHADINHOS: "enable_achadinhos_module",
-  COMPRE_COM_PONTOS: "enable_points_purchase",
-};
-
-const isNativeSectionVisible = (ns: NativeSectionConfig) => {
-  if (!ns.enabled) return false;
-  const moduleKey = SECTION_MODULE_MAP[ns.key];
-  if (moduleKey && !isModuleEnabled(moduleKey)) return false;
-  // City-level override
-  const branchFlag = BRANCH_FLAG_MAP[ns.key];
-  if (branchFlag && branchSettings && branchFlag in branchSettings) {
-    if (branchSettings[branchFlag] !== true) return false;
-  }
-  const audience = ns.audience || "all";
-  if (audience === "driver_only" && !isDriver) return false;
-  if (audience === "customer_only" && isDriver) return false;
-  return true;
-};
-```
+Será adicionado como um card standalone antes dos links externos, com URL hardcoded do preview. Incluirá o `brandId` como query param para manter o contexto da marca.
 
