@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPoints } from "@/lib/formatPoints";
-import { ArrowLeft, Coins, Loader2, Car, ShoppingCart, Gift, Ticket, CircleDot } from "lucide-react";
+import { ArrowLeft, Coins, Loader2, Car, ShoppingCart, Gift, Ticket, CircleDot, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -49,9 +49,11 @@ function getReferenceLabel(refType: string | null, entryType: string) {
 interface Props {
   fontHeading?: string;
   onBack: () => void;
+  buyPointsEnabled?: boolean;
+  onBuyPoints?: () => void;
 }
 
-export default function DriverLedgerOverlay({ fontHeading, onBack }: Props) {
+export default function DriverLedgerOverlay({ fontHeading, onBack, buyPointsEnabled, onBuyPoints }: Props) {
   const { driver } = useDriverSession();
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,15 +135,31 @@ export default function DriverLedgerOverlay({ fontHeading, onBack }: Props) {
           }}
         >
           <p className="text-xs opacity-80 mb-1">Seu saldo</p>
-          <div className="flex items-baseline gap-2">
-            <Coins className="h-6 w-6" />
-            <span
-              className="text-3xl font-extrabold"
-              style={{ fontFamily: fontHeading || "inherit" }}
-            >
-              {formatPoints(driver.points_balance)}
-            </span>
-            <span className="text-sm font-semibold opacity-80">pontos</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-baseline gap-2">
+              <Coins className="h-6 w-6" />
+              <span
+                className="text-3xl font-extrabold"
+                style={{ fontFamily: fontHeading || "inherit" }}
+              >
+                {formatPoints(driver.points_balance)}
+              </span>
+              <span className="text-sm font-semibold opacity-80">pontos</span>
+            </div>
+            {buyPointsEnabled && onBuyPoints && (
+              <button
+                onClick={onBuyPoints}
+                className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-transform active:scale-95"
+                style={{
+                  backgroundColor: "hsl(var(--primary-foreground) / 0.25)",
+                  color: "hsl(var(--primary-foreground))",
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Comprar
+              </button>
+            )}
           </div>
         </div>
 
