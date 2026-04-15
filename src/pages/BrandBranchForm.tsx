@@ -284,6 +284,34 @@ export default function BrandBranchForm() {
         if (fnError) {
           console.error("Integration registration error:", fnError);
           toast.error("Cidade salva, mas houve erro ao registrar a integração.");
+        } else {
+          // Auto-activate machine_integration module for this brand
+          const { data: modDef } = await supabase
+            .from("module_definitions")
+            .select("id")
+            .eq("key", "machine_integration")
+            .single();
+          if (modDef) {
+            await supabase.from("brand_modules").upsert(
+              { brand_id: currentBrandId, module_definition_id: modDef.id, is_enabled: true },
+              { onConflict: "brand_id,module_definition_id" }
+            );
+          }
+
+          // Auto-set scoring_model to DRIVER_ONLY if not yet defined
+          if (branchId) {
+            const { data: branchData } = await supabase
+              .from("branches")
+              .select("scoring_model")
+              .eq("id", branchId)
+              .single();
+            if (branchData && branchData.scoring_model === "BOTH") {
+              await supabase
+                .from("branches")
+                .update({ scoring_model: "DRIVER_ONLY" })
+                .eq("id", branchId);
+            }
+          }
         }
       } else if (branchId && telegramChatId.trim()) {
         // Only telegram update, no credentials
