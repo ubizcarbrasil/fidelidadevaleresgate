@@ -163,7 +163,12 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
           <DriverProfileOverlay fontHeading={fontHeading} onBack={() => setHubOverlay(null)} />
         )}
         {hubOverlay?.type === "ledger" && (
-          <DriverLedgerOverlay fontHeading={fontHeading} onBack={() => setHubOverlay(null)} />
+          <DriverLedgerOverlay
+            fontHeading={fontHeading}
+            onBack={() => setHubOverlay(null)}
+            buyPointsEnabled={buyPointsEnabled}
+            onBuyPoints={() => setHubOverlay({ type: "buyPoints" })}
+          />
         )}
         {hubOverlay?.type === "programInfo" && (
           <DriverProgramInfo
