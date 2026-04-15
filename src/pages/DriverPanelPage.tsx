@@ -231,6 +231,14 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             onBack={() => setHubOverlay(null)}
           />
         )}
+        {hubOverlay?.type === "buyPoints" && buyPointsEnabled && (
+          <DriverBuyPointsOverlay
+            brandId={brand.id}
+            branchId={effectiveBranch?.id}
+            fontHeading={fontHeading}
+            onBack={() => setHubOverlay(null)}
+          />
+        )}
       </div>
     </CustomerProvider>
   );
