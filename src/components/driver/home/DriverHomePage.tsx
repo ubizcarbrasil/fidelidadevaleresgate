@@ -30,6 +30,7 @@ interface Props {
   onActivateSearch: () => void;
   achadinhosEnabled: boolean;
   marketplaceEnabled?: boolean;
+  whatsappNumber?: string;
 }
 
 export default function DriverHomePage({
@@ -37,12 +38,11 @@ export default function DriverHomePage({
   onGoToMarketplace, onOpenCategory, onOpenDeal, onOpenRedeemDeal,
   onOpenProfile, onOpenLedger, onOpenProgramInfo, onOpenRedeemStore,
   onOpenCityRedeem, onActivateSearch, achadinhosEnabled, marketplaceEnabled = false,
+  whatsappNumber,
 }: Props) {
   const { driver } = useDriverSession();
   const settings = brand.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
-  const branchWhatsappEnabled = (branch?.branch_settings_json as any)?.enable_whatsapp_access !== false;
-  const whatsappNumber = branchWhatsappEnabled ? (settings?.whatsapp_number as string | undefined) : undefined;
   const marketplaceTitle = settings?.driver_marketplace_title || "Achadinhos";
   const isCityRedemptionEnabled = (branch as any)?.is_city_redemption_enabled === true;
 
