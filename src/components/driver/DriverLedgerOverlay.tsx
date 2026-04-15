@@ -161,6 +161,7 @@ export default function DriverLedgerOverlay({ fontHeading, onBack, buyPointsEnab
               </button>
             )}
           </div>
+        </div>
 
         {/* Ledger list */}
         <div className="mx-4 mt-5">
