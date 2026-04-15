@@ -1,16 +1,18 @@
-import { MapPin, MessageCircle, ChevronRight, Ticket } from "lucide-react";
+import { MapPin, MessageCircle, ChevronRight, Ticket, Coins } from "lucide-react";
 
 interface Props {
   fontHeading?: string;
   showCityRedeem: boolean;
   showCityRedemptions?: boolean;
+  showBuyPoints?: boolean;
   whatsappNumber?: string;
   onCityRedeem: () => void;
   onCityRedemptions: () => void;
+  onBuyPoints?: () => void;
   achadinhosEnabled?: boolean;
 }
 
-export default function QuickActionCards({ fontHeading, showCityRedeem, showCityRedemptions = false, whatsappNumber, onCityRedeem, onCityRedemptions, achadinhosEnabled = false }: Props) {
+export default function QuickActionCards({ fontHeading, showCityRedeem, showCityRedemptions = false, showBuyPoints = false, whatsappNumber, onCityRedeem, onCityRedemptions, onBuyPoints, achadinhosEnabled = false }: Props) {
   return (
     <div className="px-4 space-y-3">
       {showCityRedeem && (
