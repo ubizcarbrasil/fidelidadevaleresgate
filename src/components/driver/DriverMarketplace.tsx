@@ -2,7 +2,7 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle, Gift, HelpCircle, Swords, ArrowLeft } from "lucide-react";
+import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle, Gift, HelpCircle, Swords, ArrowLeft, Ticket } from "lucide-react";
 import { shareDriverUrl, buildDriverUrl } from "@/lib/publicShareUrl";
 import DriverCategoryPage from "./DriverCategoryPage";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
@@ -26,6 +26,7 @@ import SecaoResgateCidade, { type OfertaCidade } from "./SecaoResgateCidade";
 import CityOfferDetailOverlay from "./CityOfferDetailOverlay";
 import DriverCityPartnersPage from "./DriverCityPartnersPage";
 import DuelsHub from "./duels/DuelsHub";
+import DriverCityRedemptionHistory from "./DriverCityRedemptionHistory";
 import SecaoDuelosCidade from "./duels/SecaoDuelosCidade";
 import { useConfigDuelos } from "./duels/hook_config_duelos";
 import BannerPromoDuelos from "./duels/BannerPromoDuelos";
@@ -153,6 +154,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const [showLedger, setShowLedger] = useState(false);
   const [selectedCityOffer, setSelectedCityOffer] = useState<OfertaCidade | null>(null);
   const [showCityPartners, setShowCityPartners] = useState(false);
+  const [showCityRedemptions, setShowCityRedemptions] = useState(false);
   const [showDuels, setShowDuels] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
@@ -696,6 +698,32 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         />
       )}
 
+      {/* Meus Resgates na Cidade */}
+      {!debouncedSearch.trim() && (branch as any)?.is_city_redemption_enabled === true && (
+        <section className="px-5 pt-2">
+          <button
+            onClick={() => setShowCityRedemptions(true)}
+            className="w-full flex items-center gap-3 rounded-2xl p-4 transition-opacity active:opacity-80 text-left"
+            style={{
+              backgroundColor: "hsl(var(--card))",
+              border: "1px solid hsl(var(--border))",
+            }}
+          >
+            <div
+              className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: "hsl(45 93% 47% / 0.13)" }}
+            >
+              <Ticket className="h-5 w-5" style={{ color: "hsl(45 93% 47%)" }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">Meus Resgates</p>
+              <p className="text-[11px] text-muted-foreground">Acompanhe seus resgates na cidade</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          </button>
+        </section>
+      )}
+
       {/* WhatsApp CTA Banner for ML affiliate link — respects city toggle */}
       {achadinhosEnabled && !debouncedSearch.trim() && !!whatsappNumber && (
         <section className="px-5 pt-4">
@@ -949,6 +977,14 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       {/* Duels overlay */}
       {showDuels && configDuelos.duelosAtivos && (
         <DuelsHub onBack={() => setShowDuels(false)} configDuelos={configDuelos} />
+      )}
+
+      {/* Meus Resgates overlay */}
+      {showCityRedemptions && (
+        <DriverCityRedemptionHistory
+          fontHeading={fontHeading}
+          onBack={() => setShowCityRedemptions(false)}
+        />
       )}
 
       {/* Popup de desafio recebido em tempo real */}
