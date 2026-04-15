@@ -3,13 +3,14 @@ import { MapPin, MessageCircle, ChevronRight, Ticket } from "lucide-react";
 interface Props {
   fontHeading?: string;
   showCityRedeem: boolean;
+  showCityRedemptions?: boolean;
   whatsappNumber?: string;
   onCityRedeem: () => void;
   onCityRedemptions: () => void;
   achadinhosEnabled?: boolean;
 }
 
-export default function QuickActionCards({ fontHeading, showCityRedeem, whatsappNumber, onCityRedeem, onCityRedemptions, achadinhosEnabled = false }: Props) {
+export default function QuickActionCards({ fontHeading, showCityRedeem, showCityRedemptions = false, whatsappNumber, onCityRedeem, onCityRedemptions, achadinhosEnabled = false }: Props) {
   return (
     <div className="px-4 space-y-3">
       {showCityRedeem && (
@@ -39,7 +40,7 @@ export default function QuickActionCards({ fontHeading, showCityRedeem, whatsapp
         </button>
       )}
 
-      {showCityRedeem && (
+      {showCityRedemptions && (
         <button
           onClick={onCityRedemptions}
           className="w-full flex items-center gap-3 rounded-2xl p-4 transition-transform active:scale-[0.98] text-left"
