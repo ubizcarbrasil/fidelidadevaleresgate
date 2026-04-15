@@ -136,6 +136,7 @@ const BrandBranchForm = lazyWithRetry(() => import("@/pages/BrandBranchForm"));
 const BrandCidadesJourneyPage = lazyWithRetry(() => import("@/pages/BrandCidadesJourneyPage"));
 const BrandApiJourneyPage = lazyWithRetry(() => import("@/pages/BrandApiJourneyPage"));
 const PaginaOnboardingCidade = lazyWithRetry(() => import("@/features/city_onboarding/pagina_onboarding_cidade"));
+const PaginaConfiguracaoCidade = lazyWithRetry(() => import("@/features/configuracao_cidade/pagina_configuracao_cidade"));
 const GamificacaoAdminPage = lazyWithRetry(() => import("@/pages/GamificacaoAdminPage"));
 const PaginaPacotesPontos = lazyWithRetry(() => import("@/features/pacotes_pontos/pagina_pacotes_pontos"));
 const PaginaLojaPacotes = lazyWithRetry(() => import("@/features/pacotes_pontos/pagina_loja_pacotes"));
