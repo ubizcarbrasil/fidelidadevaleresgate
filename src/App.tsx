@@ -284,6 +284,7 @@ function AnimatedRoutes() {
               <Route path="brand-cidades-journey" element={<BrandCidadesJourneyPage />} />
               <Route path="brand-api-journey" element={<BrandApiJourneyPage />} />
               <Route path="city-onboarding" element={<PaginaOnboardingCidade />} />
+              <Route path="configuracao-cidade" element={<PaginaConfiguracaoCidade />} />
               <Route path="gamificacao-admin" element={<ModuleGuard moduleKey="achadinhos_motorista"><GamificacaoAdminPage /></ModuleGuard>} />
               <Route path="points-packages" element={<PaginaPacotesPontos />} />
               <Route path="points-packages-store" element={<PaginaLojaPacotes />} />
