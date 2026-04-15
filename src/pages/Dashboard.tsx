@@ -42,17 +42,48 @@ function getPeriodDays(period: PeriodKey): number {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase.from() requires dynamic table names here
 const fromTable = (table: string) => (supabase.from as (t: string) => ReturnType<typeof supabase.from>)(table);
 
-function useMetric(table: string, enabled = true, filter?: (q: any) => any, filterKey?: string, brandId?: string) {
-  return useQuery({
-    queryKey: [`${table}-count`, filterKey ?? "all", brandId ?? "global"],
+interface DashboardKpis {
+  stores_active: number;
+  offers_total: number;
+  offers_active: number;
+  customers_total: number;
+  customers_active: number;
+  redemptions_total: number;
+  redemptions_period: number;
+  redemptions_pending: number;
+  store_rules_pending: number;
+  earning_events_total: number;
+  earning_events_period: number;
+  motoristas_total: number;
+  achadinhos_active: number;
+  achadinhos_stores: number;
+  achadinhos_cities: number;
+  product_redemptions_pending: number;
+  product_redemptions_month: number;
+  driver_points_total: number;
+  client_points_total: number;
+}
+
+function useDashboardKpis(brandFilter?: string, periodStart?: Date) {
+  const monthStart = useMemo(() => {
+    const d = new Date();
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+  return useQuery<DashboardKpis>({
+    queryKey: ["dashboard-kpis", brandFilter ?? "global", periodStart?.toISOString()],
     queryFn: async () => {
-      let q = fromTable(table).select("*", { count: "exact", head: true });
-      if (brandId) q = q.eq("brand_id", brandId);
-      if (filter) q = filter(q);
-      const { count } = await q;
-      return count || 0;
+      const { data, error } = await (supabase.rpc as any)("get_dashboard_kpis", {
+        p_brand_id: brandFilter || null,
+        p_period_start: periodStart?.toISOString() ?? new Date(Date.now() - 7 * 86400000).toISOString(),
+        p_month_start: monthStart.toISOString(),
+      });
+      if (error) throw error;
+      return data as DashboardKpis;
     },
-    enabled,
+    staleTime: 30_000,
   });
 }
 
