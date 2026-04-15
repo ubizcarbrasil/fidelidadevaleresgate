@@ -86,11 +86,10 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
     { label: "App do Cliente", path: "/", icon: ExternalLink, description: "Visualizar o aplicativo", scoringFilter: "PASSENGER" as const },
     { label: "Cadastro Parceiro", path: "/register-store", icon: ShoppingBag, description: "Formulário de parceiros", scoringFilter: "PASSENGER" as const },
     { label: "Painel Parceiro", path: "/store-panel", icon: Store, description: "Gestão das lojas", scoringFilter: "PASSENGER" as const },
-    { label: "Achadinho Motorista", path: `/driver?brandId=${currentBrandId}`, icon: Car, description: "Marketplace do motorista", scoringFilter: "DRIVER" as const },
+    { label: "Painel do Motorista", path: `/driver?brandId=${currentBrandId}`, icon: Car, description: "Hub do motorista", scoringFilter: "DRIVER" as const },
   ].filter((link) => {
     if (link.scoringFilter === "DRIVER") {
       if (!isDriverEnabled) return false;
-      if (link.label === "Achadinho Motorista" && !achadinhosModuleEnabled) return false;
     }
     if (link.scoringFilter === "PASSENGER") return isPassengerEnabled;
     return true;
