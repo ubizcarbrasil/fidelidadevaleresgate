@@ -42,17 +42,48 @@ function getPeriodDays(period: PeriodKey): number {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase.from() requires dynamic table names here
 const fromTable = (table: string) => (supabase.from as (t: string) => ReturnType<typeof supabase.from>)(table);
 
-function useMetric(table: string, enabled = true, filter?: (q: any) => any, filterKey?: string, brandId?: string) {
-  return useQuery({
-    queryKey: [`${table}-count`, filterKey ?? "all", brandId ?? "global"],
+interface DashboardKpis {
+  stores_active: number;
+  offers_total: number;
+  offers_active: number;
+  customers_total: number;
+  customers_active: number;
+  redemptions_total: number;
+  redemptions_period: number;
+  redemptions_pending: number;
+  store_rules_pending: number;
+  earning_events_total: number;
+  earning_events_period: number;
+  motoristas_total: number;
+  achadinhos_active: number;
+  achadinhos_stores: number;
+  achadinhos_cities: number;
+  product_redemptions_pending: number;
+  product_redemptions_month: number;
+  driver_points_total: number;
+  client_points_total: number;
+}
+
+function useDashboardKpis(brandFilter?: string, periodStart?: Date) {
+  const monthStart = useMemo(() => {
+    const d = new Date();
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+  return useQuery<DashboardKpis>({
+    queryKey: ["dashboard-kpis", brandFilter ?? "global", periodStart?.toISOString()],
     queryFn: async () => {
-      let q = fromTable(table).select("*", { count: "exact", head: true });
-      if (brandId) q = q.eq("brand_id", brandId);
-      if (filter) q = filter(q);
-      const { count } = await q;
-      return count || 0;
+      const { data, error } = await (supabase.rpc as any)("get_dashboard_kpis", {
+        p_brand_id: brandFilter || null,
+        p_period_start: periodStart?.toISOString() ?? new Date(Date.now() - 7 * 86400000).toISOString(),
+        p_month_start: monthStart.toISOString(),
+      });
+      if (error) throw error;
+      return data as DashboardKpis;
     },
-    enabled,
+    staleTime: 30_000,
   });
 }
 
@@ -79,16 +110,16 @@ function useRealtimeRefresh() {
     const channel = supabase
       .channel("dashboard-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "redemptions" }, () => {
-        enqueue("redemptions-count", "redemptions-chart");
+        enqueue("dashboard-kpis", "redemptions-chart");
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "machine_rides" }, () => {
-        enqueue("machine_rides-count", "earnings-chart", "pontos-summary", "ranking-pontuacao");
+        enqueue("dashboard-kpis", "earnings-chart", "ranking-pontuacao");
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "customers" }, () => {
-        enqueue("customers-count");
+        enqueue("dashboard-kpis");
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "offers" }, () => {
-        enqueue("offers-count");
+        enqueue("dashboard-kpis");
       })
       .subscribe();
     return () => {
@@ -162,54 +193,8 @@ export default function Dashboard() {
   const periodDays = getPeriodDays(period);
   const brandFilter = isRoot ? undefined : currentBrandId ?? undefined;
 
-  // All metrics
-  const { data: storesActive } = useMetric("stores", true, (q) => q.eq("is_active", true), "active", brandFilter);
-  const { data: offersTotal } = useMetric("offers", true, undefined, undefined, brandFilter);
-  const { data: offersActive } = useMetric("offers", true, (q) => q.eq("status", "ACTIVE").eq("is_active", true), "active", brandFilter);
-  const { data: customersTotal } = useMetric("customers", true, undefined, undefined, brandFilter);
-  const { data: customersActive } = useMetric("customers", true, (q) => q.eq("is_active", true), "active", brandFilter);
-  const { data: redemptionsTotal } = useMetric("redemptions", true, undefined, undefined, brandFilter);
-  const { data: redemptionsPending } = useMetric("redemptions", true, (q) => q.eq("status", "PENDING"), "pending", brandFilter);
-  const { data: storeRulesPending } = useMetric("store_points_rules", true, (q) => q.eq("status", "PENDING_APPROVAL"), "pending", brandFilter);
-  const { data: earningEventsTotal } = useMetric("machine_rides", true, (q: any) => q.eq("ride_status", "FINALIZED"), "finished", brandFilter);
-  const { data: earningEventsPeriod } = useMetric("machine_rides", true, (q: any) => q.eq("ride_status", "FINALIZED").gte("finalized_at", periodStart.toISOString()), `finished-period-${period}`, brandFilter);
-  const { data: redemptionsPeriod } = useMetric("redemptions", true, (q) => q.gte("created_at", periodStart.toISOString()), `period-${period}`, brandFilter);
-  const { data: motoristasTotal } = useMetric("customers", true, (q) => q.ilike("name", "%[MOTORISTA]%"), "motoristas", brandFilter);
-
-  // Achadinhos KPIs
-  const { data: achadinhosAtivas } = useMetric("affiliate_deals", true, (q) => q.eq("is_active", true), "achadinhos-active", brandFilter);
-  const { data: achadinhosLojas } = useQuery({
-    queryKey: ["achadinhos-stores-count", brandFilter ?? "global"],
-    queryFn: async () => {
-      let q = supabase.from("affiliate_deals").select("store_name").eq("is_active", true);
-      if (brandFilter) q = q.eq("brand_id", brandFilter);
-      const { data } = await q.limit(1000);
-      const unique = new Set((data || []).map((d: any) => d.store_name).filter(Boolean));
-      return unique.size;
-    },
-  });
-  const { data: achadinhosCidades } = useMetric("branches", true, (q) => q.eq("is_active", true), "branches-active", brandFilter);
-
-  // Product Redemption KPIs
-  const { data: productRedemptionsPending } = useMetric("product_redemption_orders", true, (q) => q.eq("status", "PENDING"), "prod-pending", brandFilter);
-  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
-  const { data: productRedemptionsMonth } = useMetric("product_redemption_orders", true, (q) => q.gte("created_at", monthStart.toISOString()), `prod-month`, brandFilter);
-
-  // Pontos summary via RPC
-  const { data: pontosSummary } = useQuery({
-    queryKey: ["pontos-summary", brandFilter ?? "global"],
-    queryFn: async () => {
-      if (!brandFilter) return { driver_points_total: 0, client_points_total: 0 };
-      const { data, error } = await supabase.rpc("get_points_summary", { p_brand_id: brandFilter } as any);
-      if (error) throw error;
-      const row = Array.isArray(data) ? data[0] : data;
-      return {
-        driver_points_total: Number(row?.driver_points_total ?? 0),
-        client_points_total: Number(row?.client_points_total ?? 0),
-      };
-    },
-    enabled: !!brandFilter,
-  });
+  // All metrics consolidated in a single RPC
+  const { data: kpis } = useDashboardKpis(brandFilter, periodStart);
 
   // Chart data
   const fetchChartData = useCallback(async (table: string, extraFilter?: (q: any) => any, dateColumn = "created_at") => {
@@ -256,10 +241,12 @@ export default function Dashboard() {
   const { data: recentRedemptions } = useQuery({
     queryKey: ["redemptions-chart", period, brandFilter ?? "global"],
     queryFn: () => fetchChartData("redemptions"),
+    staleTime: 60_000,
   });
   const { data: recentEarnings } = useQuery({
     queryKey: ["earnings-chart", period, brandFilter ?? "global"],
     queryFn: () => fetchChartData("machine_rides", (q: any) => q.eq("ride_status", "FINALIZED"), "finalized_at"),
+    staleTime: 60_000,
   });
 
   const combinedChart = useMemo(() => {
@@ -316,22 +303,22 @@ export default function Dashboard() {
 
       {/* KPIs — hidden for BRANCH scope */}
       {!isCityScopedView && <DashboardKpiSection
-        redemptionsPeriod={redemptionsPeriod}
-        redemptionsTotal={redemptionsTotal}
-        customersTotal={customersTotal}
-        customersActive={customersActive}
-        earningEventsPeriod={earningEventsPeriod}
-        earningEventsTotal={earningEventsTotal}
-        offersActive={offersActive}
-        offersTotal={offersTotal}
-        motoristasTotal={motoristasTotal}
-        pontosMotoristas={pontosSummary?.driver_points_total}
-        pontosClientes={pontosSummary?.client_points_total}
-        achadinhosAtivas={achadinhosAtivas}
-        achadinhosLojas={achadinhosLojas}
-        achadinhosCidades={achadinhosCidades}
-        productRedemptionsPending={productRedemptionsPending}
-        productRedemptionsMonth={productRedemptionsMonth}
+        redemptionsPeriod={kpis?.redemptions_period}
+        redemptionsTotal={kpis?.redemptions_total}
+        customersTotal={kpis?.customers_total}
+        customersActive={kpis?.customers_active}
+        earningEventsPeriod={kpis?.earning_events_period}
+        earningEventsTotal={kpis?.earning_events_total}
+        offersActive={kpis?.offers_active}
+        offersTotal={kpis?.offers_total}
+        motoristasTotal={kpis?.motoristas_total}
+        pontosMotoristas={kpis?.driver_points_total}
+        pontosClientes={kpis?.client_points_total}
+        achadinhosAtivas={kpis?.achadinhos_active}
+        achadinhosLojas={kpis?.achadinhos_stores}
+        achadinhosCidades={kpis?.achadinhos_cities}
+        productRedemptionsPending={kpis?.product_redemptions_pending}
+        productRedemptionsMonth={kpis?.product_redemptions_month}
         recentRedemptions={recentRedemptions?.map(d => d.count)}
         recentEarnings={recentEarnings?.map(d => d.count)}
         isDriverEnabled={isDriverEnabled}
@@ -361,8 +348,8 @@ export default function Dashboard() {
             brandFilter={brandFilter}
             showBrand={showBrand}
             isRoot={isRoot}
-            redemptionsPending={redemptionsPending}
-            storeRulesPending={storeRulesPending}
+            redemptionsPending={kpis?.redemptions_pending}
+            storeRulesPending={kpis?.store_rules_pending}
             isDriverEnabled={isDriverEnabled}
             isPassengerEnabled={isPassengerEnabled}
           />

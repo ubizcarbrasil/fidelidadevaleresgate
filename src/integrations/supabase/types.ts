@@ -8107,6 +8107,14 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string[]
       }
+      get_dashboard_kpis: {
+        Args: {
+          p_brand_id?: string
+          p_month_start?: string
+          p_period_start?: string
+        }
+        Returns: Json
+      }
       get_driver_city_position: {
         Args: { p_branch_id: string; p_customer_id: string }
         Returns: {
