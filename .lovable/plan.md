@@ -1,70 +1,58 @@
 
-Objetivo
 
-Mover a verificação do motorista para o último passo do resgate com pontos: primeiro ele preenche os dados, depois clica em comprar/resgatar, e só então aparece a verificação.
+## Compra de Pontos pelo Motorista
 
-Diagnóstico do código atual
+### Contexto atual
+- Já existe um sistema de **Pacotes de Pontos** (`points_packages`) usado para cidades comprarem pontos do empreendedor.
+- O painel do motorista já tem a flag `enable_points_purchase` no `branch_settings_json`, mas ela só controla a visibilidade da seção "Compre com Pontos" (produtos resgatáveis).
+- Não existe ainda: preço por milheiro configurável pelo empreendedor, nem tela de compra de pontos no app do motorista.
 
-- Hoje o fluxo do motorista está invertido em `src/components/driver/DriverRedeemCheckout.tsx`.
-- Esse componente exige `DriverVerifyCodeStep` antes mesmo de mostrar o formulário:
-  - `if (!verified) return <DriverVerifyCodeStep ... />`
-- Por isso a verificação aparece cedo demais.
-- O fluxo do cliente em `src/components/customer/CustomerRedeemCheckout.tsx` já está no formato certo e pode servir de referência:
-  - formulário
-  - clique em confirmar
-  - OTP
-  - conclusão
+### O que será feito
 
-Plano de ajuste
+**1. Banco de dados — nova tabela e configuração**
 
-1. Refatorar `DriverRedeemCheckout.tsx`
-- Trocar o controle atual por etapas explícitas, por exemplo:
-  - `form`
-  - `otp`
-  - `success`
-- Remover a lógica que bloqueia a tela com verificação logo na abertura.
-- Exibir primeiro o formulário de entrega normalmente.
+- Criar tabela `driver_points_purchase_config` com:
+  - `brand_id` (FK), `price_per_thousand_cents` (integer — preço do milheiro em centavos), `min_points` (default 1000), `max_points` (default 300000), `is_active` (boolean)
+  - RLS: leitura pública (motorista anônimo precisa ver), escrita somente para admins autenticados
+- Criar tabela `driver_points_orders` para registrar os pedidos:
+  - `id`, `brand_id`, `branch_id`, `customer_id` (motorista), `points_amount`, `price_cents`, `status` (PENDING/CONFIRMED/CANCELLED), `created_at`, `confirmed_at`
+  - RLS: leitura pública filtrada por `customer_id`, inserção pública
 
-2. Fazer a validação só após clicar em comprar/resgatar
-- No botão final do checkout do motorista:
-  - validar saldo
-  - validar campos obrigatórios
-  - se estiver tudo certo, abrir a etapa de verificação
-- O débito de pontos e o RPC `process_product_redemption` só devem acontecer depois da verificação concluída.
+**2. Painel do Empreendedor — Configuração do preço**
 
-3. Adaptar `DriverVerifyCodeStep.tsx` para uso como etapa final
-- Manter o componente como tela de verificação reutilizável.
-- Abrir essa etapa somente depois do formulário validado.
-- Ao validar o código com sucesso, retornar para o `DriverRedeemCheckout` executar o resgate final.
-- Remover a exposição do código em toast, que é exatamente o comportamento mostrado na imagem.
+- Nova página/seção acessível pelo sidebar (dentro do grupo de Motoristas ou Pontos):
+  - Campo para definir o **valor do milheiro** (ex: R$ 70,00 = 70_00 cents)
+  - Mínimo e máximo de pontos por compra
+  - Toggle ativar/desativar
+- Listagem de pedidos de compra de pontos feitos pelos motoristas, com botão de confirmar (crédito manual)
 
-4. Preservar o restante do fluxo
-- O formulário continua igual.
-- O sucesso continua igual.
-- Os pontos só são consumidos depois do código correto.
-- O botão “Comprar” externo não passa por verificação; a verificação continua apenas no fluxo de compra com pontos.
+**3. App do Motorista — Tela "Comprar Pontos"**
 
-Arquivos que precisam ser alterados
+- Novo botão no `QuickActionCards` e/ou `DriverHomePage`: "Comprar Pontos" (ícone Coins)
+- Tela de compra (overlay) inspirada na imagem enviada:
+  - Seletor "Pra mim" (pré-selecionado, motorista logado)
+  - Input de quantidade de pontos com botões rápidos (+1.000, +10.000, +50.000)
+  - Validação min/max
+  - Cálculo automático do valor: `(pontos / 1000) * preço_milheiro`
+  - Botão "Continuar compra" → cria o pedido na tabela `driver_points_orders` com status PENDING
+  - Toast de sucesso: "Pedido enviado! Aguarde confirmação."
 
-- `src/components/driver/DriverRedeemCheckout.tsx`
-- `src/components/driver/DriverVerifyCodeStep.tsx`
+**4. Flag de ativação por cidade**
 
-Resultado esperado
+- Adicionar novo toggle `enable_driver_points_purchase` no `constantes_toggles.ts` para controle granular por cidade
+- O botão "Comprar Pontos" só aparece se a config existir e estiver ativa, e se a cidade tiver a flag ligada
 
-Fluxo final do motorista:
+### Arquivos principais
 
-```text
-Abrir checkout
-→ preencher dados
-→ clicar em comprar/resgatar
-→ abrir verificação
-→ código válido
-→ concluir resgate
-→ tela de sucesso
-```
+| Área | Arquivos |
+|------|----------|
+| Banco | Migration: `driver_points_purchase_config`, `driver_points_orders` |
+| Admin | Nova feature em `src/features/compra_pontos_motorista/` |
+| Driver | `QuickActionCards.tsx`, `DriverHomePage.tsx`, `DriverPanelPage.tsx`, novo overlay de compra |
+| Config cidade | `constantes_toggles.ts` |
 
-Detalhe técnico
+### Resultado esperado
+- Empreendedor define preço do milheiro no painel
+- Motorista vê botão "Comprar Pontos" no app → escolhe quantidade → envia pedido
+- Empreendedor vê pedido pendente → confirma → pontos creditados
 
-- Não parece exigir mudança de banco.
-- É uma correção de frontend e de ordem do fluxo.
-- Vou espelhar o comportamento já existente no `CustomerRedeemCheckout`, para manter consistência entre cliente e motorista.
