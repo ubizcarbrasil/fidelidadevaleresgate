@@ -103,7 +103,7 @@ export default function AchadinhoDealDetail({
     queryFn: async () => {
       let q = supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, origin")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, origin, is_redeemable, redeem_points_cost")
         .eq("brand_id", brandId)
         .eq("is_active", true)
         .eq("category_id", deal.category_id!)
