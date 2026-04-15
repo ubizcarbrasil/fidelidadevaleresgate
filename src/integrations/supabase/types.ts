@@ -7695,6 +7695,7 @@ export type Database = {
           click_count: number | null
           created_at: string | null
           current_status: string | null
+          custom_points_per_real: number | null
           description: string | null
           id: string | null
           image_url: string | null
@@ -7704,11 +7705,12 @@ export type Database = {
           is_redeemable: boolean | null
           marketplace: string | null
           order_index: number | null
-          origin: string | null
           original_price: number | null
           price: number | null
           redeem_points_cost: number | null
           redeemable_by: string | null
+          source_group_id: string | null
+          source_group_name: string | null
           store_logo_url: string | null
           store_name: string | null
           title: string | null
@@ -7725,6 +7727,7 @@ export type Database = {
           click_count?: number | null
           created_at?: string | null
           current_status?: string | null
+          custom_points_per_real?: number | null
           description?: string | null
           id?: string | null
           image_url?: string | null
@@ -7734,11 +7737,12 @@ export type Database = {
           is_redeemable?: boolean | null
           marketplace?: string | null
           order_index?: number | null
-          origin?: string | null
           original_price?: number | null
           price?: number | null
           redeem_points_cost?: number | null
           redeemable_by?: string | null
+          source_group_id?: string | null
+          source_group_name?: string | null
           store_logo_url?: string | null
           store_name?: string | null
           title?: string | null
@@ -7755,6 +7759,7 @@ export type Database = {
           click_count?: number | null
           created_at?: string | null
           current_status?: string | null
+          custom_points_per_real?: number | null
           description?: string | null
           id?: string | null
           image_url?: string | null
@@ -7764,11 +7769,12 @@ export type Database = {
           is_redeemable?: boolean | null
           marketplace?: string | null
           order_index?: number | null
-          origin?: string | null
           original_price?: number | null
           price?: number | null
           redeem_points_cost?: number | null
           redeemable_by?: string | null
+          source_group_id?: string | null
+          source_group_name?: string | null
           store_logo_url?: string | null
           store_name?: string | null
           title?: string | null
@@ -7809,8 +7815,33 @@ export type Database = {
       public_brand_modules_safe: {
         Row: {
           brand_id: string | null
+          config_json: Json | null
+          created_at: string | null
+          id: string | null
           is_enabled: boolean | null
-          module_key: string | null
+          module_definition_id: string | null
+          order_index: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          brand_id?: string | null
+          config_json?: Json | null
+          created_at?: string | null
+          id?: string | null
+          is_enabled?: boolean | null
+          module_definition_id?: string | null
+          order_index?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          brand_id?: string | null
+          config_json?: Json | null
+          created_at?: string | null
+          id?: string | null
+          is_enabled?: boolean | null
+          module_definition_id?: string | null
+          order_index?: number | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -7827,6 +7858,13 @@ export type Database = {
             referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "brand_modules_module_definition_id_fkey"
+            columns: ["module_definition_id"]
+            isOneToOne: false
+            referencedRelation: "module_definitions"
+            referencedColumns: ["id"]
+          },
         ]
       }
       public_brands_safe: {
@@ -7839,6 +7877,7 @@ export type Database = {
           is_active: boolean | null
           name: string | null
           slug: string | null
+          subscription_plan: string | null
           subscription_status: string | null
           tenant_id: string | null
           trial_expires_at: string | null
@@ -7852,6 +7891,7 @@ export type Database = {
           is_active?: boolean | null
           name?: string | null
           slug?: string | null
+          subscription_plan?: string | null
           subscription_status?: string | null
           tenant_id?: string | null
           trial_expires_at?: string | null
@@ -7865,6 +7905,7 @@ export type Database = {
           is_active?: boolean | null
           name?: string | null
           slug?: string | null
+          subscription_plan?: string | null
           subscription_status?: string | null
           tenant_id?: string | null
           trial_expires_at?: string | null
