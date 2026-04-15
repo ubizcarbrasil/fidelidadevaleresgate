@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import DriverBuyPointsOverlay from "@/components/driver/DriverBuyPointsOverlay";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,6 +62,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
     | { type: "redeemStore" }
     | { type: "cityPartners" }
     | { type: "cityRedemptions" }
+    | { type: "buyPoints" }
     | { type: "category"; cat: DealCategory }
     | { type: "deal"; deal: any }
     | { type: "redeemDeal"; deal: any }
