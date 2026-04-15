@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { MENU_REGISTRY } from "@/compartilhados/constants/constantes_menu_sidebar";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 export interface LabelGroup {
@@ -285,7 +286,7 @@ export function useMenuLabels(context: MenuLabelContext) {
   const getLabel = (key: string): string => {
     const custom = customLabels?.find((l) => l.key === key);
     if (custom) return custom.custom_label;
-    return allDefaults[key] || key;
+    return allDefaults[key] || MENU_REGISTRY[key]?.defaultTitle || key;
   };
 
   return { getLabel, allDefaults, customLabels };
