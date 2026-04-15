@@ -140,7 +140,7 @@ export default function DriverHomePage({
       )}
 
       {/* Vitrine: Resgatar com pontos */}
-      {achadinhosEnabled && (
+      {marketplaceEnabled && redeemableDeals.length > 0 && (
         <HomeVitrine
           title="Resgatar com Pontos"
           subtitle={`${redeemableDeals.length} produto${redeemableDeals.length !== 1 ? "s" : ""} disponíveis`}
