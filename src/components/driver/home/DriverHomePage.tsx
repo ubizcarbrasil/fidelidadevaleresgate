@@ -41,7 +41,8 @@ export default function DriverHomePage({
   const { driver } = useDriverSession();
   const settings = brand.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
-  const whatsappNumber = settings?.whatsapp_number as string | undefined;
+  const branchWhatsappEnabled = (branch?.branch_settings_json as any)?.enable_whatsapp_access !== false;
+  const whatsappNumber = branchWhatsappEnabled ? (settings?.whatsapp_number as string | undefined) : undefined;
   const marketplaceTitle = settings?.driver_marketplace_title || "Achadinhos";
   const isCityRedemptionEnabled = (branch as any)?.is_city_redemption_enabled === true;
 
