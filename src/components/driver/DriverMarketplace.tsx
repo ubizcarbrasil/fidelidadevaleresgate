@@ -219,10 +219,11 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
     enabled: isCityRedemptionEnabled && (pointsPerReal ?? null) !== null,
   });
 
+  // Achadinhos vitrine query — only when achadinhos is on
   const { data, isLoading } = useQuery({
-    queryKey: ["driver-marketplace", brand.id, branch?.id, achadinhosEnabled, marketplaceEnabled],
+    queryKey: ["driver-marketplace", brand.id, branch?.id, achadinhosEnabled],
     queryFn: async () => {
-      if (!achadinhosEnabled && !marketplaceEnabled) {
+      if (!achadinhosEnabled) {
         return { categories: [] as DealCategory[], dealsByCategory: new Map<string, AffiliateDeal[]>(), uncategorized: [] as AffiliateDeal[], allDeals: [] as AffiliateDeal[] };
       }
       let dealsQ = supabase
@@ -266,6 +267,27 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
 
       return { categories: activeCats, dealsByCategory, uncategorized, allDeals };
     },
+  });
+
+  // Independent redeemable deals query — does NOT depend on visible_driver or achadinhos
+  const { data: redeemableDealsData = [] } = useQuery({
+    queryKey: ["driver-marketplace-redeemable", brand.id, branch?.id, marketplaceEnabled],
+    queryFn: async () => {
+      let q = supabase
+        .from("affiliate_deals")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, created_at, origin, is_redeemable, redeem_points_cost")
+        .eq("brand_id", brand.id)
+        .eq("is_active", true)
+        .eq("is_redeemable", true)
+        .order("order_index")
+        .limit(200);
+      if (branch) {
+        q = q.or(`branch_id.eq.${branch.id},branch_id.is.null`);
+      }
+      const { data: res } = await q;
+      return (res || []) as AffiliateDeal[];
+    },
+    enabled: marketplaceEnabled,
   });
 
   // Smart exposure rules: MIN_DEALS to show category, MIN_PER_ROW for row density

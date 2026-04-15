@@ -46,11 +46,11 @@ export default function DriverHomePage({
   const marketplaceTitle = settings?.driver_marketplace_title || "Achadinhos";
   const isCityRedemptionEnabled = (branch as any)?.is_city_redemption_enabled === true;
 
-  // Fetch categories + deals — skip entirely when achadinhos is off
+  // Fetch Achadinhos deals (vitrine afiliada) — only when achadinhos is on
   const { data } = useQuery({
-    queryKey: ["driver-home-data", brand.id, branch?.id, achadinhosEnabled, marketplaceEnabled],
+    queryKey: ["driver-home-data", brand.id, branch?.id, achadinhosEnabled],
     queryFn: async () => {
-      if (!achadinhosEnabled && !marketplaceEnabled) {
+      if (!achadinhosEnabled) {
         return { deals: [] as AffiliateDeal[], categories: [] as DealCategory[] };
       }
       const dealsQ = supabase
@@ -78,10 +78,29 @@ export default function DriverHomePage({
     },
   });
 
+  // Fetch redeemable deals independently — does NOT depend on visible_driver or achadinhos
+  const { data: redeemableDeals = [] } = useQuery({
+    queryKey: ["driver-home-redeemable", brand.id, branch?.id, marketplaceEnabled],
+    queryFn: async () => {
+      let q = supabase
+        .from("affiliate_deals")
+        .select("id, title, image_url, price, store_name, store_logo_url, category_id, created_at, is_redeemable, redeem_points_cost, affiliate_url, description, original_price, badge_label, origin")
+        .eq("brand_id", brand.id)
+        .eq("is_active", true)
+        .eq("is_redeemable", true)
+        .order("order_index")
+        .limit(100);
+      if (branch) {
+        q = q.or(`branch_id.eq.${branch.id},branch_id.is.null`);
+      }
+      const { data: res } = await q;
+      return (res || []) as AffiliateDeal[];
+    },
+    enabled: marketplaceEnabled,
+  });
+
   const deals = data?.deals || [];
   const categories = data?.categories || [];
-
-  const redeemableDeals = useMemo(() => deals.filter(d => d.is_redeemable), [deals]);
 
   const NEW_OFFERS_WINDOW_MS = 48 * 60 * 60 * 1000;
   const newDeals = useMemo(() => {

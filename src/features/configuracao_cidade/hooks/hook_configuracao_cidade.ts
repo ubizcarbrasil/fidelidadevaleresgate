@@ -61,11 +61,14 @@ export function useConfiguracaoCidade(branchId: string | null) {
       const toggle = TOGGLES_CIDADE.find((t) => t.key === key);
 
       if (toggle?.campoDirecto) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("branches")
           .update({ [toggle.campoDirecto]: value } as any)
-          .eq("id", branchId!);
+          .eq("id", branchId!)
+          .select("id")
+          .single();
         if (error) throw error;
+        if (!data) throw new Error("Nenhuma linha foi atualizada. Verifique suas permissões.");
       } else {
         // Read current settings, merge, write back
         const { data: current, error: readErr } = await supabase
@@ -78,22 +81,32 @@ export function useConfiguracaoCidade(branchId: string | null) {
         const settings = (current?.branch_settings_json as Record<string, any>) ?? {};
         settings[key] = value;
 
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("branches")
           .update({ branch_settings_json: settings })
-          .eq("id", branchId!);
+          .eq("id", branchId!)
+          .select("id")
+          .single();
         if (error) throw error;
+        if (!data) throw new Error("Nenhuma linha foi atualizada. Verifique suas permissões.");
       }
     },
     onSuccess: (_data, variables) => {
+      // Only update cache after confirmed DB write
       queryClient.setQueryData<Record<string, boolean>>(
         ["config-cidade", branchId],
         (old) => (old ? { ...old, [variables.key]: variables.value } : old)
       );
-      toast({ title: "Configuração salva", description: "A alteração foi aplicada." });
+      // Also invalidate branch-modules cache so driver app picks up changes
+      queryClient.invalidateQueries({ queryKey: ["branch-modules"] });
+      toast({ title: "Configuração salva", description: "A alteração foi aplicada com sucesso." });
     },
-    onError: () => {
-      toast({ title: "Erro", description: "Não foi possível salvar.", variant: "destructive" });
+    onError: (err: any) => {
+      toast({
+        title: "Erro ao salvar",
+        description: err?.message || "Não foi possível salvar a configuração. Tente novamente.",
+        variant: "destructive",
+      });
     },
   });
 
