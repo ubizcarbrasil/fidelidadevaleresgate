@@ -1,4 +1,4 @@
-import { Swords, DollarSign, ShoppingCart, MessageCircle, Car, Store, Package, ShoppingBag } from "lucide-react";
+import { Swords, DollarSign, ShoppingCart, MessageCircle, Car, Store, Package, ShoppingBag, Coins } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface ToggleCidadeConfig {
@@ -59,5 +59,11 @@ export const TOGGLES_CIDADE: ToggleCidadeConfig[] = [
     label: "Motorista acessa os Achadinhos?",
     descricao: "Exibe a seção de Achadinhos (ofertas afiliadas) no painel do motorista.",
     icon: ShoppingBag,
+  },
+  {
+    key: "enable_driver_points_purchase",
+    label: "Motorista compra pontos?",
+    descricao: "Permite que motoristas comprem pontos diretamente pelo app.",
+    icon: Coins,
   },
 ];
