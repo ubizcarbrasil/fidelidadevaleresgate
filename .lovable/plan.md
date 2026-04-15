@@ -1,48 +1,62 @@
 
 
-## Correção Definitiva: Permissões do App do Motorista
+## Correção: Achadinhos no App do Cliente + Flags de Cidade
 
-### Causa Raiz Real
+### Problema
 
-O módulo `driver_hub` **não está ativado** para a marca Ubiz Resgata. Isso faz com que o app do motorista pule a **Home Inteligente** (DriverHomePage — que mostra "Comprar Pontos", "Resgate na Cidade", WhatsApp, etc.) e vá direto para o **DriverMarketplace** (que é apenas a vitrine de Achadinhos).
+1. **RLS bloqueia `brand_modules` para anônimos** — O `useBrandModules` consulta `brand_modules`, mas a política RLS só permite `authenticated`. Clientes "Visitante" (anônimos) recebem array vazio, fazendo `isModuleEnabled("affiliate_deals")` retornar `false` e escondendo Achadinhos, Banners, Categorias, etc.
 
-O DriverMarketplace não consome as flags `enable_driver_points_purchase`, `enable_whatsapp_access`, etc. — essas flags só são usadas no DriverHomePage. Então mesmo que os toggles estejam corretos no banco de dados, a tela que os usa nunca aparece.
-
-Além disso, o DriverMarketplace possui sua própria lógica de visibilidade que **não respeita** os toggles da "Configuração por Cidade" para a seção "Compre com Pontos".
-
-### Problemas identificados
-
-1. **`driver_hub` não ativado** → Home com QuickActionCards nunca renderiza
-2. **DriverMarketplace ignora flags de cidade** → Seções como "Compre com Pontos" usam lógica própria independente
-3. **Auto-ativação do `driver_hub` inexistente** → Deveria ser ativado automaticamente quando a integração de mobilidade é configurada
-4. **Sem mecanismo de refetch** → A branch data no DriverPanelPage usa `useState` simples (não react-query), então mudanças no admin só aparecem após reload completo
+2. **Toggles da cidade não afetam o app do cliente** — O admin altera `enable_achadinhos_module` no `branch_settings_json`, mas o `CustomerHomePage` só verifica `brand_modules` (nível marca). A flag da cidade é ignorada — só o app do motorista a usa.
 
 ### Solução
 
-**A) Migração: Ativar `driver_hub` para Ubiz Resgata**
-- Inserir o módulo na tabela `brand_modules` para corrigir os dados atuais
+**A) Migração: RLS pública para leitura de `brand_modules`**
 
-**B) Auto-ativação do `driver_hub` no onboarding**
-- No `BrandBranchForm.tsx`, ao registrar integração de mobilidade, ativar `driver_hub` junto com `machine_integration`
+Adicionar política `anon SELECT` na tabela `brand_modules` (não contém dados sensíveis).
 
-**C) DriverMarketplace respeitar flags de cidade**
-- Garantir que a seção "Compre com Pontos" e "Resgate na Cidade" no DriverMarketplace respeitem `enable_points_purchase` e `is_city_redemption_enabled` da branch
-- Adicionar o botão "Comprar Pontos" no DriverMarketplace (header ou floating) quando `enable_driver_points_purchase === true`
+```sql
+CREATE POLICY "Anon can read brand_modules"
+  ON brand_modules FOR SELECT TO anon USING (true);
+```
 
-**D) Converter fetch da branch para react-query no DriverPanelPage**
-- Substituir o `useState`/`useEffect` por `useQuery` com staleTime curto para que mudanças no admin reflitam sem precisar recarregar a página inteira
+**B) `CustomerHomePage.tsx`: respeitar flags da cidade**
+
+Adicionar mapeamento de flags de `branch_settings_json` por seção nativa:
+
+- `ACHADINHOS` → `enable_achadinhos_module === true`
+- `COMPRE_COM_PONTOS` → `enable_points_purchase === true`
+
+Se a flag estiver ausente (`undefined`), usar o fallback do módulo de marca (comportamento atual). Se estiver explicitamente `false`, esconder.
 
 ### Arquivos afetados
 
-1. **Nova migração SQL** — Ativar `driver_hub` para Ubiz Resgata
-2. **`src/pages/BrandBranchForm.tsx`** — Auto-ativar `driver_hub` junto com `machine_integration`
-3. **`src/components/driver/DriverMarketplace.tsx`** — Respeitar flags de cidade para "Compre com Pontos" e adicionar botão "Comprar Pontos"
-4. **`src/pages/DriverPanelPage.tsx`** — Converter fetch de branch para react-query
+1. **Nova migração SQL** — Política RLS pública em `brand_modules`
+2. **`src/pages/customer/CustomerHomePage.tsx`** — Verificação de `branch_settings_json` em `isNativeSectionVisible`
 
 ### Detalhes técnicos
 
-```sql
--- Ativar driver_hub para Ubiz Resgata
-INSERT INTO brand_modules (brand_id, module_definition_id, is_enabled)
-VALUES (
-  'db15bd21-9137-4965-a0fb-540d8e8b26f1
+```typescript
+// CustomerHomePage.tsx
+const branchSettings = selectedBranch?.branch_settings_json as Record<string, any> | null;
+
+const BRANCH_FLAG_MAP: Record<string, string> = {
+  ACHADINHOS: "enable_achadinhos_module",
+  COMPRE_COM_PONTOS: "enable_points_purchase",
+};
+
+const isNativeSectionVisible = (ns: NativeSectionConfig) => {
+  if (!ns.enabled) return false;
+  const moduleKey = SECTION_MODULE_MAP[ns.key];
+  if (moduleKey && !isModuleEnabled(moduleKey)) return false;
+  // City-level override
+  const branchFlag = BRANCH_FLAG_MAP[ns.key];
+  if (branchFlag && branchSettings && branchFlag in branchSettings) {
+    if (branchSettings[branchFlag] !== true) return false;
+  }
+  const audience = ns.audience || "all";
+  if (audience === "driver_only" && !isDriver) return false;
+  if (audience === "customer_only" && isDriver) return false;
+  return true;
+};
+```
+
