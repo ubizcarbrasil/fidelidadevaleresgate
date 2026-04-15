@@ -1,131 +1,82 @@
 
-Diagnóstico mais preciso:
 
-A configuração no backend está correta para a marca das imagens:
-- Marca `Meu Mototaxi` (`f6ca82ea-621c-4e97-8c20-326fc63a8fd0`)
-- `affiliate_deals = false`
-- `driver_hub = false`
-- Cidade `Ipatinga - MG`
-- `enable_achadinhos_module = false`
-- `enable_marketplace_module = false`
+## Otimização de carregamento do Dashboard
 
-Ou seja: o problema não é mais toggle nem banco. O problema é front ainda expondo partes do ecossistema do motorista por caminhos paralelos.
+### Problema
+O Dashboard (`/`) dispara mais de 20 queries simultâneas ao Supabase no momento do carregamento:
+- 12+ chamadas `useMetric` (cada uma faz um `SELECT count(*)`)
+- 2 queries de gráficos com paginação (redemptions + machine_rides)
+- 1 RPC `get_points_summary`
+- 1 query de `affiliate_deals` para contar lojas únicas
+- Queries adicionais de componentes lazy (TasksSection, ActivityFeed, PointsFeed, AchadinhosAlerts, RankingPontuacao)
+- Subscription realtime
 
-O que encontrei no código:
+Isso resulta em ~16 segundos para carregamento completo conforme observado na session replay.
 
-1. `src/pages/DriverPanelPage.tsx`
-- Já consulta `public_brand_modules_safe`
-- Já combina:
-  `achadinhosEnabled = affiliate_deals && enable_achadinhos_module`
-- Portanto esta parte principal está certa
+### Solução: Consolidar métricas em uma única RPC
 
-2. `src/components/driver/home/DriverHomePage.tsx`
-- Ainda faz query de `affiliate_deals` mesmo quando `achadinhosEnabled` está falso
-- O default do prop ainda está permissivo: `achadinhosEnabled = true`
-- Isso abre margem para renderização residual e inconsistência
+Em vez de 12+ queries `HEAD` separadas, criar uma RPC `get_dashboard_kpis` que retorna todos os contadores em uma única chamada ao banco.
 
-3. `src/components/driver/DriverCategoryPage.tsx`
-- Busca ofertas direto de `affiliate_deals`
-- Não recebe flag de bloqueio
-- Se for aberto por deep link/estado antigo, continua mostrando Achadinhos
+### Arquivos afetados
 
-4. `src/components/driver/DriverRedeemStorePage.tsx`
-- Busca produtos resgatáveis direto de `affiliate_deals`
-- Não respeita `enable_marketplace_module`
-- Então “Resgatar com Pontos” pode seguir aparecendo mesmo com cidade e marca desligadas
+1. **Nova migração SQL** — criar RPC `get_dashboard_kpis(p_brand_id uuid, p_period_start timestamptz)`
+   - Retorna todas as contagens em um único `SELECT` com subqueries
+   - Stores active, offers total/active, customers total/active, redemptions total/pending/period, machine_rides total/period, motoristas, achadinhos ativos/lojas/cidades, product_redemption_orders pending/month
+   - Inclui pontos summary (elimina `get_points_summary` separado)
 
-5. `src/components/customer/AchadinhoDealDetail.tsx`
-- Também busca “ofertas semelhantes” direto
-- Não tem bloqueio para módulo desligado
-- Se um item já foi aberto/cacheado, a tela continua funcional
+2. **`src/pages/Dashboard.tsx`**
+   - Substituir as 12+ chamadas `useMetric` por uma única `useQuery` chamando a RPC
+   - Manter os gráficos como queries separadas (dados maiores, não são contagens)
+   - Adicionar `staleTime` nos gráficos para evitar refetch desnecessário
 
-6. `src/components/dashboard/DashboardQuickLinks.tsx`
-- O card “Achadinho Motorista” do painel administrativo depende só de `isDriverEnabled`
-- `isDriverEnabled` vem do `scoring_model`, não dos módulos
-- Por isso o link útil “Achadinho Motorista” continua aparecendo no painel, mesmo com módulos desligados
-- Isso bate com sua imagem destacando esse card
+3. **Gráficos: adicionar `staleTime`**
+   - As queries de gráficos (`redemptions-chart`, `earnings-chart`) podem ter `staleTime: 60_000` (1 min) para evitar refetch em navegação de volta
 
-Conclusão objetiva:
-há pelo menos 2 problemas diferentes ao mesmo tempo:
+### Detalhes técnicos
 
-```text
-A) Link administrativo continua exibindo "Achadinho Motorista"
-   porque ele usa scoring model e não módulos
-
-B) Fluxos internos do app do motorista ainda têm telas/queries sem guarda central
-   (home, categoria, detalhe, loja de resgate)
+**RPC `get_dashboard_kpis`:**
+```sql
+CREATE OR REPLACE FUNCTION get_dashboard_kpis(
+  p_brand_id uuid DEFAULT NULL,
+  p_period_start timestamptz DEFAULT now() - interval '7 days',
+  p_month_start timestamptz DEFAULT date_trunc('month', now())
+)
+RETURNS json
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT json_build_object(
+    'stores_active', (SELECT count(*) FROM stores WHERE is_active AND (p_brand_id IS NULL OR brand_id = p_brand_id)),
+    'offers_total', (SELECT count(*) FROM offers WHERE (p_brand_id IS NULL OR brand_id = p_brand_id)),
+    'offers_active', (SELECT count(*) FROM offers WHERE status = 'ACTIVE' AND is_active AND (p_brand_id IS NULL OR brand_id = p_brand_id)),
+    -- ... demais contadores
+  )
+$$;
 ```
 
-Plano de correção:
-
-1. Criar uma regra única de visibilidade do ecossistema do motorista
-- Centralizar a regra final:
-  - `driverHubEnabled`
-  - `affiliateDealsEnabled`
-  - `branchAchadinhosEnabled`
-  - `branchMarketplaceEnabled`
-- Separar claramente:
-  - Achadinhos afiliado
-  - Loja de resgate / marketplace de resgate
-  - Hub do motorista
-
-2. Endurecer os componentes do app do motorista
-- `DriverHomePage.tsx`
-  - remover default permissivo
-  - desabilitar query quando Achadinhos estiver falso
-- `DriverCategoryPage.tsx`
-  - receber flag explícita
-  - bloquear abertura/renderização se módulo estiver desligado
-- `DriverRedeemStorePage.tsx`
-  - receber flag explícita do marketplace
-  - não consultar/renderizar produtos se `enable_marketplace_module = false`
-- `AchadinhoDealDetail.tsx`
-  - bloquear ofertas semelhantes e CTA quando vier de módulo desligado
-
-3. Blindar o roteamento do `DriverPanelPage`
-- impedir overlays de categoria, detalhe e loja de resgate quando o módulo correspondente estiver desligado
-- limpar qualquer estado residual/deep link inválido
-- se houver `dealId`/`categoryId` e o módulo estiver desligado, ignorar esses parâmetros
-
-4. Corrigir o painel administrativo
-- `DashboardQuickLinks.tsx`
-  - o card “Achadinho Motorista” deve depender também dos módulos reais da marca/cidade, não só do scoring model
-- assim o botão “Abrir” some do painel quando a feature estiver desativada
-
-5. Revisar defaults inseguros
-- trocar defaults como `= true` por comportamento fail-safe
-- enquanto módulo/configuração não carregaram, a UI deve assumir oculto
-- isso evita reaparecimento por loading ou cache de estado
-
-6. Validar o cenário exato das imagens
-Depois da implementação, o comportamento esperado será:
-
-```text
-affiliate_deals = false
-enable_achadinhos_module = false
-=> some:
-- banner amarelo
-- “Novas Ofertas”
-- categorias de achadinhos
-- detalhes da oferta afiliada
-- card “Achadinho Motorista” nos links úteis
-
-enable_marketplace_module = false
-=> some:
-- Loja de Resgate
-- “Resgatar com Pontos”
-- fluxo de produto resgatável
+**Dashboard simplificado:**
+```typescript
+const { data: kpis } = useQuery({
+  queryKey: ["dashboard-kpis", brandFilter, period],
+  queryFn: async () => {
+    const { data } = await supabase.rpc("get_dashboard_kpis", {
+      p_brand_id: brandFilter || null,
+      p_period_start: periodStart.toISOString(),
+      p_month_start: monthStart.toISOString(),
+    });
+    return data;
+  },
+  staleTime: 30_000,
+});
 ```
 
-Detalhe técnico importante:
-o que está vazando hoje não é um único toggle “com defeito”, e sim múltiplos componentes consultando `affiliate_deals` por conta própria, sem uma guarda central compartilhada. A correção ideal é unificar essas regras num hook/serviço de visibilidade do painel do motorista e fazer todos os componentes consumirem a mesma fonte de verdade.
+### Resultado esperado
+- De ~20 requests HTTP para ~5 (1 RPC + 2 gráficos + realtime + lazy components)
+- Tempo de carregamento estimado: 2-4 segundos em vez de 16
 
-Arquivos que precisam ser ajustados:
-- `src/pages/DriverPanelPage.tsx`
-- `src/components/driver/home/DriverHomePage.tsx`
-- `src/components/driver/DriverCategoryPage.tsx`
-- `src/components/driver/DriverRedeemStorePage.tsx`
-- `src/components/customer/AchadinhoDealDetail.tsx`
-- `src/components/dashboard/DashboardQuickLinks.tsx`
-- opcionalmente um novo hook compartilhado para regra central de visibilidade
+### O que NAO muda
+- Layout visual do dashboard
+- Realtime refresh (continua funcionando, invalidando a query da RPC)
+- Componentes lazy (TasksSection, ActivityFeed)
+- Gráficos (continuam separados, mas com staleTime)
 
