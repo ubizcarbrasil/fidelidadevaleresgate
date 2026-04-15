@@ -123,6 +123,7 @@ export default function DriverHomePage({
         showCityRedeem={isCityRedemptionEnabled}
         whatsappNumber={whatsappNumber}
         onCityRedeem={onOpenCityRedeem}
+        achadinhosEnabled={achadinhosEnabled}
       />
 
       {/* Categorias ativas */}

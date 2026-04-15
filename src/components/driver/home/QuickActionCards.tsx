@@ -38,7 +38,7 @@ export default function QuickActionCards({ fontHeading, showCityRedeem, whatsapp
         </button>
       )}
 
-      {whatsappNumber && (
+      {achadinhosEnabled && whatsappNumber && (
         <a
           href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent("Olá! Gostaria de enviar um link de produto do Mercado Livre para gerar pontos.")}`}
           target="_blank"
