@@ -102,8 +102,8 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
     setOtpInput(["", "", "", "", "", ""]);
     setOtpError(false);
     setStep("otp");
-    // Show code in toast (in production, send via SMS/email)
-    toast.info(`Seu código de verificação: ${code}`, { duration: 15000 });
+    // TODO: Enviar código via e-mail/SMS em produção
+    console.log("[OTP] Código gerado para verificação");
   };
 
   const handleOtpChange = (index: number, value: string) => {

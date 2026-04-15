@@ -363,7 +363,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       // If not in preloaded deals, fetch it
       supabase
         .from("affiliate_deals")
-        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, origin")
+        .select("id, title, description, image_url, price, original_price, affiliate_url, store_name, store_logo_url, badge_label, category_id, origin, is_redeemable, redeem_points_cost")
         .eq("id", initialDealId)
         .single()
         .then(({ data: d }) => { if (d) setSelectedDeal(d as AffiliateDeal); });
@@ -881,6 +881,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           category={openCategory}
           brandId={brand.id}
           branchId={branch?.id || null}
+          customerId={driver?.id}
           fontHeading={fontHeading}
           brandSettings={brand.brand_settings_json}
           theme={theme}
@@ -894,6 +895,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           deal={selectedDeal}
           brandId={brand.id}
           branchId={branch?.id}
+          customerId={driver?.id}
           theme={theme}
           brandSettings={brand.brand_settings_json}
           onBack={() => setSelectedDeal(null)}
