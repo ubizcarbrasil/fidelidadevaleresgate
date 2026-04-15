@@ -1013,6 +1013,16 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         />
       )}
 
+      {/* Buy Points overlay */}
+      {showBuyPoints && buyPointsEnabled && (
+        <DriverBuyPointsOverlay
+          brandId={brand.id}
+          branchId={branch?.id}
+          fontHeading={fontHeading}
+          onBack={() => setShowBuyPoints(false)}
+        />
+      )}
+
       {/* Popup de desafio recebido em tempo real */}
       <PopupDesafioRecebido
         desafio={desafioPendente}
