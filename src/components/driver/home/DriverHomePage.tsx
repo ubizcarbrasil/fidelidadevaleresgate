@@ -146,6 +146,7 @@ export default function DriverHomePage({
       <QuickActionCards
         fontHeading={fontHeading}
         showCityRedeem={isCityRedemptionEnabled}
+        showCityRedemptions
         whatsappNumber={whatsappNumber}
         onCityRedeem={onOpenCityRedeem}
         onCityRedemptions={onOpenCityRedemptions}
