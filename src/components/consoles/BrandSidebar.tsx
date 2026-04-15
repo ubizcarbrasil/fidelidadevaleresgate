@@ -248,6 +248,9 @@ export function BrandSidebar() {
         if (item.key === "sidebar.tema_marca" && currentBrandId) {
           return { ...item, url: `/brands/${currentBrandId}` };
         }
+        if (item.key === "sidebar.painel_motorista_view" && effectiveBrandId) {
+          return { ...item, url: `/driver?brandId=${effectiveBrandId}` };
+        }
         return item;
       })
       .filter(item => !item.moduleKey || isModuleEnabled(item.moduleKey))
