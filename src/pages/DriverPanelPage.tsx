@@ -85,8 +85,13 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   const branchAchadinhosEnabled = branchSettings ? branchSettings.enable_achadinhos_module !== false : false;
   const branchMarketplaceEnabled = branchSettings ? branchSettings.enable_marketplace_module !== false : false;
   const branchPointsPurchaseEnabled = branchSettings ? branchSettings.enable_points_purchase !== false : true;
+  const branchWhatsappEnabled = branchSettings ? branchSettings.enable_whatsapp_access !== false : true;
   const achadinhosEnabled = modulesLoaded ? (brandAchadinhosEnabled && branchAchadinhosEnabled) : false;
   const marketplaceEnabled = modulesLoaded ? (branchMarketplaceEnabled || branchPointsPurchaseEnabled) : false;
+
+  // Derive whatsappNumber filtered by city toggle
+  const rawWhatsappNumber = settings?.whatsapp_number as string | undefined;
+  const whatsappNumber = branchWhatsappEnabled ? rawWhatsappNumber : undefined;
 
   // When deep-link params exist, go straight to marketplace — but only if module is on
   useEffect(() => {
@@ -136,6 +141,8 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             initialDealId={initialDealId}
             isAdminSession={isAdminSession}
             achadinhosEnabled={achadinhosEnabled}
+            marketplaceEnabled={marketplaceEnabled}
+            whatsappNumber={whatsappNumber}
           />
         )}
 
@@ -148,7 +155,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
         )}
         {hubOverlay?.type === "programInfo" && (
           <DriverProgramInfo
-            whatsappNumber={settings?.whatsapp_number}
+            whatsappNumber={whatsappNumber}
             fontHeading={fontHeading}
             onBack={() => setHubOverlay(null)}
             videos={settings?.driver_info_videos || []}
