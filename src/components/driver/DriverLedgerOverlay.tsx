@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPoints } from "@/lib/formatPoints";
-import { ArrowLeft, Coins, Loader2, Car, ShoppingCart, Gift, Ticket, CircleDot } from "lucide-react";
+import { ArrowLeft, Coins, Loader2, Car, ShoppingCart, Gift, Ticket, CircleDot, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
