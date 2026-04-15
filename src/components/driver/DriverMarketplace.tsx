@@ -143,6 +143,12 @@ export const formatPrice = (val: number | null | undefined) => {
 };
 
 export default function DriverMarketplace({ brand, branch, theme, initialCategoryId, initialDealId, isAdminSession, achadinhosEnabled = false, marketplaceEnabled = false, whatsappNumber: whatsappNumberProp }: Props) {
+  // Derive city-level flags from branch settings
+  const branchSettings = branch?.branch_settings_json as Record<string, any> | null;
+  const buyPointsEnabled = branchSettings?.enable_driver_points_purchase === true;
+  const pointsPurchaseEnabled = branchSettings?.enable_points_purchase === true;
+  // Override marketplaceEnabled with city-level flag when branch exists
+  const effectiveMarketplaceEnabled = marketplaceEnabled && (branch ? pointsPurchaseEnabled : true);
   const [openCategory, setOpenCategory] = useState<DealCategory | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
