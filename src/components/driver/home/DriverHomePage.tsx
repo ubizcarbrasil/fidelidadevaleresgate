@@ -28,14 +28,15 @@ interface Props {
   onOpenRedeemStore: () => void;
   onOpenCityRedeem: () => void;
   onActivateSearch: () => void;
-  achadinhosEnabled?: boolean;
+  achadinhosEnabled: boolean;
+  marketplaceEnabled?: boolean;
 }
 
 export default function DriverHomePage({
   brand, branch, theme, fontHeading,
   onGoToMarketplace, onOpenCategory, onOpenDeal, onOpenRedeemDeal,
   onOpenProfile, onOpenLedger, onOpenProgramInfo, onOpenRedeemStore,
-  onOpenCityRedeem, onActivateSearch, achadinhosEnabled = true,
+  onOpenCityRedeem, onActivateSearch, achadinhosEnabled, marketplaceEnabled = false,
 }: Props) {
   const { driver } = useDriverSession();
   const settings = brand.brand_settings_json as any;
@@ -44,10 +45,13 @@ export default function DriverHomePage({
   const marketplaceTitle = settings?.driver_marketplace_title || "Achadinhos";
   const isCityRedemptionEnabled = (branch as any)?.is_city_redemption_enabled === true;
 
-  // Fetch categories + deals
+  // Fetch categories + deals — skip entirely when achadinhos is off
   const { data } = useQuery({
-    queryKey: ["driver-home-data", brand.id, branch?.id],
+    queryKey: ["driver-home-data", brand.id, branch?.id, achadinhosEnabled],
     queryFn: async () => {
+      if (!achadinhosEnabled) {
+        return { deals: [] as AffiliateDeal[], categories: [] as DealCategory[] };
+      }
       const dealsQ = supabase
         .from("affiliate_deals")
         .select("id, title, image_url, price, store_name, store_logo_url, category_id, created_at, is_redeemable, redeem_points_cost, affiliate_url, description, original_price, badge_label, origin")
@@ -136,7 +140,7 @@ export default function DriverHomePage({
       )}
 
       {/* Vitrine: Resgatar com pontos */}
-      {achadinhosEnabled && (
+      {marketplaceEnabled && redeemableDeals.length > 0 && (
         <HomeVitrine
           title="Resgatar com Pontos"
           subtitle={`${redeemableDeals.length} produto${redeemableDeals.length !== 1 ? "s" : ""} disponíveis`}

@@ -31,6 +31,25 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
     enabled: !!currentBrandId,
   });
 
+  // Check if affiliate_deals module is enabled at brand level
+  const { data: brandModulesFlags } = useQuery({
+    queryKey: ["brand-modules-quick-links", currentBrandId],
+    queryFn: async () => {
+      if (!currentBrandId) return {};
+      const { data } = await supabase
+        .from("public_brand_modules_safe")
+        .select("module_key, is_enabled")
+        .eq("brand_id", currentBrandId)
+        .in("module_key", ["affiliate_deals"]);
+      const map: Record<string, boolean> = {};
+      (data || []).forEach((r: any) => { map[r.module_key] = r.is_enabled; });
+      return map;
+    },
+    enabled: !!currentBrandId,
+  });
+
+  const achadinhosModuleEnabled = brandModulesFlags?.affiliate_deals ?? true;
+
   // Fetch brand's own domain (excluding the portal domain)
   const { data: brandDomains } = useQuery({
     queryKey: ["brand-domain-links", currentBrandId],
@@ -69,7 +88,10 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
     { label: "Painel Parceiro", path: "/store-panel", icon: Store, description: "Gestão das lojas", scoringFilter: "PASSENGER" as const },
     { label: "Achadinho Motorista", path: `/driver?brandId=${currentBrandId}`, icon: Car, description: "Marketplace do motorista", scoringFilter: "DRIVER" as const },
   ].filter((link) => {
-    if (link.scoringFilter === "DRIVER") return isDriverEnabled;
+    if (link.scoringFilter === "DRIVER") {
+      if (!isDriverEnabled) return false;
+      if (link.label === "Achadinho Motorista" && !achadinhosModuleEnabled) return false;
+    }
     if (link.scoringFilter === "PASSENGER") return isPassengerEnabled;
     return true;
   });
