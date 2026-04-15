@@ -288,22 +288,42 @@ export default function AchadinhoDealDetail({
               </div>
             </div>
 
-            {/* CTA Button */}
-            <div className="px-5 pt-5 pb-4">
-              <button
-                onClick={handleGoToOffer}
-                className="w-full py-3.5 rounded-xl text-base font-bold transition-transform active:scale-[0.97] flex items-center justify-center gap-2"
-                style={{ backgroundColor: ctaBg, color: ctaText }}
-              >
-                {isRedeemable ? (
-                  <>
+            {/* CTA Buttons */}
+            <div className="px-5 pt-5 pb-4 space-y-2.5">
+              {isRedeemable ? (
+                <>
+                  <button
+                    onClick={handleRedeemWithPoints}
+                    className="w-full py-3.5 rounded-xl text-base font-bold transition-transform active:scale-[0.97] flex items-center justify-center gap-2"
+                    style={{ backgroundColor: ctaBg, color: ctaText }}
+                  >
                     <Gift className="h-5 w-5" />
                     Resgatar — {formatPoints(deal.redeem_points_cost!)} pts
-                  </>
-                ) : (
-                  ctaLabel
-                )}
-              </button>
+                  </button>
+                  {priceStr && (
+                    <button
+                      onClick={handleBuyExternal}
+                      className="w-full py-3 rounded-xl text-sm font-semibold transition-transform active:scale-[0.97] flex items-center justify-center gap-2 border"
+                      style={{
+                        borderColor: "hsl(var(--border))",
+                        backgroundColor: "hsl(var(--card))",
+                        color: "hsl(var(--foreground))",
+                      }}
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      Comprar — {priceStr}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <button
+                  onClick={handleGoToOffer}
+                  className="w-full py-3.5 rounded-xl text-base font-bold transition-transform active:scale-[0.97] flex items-center justify-center gap-2"
+                  style={{ backgroundColor: ctaBg, color: ctaText }}
+                >
+                  {ctaLabel}
+                </button>
+              )}
             </div>
 
             {/* Report button */}
