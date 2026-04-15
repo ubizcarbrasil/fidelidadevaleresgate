@@ -15,6 +15,7 @@ interface Props {
   category: DealCategory;
   brandId: string;
   branchId: string | null;
+  customerId?: string | null;
   fontHeading: string;
   brandSettings?: any;
   theme?: any;
@@ -28,7 +29,7 @@ interface CategoryBanner {
   link_url: string | null;
 }
 
-export default function DriverCategoryPage({ category, brandId, branchId, fontHeading, brandSettings, theme, onBack }: Props) {
+export default function DriverCategoryPage({ category, brandId, branchId, customerId, fontHeading, brandSettings, theme, onBack }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 300);
   const [bannerIndex, setBannerIndex] = useState(0);

@@ -881,6 +881,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           category={openCategory}
           brandId={brand.id}
           branchId={branch?.id || null}
+          customerId={driver?.id}
           fontHeading={fontHeading}
           brandSettings={brand.brand_settings_json}
           theme={theme}
