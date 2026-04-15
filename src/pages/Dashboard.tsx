@@ -303,22 +303,22 @@ export default function Dashboard() {
 
       {/* KPIs — hidden for BRANCH scope */}
       {!isCityScopedView && <DashboardKpiSection
-        redemptionsPeriod={redemptionsPeriod}
-        redemptionsTotal={redemptionsTotal}
-        customersTotal={customersTotal}
-        customersActive={customersActive}
-        earningEventsPeriod={earningEventsPeriod}
-        earningEventsTotal={earningEventsTotal}
-        offersActive={offersActive}
-        offersTotal={offersTotal}
-        motoristasTotal={motoristasTotal}
-        pontosMotoristas={pontosSummary?.driver_points_total}
-        pontosClientes={pontosSummary?.client_points_total}
-        achadinhosAtivas={achadinhosAtivas}
-        achadinhosLojas={achadinhosLojas}
-        achadinhosCidades={achadinhosCidades}
-        productRedemptionsPending={productRedemptionsPending}
-        productRedemptionsMonth={productRedemptionsMonth}
+        redemptionsPeriod={kpis?.redemptions_period}
+        redemptionsTotal={kpis?.redemptions_total}
+        customersTotal={kpis?.customers_total}
+        customersActive={kpis?.customers_active}
+        earningEventsPeriod={kpis?.earning_events_period}
+        earningEventsTotal={kpis?.earning_events_total}
+        offersActive={kpis?.offers_active}
+        offersTotal={kpis?.offers_total}
+        motoristasTotal={kpis?.motoristas_total}
+        pontosMotoristas={kpis?.driver_points_total}
+        pontosClientes={kpis?.client_points_total}
+        achadinhosAtivas={kpis?.achadinhos_active}
+        achadinhosLojas={kpis?.achadinhos_stores}
+        achadinhosCidades={kpis?.achadinhos_cities}
+        productRedemptionsPending={kpis?.product_redemptions_pending}
+        productRedemptionsMonth={kpis?.product_redemptions_month}
         recentRedemptions={recentRedemptions?.map(d => d.count)}
         recentEarnings={recentEarnings?.map(d => d.count)}
         isDriverEnabled={isDriverEnabled}
