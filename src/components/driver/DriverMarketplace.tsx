@@ -279,7 +279,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
 
   // Independent redeemable deals query — does NOT depend on visible_driver or achadinhos
   const { data: redeemableDealsData = [] } = useQuery({
-    queryKey: ["driver-marketplace-redeemable", brand.id, branch?.id, marketplaceEnabled],
+    queryKey: ["driver-marketplace-redeemable", brand.id, branch?.id, effectiveMarketplaceEnabled],
     queryFn: async () => {
       let q = supabase
         .from("affiliate_deals")
@@ -295,7 +295,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       const { data: res } = await q;
       return (res || []) as AffiliateDeal[];
     },
-    enabled: marketplaceEnabled,
+    enabled: effectiveMarketplaceEnabled,
   });
 
   // Smart exposure rules: MIN_DEALS to show category, MIN_PER_ROW for row density
@@ -610,8 +610,8 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         </div>
       )}
 
-      {/* Redeemable section — visible when marketplace (Compre com Pontos) is enabled */}
-      {marketplaceEnabled && !debouncedSearch.trim() && redeemableDeals.length > 0 && (
+      {/* Redeemable section — visible when marketplace (Compre com Pontos) is enabled at city level */}
+      {effectiveMarketplaceEnabled && !debouncedSearch.trim() && redeemableDeals.length > 0 && (
         <section className="pt-4">
           <div className="px-5 mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
