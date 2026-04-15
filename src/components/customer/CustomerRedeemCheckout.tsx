@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, MapPin, Loader2, CheckCircle2, Package } from "lucide-react";
+import { ArrowLeft, MapPin, Loader2, CheckCircle2, Package, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { haptics } from "@/lib/haptics";
 import { formatPoints } from "@/lib/formatPoints";
@@ -26,12 +26,23 @@ interface Props {
   onSuccess: () => void;
 }
 
+// Generate a random 6-digit code
+const generateOtpCode = () => String(Math.floor(100000 + Math.random() * 900000));
+
 export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Props) {
   const { customer, refetch } = useCustomer();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // OTP verification state
+  const [step, setStep] = useState<"form" | "otp">("form");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpInput, setOtpInput] = useState(["", "", "", "", "", ""]);
+  const [otpError, setOtpError] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const [form, setForm] = useState({
     name: customer?.name || "",
@@ -75,8 +86,7 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
     setCepLoading(false);
   };
 
-  const handleSubmit = async () => {
-    if (loading) return;
+  const handleProceedToOtp = () => {
     if (!customer) return;
     if (!canAfford) {
       toast.error("Saldo de pontos insuficiente!");
@@ -86,7 +96,57 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
       toast.error("Preencha todos os campos obrigatórios!");
       return;
     }
+    // Generate OTP code and show verification screen
+    const code = generateOtpCode();
+    setOtpCode(code);
+    setOtpInput(["", "", "", "", "", ""]);
+    setOtpError(false);
+    setStep("otp");
+    // Show code in toast (in production, send via SMS/email)
+    toast.info(`Seu código de verificação: ${code}`, { duration: 15000 });
+  };
 
+  const handleOtpChange = (index: number, value: string) => {
+    if (value.length > 1) value = value.slice(-1);
+    if (value && !/^\d$/.test(value)) return;
+    
+    const newOtp = [...otpInput];
+    newOtp[index] = value;
+    setOtpInput(newOtp);
+    setOtpError(false);
+
+    // Auto-focus next input
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+
+    // Auto-submit when all 6 digits are filled
+    if (value && index === 5 && newOtp.every((d) => d !== "")) {
+      verifyAndSubmit(newOtp.join(""));
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === "Backspace" && !otpInput[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const verifyAndSubmit = async (code: string) => {
+    if (code !== otpCode) {
+      setOtpError(true);
+      haptics.error();
+      toast.error("Código incorreto. Tente novamente.");
+      return;
+    }
+    await processRedemption();
+  };
+
+  const processRedemption = async () => {
+    if (loading) return;
+    if (!customer) return;
+
+    setOtpLoading(true);
     setLoading(true);
     try {
       const { data: orderId, error: rpcError } = await supabase.rpc(
@@ -118,11 +178,9 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
       );
       if (rpcError) throw rpcError;
 
-      // Refresh customer balance and product orders list
       await refetch();
       queryClient.invalidateQueries({ queryKey: ["customer-product-orders"] });
 
-      // Send Telegram notification (fire & forget)
       sendRedemptionTelegramNotification({
         brandId: customer.brand_id,
         branchId: customer.branch_id,
@@ -143,6 +201,7 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
       toast.error(err.message || "Erro ao processar resgate");
     }
     setLoading(false);
+    setOtpLoading(false);
   };
 
   if (success) {
@@ -157,6 +216,75 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
           Você será notificado sobre o andamento.
         </p>
         <Button onClick={() => { onSuccess(); onClose(); }}>Voltar</Button>
+      </div>
+    );
+  }
+
+  // OTP Verification Screen
+  if (step === "otp") {
+    return (
+      <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-sm w-full space-y-6">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-16 w-16 rounded-full flex items-center justify-center" style={{ backgroundColor: "hsl(var(--primary) / 0.1)" }}>
+              <ShieldCheck className="h-8 w-8" style={{ color: "hsl(var(--primary))" }} />
+            </div>
+            <h2 className="text-xl font-bold">Verificação de Identidade</h2>
+            <p className="text-sm text-muted-foreground">
+              Digite o código de 6 dígitos para confirmar seu resgate
+            </p>
+          </div>
+
+          <div className="flex justify-center gap-2">
+            {otpInput.map((digit, i) => (
+              <input
+                key={i}
+                ref={(el) => { inputRefs.current[i] = el; }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleOtpChange(i, e.target.value)}
+                onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                className={`h-14 w-11 text-center text-xl font-bold rounded-xl border-2 bg-card outline-none transition-colors ${
+                  otpError
+                    ? "border-destructive"
+                    : digit
+                    ? "border-primary"
+                    : "border-border"
+                } focus:border-primary`}
+                autoFocus={i === 0}
+              />
+            ))}
+          </div>
+
+          {otpError && (
+            <p className="text-sm text-destructive font-medium">Código incorreto</p>
+          )}
+
+          <div className="flex flex-col gap-2 pt-2">
+            <Button
+              className="w-full h-12 text-base font-bold rounded-2xl"
+              disabled={otpInput.some((d) => !d) || otpLoading}
+              onClick={() => verifyAndSubmit(otpInput.join(""))}
+            >
+              {otpLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                "Confirmar Resgate"
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={() => { setStep("form"); setOtpError(false); }}
+              disabled={otpLoading}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -277,7 +405,7 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
           <Button
             className="w-full h-12 text-base font-bold rounded-2xl"
             disabled={!canAfford || loading}
-            onClick={handleSubmit}
+            onClick={handleProceedToOtp}
           >
             {loading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
