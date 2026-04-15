@@ -1,80 +1,70 @@
 
-Correção completa do que você pediu
+Objetivo
 
-Diagnóstico rápido:
-- Você está certo: o comportamento ficou inconsistente.
-- Parte do fluxo já foi alterada em alguns componentes, mas não em todos os pontos de entrada. Por isso, na prática, você não viu o resultado “em todo o app”.
-- Também confirmei que o botão “Meus Resgates” existe no código em mais de um lugar, mas a entrada do motorista continua fragmentada.
-- A verificação por código hoje está no passo final do checkout, porém o código ainda está sendo exibido em toast local, o que está errado para esse fluxo.
+Mover a verificação do motorista para o último passo do resgate com pontos: primeiro ele preenche os dados, depois clica em comprar/resgatar, e só então aparece a verificação.
 
-O que vou ajustar
+Diagnóstico do código atual
 
-1. Garantir CTA duplo em todas as ofertas do Achadinho
-- Padronizar o detalhe da oferta para sempre mostrar:
-  - Comprar com pontos — X pts
-  - Comprar — R$ XX,XX
-- O botão de pontos continuará abrindo o checkout atual de resgate.
-- O botão de compra abrirá a oferta externa e sairá da página, como você pediu.
+- Hoje o fluxo do motorista está invertido em `src/components/driver/DriverRedeemCheckout.tsx`.
+- Esse componente exige `DriverVerifyCodeStep` antes mesmo de mostrar o formulário:
+  - `if (!verified) return <DriverVerifyCodeStep ... />`
+- Por isso a verificação aparece cedo demais.
+- O fluxo do cliente em `src/components/customer/CustomerRedeemCheckout.tsx` já está no formato certo e pode servir de referência:
+  - formulário
+  - clique em confirmar
+  - OTP
+  - conclusão
 
-2. Corrigir as origens que ainda não carregam os dados de resgate
-Hoje o CTA duplo não aparece em todos os casos porque alguns fluxos ainda buscam a oferta sem:
-- is_redeemable
-- redeem_points_cost
+Plano de ajuste
 
-Vou alinhar isso nos pontos que ainda estão incompletos, principalmente:
-- `src/components/driver/DriverCategoryPage.tsx`
-- fluxos derivados que reutilizam o mesmo detalhe
+1. Refatorar `DriverRedeemCheckout.tsx`
+- Trocar o controle atual por etapas explícitas, por exemplo:
+  - `form`
+  - `otp`
+  - `success`
+- Remover a lógica que bloqueia a tela com verificação logo na abertura.
+- Exibir primeiro o formulário de entrega normalmente.
 
-3. Manter a verificação por código apenas na última ação do resgate com pontos
-- O formulário de entrega continua primeiro.
-- Só ao confirmar o resgate com pontos o app abre a etapa de verificação.
-- Somente após código válido o resgate é concluído.
-- Vou remover o comportamento atual de exibir o código em toast/localmente, porque isso quebra o fluxo real.
+2. Fazer a validação só após clicar em comprar/resgatar
+- No botão final do checkout do motorista:
+  - validar saldo
+  - validar campos obrigatórios
+  - se estiver tudo certo, abrir a etapa de verificação
+- O débito de pontos e o RPC `process_product_redemption` só devem acontecer depois da verificação concluída.
 
-4. Ajustar o checkout de pontos para ficar coerente com a regra
-Arquivo principal:
-- `src/components/customer/CustomerRedeemCheckout.tsx`
+3. Adaptar `DriverVerifyCodeStep.tsx` para uso como etapa final
+- Manter o componente como tela de verificação reutilizável.
+- Abrir essa etapa somente depois do formulário validado.
+- Ao validar o código com sucesso, retornar para o `DriverRedeemCheckout` executar o resgate final.
+- Remover a exposição do código em toast, que é exatamente o comportamento mostrado na imagem.
 
-Ajustes:
-- manter OTP somente no fluxo “comprar com pontos”
-- OTP como último passo antes do RPC de conclusão
-- remover exposição do código na interface
-- revisar botão “reenviar código”
-- garantir que o botão “Comprar” normal nunca passe por OTP
+4. Preservar o restante do fluxo
+- O formulário continua igual.
+- O sucesso continua igual.
+- Os pontos só são consumidos depois do código correto.
+- O botão “Comprar” externo não passa por verificação; a verificação continua apenas no fluxo de compra com pontos.
 
-5. Deixar “Meus Resgates” visível e acessível no app do motorista
-Vou consolidar o acesso ao histórico do motorista para não depender de uma tela específica.
+Arquivos que precisam ser alterados
 
-Arquivos envolvidos:
-- `src/components/driver/DriverMarketplace.tsx`
-- `src/components/driver/home/DriverHomePage.tsx`
-- `src/components/driver/home/QuickActionCards.tsx`
-- `src/pages/DriverPanelPage.tsx`
-- `src/components/driver/DriverCityRedemptionHistory.tsx`
+- `src/components/driver/DriverRedeemCheckout.tsx`
+- `src/components/driver/DriverVerifyCodeStep.tsx`
 
-Resultado esperado:
-- motorista vê “Meus Resgates”
-- toca no botão
-- abre a lista/histórico corretamente
-- tudo fica registrado ali
+Resultado esperado
 
-Arquivos que precisam de ajuste
-- `src/components/customer/AchadinhoDealDetail.tsx`
-- `src/components/customer/CustomerRedeemCheckout.tsx`
-- `src/components/driver/DriverCategoryPage.tsx`
-- `src/components/driver/DriverMarketplace.tsx`
-- `src/components/driver/home/DriverHomePage.tsx`
-- `src/components/driver/home/QuickActionCards.tsx`
-- `src/pages/DriverPanelPage.tsx`
+Fluxo final do motorista:
 
-Resultado final após implementação
-- Todas as ofertas resgatáveis terão dois botões
-- “Comprar com pontos” vai para o checkout atual
-- “Comprar” vai para a oferta externa
-- OTP só aparece no último passo do resgate com pontos
-- “Meus Resgates” ficará acessível no app do motorista e registrará tudo por lá
+```text
+Abrir checkout
+→ preencher dados
+→ clicar em comprar/resgatar
+→ abrir verificação
+→ código válido
+→ concluir resgate
+→ tela de sucesso
+```
 
-Detalhe técnico importante
-- O componente `AchadinhoDealDetail.tsx` já está preparado para CTA duplo, mas isso não funciona em toda a aplicação porque alguns loaders ainda não trazem os campos de resgate.
-- O maior conserto é padronizar os dados carregados e fechar os pontos de entrada quebrados.
-- Não parece exigir mudança de banco para o CTA duplo; o foco é correção de frontend e do fluxo de verificação.
+Detalhe técnico
+
+- Não parece exigir mudança de banco.
+- É uma correção de frontend e de ordem do fluxo.
+- Vou espelhar o comportamento já existente no `CustomerRedeemCheckout`, para manter consistência entre cliente e motorista.
