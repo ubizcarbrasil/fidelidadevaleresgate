@@ -1,29 +1,82 @@
 
-Diagnóstico rápido:
+## Diagnóstico confirmado
 
-O bloco destacado da imagem é do ecossistema de Achadinhos do motorista:
-- banner amarelo
-- categoria “Novas Ofertas”
-- cards de ofertas
+Verifiquei o estado atual e a configuração já está correta no backend:
 
-Ele não é controlado pelo “Módulo Mercado Livre”.
+- `affiliate_deals` da marca = `false`
+- `driver_hub` da marca = `false`
+- `branch_settings_json.enable_achadinhos_module` da cidade = `false`
 
-No código atual, esse trecho depende de 2 chaves ao mesmo tempo:
-1. Marca: módulo `affiliate_deals` (“Achadinhos” em Funcionalidades do App/Marca)
-2. Cidade: `branch_settings_json.enable_achadinhos_module` (“Módulo Achadinho” dentro da edição da cidade)
+Ou seja: o problema não é mais “qual toggle desligar”. O problema agora é o front do painel do motorista ainda permitir a exibição em alguns cenários.
 
-Qual desativar para isso sumir:
-- Para remover dessa cidade específica: desative `Módulo Achadinho` na tela de edição da cidade.
-- Para remover da marca inteira: desative `Achadinhos` em Funcionalidades da Marca/App.
-- Se quiser garantir que suma agora, deixe os dois desligados.
+## O que vou corrigir
 
-Importante:
-- Não é o toggle “Módulo Mercado Livre”.
-- “Módulo Mercado Livre” é outro fluxo, ligado ao resgate/marketplace de produtos, não a esse bloco de “Novas Ofertas”.
+### 1. Endurecer a lógica do painel do motorista
+Hoje o `DriverPanelPage.tsx` ainda usa defaults permissivos durante carregamento/resolução:
 
-Resumo objetivo:
-- O toggle certo da cidade é: `Módulo Achadinho`
-- O toggle global da marca é: `Achadinhos`
-- Desligando ambos, esse bloco deve desaparecer
+- `brandAchadinhosEnabled ?? true`
+- branch sem carregar ainda acaba permitindo exibição
+- `driver_hub` e `achadinhos` não ficam “fail-safe”
 
-Se ainda continuar mesmo com os dois desligados, o cenário mais provável não é configuração e sim cache antigo do app do motorista/PWA. Nesse caso, a próxima correção seria revisar cache/atualização do front para garantir que a desativação reflita imediatamente.
+Vou ajustar para comportamento seguro:
+
+```text
+Se ainda não carregou módulo/cidade => não exibe Achadinhos
+Se módulo estiver desligado => não exibe
+Se Home do Motorista estiver desligada => nunca abre a Home Hub
+```
+
+### 2. Bloquear o Achadinhos de ponta a ponta
+Mesmo com o flag desligado, vou garantir que o ecossistema inteiro do motorista respeite isso:
+
+- busca
+- banners
+- “Novas Ofertas”
+- “Resgatar com Pontos”
+- CTA “Ganhe pontos comprando no ML”
+- categorias e cards de ofertas
+- queries de `affiliate_deals`
+
+### 3. Remover brechas entre Home e Marketplace
+Vou alinhar os dois fluxos:
+
+- `DriverHomePage.tsx`
+- `DriverMarketplace.tsx`
+
+para que ambos obedeçam exatamente a mesma regra final de visibilidade.
+
+## Arquivos que serão ajustados
+
+- `src/pages/DriverPanelPage.tsx`
+  - tornar `driver_hub` e `affiliate_deals` fail-safe
+  - esperar resolução dos dados antes de decidir renderização
+  - impedir Home Hub quando `driver_hub = false`
+
+- `src/components/driver/DriverMarketplace.tsx`
+  - desativar queries e blocos de Achadinhos quando desligado
+  - esconder CTA do ML, banners, vitrines e categorias
+  - evitar abertura de conteúdos de oferta por estado residual
+
+- `src/components/driver/home/DriverHomePage.tsx`
+  - garantir que a Home não monte partes de Achadinhos quando desligado
+
+- `src/components/driver/home/QuickActionCards.tsx`
+  - separar o card “Ganhe pontos comprando no ML” para ele também obedecer ao toggle
+
+## Resultado esperado
+
+Depois da correção:
+
+```text
+affiliate_deals = false
++ enable_achadinhos_module = false
+=> nenhum bloco de Achadinhos aparece no painel do motorista
+
+driver_hub = false
+=> a Home do Motorista não aparece; abre somente o fluxo permitido
+```
+
+## Detalhe técnico importante
+
+Não precisa mudar banco nem configuração.  
+O backend já está consistente. A correção é 100% no front para fechar defaults permissivos e renderizações residuais.
