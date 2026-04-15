@@ -17,6 +17,7 @@ import DriverProgramInfo from "@/components/driver/DriverProgramInfo";
 import DriverRedeemStorePage from "@/components/driver/DriverRedeemStorePage";
 import DriverRedeemCheckout from "@/components/driver/DriverRedeemCheckout";
 import DriverCityPartnersPage from "@/components/driver/DriverCityPartnersPage";
+import DriverCityRedemptionHistory from "@/components/driver/DriverCityRedemptionHistory";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 import DriverCategoryPage from "@/components/driver/DriverCategoryPage";
 
@@ -59,6 +60,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
     | { type: "programInfo" }
     | { type: "redeemStore" }
     | { type: "cityPartners" }
+    | { type: "cityRedemptions" }
     | { type: "category"; cat: DealCategory }
     | { type: "deal"; deal: any }
     | { type: "redeemDeal"; deal: any }
@@ -131,6 +133,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             onOpenProgramInfo={() => setHubOverlay({ type: "programInfo" })}
             onOpenRedeemStore={() => marketplaceEnabled && setHubOverlay({ type: "redeemStore" })}
             onOpenCityRedeem={() => marketplaceEnabled && setHubOverlay({ type: "cityPartners" })}
+            onOpenCityRedemptions={() => setHubOverlay({ type: "cityRedemptions" })}
             onActivateSearch={() => achadinhosEnabled && setShowHub(false)}
             achadinhosEnabled={achadinhosEnabled}
             marketplaceEnabled={marketplaceEnabled}
@@ -213,6 +216,12 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
           <DriverCityPartnersPage
             brandId={brand.id}
             branchId={effectiveBranch.id}
+            fontHeading={fontHeading}
+            onBack={() => setHubOverlay(null)}
+          />
+        )}
+        {hubOverlay?.type === "cityRedemptions" && (
+          <DriverCityRedemptionHistory
             fontHeading={fontHeading}
             onBack={() => setHubOverlay(null)}
           />
