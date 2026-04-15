@@ -1,33 +1,37 @@
 
 
-## Diagnóstico: Tudo implementado, falta publicar
+## Correção: "Marca não encontrada" no painel do motorista
 
-Investiguei todo o código e confirmei que **ambas as funcionalidades já estão prontas**:
+### Causa raiz
 
-### No painel do empreendedor
-- **"Venda de Pontos"** está no sidebar, grupo "Gestão Comercial", rota `/driver-points-purchase`
-- Tem configuração de preço do milheiro, mínimo/máximo, toggle ativar/desativar
-- Lista de pedidos com botões Confirmar/Cancelar
-- O item só aparece quando o modelo de scoring da marca inclui motoristas (`scoringFilter: "DRIVER"`)
+A última migração de segurança (`20260415201049`) recriou a view `public_brands_safe` com `security_invoker = true`. Isso faz a view executar com as permissões RLS do chamador. Como o painel do motorista usa acesso anônimo (sem sessão de login), e a política de SELECT anônimo na tabela `brands` foi removida anteriormente (migração `20260410142643`), a view retorna zero linhas — resultando em "Marca não encontrada".
 
-### No app do motorista
-- **"Comprar Pontos"** aparece nos QuickActionCards quando `enable_driver_points_purchase === true` no `branch_settings_json`
-- Overlay completo com seletor de quantidade, botões rápidos e cálculo automático do valor
+A migração `20260410170030` já havia corrigido isso removendo `security_invoker`, mas a correção de segurança mais recente reverteu essa mudança.
 
-### Na configuração da cidade
-- Toggle **"Motorista compra pontos?"** já existe em `constantes_toggles.ts`
+### Solução
 
-### Por que você não vê
+Uma nova migração SQL que recria as 3 views afetadas:
 
-Você está acessando `app.valeresgate.com.br` (produção). As mudanças estão apenas no **Preview** do Lovable e ainda não foram publicadas.
+1. **`public_brands_safe`** — SEM `security_invoker` (roda como owner, bypassa RLS). A view já exclui campos sensíveis (`stripe_customer_id`, `matrix_api_key`, etc.), então é segura para acesso público.
 
-### O que fazer
+2. **`public_affiliate_deals_safe`** e **`public_brand_modules_safe`** — Verificar se também precisam de acesso anônimo. Se sim, remover `security_invoker` delas também. Se não, manter como estão.
 
-1. **Publicar o app** — clique no botão de publicar (ícone no canto superior direito no desktop, ou "..." no canto inferior direito no mobile → "Publish")
-2. **Acessar o painel do empreendedor** na URL publicada — o item "Venda de Pontos" estará em "Gestão Comercial"
-3. **Configurar o preço do milheiro** na página "Venda de Pontos"
-4. **Ativar o toggle** "Motorista compra pontos?" na configuração da cidade
-5. O motorista verá o botão "Comprar Pontos" no app
+3. Manter os `GRANT SELECT ... TO anon, authenticated` em todas as views públicas.
 
-Nenhuma alteração de código é necessária — apenas publicar e configurar.
+### Detalhes técnicos
+
+```sql
+DROP VIEW IF EXISTS public.public_brands_safe;
+CREATE VIEW public.public_brands_safe AS
+SELECT id, name, slug, is_active, subscription_status, tenant_id,
+       default_theme_id, home_layout_json, brand_settings_json,
+       created_at, trial_expires_at
+FROM public.brands;
+
+GRANT SELECT ON public.public_brands_safe TO anon, authenticated;
+```
+
+### Arquivos afetados
+- Nova migração SQL (apenas)
+- Nenhuma mudança de frontend necessária
 
