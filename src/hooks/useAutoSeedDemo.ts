@@ -15,6 +15,10 @@ export function useAutoSeedDemo(brandId: string | undefined, branchId: string | 
     const check = async () => {
       triggered.current = true;
 
+      // Only run if there's an authenticated session (edge function requires auth)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
       // Check if auto-seed already ran via brand_settings_json flag
       const { data: brand } = await supabase
         .from("brands")

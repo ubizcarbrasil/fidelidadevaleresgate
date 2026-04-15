@@ -423,15 +423,32 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // ── Auth check: require valid JWT ──
     const authHeader = req.headers.get("Authorization") || "";
-    let callerUserId = "00000000-0000-0000-0000-000000000000";
-    if (authHeader.startsWith("Bearer ")) {
-      const supabaseAdmin = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      );
-      const { data: { user } } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
-      if (user?.id) callerUserId = user.id;
+    if (!authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { data: { user } } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
+    if (!user?.id) {
+      return new Response(JSON.stringify({ error: "Invalid or expired token" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const callerUserId = user.id;
+
+    // Verify caller is brand_admin or root_admin
+    const { data: roles } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", callerUserId)
+      .in("role", ["root_admin", "brand_admin"]);
+
+    if (!roles || roles.length === 0) {
+      return new Response(JSON.stringify({ error: "Insufficient permissions" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const body = await req.json();
