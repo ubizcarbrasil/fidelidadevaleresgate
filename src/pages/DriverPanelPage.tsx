@@ -114,16 +114,17 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             theme={theme}
             fontHeading={fontHeading}
             onGoToMarketplace={() => setShowHub(false)}
-            onOpenCategory={(cat) => setHubOverlay({ type: "category", cat })}
-            onOpenDeal={(deal) => setHubOverlay({ type: "deal", deal })}
-            onOpenRedeemDeal={(deal) => setHubOverlay({ type: "redeemDeal", deal })}
+            onOpenCategory={(cat) => achadinhosEnabled && setHubOverlay({ type: "category", cat })}
+            onOpenDeal={(deal) => achadinhosEnabled && setHubOverlay({ type: "deal", deal })}
+            onOpenRedeemDeal={(deal) => marketplaceEnabled && setHubOverlay({ type: "redeemDeal", deal })}
             onOpenProfile={() => setHubOverlay({ type: "profile" })}
             onOpenLedger={() => setHubOverlay({ type: "ledger" })}
             onOpenProgramInfo={() => setHubOverlay({ type: "programInfo" })}
-            onOpenRedeemStore={() => setHubOverlay({ type: "redeemStore" })}
+            onOpenRedeemStore={() => marketplaceEnabled && setHubOverlay({ type: "redeemStore" })}
             onOpenCityRedeem={() => setShowHub(false)}
-            onActivateSearch={() => setShowHub(false)}
+            onActivateSearch={() => achadinhosEnabled && setShowHub(false)}
             achadinhosEnabled={achadinhosEnabled}
+            marketplaceEnabled={marketplaceEnabled}
           />
         ) : (
           <DriverMarketplace
