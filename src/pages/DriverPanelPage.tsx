@@ -70,23 +70,17 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   >(null);
 
   // Auto-fetch branch from driver's branch_id when URL doesn't include branchId
-  const [derivedBranch, setDerivedBranch] = useState<any>(null);
-  const [loadingBranch, setLoadingBranch] = useState(false);
+  const { data: derivedBranch, isLoading: loadingBranch } = useQuery({
+    queryKey: ["driver-derived-branch", driver?.branch_id, !!branchFromUrl],
+    queryFn: async () => {
+      const { data } = await supabase.from("branches").select("*").eq("id", driver!.branch_id!).maybeSingle();
+      return data;
+    },
+    enabled: !branchFromUrl && !!driver?.branch_id,
+    staleTime: 30_000, // refetch after 30s so admin changes reflect quickly
+  });
 
-  useEffect(() => {
-    if (branchFromUrl || !driver?.branch_id) {
-      setDerivedBranch(null);
-      return;
-    }
-    setLoadingBranch(true);
-    supabase.from("branches").select("*").eq("id", driver.branch_id).maybeSingle()
-      .then(({ data }) => {
-        setDerivedBranch(data);
-        setLoadingBranch(false);
-      });
-  }, [branchFromUrl, driver?.branch_id]);
-
-  const effectiveBranch = branchFromUrl || derivedBranch;
+  const effectiveBranch = branchFromUrl || derivedBranch || null;
   const branchSettings = effectiveBranch?.branch_settings_json as Record<string, any> | null;
   // UNIFIED RULE: use === true so missing key = OFF (same logic as admin Configuração por Cidade)
   const branchAchadinhosEnabled = branchSettings?.enable_achadinhos_module === true;

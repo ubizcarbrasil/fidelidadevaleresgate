@@ -2,7 +2,7 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle, Gift, HelpCircle, Swords, ArrowLeft, Ticket } from "lucide-react";
+import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle, Gift, HelpCircle, Swords, ArrowLeft, Ticket, CreditCard } from "lucide-react";
 import { shareDriverUrl, buildDriverUrl } from "@/lib/publicShareUrl";
 import DriverCategoryPage from "./DriverCategoryPage";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
@@ -33,6 +33,7 @@ import BannerPromoDuelos from "./duels/BannerPromoDuelos";
 import BannerDueloAoVivo from "./duels/BannerDueloAoVivo";
 import { useEscutaDesafiosRecebidos } from "./duels/hook_escuta_desafios_recebidos";
 import PopupDesafioRecebido from "./duels/PopupDesafioRecebido";
+import DriverBuyPointsOverlay from "./DriverBuyPointsOverlay";
 
 export interface AffiliateDeal {
   id: string;
@@ -143,6 +144,12 @@ export const formatPrice = (val: number | null | undefined) => {
 };
 
 export default function DriverMarketplace({ brand, branch, theme, initialCategoryId, initialDealId, isAdminSession, achadinhosEnabled = false, marketplaceEnabled = false, whatsappNumber: whatsappNumberProp }: Props) {
+  // Derive city-level flags from branch settings
+  const branchSettings = branch?.branch_settings_json as Record<string, any> | null;
+  const buyPointsEnabled = branchSettings?.enable_driver_points_purchase === true;
+  const pointsPurchaseEnabled = branchSettings?.enable_points_purchase === true;
+  // Override marketplaceEnabled with city-level flag when branch exists
+  const effectiveMarketplaceEnabled = marketplaceEnabled && (branch ? pointsPurchaseEnabled : true);
   const [openCategory, setOpenCategory] = useState<DealCategory | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<AffiliateDeal | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -152,6 +159,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const [showRedeemStore, setShowRedeemStore] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showLedger, setShowLedger] = useState(false);
+  const [showBuyPoints, setShowBuyPoints] = useState(false);
   const [selectedCityOffer, setSelectedCityOffer] = useState<OfertaCidade | null>(null);
   const [showCityPartners, setShowCityPartners] = useState(false);
   const [showCityRedemptions, setShowCityRedemptions] = useState(false);
@@ -273,7 +281,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
 
   // Independent redeemable deals query — does NOT depend on visible_driver or achadinhos
   const { data: redeemableDealsData = [] } = useQuery({
-    queryKey: ["driver-marketplace-redeemable", brand.id, branch?.id, marketplaceEnabled],
+    queryKey: ["driver-marketplace-redeemable", brand.id, branch?.id, effectiveMarketplaceEnabled],
     queryFn: async () => {
       let q = supabase
         .from("affiliate_deals")
@@ -289,7 +297,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       const { data: res } = await q;
       return (res || []) as AffiliateDeal[];
     },
-    enabled: marketplaceEnabled,
+    enabled: effectiveMarketplaceEnabled,
   });
 
   // Smart exposure rules: MIN_DEALS to show category, MIN_PER_ROW for row density
@@ -549,6 +557,22 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
             </button>
           )}
 
+          {/* Buy Points button — when city flag is on */}
+          {driver && buyPointsEnabled && (
+            <button
+              onClick={() => setShowBuyPoints(true)}
+              className="w-full flex items-center gap-3 rounded-xl px-4 py-2.5 mb-3 transition-transform active:scale-[0.98]"
+              style={{
+                backgroundColor: "hsl(var(--muted))",
+                border: "1px solid hsl(var(--border))",
+              }}
+            >
+              <CreditCard className="h-4.5 w-4.5" style={{ color: "hsl(var(--primary))" }} />
+              <span className="text-sm font-semibold text-foreground">Comprar Pontos</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto" />
+            </button>
+          )}
+
           {/* Search Bar — customer style */}
           {achadinhosEnabled && (
             <>
@@ -604,8 +628,8 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         </div>
       )}
 
-      {/* Redeemable section — visible when marketplace (Compre com Pontos) is enabled */}
-      {marketplaceEnabled && !debouncedSearch.trim() && redeemableDeals.length > 0 && (
+      {/* Redeemable section — visible when marketplace (Compre com Pontos) is enabled at city level */}
+      {effectiveMarketplaceEnabled && !debouncedSearch.trim() && redeemableDeals.length > 0 && (
         <section className="pt-4">
           <div className="px-5 mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -986,6 +1010,16 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         <DriverCityRedemptionHistory
           fontHeading={fontHeading}
           onBack={() => setShowCityRedemptions(false)}
+        />
+      )}
+
+      {/* Buy Points overlay */}
+      {showBuyPoints && buyPointsEnabled && (
+        <DriverBuyPointsOverlay
+          brandId={brand.id}
+          branchId={branch?.id}
+          fontHeading={fontHeading}
+          onBack={() => setShowBuyPoints(false)}
         />
       )}
 
