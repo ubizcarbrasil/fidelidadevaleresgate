@@ -5,9 +5,10 @@ interface Props {
   showCityRedeem: boolean;
   whatsappNumber?: string;
   onCityRedeem: () => void;
+  achadinhosEnabled?: boolean;
 }
 
-export default function QuickActionCards({ fontHeading, showCityRedeem, whatsappNumber, onCityRedeem }: Props) {
+export default function QuickActionCards({ fontHeading, showCityRedeem, whatsappNumber, onCityRedeem, achadinhosEnabled = false }: Props) {
   return (
     <div className="px-4 space-y-3">
       {showCityRedeem && (
