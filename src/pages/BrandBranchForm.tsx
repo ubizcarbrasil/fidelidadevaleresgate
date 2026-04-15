@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Key, UserPlus, Link, Copy, Check, Car, Users, RefreshCw, Swords, RotateCcw, Package, ShoppingCart, Store, Zap, Coins } from "lucide-react";
+import { ArrowLeft, Loader2, Key, UserPlus, Link, Copy, Check, Car, Users, RefreshCw, Swords, RotateCcw, Package, ShoppingCart, Store, Zap, Coins, MessageCircle, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import DialogResetPontos from "@/components/branch/DialogResetPontos";
@@ -76,11 +76,16 @@ export default function BrandBranchForm() {
   const [allowPublicDuelViewing, setAllowPublicDuelViewing] = useState(false);
 
   // Módulos de Negócio
-  const [enableDuelsModule, setEnableDuelsModule] = useState(true);
-  const [enableAchadinhosModule, setEnableAchadinhosModule] = useState(true);
-  const [enableMarketplaceModule, setEnableMarketplaceModule] = useState(true);
-  const [enableRaceEarnModule, setEnableRaceEarnModule] = useState(true);
-  const [enableCustomerScoringModule, setEnableCustomerScoringModule] = useState(true);
+  const [enableDuelsModule, setEnableDuelsModule] = useState(false);
+  const [enableAchadinhosModule, setEnableAchadinhosModule] = useState(false);
+  const [enableMarketplaceModule, setEnableMarketplaceModule] = useState(false);
+  const [enableRaceEarnModule, setEnableRaceEarnModule] = useState(false);
+  const [enableCustomerScoringModule, setEnableCustomerScoringModule] = useState(false);
+
+  // Flags do App do Motorista
+  const [enableDriverPointsPurchase, setEnableDriverPointsPurchase] = useState(false);
+  const [enableWhatsappAccess, setEnableWhatsappAccess] = useState(false);
+  const [enablePointsPurchase, setEnablePointsPurchase] = useState(false);
 
   // Load brand's default scoring model for new cities
   useEffect(() => {
@@ -158,12 +163,16 @@ export default function BrandBranchForm() {
         setEnableCityRanking(bs.enable_city_ranking !== false);
         setEnableCityBelt(bs.enable_city_belt !== false);
         setAllowPublicDuelViewing(bs.allow_public_duel_viewing === true);
-        // Módulos de Negócio
-        setEnableDuelsModule(bs.enable_duels_module !== false);
-        setEnableAchadinhosModule(bs.enable_achadinhos_module !== false);
-        setEnableMarketplaceModule(bs.enable_marketplace_module !== false);
-        setEnableRaceEarnModule(bs.enable_race_earn_module !== false);
-        setEnableCustomerScoringModule(bs.enable_customer_scoring_module !== false);
+        // Módulos de Negócio — regra unificada: ausente = OFF (=== true)
+        setEnableDuelsModule(bs.enable_duels_module === true);
+        setEnableAchadinhosModule(bs.enable_achadinhos_module === true);
+        setEnableMarketplaceModule(bs.enable_marketplace_module === true);
+        setEnableRaceEarnModule(bs.enable_race_earn_module === true);
+        setEnableCustomerScoringModule(bs.enable_customer_scoring_module === true);
+        // Flags do App do Motorista
+        setEnableDriverPointsPurchase(bs.enable_driver_points_purchase === true);
+        setEnableWhatsappAccess(bs.enable_whatsapp_access === true);
+        setEnablePointsPurchase(bs.enable_points_purchase === true);
       }
     }
   }, [existing]);
@@ -235,6 +244,10 @@ export default function BrandBranchForm() {
         enable_marketplace_module: enableMarketplaceModule,
         enable_race_earn_module: enableRaceEarnModule,
         enable_customer_scoring_module: enableCustomerScoringModule,
+        // Flags do App do Motorista
+        enable_driver_points_purchase: enableDriverPointsPurchase,
+        enable_whatsapp_access: enableWhatsappAccess,
+        enable_points_purchase: enablePointsPurchase,
       };
 
       const payload = {
@@ -548,6 +561,50 @@ export default function BrandBranchForm() {
               </p>
             </div>
             <Switch checked={enableCustomerScoringModule} onCheckedChange={setEnableCustomerScoringModule} />
+          </div>
+
+          {/* Flags do App do Motorista */}
+          <div className="border-t pt-4 mt-2">
+            <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">App do Motorista</p>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-emerald-500" />
+                Motorista compra pontos
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Permite que motoristas comprem pontos diretamente pelo app.
+              </p>
+            </div>
+            <Switch checked={enableDriverPointsPurchase} onCheckedChange={setEnableDriverPointsPurchase} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <MessageCircle className="h-4 w-4 text-green-500" />
+                Motorista acessa WhatsApp
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Exibe o botão de contato via WhatsApp no painel do motorista.
+              </p>
+            </div>
+            <Switch checked={enableWhatsappAccess} onCheckedChange={setEnableWhatsappAccess} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4 text-purple-500" />
+                Motorista compra com pontos
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Exibe a seção "Compre com Pontos" no painel do motorista.
+              </p>
+            </div>
+            <Switch checked={enablePointsPurchase} onCheckedChange={setEnablePointsPurchase} />
           </div>
         </CardContent>
       </Card>
