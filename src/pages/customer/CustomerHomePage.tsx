@@ -119,10 +119,22 @@ export default function CustomerHomePage({ onOpenLedger, onOpenCategoryGrid, onO
     CATEGORIES: "categories",
   };
 
+  const BRANCH_FLAG_MAP: Record<string, string> = {
+    ACHADINHOS: "enable_achadinhos_module",
+    COMPRE_COM_PONTOS: "enable_points_purchase",
+  };
+
+  const branchSettings = selectedBranch?.branch_settings_json as Record<string, any> | null;
+
   const isNativeSectionVisible = (ns: NativeSectionConfig) => {
     if (!ns.enabled) return false;
     const moduleKey = SECTION_MODULE_MAP[ns.key];
     if (moduleKey && !isModuleEnabled(moduleKey)) return false;
+    // City-level override: if flag exists and is not true, hide section
+    const branchFlag = BRANCH_FLAG_MAP[ns.key];
+    if (branchFlag && branchSettings && branchFlag in branchSettings) {
+      if (branchSettings[branchFlag] !== true) return false;
+    }
     const audience = ns.audience || "all";
     if (audience === "driver_only" && !isDriver) return false;
     if (audience === "customer_only" && isDriver) return false;
