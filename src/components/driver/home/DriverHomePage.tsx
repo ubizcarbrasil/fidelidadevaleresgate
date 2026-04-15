@@ -28,9 +28,11 @@ interface Props {
   onOpenRedeemStore: () => void;
   onOpenCityRedeem: () => void;
   onOpenCityRedemptions: () => void;
+  onOpenBuyPoints: () => void;
   onActivateSearch: () => void;
   achadinhosEnabled: boolean;
   marketplaceEnabled?: boolean;
+  buyPointsEnabled?: boolean;
   whatsappNumber?: string;
 }
 
@@ -38,8 +40,8 @@ export default function DriverHomePage({
   brand, branch, theme, fontHeading,
   onGoToMarketplace, onOpenCategory, onOpenDeal, onOpenRedeemDeal,
   onOpenProfile, onOpenLedger, onOpenProgramInfo, onOpenRedeemStore,
-  onOpenCityRedeem, onOpenCityRedemptions, onActivateSearch, achadinhosEnabled, marketplaceEnabled = false,
-  whatsappNumber,
+  onOpenCityRedeem, onOpenCityRedemptions, onOpenBuyPoints, onActivateSearch, achadinhosEnabled, marketplaceEnabled = false,
+  buyPointsEnabled = false, whatsappNumber,
 }: Props) {
   const { driver } = useDriverSession();
   const settings = brand.brand_settings_json as any;
@@ -147,9 +149,11 @@ export default function DriverHomePage({
         fontHeading={fontHeading}
         showCityRedeem={isCityRedemptionEnabled}
         showCityRedemptions
+        showBuyPoints={buyPointsEnabled}
         whatsappNumber={whatsappNumber}
         onCityRedeem={onOpenCityRedeem}
         onCityRedemptions={onOpenCityRedemptions}
+        onBuyPoints={onOpenBuyPoints}
         achadinhosEnabled={achadinhosEnabled}
       />
 
