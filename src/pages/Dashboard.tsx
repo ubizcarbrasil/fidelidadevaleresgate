@@ -110,16 +110,16 @@ function useRealtimeRefresh() {
     const channel = supabase
       .channel("dashboard-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "redemptions" }, () => {
-        enqueue("redemptions-count", "redemptions-chart");
+        enqueue("dashboard-kpis", "redemptions-chart");
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "machine_rides" }, () => {
-        enqueue("machine_rides-count", "earnings-chart", "pontos-summary", "ranking-pontuacao");
+        enqueue("dashboard-kpis", "earnings-chart", "ranking-pontuacao");
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "customers" }, () => {
-        enqueue("customers-count");
+        enqueue("dashboard-kpis");
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "offers" }, () => {
-        enqueue("offers-count");
+        enqueue("dashboard-kpis");
       })
       .subscribe();
     return () => {
