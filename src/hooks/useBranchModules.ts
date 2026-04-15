@@ -29,8 +29,9 @@ export function useBranchModules(branchIdOverride?: string) {
   });
 
   const isBranchModuleEnabled = (key: BranchModuleKey): boolean => {
-    if (!settings || typeof settings !== "object") return true;
-    return settings[key] !== false;
+    if (!settings || typeof settings !== "object") return false;
+    // UNIFIED RULE: use === true so missing key = OFF (matches admin Configuração por Cidade)
+    return settings[key] === true;
   };
 
   return { isBranchModuleEnabled, isLoading };
