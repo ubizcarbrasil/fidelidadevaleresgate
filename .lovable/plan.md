@@ -1,29 +1,37 @@
 
 
-## Correção: Botão "Resgate na Cidade" deve abrir lista de parceiros
+## Plano: Adicionar botão "Meus Resgates" no app do motorista
 
 ### Problema
-O botão "Resgate na Cidade" na Home do motorista executa `setShowHub(false)`, que apenas troca para a view do Marketplace. Não abre a lista de parceiros.
+O componente `DriverCityRedemptionHistory` existe mas não é mais acessível — foi desconectado quando o botão "Meus Resgates" virou "Ver Parceiros".
 
 ### Solução
-Alterar `DriverPanelPage.tsx` para que `onOpenCityRedeem` abra o `DriverCityPartnersPage` como um hub overlay, igual aos outros overlays (profile, ledger, etc.).
+Adicionar um novo botão "Meus Resgates" na Home do motorista (dentro do `QuickActionCards`) e conectá-lo ao overlay `DriverCityRedemptionHistory`.
 
 ### Alterações
 
-**`src/pages/DriverPanelPage.tsx`**
-1. Importar `DriverCityPartnersPage`
-2. Mudar `onOpenCityRedeem` de `() => setShowHub(false)` para `() => setHubOverlay({ type: "cityPartners" })`
-3. Adicionar renderização condicional do overlay:
+**1. `src/pages/DriverPanelPage.tsx`**
+- Adicionar `"cityRedemptions"` ao tipo do `hubOverlay`
+- Importar `DriverCityRedemptionHistory`
+- Passar novo callback `onOpenCityRedemptions` para `DriverHomePage`
+- Renderizar overlay:
 ```tsx
-{hubOverlay?.type === "cityPartners" && effectiveBranch && (
-  <DriverCityPartnersPage
-    brandId={brand.id}
-    branchId={effectiveBranch.id}
-    fontHeading={fontHeading}
-    onBack={() => setHubOverlay(null)}
-  />
+{hubOverlay?.type === "cityRedemptions" && (
+  <DriverCityRedemptionHistory fontHeading={fontHeading} onBack={() => setHubOverlay(null)} />
 )}
 ```
 
-Nenhuma outra alteração necessária. O componente `DriverCityPartnersPage` já existe e funciona.
+**2. `src/components/driver/home/DriverHomePage.tsx`**
+- Adicionar prop `onOpenCityRedemptions`
+- Passar para `QuickActionCards`
+
+**3. `src/components/driver/home/QuickActionCards.tsx`**
+- Adicionar prop `onCityRedemptions` e `showCityRedemptions`
+- Renderizar novo botão com ícone `Ticket` e texto "Meus Resgates" / "Acompanhe seus resgates na cidade"
+- Exibir quando `showCityRedemptions` for `true` (mesma condição do botão Resgate na Cidade)
+
+### Resultado
+O motorista terá dois botões na Home:
+- **Resgate na Cidade** → abre lista de parceiros
+- **Meus Resgates** → abre histórico de resgates (PINs ativos, usados, expirados)
 
