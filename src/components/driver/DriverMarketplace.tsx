@@ -298,7 +298,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const dealsByCategory: Map<string, AffiliateDeal[]> = data?.dealsByCategory || new Map();
   const rawUncategorized = data?.uncategorized || [];
   const allDeals = data?.allDeals || [];
-  const redeemableDeals = useMemo(() => allDeals.filter((d: any) => d.is_redeemable), [allDeals]);
+  const redeemableDeals = redeemableDealsData;
 
   const NEW_OFFERS_ID = "__new_offers__";
   const NEW_OFFERS_WINDOW_MS = 48 * 60 * 60 * 1000;
