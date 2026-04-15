@@ -86,6 +86,9 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
   "sidebar.onboarding_cidade": {
     key: "sidebar.onboarding_cidade", defaultTitle: "Onboarding Cidade", url: "/city-onboarding", icon: Rocket,
   },
+  "sidebar.configuracao_cidade": {
+    key: "sidebar.configuracao_cidade", defaultTitle: "Configuração por Cidade", url: "/configuracao-cidade", icon: Settings2,
+  },
   "sidebar.dominios_marca": {
     key: "sidebar.dominios_marca", defaultTitle: "Meus Domínios", url: "/brand-domains", icon: Globe,
   },
