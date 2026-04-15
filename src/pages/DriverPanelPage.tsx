@@ -95,6 +95,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   const branchWhatsappEnabled = branchSettings?.enable_whatsapp_access === true;
   const achadinhosEnabled = modulesLoaded ? (brandAchadinhosEnabled && branchAchadinhosEnabled) : false;
   const marketplaceEnabled = modulesLoaded ? (branchMarketplaceEnabled || branchPointsPurchaseEnabled) : false;
+  const buyPointsEnabled = branchSettings?.enable_driver_points_purchase === true;
 
   // Derive whatsappNumber filtered by city toggle
   const rawWhatsappNumber = settings?.whatsapp_number as string | undefined;
@@ -136,9 +137,11 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             onOpenRedeemStore={() => marketplaceEnabled && setHubOverlay({ type: "redeemStore" })}
             onOpenCityRedeem={() => marketplaceEnabled && setHubOverlay({ type: "cityPartners" })}
             onOpenCityRedemptions={() => setHubOverlay({ type: "cityRedemptions" })}
+            onOpenBuyPoints={() => buyPointsEnabled && setHubOverlay({ type: "buyPoints" })}
             onActivateSearch={() => achadinhosEnabled && setShowHub(false)}
             achadinhosEnabled={achadinhosEnabled}
             marketplaceEnabled={marketplaceEnabled}
+            buyPointsEnabled={buyPointsEnabled}
             whatsappNumber={whatsappNumber}
           />
         ) : (
