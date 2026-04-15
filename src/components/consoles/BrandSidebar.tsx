@@ -91,6 +91,7 @@ const brandGroupDefs: DefinicaoGrupoSidebar[] = [
       { key: "sidebar.parceiros", overrides: { scoringFilter: "PASSENGER" as const } },
       { key: "sidebar.clientes", overrides: { scoringFilter: "PASSENGER" as const } },
       "sidebar.motoristas", "sidebar.patrocinados",
+      { key: "sidebar.painel_motorista_view", overrides: { scoringFilter: "DRIVER" as const } },
     ],
   },
   {
