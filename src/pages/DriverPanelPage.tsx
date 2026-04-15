@@ -82,10 +82,11 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
 
   const effectiveBranch = branchFromUrl || derivedBranch;
   const branchSettings = effectiveBranch?.branch_settings_json as Record<string, any> | null;
-  const branchAchadinhosEnabled = branchSettings ? branchSettings.enable_achadinhos_module !== false : false;
-  const branchMarketplaceEnabled = branchSettings ? branchSettings.enable_marketplace_module !== false : false;
-  const branchPointsPurchaseEnabled = branchSettings ? branchSettings.enable_points_purchase !== false : true;
-  const branchWhatsappEnabled = branchSettings ? branchSettings.enable_whatsapp_access !== false : true;
+  // UNIFIED RULE: use === true so missing key = OFF (same logic as admin Configuração por Cidade)
+  const branchAchadinhosEnabled = branchSettings?.enable_achadinhos_module === true;
+  const branchMarketplaceEnabled = branchSettings?.enable_marketplace_module === true;
+  const branchPointsPurchaseEnabled = branchSettings?.enable_points_purchase === true;
+  const branchWhatsappEnabled = branchSettings?.enable_whatsapp_access === true;
   const achadinhosEnabled = modulesLoaded ? (brandAchadinhosEnabled && branchAchadinhosEnabled) : false;
   const marketplaceEnabled = modulesLoaded ? (branchMarketplaceEnabled || branchPointsPurchaseEnabled) : false;
 
