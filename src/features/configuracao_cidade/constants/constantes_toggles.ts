@@ -51,7 +51,7 @@ export const TOGGLES_CIDADE: ToggleCidadeConfig[] = [
   {
     key: "enable_points_purchase",
     label: "Motorista compra com pontos?",
-    descricao: "Habilita a compra de produtos usando o saldo de pontos acumulados.",
+    descricao: "Exibe a seção 'Compre com Pontos' mesmo que os Achadinhos estejam desativados.",
     icon: Package,
   },
   {

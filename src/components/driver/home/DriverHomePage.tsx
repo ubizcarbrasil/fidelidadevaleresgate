@@ -47,9 +47,9 @@ export default function DriverHomePage({
 
   // Fetch categories + deals — skip entirely when achadinhos is off
   const { data } = useQuery({
-    queryKey: ["driver-home-data", brand.id, branch?.id, achadinhosEnabled],
+    queryKey: ["driver-home-data", brand.id, branch?.id, achadinhosEnabled, marketplaceEnabled],
     queryFn: async () => {
-      if (!achadinhosEnabled) {
+      if (!achadinhosEnabled && !marketplaceEnabled) {
         return { deals: [] as AffiliateDeal[], categories: [] as DealCategory[] };
       }
       const dealsQ = supabase

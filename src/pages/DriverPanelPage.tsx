@@ -84,8 +84,9 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   const branchSettings = effectiveBranch?.branch_settings_json as Record<string, any> | null;
   const branchAchadinhosEnabled = branchSettings ? branchSettings.enable_achadinhos_module !== false : false;
   const branchMarketplaceEnabled = branchSettings ? branchSettings.enable_marketplace_module !== false : false;
+  const branchPointsPurchaseEnabled = branchSettings ? branchSettings.enable_points_purchase !== false : true;
   const achadinhosEnabled = modulesLoaded ? (brandAchadinhosEnabled && branchAchadinhosEnabled) : false;
-  const marketplaceEnabled = modulesLoaded ? branchMarketplaceEnabled : false;
+  const marketplaceEnabled = modulesLoaded ? (branchMarketplaceEnabled || branchPointsPurchaseEnabled) : false;
 
   // When deep-link params exist, go straight to marketplace — but only if module is on
   useEffect(() => {
