@@ -131,6 +131,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             onActivateSearch={() => achadinhosEnabled && setShowHub(false)}
             achadinhosEnabled={achadinhosEnabled}
             marketplaceEnabled={marketplaceEnabled}
+            whatsappNumber={whatsappNumber}
           />
         ) : (
           <DriverMarketplace
