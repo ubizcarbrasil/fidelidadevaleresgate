@@ -24,7 +24,7 @@ import DriverDealCard from "./DriverDealCard";
 import DriverDealCardGrid from "./DriverDealCardGrid";
 import SecaoResgateCidade, { type OfertaCidade } from "./SecaoResgateCidade";
 import CityOfferDetailOverlay from "./CityOfferDetailOverlay";
-import DriverCityRedemptionHistory from "./DriverCityRedemptionHistory";
+import DriverCityPartnersPage from "./DriverCityPartnersPage";
 import DuelsHub from "./duels/DuelsHub";
 import SecaoDuelosCidade from "./duels/SecaoDuelosCidade";
 import { useConfigDuelos } from "./duels/hook_config_duelos";
@@ -152,7 +152,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const [showProfile, setShowProfile] = useState(false);
   const [showLedger, setShowLedger] = useState(false);
   const [selectedCityOffer, setSelectedCityOffer] = useState<OfertaCidade | null>(null);
-  const [showCityRedemptions, setShowCityRedemptions] = useState(false);
+  const [showCityPartners, setShowCityPartners] = useState(false);
   const [showDuels, setShowDuels] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
@@ -692,7 +692,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
           ofertas={cityOffers || []}
           fontHeading={fontHeading}
           onClickOferta={(oferta) => setSelectedCityOffer(oferta)}
-          onVerHistorico={() => setShowCityRedemptions(true)}
+          onVerParceiros={() => setShowCityPartners(true)}
         />
       )}
 
@@ -937,10 +937,12 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       )}
 
       {/* City redemption history overlay */}
-      {showCityRedemptions && (
-        <DriverCityRedemptionHistory
+      {showCityPartners && branch && (
+        <DriverCityPartnersPage
+          brandId={brand.id}
+          branchId={branch.id}
           fontHeading={fontHeading}
-          onBack={() => setShowCityRedemptions(false)}
+          onBack={() => setShowCityPartners(false)}
         />
       )}
 
