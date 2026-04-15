@@ -116,15 +116,23 @@ export default function AchadinhoDealDetail({
     },
   });
 
+  const handleRedeemWithPoints = () => {
+    setShowCheckout(true);
+  };
+
+  const handleBuyExternal = () => {
+    if (customerId) {
+      supabase.from("affiliate_clicks").insert({ deal_id: deal.id, customer_id: customerId }).then();
+    }
+    window.open(deal.affiliate_url, "_blank", "noopener,noreferrer");
+  };
+
   const handleGoToOffer = () => {
     if (isRedeemable) {
       setShowCheckout(true);
       return;
     }
-    if (customerId) {
-      supabase.from("affiliate_clicks").insert({ deal_id: deal.id, customer_id: customerId }).then();
-    }
-    window.open(deal.affiliate_url, "_blank", "noopener,noreferrer");
+    handleBuyExternal();
   };
 
   const handleSimilarClick = (similar: AffiliateDeal) => {
