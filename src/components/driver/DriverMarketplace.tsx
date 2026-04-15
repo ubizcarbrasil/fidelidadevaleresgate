@@ -557,6 +557,22 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
             </button>
           )}
 
+          {/* Buy Points button — when city flag is on */}
+          {driver && buyPointsEnabled && (
+            <button
+              onClick={() => setShowBuyPoints(true)}
+              className="w-full flex items-center gap-3 rounded-xl px-4 py-2.5 mb-3 transition-transform active:scale-[0.98]"
+              style={{
+                backgroundColor: "hsl(var(--muted))",
+                border: "1px solid hsl(var(--border))",
+              }}
+            >
+              <CreditCard className="h-4.5 w-4.5" style={{ color: "hsl(var(--primary))" }} />
+              <span className="text-sm font-semibold text-foreground">Comprar Pontos</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto" />
+            </button>
+          )}
+
           {/* Search Bar — customer style */}
           {achadinhosEnabled && (
             <>
