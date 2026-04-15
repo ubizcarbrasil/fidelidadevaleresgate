@@ -91,6 +91,7 @@ const brandGroupDefs: DefinicaoGrupoSidebar[] = [
       { key: "sidebar.parceiros", overrides: { scoringFilter: "PASSENGER" as const } },
       { key: "sidebar.clientes", overrides: { scoringFilter: "PASSENGER" as const } },
       "sidebar.motoristas", "sidebar.patrocinados",
+      { key: "sidebar.painel_motorista_view", overrides: { scoringFilter: "DRIVER" as const } },
     ],
   },
   {
@@ -246,6 +247,9 @@ export function BrandSidebar() {
       .map(item => {
         if (item.key === "sidebar.tema_marca" && currentBrandId) {
           return { ...item, url: `/brands/${currentBrandId}` };
+        }
+        if (item.key === "sidebar.painel_motorista_view" && effectiveBrandId) {
+          return { ...item, url: `/driver?brandId=${effectiveBrandId}` };
         }
         return item;
       })
