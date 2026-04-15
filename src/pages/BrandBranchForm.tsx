@@ -562,6 +562,50 @@ export default function BrandBranchForm() {
             </div>
             <Switch checked={enableCustomerScoringModule} onCheckedChange={setEnableCustomerScoringModule} />
           </div>
+
+          {/* Flags do App do Motorista */}
+          <div className="border-t pt-4 mt-2">
+            <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">App do Motorista</p>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-emerald-500" />
+                Motorista compra pontos
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Permite que motoristas comprem pontos diretamente pelo app.
+              </p>
+            </div>
+            <Switch checked={enableDriverPointsPurchase} onCheckedChange={setEnableDriverPointsPurchase} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <MessageCircle className="h-4 w-4 text-green-500" />
+                Motorista acessa WhatsApp
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Exibe o botão de contato via WhatsApp no painel do motorista.
+              </p>
+            </div>
+            <Switch checked={enableWhatsappAccess} onCheckedChange={setEnableWhatsappAccess} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4 text-purple-500" />
+                Motorista compra com pontos
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Exibe a seção "Compre com Pontos" no painel do motorista.
+              </p>
+            </div>
+            <Switch checked={enablePointsPurchase} onCheckedChange={setEnablePointsPurchase} />
+          </div>
         </CardContent>
       </Card>
 
