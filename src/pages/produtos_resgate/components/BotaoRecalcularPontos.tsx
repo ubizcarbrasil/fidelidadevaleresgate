@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useRegrasResgateCidade } from "@/compartilhados/hooks/hook_regras_resgate_cidade";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -19,38 +20,20 @@ import { Calculator, Loader2 } from "lucide-react";
 
 export default function BotaoRecalcularPontos() {
   const qc = useQueryClient();
-  const { currentBrandId, isRootAdmin } = useBrandGuard();
+  const { currentBrandId, currentBranchId, isRootAdmin } = useBrandGuard();
   const [aberto, setAberto] = useState(false);
 
-  const { data: taxasConversao } = useQuery({
-    queryKey: ["brand-points-per-real", currentBrandId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("brands")
-        .select("brand_settings_json")
-        .eq("id", currentBrandId!)
-        .single();
-      if (error) throw error;
-      const settings = data?.brand_settings_json as Record<string, any> | null;
-      const rules = settings?.redemption_rules || {};
-      const base = (rules.points_per_real as number) || 40;
-      return {
-        driver: (rules.points_per_real_driver as number) || base,
-        customer: (rules.points_per_real_customer as number) || base,
-        base,
-      };
-    },
-    enabled: !!currentBrandId,
-  });
+  // Effective rates: city > brand > defaults
+  const { data: regrasEfetivas } = useRegrasResgateCidade(currentBrandId, currentBranchId);
 
-  const taxa = taxasConversao?.base ?? 40;
+  const taxa = regrasEfetivas?.points_per_real ?? 40;
 
   const getTaxaPorPublico = (redeemableBy: string): number => {
-    if (!taxasConversao) return taxa;
-    if (redeemableBy === "driver") return taxasConversao.driver;
-    if (redeemableBy === "customer") return taxasConversao.customer;
+    if (!regrasEfetivas) return taxa;
+    if (redeemableBy === "driver") return regrasEfetivas.points_per_real_driver;
+    if (redeemableBy === "customer") return regrasEfetivas.points_per_real_customer;
     // "both" → use the higher rate
-    return Math.max(taxasConversao.driver, taxasConversao.customer);
+    return Math.max(regrasEfetivas.points_per_real_driver, regrasEfetivas.points_per_real_customer);
   };
 
   const recalcular = useMutation({
@@ -107,8 +90,8 @@ export default function BotaoRecalcularPontos() {
           <AlertDialogTitle>Recalcular custo em pontos?</AlertDialogTitle>
           <AlertDialogDescription>
             Todos os produtos resgatáveis terão o custo recalculado usando a taxa do público-alvo:{" "}
-            <strong>Motorista: {taxasConversao?.driver ?? taxa} pts/R$</strong>,{" "}
-            <strong>Passageiro: {taxasConversao?.customer ?? taxa} pts/R$</strong>.
+            <strong>Motorista: {regrasEfetivas?.points_per_real_driver ?? taxa} pts/R$</strong>,{" "}
+            <strong>Passageiro: {regrasEfetivas?.points_per_real_customer ?? taxa} pts/R$</strong>.
             Valores editados manualmente serão sobrescritos.
           </AlertDialogDescription>
         </AlertDialogHeader>
