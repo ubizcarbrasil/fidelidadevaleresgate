@@ -1,71 +1,79 @@
 
 
-## Fase 1 — Realtime + useResolvedModules
+## Checkpoint manual da Fase 3 — execução assistida
 
-### Migration SQL
+### Estado já validado (read-only)
+
+| Momento | branch | is_enabled | source |
+|---|---|---|---|
+| Antes do INSERT | Leme - SP | **true** | **brand** ✅ |
+| Antes do INSERT | Olimpia - SP (controle) | **true** | **brand** ✅ |
+
+Tabela `city_module_overrides` confirmada vazia (0 linhas — backfill cenário A íntegro).
+
+### O que falta executar (precisa de modo default — DML)
+
+Vou criar uma única migration de teste com 3 blocos atômicos, cada um seguido de SELECT capturado via `RAISE NOTICE`, e te entrego o relatório final.
+
+**Migration de teste (transação única, com rollback automático no final):**
+
 ```sql
-ALTER PUBLICATION supabase_realtime ADD TABLE public.brand_modules;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.module_definitions;
-ALTER TABLE public.brand_modules REPLICA IDENTITY FULL;
-ALTER TABLE public.module_definitions REPLICA IDENTITY FULL;
+DO $$
+DECLARE
+  r record;
+BEGIN
+  -- PASSO 1.2: INSERT override OFF em Leme
+  INSERT INTO city_module_overrides (brand_id, branch_id, module_definition_id, is_enabled)
+  VALUES (
+    'db15bd21-9137-4965-a0fb-540d8e8b26f1',
+    '601882d7-bf11-4b49-afd1-728d54232ed3',
+    'ea20135f-3fc9-4d29-8ddf-a90149cf917f',
+    false
+  );
+
+  -- PASSO 1.3: leitura pós-INSERT (Leme)
+  SELECT * INTO r FROM resolve_active_modules(
+    'db15bd21-9137-4965-a0fb-540d8e8b26f1',
+    '601882d7-bf11-4b49-afd1-728d54232ed3'
+  ) WHERE module_key = 'sponsored';
+  RAISE NOTICE 'TESTE 1 pos-INSERT (Leme): is_enabled=%, source=%', r.is_enabled, r.source;
+
+  -- PASSO 2.2: leitura na outra branch (Olimpia)
+  SELECT * INTO r FROM resolve_active_modules(
+    'db15bd21-9137-4965-a0fb-540d8e8b26f1',
+    'ece001ed-950e-4ae5-b59b-196952ae961f'
+  ) WHERE module_key = 'sponsored';
+  RAISE NOTICE 'TESTE 2 (Olimpia): is_enabled=%, source=%', r.is_enabled, r.source;
+
+  -- PASSO 3.1: DELETE override
+  DELETE FROM city_module_overrides
+  WHERE branch_id = '601882d7-bf11-4b49-afd1-728d54232ed3'
+    AND module_definition_id = 'ea20135f-3fc9-4d29-8ddf-a90149cf917f';
+
+  -- PASSO 3.2: leitura pós-DELETE (Leme)
+  SELECT * INTO r FROM resolve_active_modules(
+    'db15bd21-9137-4965-a0fb-540d8e8b26f1',
+    '601882d7-bf11-4b49-afd1-728d54232ed3'
+  ) WHERE module_key = 'sponsored';
+  RAISE NOTICE 'TESTE 3 pos-DELETE (Leme): is_enabled=%, source=%', r.is_enabled, r.source;
+END $$;
 ```
 
-### Arquivos a criar
+### Critérios de aceite (avalio antes de te entregar)
 
-**1. `src/compartilhados/constants/constantes_features.ts`**
-```ts
-export const USE_RESOLVED_MODULES = true;
-```
+| Teste | Esperado | Falha = |
+|---|---|---|
+| 1 (pós-INSERT Leme) | `is_enabled=false, source=branch` | qualquer outra coisa |
+| 2 (Olimpia) | `is_enabled=true, source=brand` | qualquer outra coisa |
+| 3 (pós-DELETE Leme) | `is_enabled=true, source=brand` | qualquer outra coisa |
 
-**2. `src/compartilhados/hooks/hook_modulos_resolvidos.ts`**
+Se algum falhar: paro imediatamente, mostro o `RAISE NOTICE` capturado e abro diagnóstico antes de qualquer correção. Não toco em código.
 
-Hook unificado com Realtime + fallback explícito (`staleTime: 30_000`, `refetchOnWindowFocus: true`, `refetchOnReconnect: true` no próprio hook, sobrescrevendo defaults globais).
+Se todos passarem: entrego a tabela final 4 linhas + status PASS/FAIL de cada teste + confirmação de que `city_module_overrides` voltou a 0 linhas (estado limpo pós-checkpoint).
 
-Lógica:
-- Query `["resolved-modules", brandId, branchId ?? null]`
-- Busca paralela: `module_definitions` (catálogo), `brand_modules` (toggle marca), `branches.branch_settings_json` (override cidade quando branchId)
-- Combina client-side aplicando regra: cidade > marca > `ALWAYS_ON_MODULES` (mesmo set do `useBrandModules`)
-- `useEffect` cria channel `resolved-modules-${brandId}` com 2 subscriptions:
-  - `postgres_changes` em `brand_modules` filtrado por `brand_id=eq.${brandId}`
-  - `postgres_changes` em `module_definitions` (sem filtro, tabela pequena)
-- Ao receber qualquer evento → `qc.invalidateQueries({ queryKey: ["resolved-modules", brandId, branchId ?? null] })`
-- Cleanup `supabase.removeChannel(channel)` no unmount
-- Retorna `{ isModuleEnabled(key: string), isLoading, modules }`
+### Observação sobre Realtime cross-tab
 
-### Arquivos a editar
+O teste de propagação visual (<2s, 2 abas abertas) você precisa fazer no navegador — eu não consigo abrir 2 abas autenticadas simultâneas. Após eu te entregar o relatório SQL, abra `/brand-modules` da Ubiz Resgata em 2 abas e dispare o INSERT manualmente via SQL Editor (vou te entregar o snippet pronto para isso).
 
-**3. `src/components/consoles/BrandSidebar.tsx`**
-- Import `useResolvedModules` + `USE_RESOLVED_MODULES`
-- Trocar uso de `isModuleEnabled` por versão resolvida quando flag ativa, mantendo `useBrandModules` como fallback
-
-**4. `src/components/consoles/BranchSidebar.tsx`**
-- Idem, passando `currentBrandId` + `currentBranchId`
-- Mantém `useBranchModules` para flags de cidade não-modulares (duels/ranking/belt)
-
-**5. `src/pages/BrandModulesPage.tsx`** (após salvar toggle)
-- Adicionar `qc.invalidateQueries({ queryKey: ["resolved-modules"] })` (sem brandId = invalida todas as combinações de cache)
-
-### Arquivos NÃO tocados
-- `useBrandModules.ts`, `useBranchModules.ts`, `usePartnerModules.ts` — preservados intactos (rollback simples via flag)
-- `MENU_REGISTRY` — sem alterações estruturais
-- View `public_brand_modules_safe` — sem alterações
-- Painel parceiro — não tocado nesta fase
-
-### Entrega antes do teste manual
-1. Código completo do `hook_modulos_resolvidos.ts` colado no chat
-2. Diff exato de `BrandSidebar.tsx` e `BranchSidebar.tsx` colado no chat
-3. Resultado da query `SELECT schemaname, tablename FROM pg_publication_tables WHERE pubname='supabase_realtime' AND tablename IN ('brand_modules','module_definitions')`
-4. Confirmação de build TypeScript sem erros (via `npm run build` ou checagem de tipos)
-
-### Checkpoint bloqueante
-Você executa: login root → impersonar Ubiz Resgata → `/brand-modules` → desligar `sponsored` → sidebar deve atualizar em <2s sem F5 (incluindo 2ª aba aberta).
-
-**Se passar**: print antes/depois → aprovação Fase 2.
-**Se falhar**: paro tudo, abro DevTools junto com você (console + network tools), documento 4 pontos:
-1. `channel.subscribe()` retornou `SUBSCRIBED`?
-2. Evento `postgres_changes` chegou no payload?
-3. `["resolved-modules", brandId, ...]` foi invalidado?
-4. Sidebar re-renderizou após invalidação?
-
-Zero correção cega antes da sua revisão.
+**Aprova execução desta migration de teste?**
 
