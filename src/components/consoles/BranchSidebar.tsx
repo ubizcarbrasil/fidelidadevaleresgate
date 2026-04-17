@@ -62,7 +62,7 @@ const branchGroupDefs: DefinicaoGrupoSidebar[] = [
     scoringFilter: "DRIVER",
     branchModuleKey: "enable_race_earn_module",
     items: [
-      "sidebar.carteira_pontos", "sidebar.comprar_pontos", "sidebar.regras_motorista",
+      "sidebar.carteira_pontos", "sidebar.comprar_pontos",
       "sidebar.produtos_resgate", "sidebar.pedidos_resgate",
       { key: "sidebar.motoristas", overrides: { moduleKey: "achadinhos_motorista" } },
       "sidebar.relatorios_cidade", "sidebar.manuais",
