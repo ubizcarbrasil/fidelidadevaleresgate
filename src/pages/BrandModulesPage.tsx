@@ -133,6 +133,8 @@ export default function BrandModulesPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["brand-modules", brandId] });
       qc.invalidateQueries({ queryKey: ["brand-modules-active", brandId] });
+      // Fase 1: invalida o hook unificado (sem brandId = todas as combinações)
+      qc.invalidateQueries({ queryKey: ["resolved-modules"] });
       toast.success("Módulo atualizado!");
     },
     onError: (e: Error) => toast.error(e.message),

@@ -9,6 +9,8 @@ import { useBrandInfo } from "@/hooks/useBrandName";
 import { useBrandModules } from "@/hooks/useBrandModules";
 import { useMenuLabels } from "@/hooks/useMenuLabels";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useResolvedModules } from "@/compartilhados/hooks/hook_modulos_resolvidos";
+import { USE_RESOLVED_MODULES } from "@/compartilhados/constants/constantes_features";
 import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { supabase } from "@/integrations/supabase/client";
@@ -209,7 +211,7 @@ export function BrandSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { user, signOut } = useAuth();
-  const { isModuleEnabled } = useBrandModules();
+  const legacyBrandModules = useBrandModules();
   const { getLabel } = useMenuLabels("admin");
   const { name: brandName, logoUrl: brandLogoUrl, subscriptionPlan, brandId: infoBrandId } = useBrandInfo();
   const { currentBrandId } = useBrandGuard();
@@ -218,6 +220,10 @@ export function BrandSidebar() {
   const [openGroupLabel, setOpenGroupLabel] = useState<string | null>(null);
 
   const effectiveBrandId = currentBrandId || infoBrandId;
+  const resolvedModules = useResolvedModules(effectiveBrandId);
+  const isModuleEnabled = USE_RESOLVED_MODULES
+    ? resolvedModules.isModuleEnabled
+    : legacyBrandModules.isModuleEnabled;
 
   const { data: sidebarOrder } = useQuery({
     queryKey: ["brand-sidebar-order", effectiveBrandId],

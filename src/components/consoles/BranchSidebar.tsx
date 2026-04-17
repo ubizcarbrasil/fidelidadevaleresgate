@@ -8,6 +8,9 @@ import { useMenuLabels } from "@/hooks/useMenuLabels";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { useBranchScoringModel } from "@/hooks/useBranchScoringModel";
 import { useBranchModules } from "@/hooks/useBranchModules";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useResolvedModules } from "@/compartilhados/hooks/hook_modulos_resolvidos";
+import { USE_RESOLVED_MODULES } from "@/compartilhados/constants/constantes_features";
 import { Badge } from "@/components/ui/badge";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -147,7 +150,12 @@ export function BranchSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { user, signOut } = useAuth();
-  const { isModuleEnabled } = useBrandModules();
+  const { currentBrandId, currentBranchId } = useBrandGuard();
+  const legacyBrandModules = useBrandModules();
+  const resolvedModules = useResolvedModules(currentBrandId, currentBranchId);
+  const isModuleEnabled = USE_RESOLVED_MODULES
+    ? resolvedModules.isModuleEnabled
+    : legacyBrandModules.isModuleEnabled;
   const { getLabel } = useMenuLabels("admin");
   const badges = useSidebarBadges();
   const { isDriverEnabled, isPassengerEnabled } = useBranchScoringModel();
