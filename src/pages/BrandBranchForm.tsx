@@ -694,6 +694,132 @@ export default function BrandBranchForm() {
         </CardContent>
       </Card>
 
+      {/* Card 1 — Regra de Resgate (por cidade) */}
+      <Card className="rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Coins className="h-4 w-4 text-amber-500" />
+            Regra de Resgate
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Configurações específicas desta cidade. Sobrescrevem o padrão da marca.
+          </p>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs flex items-center gap-1.5">
+              <Coins className="h-3.5 w-3.5 text-amber-500" />
+              Taxa de Conversão (pts = R$ 1,00)
+            </Label>
+            <Input
+              type="number"
+              min={0.01}
+              step={0.1}
+              value={pointsPerReal === 0 ? "" : pointsPerReal}
+              onChange={(e) => setPointsPerReal(parseFloat(e.target.value) || 0)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+              Mínimo de Pontos para Resgate
+            </Label>
+            <Input
+              type="number"
+              min={1}
+              value={minPointsToRedeem === 0 ? "" : minPointsToRedeem}
+              onChange={(e) => setMinPointsToRedeem(parseInt(e.target.value) || 0)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5 text-primary" />
+              Limite Mensal por Motorista
+            </Label>
+            <Input
+              type="number"
+              min={1}
+              value={maxRedemptionsPerMonth === 0 ? "" : maxRedemptionsPerMonth}
+              onChange={(e) => setMaxRedemptionsPerMonth(parseInt(e.target.value) || 0)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs flex items-center gap-1.5">
+              <CalendarClock className="h-3.5 w-3.5 text-sky-500" />
+              Prazo de Aprovação (horas)
+            </Label>
+            <Input
+              type="number"
+              min={1}
+              value={approvalDeadlineHours === 0 ? "" : approvalDeadlineHours}
+              onChange={(e) => setApprovalDeadlineHours(parseInt(e.target.value) || 0)}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Card 2 — Conversão por Público */}
+      <Card className="rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <ArrowLeftRight className="h-4 w-4 text-primary" />
+            Conversão de Resgate por Público
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Taxas de conversão diferentes para motoristas e passageiros (apenas nesta cidade).
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs flex items-center gap-1.5">
+                <Car className="h-3.5 w-3.5 text-blue-500" />
+                Taxa do Motorista (pts/R$)
+              </Label>
+              <Input
+                type="number"
+                min={0.01}
+                step={0.1}
+                value={pointsPerRealDriver === 0 ? "" : pointsPerRealDriver}
+                onChange={(e) => setPointsPerRealDriver(parseFloat(e.target.value) || 0)}
+              />
+              {pointsPerRealDriver > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Produto de R$ 100 = {Math.ceil(100 * pointsPerRealDriver).toLocaleString("pt-BR")} pts
+                </p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-emerald-500" />
+                Taxa do Passageiro (pts/R$)
+              </Label>
+              <Input
+                type="number"
+                min={0.01}
+                step={0.1}
+                value={pointsPerRealCustomer === 0 ? "" : pointsPerRealCustomer}
+                onChange={(e) => setPointsPerRealCustomer(parseFloat(e.target.value) || 0)}
+              />
+              {pointsPerRealCustomer > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Produto de R$ 100 = {Math.ceil(100 * pointsPerRealCustomer).toLocaleString("pt-BR")} pts
+                </p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Card 3 — Pontuação do Motorista */}
+      {isEdit && id && (
+        <CardPontuacaoMotorista
+          brandId={currentBrandId ?? null}
+          branchId={id}
+          onChange={setPontuacaoMotorista}
+        />
+      )}
+
       {/* Modelo de Negócio */}
       <Card className="rounded-xl">
         <CardHeader className="pb-3">
