@@ -1,66 +1,71 @@
 
 
-## Consolidação: Regras dentro de "Editar Cidade"
+## Fase 1 — Realtime + useResolvedModules
 
-### Objetivo
+### Migration SQL
+```sql
+ALTER PUBLICATION supabase_realtime ADD TABLE public.brand_modules;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.module_definitions;
+ALTER TABLE public.brand_modules REPLICA IDENTITY FULL;
+ALTER TABLE public.module_definitions REPLICA IDENTITY FULL;
+```
 
-Centralizar 3 conjuntos de configurações por cidade dentro da tela `Editar Cidade` (`/branches/:id`), com cada cidade tendo seus próprios valores (sobrescrevem o padrão da marca quando definidos).
+### Arquivos a criar
 
-### O que será adicionado em "Editar Cidade"
+**1. `src/compartilhados/constants/constantes_features.ts`**
+```ts
+export const USE_RESOLVED_MODULES = true;
+```
 
-**Card 1 — Regra de Resgate (por cidade)**
-- Taxa de Conversão (`points_per_real`)
-- Mínimo de Pontos para Resgate (`min_points_to_redeem`)
-- Limite Mensal por Motorista (`max_redemptions_per_month`)
-- Prazo de Aprovação em horas (`approval_deadline_hours`)
+**2. `src/compartilhados/hooks/hook_modulos_resolvidos.ts`**
 
-**Card 2 — Conversão de Resgate por Público (por cidade)**
-- Taxa do Motorista (`points_per_real_driver`)
-- Taxa do Passageiro (`points_per_real_customer`)
-- Exibe simulação "Produto de R$ 100 = X pts"
+Hook unificado com Realtime + fallback explícito (`staleTime: 30_000`, `refetchOnWindowFocus: true`, `refetchOnReconnect: true` no próprio hook, sobrescrevendo defaults globais).
 
-**Card 3 — Pontuação do Motorista (por cidade)**
-- Modo (`PER_REAL`, `PERCENT`, `FIXED`, `VOLUME_TIER`)
-- Valores conforme o modo (pontos/R$, %, fixo, faixas de volume)
-- Pontuação Maçaneta (`macaneta_points_per_ride`)
-- Switch ativo/inativo
+Lógica:
+- Query `["resolved-modules", brandId, branchId ?? null]`
+- Busca paralela: `module_definitions` (catálogo), `brand_modules` (toggle marca), `branches.branch_settings_json` (override cidade quando branchId)
+- Combina client-side aplicando regra: cidade > marca > `ALWAYS_ON_MODULES` (mesmo set do `useBrandModules`)
+- `useEffect` cria channel `resolved-modules-${brandId}` com 2 subscriptions:
+  - `postgres_changes` em `brand_modules` filtrado por `brand_id=eq.${brandId}`
+  - `postgres_changes` em `module_definitions` (sem filtro, tabela pequena)
+- Ao receber qualquer evento → `qc.invalidateQueries({ queryKey: ["resolved-modules", brandId, branchId ?? null] })`
+- Cleanup `supabase.removeChannel(channel)` no unmount
+- Retorna `{ isModuleEnabled(key: string), isLoading, modules }`
 
-### Onde os dados serão salvos
+### Arquivos a editar
 
-| Bloco | Armazenamento |
-|---|---|
-| Regra de Resgate | `branches.branch_settings_json.redemption_rules` (override por cidade) |
-| Conversão por Público | `branches.branch_settings_json.redemption_rules` (mesmas chaves do brand) |
-| Pontuação do Motorista | Tabela existente `driver_points_rules` (já é por `branch_id`) |
+**3. `src/components/consoles/BrandSidebar.tsx`**
+- Import `useResolvedModules` + `USE_RESOLVED_MODULES`
+- Trocar uso de `isModuleEnabled` por versão resolvida quando flag ativa, mantendo `useBrandModules` como fallback
 
-Não será necessário criar novas colunas — a tabela `branches` já tem `branch_settings_json` (JSONB) e `driver_points_rules` já é por cidade.
+**4. `src/components/consoles/BranchSidebar.tsx`**
+- Idem, passando `currentBrandId` + `currentBranchId`
+- Mantém `useBranchModules` para flags de cidade não-modulares (duels/ranking/belt)
 
-### Lógica de fallback
+**5. `src/pages/BrandModulesPage.tsx`** (após salvar toggle)
+- Adicionar `qc.invalidateQueries({ queryKey: ["resolved-modules"] })` (sem brandId = invalida todas as combinações de cache)
 
-Os hooks/queries que leem essas regras precisam priorizar o valor da cidade quando existir, e cair no padrão da marca quando ausente. Aplica-se em:
-- Criação/edição de produtos resgatáveis (cálculo automático em pontos)
-- Validação de mínimo de pontos / limite mensal nos resgates
+### Arquivos NÃO tocados
+- `useBrandModules.ts`, `useBranchModules.ts`, `usePartnerModules.ts` — preservados intactos (rollback simples via flag)
+- `MENU_REGISTRY` — sem alterações estruturais
+- View `public_brand_modules_safe` — sem alterações
+- Painel parceiro — não tocado nesta fase
 
-### Remoções no menu (mantém só o nível Marca)
+### Entrega antes do teste manual
+1. Código completo do `hook_modulos_resolvidos.ts` colado no chat
+2. Diff exato de `BrandSidebar.tsx` e `BranchSidebar.tsx` colado no chat
+3. Resultado da query `SELECT schemaname, tablename FROM pg_publication_tables WHERE pubname='supabase_realtime' AND tablename IN ('brand_modules','module_definitions')`
+4. Confirmação de build TypeScript sem erros (via `npm run build` ou checagem de tipos)
 
-Conforme aprovado, remover do sidebar:
-- `sidebar.conversao_resgate` → `/conversao-resgate` (continua acessível só pela marca)
-- `sidebar.driver_points_rules` e `sidebar.regras_motorista` → `/driver-points-rules`
+### Checkpoint bloqueante
+Você executa: login root → impersonar Ubiz Resgata → `/brand-modules` → desligar `sponsored` → sidebar deve atualizar em <2s sem F5 (incluindo 2ª aba aberta).
 
-A página `Regras de Resgate` (`/regras-resgate`) é mantida — ela é o padrão da marca.
-As rotas continuam existindo (pra não quebrar links profundos), só somem do menu.
+**Se passar**: print antes/depois → aprovação Fase 2.
+**Se falhar**: paro tudo, abro DevTools junto com você (console + network tools), documento 4 pontos:
+1. `channel.subscribe()` retornou `SUBSCRIBED`?
+2. Evento `postgres_changes` chegou no payload?
+3. `["resolved-modules", brandId, ...]` foi invalidado?
+4. Sidebar re-renderizou após invalidação?
 
-### Arquivos afetados
-
-1. **`src/pages/BrandBranchForm.tsx`** — adicionar 3 novos cards (estados, queries, mutations, UI), com botão único "Salvar Cidade" também salvando esses blocos
-2. **`src/compartilhados/constants/constantes_menu_sidebar.ts`** — remover entradas do menu legadas
-3. **Hooks de leitura** (`src/pages/produtos_resgate/components/ModalAdicionarResgatavel.tsx` e similares) — priorizar `branch_settings_json.redemption_rules` da cidade ativa antes do brand padrão
-4. **Migração SQL** — backfill: para cada cidade existente, copiar o `redemption_rules` da marca para `branch_settings_json` se ainda não houver (garante que a cidade comece com o padrão atual e não fique zerada)
-
-### Detalhes técnicos
-
-- Nova função utilitária `useCityRedemptionRules(branchId)` que lê branch + brand e devolve o efetivo (cidade > marca > defaults).
-- A `mutation` salva no `handleSave` já existente é estendida para também fazer upsert em `driver_points_rules` (chave `brand_id,branch_id`).
-- O bloco "Pontuação do Motorista" reaproveita a UI condicional do `DriverPointsRulesPage` (PER_REAL / PERCENT / FIXED / VOLUME_TIER) — mas em formato compacto dentro do card.
-- Toda nova UI segue o padrão visual já existente (`Card` + `CardHeader` + ícones coloridos), conforme prints anexados.
+Zero correção cega antes da sua revisão.
 
