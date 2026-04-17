@@ -15,17 +15,7 @@ import {
 } from "lucide-react";
 import HomeSectionOrderEditor from "@/components/brand-modules/HomeSectionOrderEditor";
 import SidebarOrderEditor from "@/components/brand-modules/SidebarOrderEditor";
-
-const CATEGORY_META: Record<string, { label: string; emoji: string; description: string }> = {
-  essencial:          { label: "Essencial",            emoji: "🔧", description: "Base da plataforma" },
-  comercial:          { label: "Comercial",            emoji: "🏪", description: "Parceiros, ofertas e catálogo" },
-  fidelidade_pontos:  { label: "Fidelidade & Pontos",  emoji: "⭐", description: "Programa de pontos e cashback" },
-  engajamento:        { label: "Engajamento",          emoji: "📣", description: "CRM, gamificação e comunicação" },
-  personalizacao:     { label: "Personalização",       emoji: "🎨", description: "Aparência, tema e identidade visual" },
-  governanca:         { label: "Governança",           emoji: "🛡️", description: "Acessos, auditoria, plano e configs" },
-  inteligencia_dados: { label: "Inteligência & Dados", emoji: "📊", description: "Relatórios, importação e análise" },
-  integracoes:        { label: "Integrações & API",    emoji: "🔌", description: "APIs e sistemas externos" },
-};
+import { CATEGORY_META } from "@/compartilhados/constants/constantes_categorias_modulos";
 
 const MODULE_ICONS: Record<string, any> = {
   stores: Store,
