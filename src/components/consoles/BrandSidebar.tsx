@@ -9,6 +9,8 @@ import { useBrandInfo } from "@/hooks/useBrandName";
 import { useBrandModules } from "@/hooks/useBrandModules";
 import { useMenuLabels } from "@/hooks/useMenuLabels";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useResolvedModules } from "@/compartilhados/hooks/hook_modulos_resolvidos";
+import { USE_RESOLVED_MODULES } from "@/compartilhados/constants/constantes_features";
 import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { supabase } from "@/integrations/supabase/client";
