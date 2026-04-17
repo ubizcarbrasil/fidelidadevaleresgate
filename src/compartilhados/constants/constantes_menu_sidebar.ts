@@ -208,9 +208,6 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
   "sidebar.comprar_pontos": {
     key: "sidebar.comprar_pontos", defaultTitle: "Comprar Pontos", url: "/points-packages-store", icon: ShoppingCart, moduleKey: "achadinhos_motorista",
   },
-  "sidebar.regras_motorista": {
-    key: "sidebar.regras_motorista", defaultTitle: "Regras de Pontuação", url: "/driver-points-rules", icon: Settings2, moduleKey: "achadinhos_motorista",
-  },
   "sidebar.produtos_resgate": {
     key: "sidebar.produtos_resgate", defaultTitle: "Produtos de Resgate", url: "/produtos-resgate", icon: ShoppingBag, scoringFilter: "DRIVER",
   },
@@ -219,9 +216,6 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
   },
   "sidebar.relatorios_cidade": {
     key: "sidebar.relatorios_cidade", defaultTitle: "Relatórios", url: "/branch-reports", icon: BarChart3, moduleKey: "achadinhos_motorista",
-  },
-  "sidebar.driver_points_rules": {
-    key: "sidebar.driver_points_rules", defaultTitle: "Regras de Pontuação Motorista", url: "/driver-points-rules", icon: Truck, moduleKey: "machine_integration", scoringFilter: "DRIVER",
   },
 
   // ─── Gamificação ───
