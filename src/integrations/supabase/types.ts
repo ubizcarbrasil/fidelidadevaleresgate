@@ -1461,6 +1461,65 @@ export type Database = {
           },
         ]
       }
+      city_module_overrides: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string
+          id: string
+          is_enabled: boolean
+          module_definition_id: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          id?: string
+          is_enabled: boolean
+          module_definition_id: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          module_definition_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_module_overrides_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_module_overrides_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_module_overrides_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_module_overrides_module_definition_id_fkey"
+            columns: ["module_definition_id"]
+            isOneToOne: false
+            referencedRelation: "module_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupons: {
         Row: {
           branch_id: string
@@ -8530,6 +8589,14 @@ export type Database = {
       reprocess_missing_driver_points: {
         Args: { p_branch_id: string }
         Returns: Json
+      }
+      resolve_active_modules: {
+        Args: { p_branch_id?: string; p_brand_id: string }
+        Returns: {
+          is_enabled: boolean
+          module_key: string
+          source: string
+        }[]
       }
       respond_counter_proposal: {
         Args: { p_accept: boolean; p_customer_id: string; p_duel_id: string }
