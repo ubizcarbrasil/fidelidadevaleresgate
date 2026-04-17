@@ -297,6 +297,16 @@ export default function BrandBranchForm() {
         enable_driver_points_purchase: enableDriverPointsPurchase,
         enable_whatsapp_access: enableWhatsappAccess,
         enable_points_purchase: enablePointsPurchase,
+        // Regras de Resgate (override por cidade)
+        redemption_rules: {
+          ...(existingSettings.redemption_rules as Record<string, any> | undefined),
+          points_per_real: pointsPerReal,
+          min_points_to_redeem: minPointsToRedeem,
+          max_redemptions_per_month: maxRedemptionsPerMonth,
+          approval_deadline_hours: approvalDeadlineHours,
+          points_per_real_driver: pointsPerRealDriver,
+          points_per_real_customer: pointsPerRealCustomer,
+        },
       };
 
       const payload = {
