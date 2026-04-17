@@ -6,7 +6,7 @@ import {
   LayoutList, Copy, Shield, ShieldCheck, Eye, TrendingUp, FlaskConical,
   FileText, Key, Car, ExternalLink, Palette, AppWindow, GalleryHorizontal,
   CreditCard, DollarSign, Zap, Handshake, FolderTree, Layers, Grip,
-  LayoutTemplate, FileUp, Truck, Package, RefreshCw, ArrowLeftRight, type LucideIcon,
+  LayoutTemplate, FileUp, Truck, Package, RefreshCw, type LucideIcon,
 } from "lucide-react";
 
 export interface RegistroItemMenu {
