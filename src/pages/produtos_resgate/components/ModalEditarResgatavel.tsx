@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useRegrasResgateCidade } from "@/compartilhados/hooks/hook_regras_resgate_cidade";
 import {
   Dialog,
   DialogContent,
@@ -43,41 +44,22 @@ interface Props {
 
 export default function ModalEditarResgatavel({ produto, aberto, onFechar }: Props) {
   const qc = useQueryClient();
-  const { currentBrandId } = useBrandGuard();
+  const { currentBrandId, currentBranchId } = useBrandGuard();
 
   const [publicoAlvo, setPublicoAlvo] = useState<"driver" | "customer" | "both">("driver");
   const [custoPontos, setCustoPontos] = useState("");
   const [taxaPersonalizada, setTaxaPersonalizada] = useState("");
   const [usarTaxaPersonalizada, setUsarTaxaPersonalizada] = useState(false);
 
-  // Fetch global rates
-  const { data: taxasGlobais } = useQuery({
-    queryKey: ["brand-points-per-real", currentBrandId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("brands")
-        .select("brand_settings_json")
-        .eq("id", currentBrandId!)
-        .single();
-      if (error) throw error;
-      const settings = data?.brand_settings_json as Record<string, any> | null;
-      const rules = settings?.redemption_rules || {};
-      const base = (rules.points_per_real as number) || 40;
-      return {
-        driver: (rules.points_per_real_driver as number) || base,
-        customer: (rules.points_per_real_customer as number) || base,
-        base,
-      };
-    },
-    enabled: aberto && !!currentBrandId,
-  });
+  // Effective rates: city > brand > defaults
+  const { data: regrasEfetivas } = useRegrasResgateCidade(currentBrandId, currentBranchId);
 
   const taxaGlobalAtiva = useMemo(() => {
-    if (!taxasGlobais) return 40;
-    if (publicoAlvo === "driver") return taxasGlobais.driver;
-    if (publicoAlvo === "customer") return taxasGlobais.customer;
-    return Math.max(taxasGlobais.driver, taxasGlobais.customer);
-  }, [taxasGlobais, publicoAlvo]);
+    if (!regrasEfetivas) return 40;
+    if (publicoAlvo === "driver") return regrasEfetivas.points_per_real_driver;
+    if (publicoAlvo === "customer") return regrasEfetivas.points_per_real_customer;
+    return Math.max(regrasEfetivas.points_per_real_driver, regrasEfetivas.points_per_real_customer);
+  }, [regrasEfetivas, publicoAlvo]);
 
   // Populate form when product changes
   useEffect(() => {

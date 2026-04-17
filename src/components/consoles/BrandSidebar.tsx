@@ -48,7 +48,7 @@ const brandGroupDefs: DefinicaoGrupoSidebar[] = [
     label: "Cidades",
     items: [
       { key: "sidebar.branches", overrides: { defaultTitle: "Minhas Cidades", url: "/brand-branches" } },
-      "sidebar.pacotes_pontos", "sidebar.regras_resgate", "sidebar.conversao_resgate",
+      "sidebar.pacotes_pontos", "sidebar.regras_resgate",
       "sidebar.jornada_cidades", "sidebar.onboarding_cidade", "sidebar.configuracao_cidade",
     ],
   },
@@ -66,7 +66,6 @@ const brandGroupDefs: DefinicaoGrupoSidebar[] = [
       "sidebar.achadinhos", "sidebar.categorias_achadinhos",
       { key: "sidebar.espelhamento", overrides: { defaultTitle: "Espelhamento Achadinho" } },
       { key: "sidebar.governanca_ofertas", overrides: { defaultTitle: "Governança Achadinho" } },
-      "sidebar.driver_points_rules",
     ],
   },
   {

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useRegrasResgateCidade } from "@/compartilhados/hooks/hook_regras_resgate_cidade";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +32,7 @@ interface Props {
 
 export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
   const qc = useQueryClient();
-  const { currentBrandId, isRootAdmin } = useBrandGuard();
+  const { currentBrandId, currentBranchId, isRootAdmin } = useBrandGuard();
 
   const [busca, setBusca] = useState("");
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
@@ -40,33 +41,17 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
   const [modoAutomatico, setModoAutomatico] = useState(true);
   const [publicoAlvo, setPublicoAlvo] = useState<"driver" | "customer" | "both">("driver");
 
-  // Fetch points_per_real rates (driver/customer) from brand settings
-  const { data: taxasConversao } = useQuery({
-    queryKey: ["brand-points-per-real", currentBrandId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("brands")
-        .select("brand_settings_json")
-        .eq("id", currentBrandId!)
-        .single();
-      if (error) throw error;
-      const settings = data?.brand_settings_json as Record<string, any> | null;
-      const rules = settings?.redemption_rules || {};
-      const base = (rules.points_per_real as number) || 40;
-      return {
-        driver: (rules.points_per_real_driver as number) || base,
-        customer: (rules.points_per_real_customer as number) || base,
-        base,
-      };
-    },
-    enabled: aberto && !!currentBrandId,
-  });
+  // Effective rates: city > brand > defaults
+  const { data: regrasEfetivas } = useRegrasResgateCidade(currentBrandId, currentBranchId);
 
   const taxaAtiva = publicoAlvo === "driver"
-    ? (taxasConversao?.driver ?? 40)
+    ? (regrasEfetivas?.points_per_real_driver ?? 40)
     : publicoAlvo === "customer"
-      ? (taxasConversao?.customer ?? 40)
-      : Math.max(taxasConversao?.driver ?? 40, taxasConversao?.customer ?? 40);
+      ? (regrasEfetivas?.points_per_real_customer ?? 40)
+      : Math.max(
+          regrasEfetivas?.points_per_real_driver ?? 40,
+          regrasEfetivas?.points_per_real_customer ?? 40,
+        );
 
   const { data: produtos, isLoading } = useQuery({
     queryKey: ["deals-nao-resgataveis", currentBrandId, busca],

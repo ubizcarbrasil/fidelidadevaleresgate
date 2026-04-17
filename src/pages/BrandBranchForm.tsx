@@ -10,10 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Key, UserPlus, Link, Copy, Check, Car, Users, RefreshCw, Swords, RotateCcw, Package, ShoppingCart, Store, Zap, Coins, MessageCircle, CreditCard } from "lucide-react";
+import { ArrowLeft, Loader2, Key, UserPlus, Link, Copy, Check, Car, Users, RefreshCw, Swords, RotateCcw, Package, ShoppingCart, Store, Zap, Coins, MessageCircle, CreditCard, ShieldCheck, CalendarClock, ArrowLeftRight } from "lucide-react";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import DialogResetPontos from "@/components/branch/DialogResetPontos";
+import CardPontuacaoMotorista, { type PontuacaoMotoristaState } from "@/pages/branches/components/CardPontuacaoMotorista";
 
 const ESTADOS = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
@@ -86,6 +87,19 @@ export default function BrandBranchForm() {
   const [enableDriverPointsPurchase, setEnableDriverPointsPurchase] = useState(false);
   const [enableWhatsappAccess, setEnableWhatsappAccess] = useState(false);
   const [enablePointsPurchase, setEnablePointsPurchase] = useState(false);
+
+  // Regras de Resgate (Card 1) — por cidade, sobrescreve a marca
+  const [pointsPerReal, setPointsPerReal] = useState<number>(40);
+  const [minPointsToRedeem, setMinPointsToRedeem] = useState<number>(100);
+  const [maxRedemptionsPerMonth, setMaxRedemptionsPerMonth] = useState<number>(3);
+  const [approvalDeadlineHours, setApprovalDeadlineHours] = useState<number>(48);
+
+  // Conversão por Público (Card 2)
+  const [pointsPerRealDriver, setPointsPerRealDriver] = useState<number>(40);
+  const [pointsPerRealCustomer, setPointsPerRealCustomer] = useState<number>(40);
+
+  // Pontuação do Motorista (Card 3) — gerenciado pelo card filho
+  const [pontuacaoMotorista, setPontuacaoMotorista] = useState<PontuacaoMotoristaState | null>(null);
 
   // Load brand's default scoring model for new cities
   useEffect(() => {
@@ -173,9 +187,44 @@ export default function BrandBranchForm() {
         setEnableDriverPointsPurchase(bs.enable_driver_points_purchase === true);
         setEnableWhatsappAccess(bs.enable_whatsapp_access === true);
         setEnablePointsPurchase(bs.enable_points_purchase === true);
+
+        // Regras de Resgate (cidade > defaults). Brand fallback é aplicado depois.
+        const cityRules = (bs.redemption_rules as Record<string, any> | undefined) || {};
+        if (cityRules.points_per_real != null) setPointsPerReal(Number(cityRules.points_per_real));
+        if (cityRules.min_points_to_redeem != null) setMinPointsToRedeem(Number(cityRules.min_points_to_redeem));
+        if (cityRules.max_redemptions_per_month != null) setMaxRedemptionsPerMonth(Number(cityRules.max_redemptions_per_month));
+        if (cityRules.approval_deadline_hours != null) setApprovalDeadlineHours(Number(cityRules.approval_deadline_hours));
+        if (cityRules.points_per_real_driver != null) setPointsPerRealDriver(Number(cityRules.points_per_real_driver));
+        else if (cityRules.points_per_real != null) setPointsPerRealDriver(Number(cityRules.points_per_real));
+        if (cityRules.points_per_real_customer != null) setPointsPerRealCustomer(Number(cityRules.points_per_real_customer));
+        else if (cityRules.points_per_real != null) setPointsPerRealCustomer(Number(cityRules.points_per_real));
       }
     }
   }, [existing]);
+
+  // Brand fallback for redemption rules — only when this branch has no overrides yet
+  useEffect(() => {
+    if (!currentBrandId) return;
+    supabase
+      .from("brands")
+      .select("brand_settings_json")
+      .eq("id", currentBrandId)
+      .single()
+      .then(({ data }) => {
+        const settings = data?.brand_settings_json as Record<string, any> | null;
+        const brandRules = (settings?.redemption_rules as Record<string, any> | undefined) || {};
+        const bs = (existing?.branch_settings_json as Record<string, any> | null) || {};
+        const cityRules = (bs.redemption_rules as Record<string, any> | undefined) || {};
+        const has = (k: string) => cityRules[k] != null;
+
+        if (!has("points_per_real") && brandRules.points_per_real != null) setPointsPerReal(Number(brandRules.points_per_real));
+        if (!has("min_points_to_redeem") && brandRules.min_points_to_redeem != null) setMinPointsToRedeem(Number(brandRules.min_points_to_redeem));
+        if (!has("max_redemptions_per_month") && brandRules.max_redemptions_per_month != null) setMaxRedemptionsPerMonth(Number(brandRules.max_redemptions_per_month));
+        if (!has("approval_deadline_hours") && brandRules.approval_deadline_hours != null) setApprovalDeadlineHours(Number(brandRules.approval_deadline_hours));
+        if (!has("points_per_real_driver") && brandRules.points_per_real_driver != null) setPointsPerRealDriver(Number(brandRules.points_per_real_driver));
+        if (!has("points_per_real_customer") && brandRules.points_per_real_customer != null) setPointsPerRealCustomer(Number(brandRules.points_per_real_customer));
+      });
+  }, [currentBrandId, existing]);
 
   useEffect(() => {
     if (existingIntegration) {
@@ -248,6 +297,16 @@ export default function BrandBranchForm() {
         enable_driver_points_purchase: enableDriverPointsPurchase,
         enable_whatsapp_access: enableWhatsappAccess,
         enable_points_purchase: enablePointsPurchase,
+        // Regras de Resgate (override por cidade)
+        redemption_rules: {
+          ...(existingSettings.redemption_rules as Record<string, any> | undefined),
+          points_per_real: pointsPerReal,
+          min_points_to_redeem: minPointsToRedeem,
+          max_redemptions_per_month: maxRedemptionsPerMonth,
+          approval_deadline_hours: approvalDeadlineHours,
+          points_per_real_driver: pointsPerRealDriver,
+          points_per_real_customer: pointsPerRealCustomer,
+        },
       };
 
       const payload = {
@@ -280,6 +339,31 @@ export default function BrandBranchForm() {
         if (error) throw error;
         branchId = inserted.id;
         toast.success("Cidade criada com sucesso!");
+      }
+
+      // Save Pontuação do Motorista (driver_points_rules)
+      if (branchId && pontuacaoMotorista) {
+        const { error: drvErr } = await (supabase as any)
+          .from("driver_points_rules")
+          .upsert(
+            {
+              brand_id: currentBrandId,
+              branch_id: branchId,
+              rule_mode: pontuacaoMotorista.rule_mode,
+              points_per_real: pontuacaoMotorista.points_per_real,
+              percent_of_passenger: pontuacaoMotorista.percent_of_passenger,
+              fixed_points_per_ride: pontuacaoMotorista.fixed_points_per_ride,
+              volume_tiers: pontuacaoMotorista.volume_tiers,
+              volume_cycle_days: pontuacaoMotorista.volume_cycle_days,
+              is_active: pontuacaoMotorista.is_active,
+              macaneta_points_per_ride: pontuacaoMotorista.macaneta_points_per_ride,
+            },
+            { onConflict: "brand_id,branch_id" }
+          );
+        if (drvErr) {
+          console.error("Driver rules save error:", drvErr);
+          toast.error("Cidade salva, mas houve erro ao salvar a pontuação do motorista.");
+        }
       }
 
       // Register integration credentials via edge function
@@ -609,6 +693,132 @@ export default function BrandBranchForm() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Card 1 — Regra de Resgate (por cidade) */}
+      <Card className="rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Coins className="h-4 w-4 text-amber-500" />
+            Regra de Resgate
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Configurações específicas desta cidade. Sobrescrevem o padrão da marca.
+          </p>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs flex items-center gap-1.5">
+              <Coins className="h-3.5 w-3.5 text-amber-500" />
+              Taxa de Conversão (pts = R$ 1,00)
+            </Label>
+            <Input
+              type="number"
+              min={0.01}
+              step={0.1}
+              value={pointsPerReal === 0 ? "" : pointsPerReal}
+              onChange={(e) => setPointsPerReal(parseFloat(e.target.value) || 0)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+              Mínimo de Pontos para Resgate
+            </Label>
+            <Input
+              type="number"
+              min={1}
+              value={minPointsToRedeem === 0 ? "" : minPointsToRedeem}
+              onChange={(e) => setMinPointsToRedeem(parseInt(e.target.value) || 0)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5 text-primary" />
+              Limite Mensal por Motorista
+            </Label>
+            <Input
+              type="number"
+              min={1}
+              value={maxRedemptionsPerMonth === 0 ? "" : maxRedemptionsPerMonth}
+              onChange={(e) => setMaxRedemptionsPerMonth(parseInt(e.target.value) || 0)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs flex items-center gap-1.5">
+              <CalendarClock className="h-3.5 w-3.5 text-sky-500" />
+              Prazo de Aprovação (horas)
+            </Label>
+            <Input
+              type="number"
+              min={1}
+              value={approvalDeadlineHours === 0 ? "" : approvalDeadlineHours}
+              onChange={(e) => setApprovalDeadlineHours(parseInt(e.target.value) || 0)}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Card 2 — Conversão por Público */}
+      <Card className="rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <ArrowLeftRight className="h-4 w-4 text-primary" />
+            Conversão de Resgate por Público
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Taxas de conversão diferentes para motoristas e passageiros (apenas nesta cidade).
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs flex items-center gap-1.5">
+                <Car className="h-3.5 w-3.5 text-blue-500" />
+                Taxa do Motorista (pts/R$)
+              </Label>
+              <Input
+                type="number"
+                min={0.01}
+                step={0.1}
+                value={pointsPerRealDriver === 0 ? "" : pointsPerRealDriver}
+                onChange={(e) => setPointsPerRealDriver(parseFloat(e.target.value) || 0)}
+              />
+              {pointsPerRealDriver > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Produto de R$ 100 = {Math.ceil(100 * pointsPerRealDriver).toLocaleString("pt-BR")} pts
+                </p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-emerald-500" />
+                Taxa do Passageiro (pts/R$)
+              </Label>
+              <Input
+                type="number"
+                min={0.01}
+                step={0.1}
+                value={pointsPerRealCustomer === 0 ? "" : pointsPerRealCustomer}
+                onChange={(e) => setPointsPerRealCustomer(parseFloat(e.target.value) || 0)}
+              />
+              {pointsPerRealCustomer > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Produto de R$ 100 = {Math.ceil(100 * pointsPerRealCustomer).toLocaleString("pt-BR")} pts
+                </p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Card 3 — Pontuação do Motorista */}
+      {isEdit && id && (
+        <CardPontuacaoMotorista
+          brandId={currentBrandId ?? null}
+          branchId={id}
+          onChange={setPontuacaoMotorista}
+        />
+      )}
 
       {/* Modelo de Negócio */}
       <Card className="rounded-xl">
