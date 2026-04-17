@@ -17,16 +17,14 @@ import HomeSectionOrderEditor from "@/components/brand-modules/HomeSectionOrderE
 import SidebarOrderEditor from "@/components/brand-modules/SidebarOrderEditor";
 
 const CATEGORY_META: Record<string, { label: string; emoji: string; description: string }> = {
-  core:         { label: "Essencial",            emoji: "🔧", description: "Base da plataforma" },
-  comercial:    { label: "Comercial",            emoji: "🏪", description: "Parceiros, ofertas e catálogo" },
-  fidelidade:   { label: "Fidelidade & Pontos",  emoji: "⭐", description: "Programa de pontos e cashback" },
-  visual:       { label: "Personalização",       emoji: "🎨", description: "Menus de aparência do painel" },
-  visual_theme: { label: "Customização do Tema", emoji: "🖌️", description: "Seções do Editor de Tema" },
-  governance:   { label: "Governança",           emoji: "🛡️", description: "Auditoria, permissões e acessos" },
-  engajamento:  { label: "Engajamento",          emoji: "📣", description: "CRM, guias e comunicação" },
-  dados:        { label: "Inteligência & Dados", emoji: "📊", description: "Relatórios e análise" },
-  integracoes:  { label: "Integrações & API",    emoji: "🔌", description: "APIs e sistemas externos" },
-  general:      { label: "Geral",                emoji: "📦", description: "Outros módulos" },
+  essencial:          { label: "Essencial",            emoji: "🔧", description: "Base da plataforma" },
+  comercial:          { label: "Comercial",            emoji: "🏪", description: "Parceiros, ofertas e catálogo" },
+  fidelidade_pontos:  { label: "Fidelidade & Pontos",  emoji: "⭐", description: "Programa de pontos e cashback" },
+  engajamento:        { label: "Engajamento",          emoji: "📣", description: "CRM, gamificação e comunicação" },
+  personalizacao:     { label: "Personalização",       emoji: "🎨", description: "Aparência, tema e identidade visual" },
+  governanca:         { label: "Governança",           emoji: "🛡️", description: "Acessos, auditoria, plano e configs" },
+  inteligencia_dados: { label: "Inteligência & Dados", emoji: "📊", description: "Relatórios, importação e análise" },
+  integracoes:        { label: "Integrações & API",    emoji: "🔌", description: "APIs e sistemas externos" },
 };
 
 const MODULE_ICONS: Record<string, any> = {
@@ -162,10 +160,10 @@ export default function BrandModulesPage() {
     return acc;
   }, {} as Record<string, typeof visibleDefinitions>) || {};
 
-  // Sort categories: core first, then alphabetical
+  // Sort categories: essencial first, then alphabetical
   const sortedCategories = Object.keys(grouped).sort((a, b) => {
-    if (a === "core") return -1;
-    if (b === "core") return 1;
+    if (a === "essencial") return -1;
+    if (b === "essencial") return 1;
     return a.localeCompare(b);
   });
 
