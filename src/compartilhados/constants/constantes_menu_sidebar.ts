@@ -6,7 +6,7 @@ import {
   LayoutList, Copy, Shield, ShieldCheck, Eye, TrendingUp, FlaskConical,
   FileText, Key, Car, ExternalLink, Palette, AppWindow, GalleryHorizontal,
   CreditCard, DollarSign, Zap, Handshake, FolderTree, Layers, Grip,
-  LayoutTemplate, FileUp, Truck, Package, RefreshCw, ArrowLeftRight, type LucideIcon,
+  LayoutTemplate, FileUp, Truck, Package, RefreshCw, type LucideIcon,
 } from "lucide-react";
 
 export interface RegistroItemMenu {
@@ -76,9 +76,6 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
   },
   "sidebar.regras_resgate": {
     key: "sidebar.regras_resgate", defaultTitle: "Regras de Resgate", url: "/regras-resgate", icon: Settings2,
-  },
-  "sidebar.conversao_resgate": {
-    key: "sidebar.conversao_resgate", defaultTitle: "Conversão por Público", url: "/conversao-resgate", icon: ArrowLeftRight,
   },
   "sidebar.jornada_cidades": {
     key: "sidebar.jornada_cidades", defaultTitle: "Guia de Cidades", url: "/brand-cidades-journey", icon: BookOpen,
@@ -211,9 +208,6 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
   "sidebar.comprar_pontos": {
     key: "sidebar.comprar_pontos", defaultTitle: "Comprar Pontos", url: "/points-packages-store", icon: ShoppingCart, moduleKey: "achadinhos_motorista",
   },
-  "sidebar.regras_motorista": {
-    key: "sidebar.regras_motorista", defaultTitle: "Regras de Pontuação", url: "/driver-points-rules", icon: Settings2, moduleKey: "achadinhos_motorista",
-  },
   "sidebar.produtos_resgate": {
     key: "sidebar.produtos_resgate", defaultTitle: "Produtos de Resgate", url: "/produtos-resgate", icon: ShoppingBag, scoringFilter: "DRIVER",
   },
@@ -222,9 +216,6 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
   },
   "sidebar.relatorios_cidade": {
     key: "sidebar.relatorios_cidade", defaultTitle: "Relatórios", url: "/branch-reports", icon: BarChart3, moduleKey: "achadinhos_motorista",
-  },
-  "sidebar.driver_points_rules": {
-    key: "sidebar.driver_points_rules", defaultTitle: "Regras de Pontuação Motorista", url: "/driver-points-rules", icon: Truck, moduleKey: "machine_integration", scoringFilter: "DRIVER",
   },
 
   // ─── Gamificação ───
