@@ -187,9 +187,44 @@ export default function BrandBranchForm() {
         setEnableDriverPointsPurchase(bs.enable_driver_points_purchase === true);
         setEnableWhatsappAccess(bs.enable_whatsapp_access === true);
         setEnablePointsPurchase(bs.enable_points_purchase === true);
+
+        // Regras de Resgate (cidade > defaults). Brand fallback é aplicado depois.
+        const cityRules = (bs.redemption_rules as Record<string, any> | undefined) || {};
+        if (cityRules.points_per_real != null) setPointsPerReal(Number(cityRules.points_per_real));
+        if (cityRules.min_points_to_redeem != null) setMinPointsToRedeem(Number(cityRules.min_points_to_redeem));
+        if (cityRules.max_redemptions_per_month != null) setMaxRedemptionsPerMonth(Number(cityRules.max_redemptions_per_month));
+        if (cityRules.approval_deadline_hours != null) setApprovalDeadlineHours(Number(cityRules.approval_deadline_hours));
+        if (cityRules.points_per_real_driver != null) setPointsPerRealDriver(Number(cityRules.points_per_real_driver));
+        else if (cityRules.points_per_real != null) setPointsPerRealDriver(Number(cityRules.points_per_real));
+        if (cityRules.points_per_real_customer != null) setPointsPerRealCustomer(Number(cityRules.points_per_real_customer));
+        else if (cityRules.points_per_real != null) setPointsPerRealCustomer(Number(cityRules.points_per_real));
       }
     }
   }, [existing]);
+
+  // Brand fallback for redemption rules — only when this branch has no overrides yet
+  useEffect(() => {
+    if (!currentBrandId) return;
+    supabase
+      .from("brands")
+      .select("brand_settings_json")
+      .eq("id", currentBrandId)
+      .single()
+      .then(({ data }) => {
+        const settings = data?.brand_settings_json as Record<string, any> | null;
+        const brandRules = (settings?.redemption_rules as Record<string, any> | undefined) || {};
+        const bs = (existing?.branch_settings_json as Record<string, any> | null) || {};
+        const cityRules = (bs.redemption_rules as Record<string, any> | undefined) || {};
+        const has = (k: string) => cityRules[k] != null;
+
+        if (!has("points_per_real") && brandRules.points_per_real != null) setPointsPerReal(Number(brandRules.points_per_real));
+        if (!has("min_points_to_redeem") && brandRules.min_points_to_redeem != null) setMinPointsToRedeem(Number(brandRules.min_points_to_redeem));
+        if (!has("max_redemptions_per_month") && brandRules.max_redemptions_per_month != null) setMaxRedemptionsPerMonth(Number(brandRules.max_redemptions_per_month));
+        if (!has("approval_deadline_hours") && brandRules.approval_deadline_hours != null) setApprovalDeadlineHours(Number(brandRules.approval_deadline_hours));
+        if (!has("points_per_real_driver") && brandRules.points_per_real_driver != null) setPointsPerRealDriver(Number(brandRules.points_per_real_driver));
+        if (!has("points_per_real_customer") && brandRules.points_per_real_customer != null) setPointsPerRealCustomer(Number(brandRules.points_per_real_customer));
+      });
+  }, [currentBrandId, existing]);
 
   useEffect(() => {
     if (existingIntegration) {
