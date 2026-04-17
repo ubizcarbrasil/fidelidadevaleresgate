@@ -77,9 +77,6 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
   "sidebar.regras_resgate": {
     key: "sidebar.regras_resgate", defaultTitle: "Regras de Resgate", url: "/regras-resgate", icon: Settings2,
   },
-  "sidebar.conversao_resgate": {
-    key: "sidebar.conversao_resgate", defaultTitle: "Conversão por Público", url: "/conversao-resgate", icon: ArrowLeftRight,
-  },
   "sidebar.jornada_cidades": {
     key: "sidebar.jornada_cidades", defaultTitle: "Guia de Cidades", url: "/brand-cidades-journey", icon: BookOpen,
   },
