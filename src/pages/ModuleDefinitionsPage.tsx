@@ -95,12 +95,14 @@ export default function ModuleDefinitionsPage() {
   }, {} as Record<string, typeof modules>) || {};
 
   const categoryIcons: Record<string, string> = {
-    core: "🔧",
+    essencial: "🔧",
     comercial: "🏪",
-    fidelidade: "⭐",
-    visual: "🎨",
+    fidelidade_pontos: "⭐",
     engajamento: "📣",
-    general: "📦",
+    personalizacao: "🎨",
+    governanca: "🛡️",
+    inteligencia_dados: "📊",
+    integracoes: "🔌",
   };
 
   return (
