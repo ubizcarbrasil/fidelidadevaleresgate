@@ -341,6 +341,31 @@ export default function BrandBranchForm() {
         toast.success("Cidade criada com sucesso!");
       }
 
+      // Save Pontuação do Motorista (driver_points_rules)
+      if (branchId && pontuacaoMotorista) {
+        const { error: drvErr } = await (supabase as any)
+          .from("driver_points_rules")
+          .upsert(
+            {
+              brand_id: currentBrandId,
+              branch_id: branchId,
+              rule_mode: pontuacaoMotorista.rule_mode,
+              points_per_real: pontuacaoMotorista.points_per_real,
+              percent_of_passenger: pontuacaoMotorista.percent_of_passenger,
+              fixed_points_per_ride: pontuacaoMotorista.fixed_points_per_ride,
+              volume_tiers: pontuacaoMotorista.volume_tiers,
+              volume_cycle_days: pontuacaoMotorista.volume_cycle_days,
+              is_active: pontuacaoMotorista.is_active,
+              macaneta_points_per_ride: pontuacaoMotorista.macaneta_points_per_ride,
+            },
+            { onConflict: "brand_id,branch_id" }
+          );
+        if (drvErr) {
+          console.error("Driver rules save error:", drvErr);
+          toast.error("Cidade salva, mas houve erro ao salvar a pontuação do motorista.");
+        }
+      }
+
       // Register integration credentials via edge function
       if (branchId && (basicAuthUser.trim() || apiKey.trim())) {
         const { error: fnError } = await supabase.functions.invoke("register-machine-webhook", {
