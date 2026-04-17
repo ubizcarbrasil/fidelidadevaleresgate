@@ -37,7 +37,7 @@ async function fetchResolvedModules(
 ): Promise<ResolvedModulesData> {
   const { data, error } = await supabase.rpc("resolve_active_modules", {
     p_brand_id: brandId,
-    p_branch_id: branchId,
+    p_branch_id: branchId ?? undefined,
   });
 
   if (error) throw error;
