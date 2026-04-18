@@ -1,5 +1,5 @@
-// Fase 4.1b - rebuild forçado em 2026-04-18 (invalidar cache de bundle do preview)
-const BUILD_TAG_FASE_4_1B = "fase-4.1b-rebuild-2026-04-18-v2";
+// Fase 4.1b - rebuild forçado em 2026-04-18 v3 (invalidar cache de bundle do preview)
+const BUILD_TAG_FASE_4_1B = "fase-4.1b-rebuild-2026-04-18-v3";
 if (typeof window !== "undefined") {
   (window as unknown as { __BUILD_TAG__?: string }).__BUILD_TAG__ = BUILD_TAG_FASE_4_1B;
 }
@@ -26,11 +26,23 @@ export default function PaginaCentralModulos() {
       </div>
 
       <Tabs defaultValue="catalogo" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-          <TabsTrigger value="catalogo"><Package className="h-4 w-4 mr-1" />Catálogo</TabsTrigger>
-          <TabsTrigger value="planos"><Layers className="h-4 w-4 mr-1" />Planos</TabsTrigger>
-          <TabsTrigger value="empreendedores"><Building2 className="h-4 w-4 mr-1" />Empreendedores</TabsTrigger>
-          <TabsTrigger value="cidades"><MapPin className="h-4 w-4 mr-1" />Cidades</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 h-auto gap-1">
+          <TabsTrigger value="catalogo" className="text-xs sm:text-sm flex-col sm:flex-row gap-1 sm:gap-0 py-2">
+            <Package className="h-4 w-4 sm:mr-1" />
+            <span>Catálogo</span>
+          </TabsTrigger>
+          <TabsTrigger value="planos" className="text-xs sm:text-sm flex-col sm:flex-row gap-1 sm:gap-0 py-2">
+            <Layers className="h-4 w-4 sm:mr-1" />
+            <span>Planos</span>
+          </TabsTrigger>
+          <TabsTrigger value="empreendedores" className="text-xs sm:text-sm flex-col sm:flex-row gap-1 sm:gap-0 py-2">
+            <Building2 className="h-4 w-4 sm:mr-1" />
+            <span>Empreendedores</span>
+          </TabsTrigger>
+          <TabsTrigger value="cidades" className="text-xs sm:text-sm flex-col sm:flex-row gap-1 sm:gap-0 py-2">
+            <MapPin className="h-4 w-4 sm:mr-1" />
+            <span>Cidades</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="catalogo" className="mt-4"><AbaCatalogo /></TabsContent>
