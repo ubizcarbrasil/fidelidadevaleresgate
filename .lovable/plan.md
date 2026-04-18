@@ -1,39 +1,46 @@
 
-## Ghost commit + rebuild para invalidar cache do preview
+## Fase 4.1b — Tentativa 2: ghost commit nos chunks-filhos
 
-### Ação única
-Adicionar 1 linha de comentário no topo de `src/features/central_modulos/pagina_central_modulos.tsx` para forçar novo hash de chunk no build do Vite.
+### Hipótese
+O ghost commit anterior mudou só `pagina_central_modulos.tsx` (chunk pai). Os componentes `AbaEmpreendedores` e `AbaCidades` provavelmente são chunks separados pelo code-splitting do Vite, e o CDN do preview pode estar servindo versões antigas desses chunks-filhos. Forçar mudança no conteúdo dos próprios arquivos das abas deve gerar novos hashes para esses chunks específicos.
 
-```tsx
-// Fase 4.1b - rebuild forçado em 2026-04-18 (invalidar cache de bundle do preview)
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-...resto do arquivo intacto...
+### Ação (3 edits triviais)
+
+1. `src/features/central_modulos/components/aba_empreendedores.tsx` — adicionar após os imports:
+```ts
+export const __PHASE_4_1B_EMP_REBUILD = "2026-04-18-v3";
 ```
 
-Sem mudança lógica. Sem mudança de UI. Sem mudança em mais nenhum arquivo.
+2. `src/features/central_modulos/components/aba_cidades.tsx` — adicionar após os imports:
+```ts
+export const __PHASE_4_1B_CID_REBUILD = "2026-04-18-v3";
+```
 
-### Verificação após salvar (em modo de execução)
-1. `npm run build` no sandbox.
-2. `ls dist/assets/pagina_central_modulos-*.js` → capturar **novo hash**.
-3. Comparar com hash anterior (`DpmMw-KM`).
-4. `grep -l "AbaEmpreendedores"` e `grep -l "AbaCidades"` no novo chunk.
-5. Confirmar build limpo (0 erros TS).
+3. Nenhuma outra mudança. Zero alteração de lógica, UI ou comportamento.
+
+### Verificação após salvar (modo execução)
+- `npm run build` (capturar exit code + tempo)
+- `ls dist/assets/aba_empreendedores-*.js dist/assets/aba_cidades-*.js dist/assets/pagina_central_modulos-*.js` (capturar hashes novos)
+- `grep -l "__PHASE_4_1B_EMP_REBUILD" dist/assets/*.js` (confirmar string no bundle)
+- `grep -l "__PHASE_4_1B_CID_REBUILD" dist/assets/*.js` (confirmar string no bundle)
+- `npx tsc --noEmit` (zero erros)
 
 ### Entrega ao usuário
-- Hash antigo: `pagina_central_modulos-DpmMw-KM.js`
-- Hash novo: `pagina_central_modulos-XXXXXX.js`
-- Status do build (tempo + 0 erros)
-- Confirmação dos 4 componentes presentes no novo chunk
-- Instrução para testar: abrir preview em **Safari aba privada** colando a URL `https://id-preview--3ff47979-b8b4-4666-bfef-7987c2d119c3.lovable.app/admin/central-modulos` diretamente na barra (não clicar em link salvo, para evitar redirect para `app.valeresgate.com.br`)
+- Exit code do build
+- Hashes novos dos 3 chunks (ou confirmação se as abas estão inlined no chunk pai)
+- Confirmação dos greps
+- Instrução para o usuário testar no preview em Safari aba privada na URL `https://id-preview--3ff47979-b8b4-4666-bfef-7987c2d119c3.lovable.app/admin/central-modulos`
 
 ### O que NÃO vou fazer
-- Não publicar para produção.
-- Não tocar Service Worker / `vite.config.ts`.
-- Não alterar lógica das abas.
-- Não republicar o domínio custom.
+- Não publicar em produção
+- Não tocar `vite.config.ts` / Service Worker
+- Não tocar nada de 4.1a, 4.2, 4.3
+- Não alterar lógica das abas
 
-### Limitação honesta
-Não tenho API/comando para forçar invalidação do CDN do preview do Lovable. Confio no fluxo padrão: novo commit → Vite gera chunk com novo hash → `index.html` aponta para o novo hash → preview serve o novo bundle. Se mesmo assim o preview ainda mostrar 2 abas após hard reload em aba privada, paramos e escalamos para o suporte do Lovable conforme combinado.
+### Plano de escalação
+Se mesmo após esse rebuild o preview continuar mostrando 2 abas:
+- Entregar relatório técnico fechado (hashes antes/depois, greps, build limpo)
+- Recomendar abertura de ticket com suporte do Lovable com evidência de cache CDN não invalidando chunks-filhos
 
 ### Risco
-Mínimo. 1 linha de comentário. Rollback trivial.
+Mínimo. 2 linhas em 2 arquivos. Constantes não importadas em lugar nenhum. Rollback trivial.
