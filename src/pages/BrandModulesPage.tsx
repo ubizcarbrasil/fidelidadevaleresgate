@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -6,12 +6,13 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { toast } from "sonner";
 import {
   Blocks, Shield, Store, MapPin, Users, Tag, Ticket, PackageSearch,
   Sparkles, Coins, Settings2, Image, Layers, Bell, BarChart3, Palette,
-  Type, FileSpreadsheet, Globe, TrendingUp, ClipboardList, Plug, Home,
+  Type, FileSpreadsheet, Globe, TrendingUp, ClipboardList, Plug, Home, Search,
 } from "lucide-react";
 import HomeSectionOrderEditor from "@/components/brand-modules/HomeSectionOrderEditor";
 import SidebarOrderEditor from "@/components/brand-modules/SidebarOrderEditor";
