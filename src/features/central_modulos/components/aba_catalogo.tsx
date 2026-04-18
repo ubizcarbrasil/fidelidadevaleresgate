@@ -99,6 +99,7 @@ export default function AbaCatalogo() {
                 <div className="grid gap-2">
                   {grouped[cat].map((m) => {
                     const Icon = getIcon(m.schema_json?.icon);
+                    const usage = usageMap?.[m.id] ?? { brands: 0, cities: 0 };
                     return (
                       <Card key={m.id} className={!m.is_active ? "opacity-60" : ""}>
                         <CardContent className="p-3 flex items-center gap-3">
@@ -112,6 +113,20 @@ export default function AbaCatalogo() {
                               {m.is_core && <Badge variant="secondary" className="text-[10px]">Core</Badge>}
                               {!m.is_active && <Badge variant="outline" className="text-[10px]">Inativo</Badge>}
                               {m.customer_facing && <Badge variant="outline" className="text-[10px]">Cliente</Badge>}
+                              <Badge
+                                variant={usage.brands > 0 ? "default" : "outline"}
+                                className="text-[10px] gap-1"
+                                title={`Ativo em ${usage.brands} marca(s)`}
+                              >
+                                <Building2 className="h-3 w-3" /> {usage.brands}
+                              </Badge>
+                              <Badge
+                                variant={usage.cities > 0 ? "default" : "outline"}
+                                className="text-[10px] gap-1"
+                                title={`Override em ${usage.cities} cidade(s)`}
+                              >
+                                <MapPin className="h-3 w-3" /> {usage.cities}
+                              </Badge>
                             </div>
                             {m.description && <p className="text-xs text-muted-foreground truncate">{m.description}</p>}
                           </div>
