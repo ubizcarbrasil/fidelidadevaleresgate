@@ -72,7 +72,7 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
     key: "sidebar.central_acessos", defaultTitle: "Gestão de Acessos", url: "/access-hub", icon: Eye, moduleKey: "access_hub",
   },
   "sidebar.pacotes_pontos": {
-    key: "sidebar.pacotes_pontos", defaultTitle: "Pacotes de Pontos", url: "/points-packages", icon: Package,
+    key: "sidebar.pacotes_pontos", defaultTitle: "Catálogo de Pacotes", url: "/points-packages", icon: Package,
   },
   "sidebar.regras_resgate": {
     key: "sidebar.regras_resgate", defaultTitle: "Regras de Resgate", url: "/regras-resgate", icon: Settings2,
