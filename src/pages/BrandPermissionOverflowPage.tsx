@@ -34,9 +34,9 @@ export default function BrandPermissionOverflowPage() {
         </div>
       </div>
 
-      <Alert className="mb-6 border-amber-500/50 bg-amber-500/5">
-        <Info className="h-4 w-4 text-amber-500" />
-        <AlertTitle className="text-amber-500">Esta tela foi descontinuada</AlertTitle>
+      <Alert className="mb-6">
+        <Info className="h-4 w-4" />
+        <AlertTitle>Esta tela foi descontinuada</AlertTitle>
         <AlertDescription className="text-muted-foreground">
           O controle de funcionalidades visíveis para o empreendedor agora é feito
           exclusivamente pela <strong>Central de Módulos</strong>. As alterações
