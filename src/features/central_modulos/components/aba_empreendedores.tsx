@@ -153,6 +153,9 @@ export default function AbaEmpreendedores() {
           <strong className="text-foreground">Aqui você liga/desliga funcionalidades por empreendedor (marca).</strong> A cascata é: Catálogo → Empreendedor → Cidade. O que estiver desligado aqui some do painel da marca em tempo real.
         </p>
       </div>
+
+      <PainelAplicacaoMassa />
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
