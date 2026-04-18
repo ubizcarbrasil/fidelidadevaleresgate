@@ -128,6 +128,43 @@ export function useToggleModuloAtivo() {
   });
 }
 
+export interface ModuleUsageRow {
+  module_definition_id: string;
+  brand_count: number;
+  city_count: number;
+}
+
+export function useModulosUsoCount() {
+  return useQuery({
+    queryKey: ["module-usage-count"],
+    queryFn: async (): Promise<Record<string, { brands: number; cities: number }>> => {
+      const [bm, cmo] = await Promise.all([
+        supabase.from("brand_modules").select("module_definition_id, brand_id, is_enabled").eq("is_enabled", true),
+        supabase.from("city_module_overrides").select("module_definition_id, branch_id, is_enabled").eq("is_enabled", true),
+      ]);
+      if (bm.error) throw bm.error;
+      if (cmo.error) throw cmo.error;
+
+      const map: Record<string, { brands: Set<string>; cities: Set<string> }> = {};
+      (bm.data ?? []).forEach((r: any) => {
+        if (!map[r.module_definition_id]) map[r.module_definition_id] = { brands: new Set(), cities: new Set() };
+        map[r.module_definition_id].brands.add(r.brand_id);
+      });
+      (cmo.data ?? []).forEach((r: any) => {
+        if (!map[r.module_definition_id]) map[r.module_definition_id] = { brands: new Set(), cities: new Set() };
+        map[r.module_definition_id].cities.add(r.branch_id);
+      });
+
+      const out: Record<string, { brands: number; cities: number }> = {};
+      Object.entries(map).forEach(([k, v]) => {
+        out[k] = { brands: v.brands.size, cities: v.cities.size };
+      });
+      return out;
+    },
+    staleTime: 30_000,
+  });
+}
+
 export function useDeletarModulo() {
   const qc = useQueryClient();
   return useMutation({
