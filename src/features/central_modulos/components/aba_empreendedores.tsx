@@ -20,6 +20,8 @@ import {
 } from "../hooks/hook_brand_modules_admin";
 import { PLANS } from "../constants/constantes_planos";
 
+export const __PHASE_4_1B_EMP_REBUILD = "2026-04-18-v3";
+
 function resolveIcon(name?: string) {
   const Lib = LucideIcons as any;
   return (Lib[name ?? "Blocks"] ?? Lib.Blocks) as any;
