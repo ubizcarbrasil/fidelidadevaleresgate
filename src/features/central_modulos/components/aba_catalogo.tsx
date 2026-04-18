@@ -65,7 +65,7 @@ export default function AbaCatalogo() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por nome ou chave…" className="pl-9" />
         </div>
-        <Button onClick={abrirNovo}><Plus className="h-4 w-4" /> Novo Módulo</Button>
+        <Button onClick={abrirNovo} className="w-full sm:w-auto"><Plus className="h-4 w-4" /> Novo Módulo</Button>
       </div>
 
       <div className="flex flex-wrap gap-2">
