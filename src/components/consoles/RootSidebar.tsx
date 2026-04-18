@@ -159,7 +159,7 @@ function CollapsibleGroup({
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
                         {!collapsed && isNovo && (
-                          <Badge className="ml-auto h-5 px-1.5 text-[10px] font-bold bg-emerald-500 text-white hover:bg-emerald-500">
+                          <Badge className="ml-auto h-5 px-1.5 text-[10px] font-bold bg-primary text-primary-foreground hover:bg-primary">
                             Novo
                           </Badge>
                         )}
