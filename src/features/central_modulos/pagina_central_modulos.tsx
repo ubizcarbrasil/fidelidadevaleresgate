@@ -1,3 +1,4 @@
+// Fase 4.1b - rebuild forçado em 2026-04-18 (invalidar cache de bundle do preview)
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutGrid, Package, Layers, Building2, MapPin } from "lucide-react";
 import AbaCatalogo from "./components/aba_catalogo";
