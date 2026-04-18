@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { MapPin, Building2, Info, Trash2, ArrowDownUp } from "lucide-react";
+import { MapPin, Building2, Info, Trash2, ArrowDownUp, Search } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -106,6 +106,7 @@ export default function AbaCidades() {
   const [branchId, setBranchId] = useState("");
   const [confirmClear, setConfirmClear] = useState(false);
   const [textConfirm, setTextConfirm] = useState("");
+  const [busca, setBusca] = useState("");
 
   const { data: brands = [] } = useBrandList();
   const { data: branches = [], isLoading: loadingBranches } = useBranchList(brandId || null);
@@ -122,9 +123,19 @@ export default function AbaCidades() {
     [lista]
   );
 
+  const listaFiltrada = useMemo(() => {
+    const term = busca.trim().toLowerCase();
+    if (!term) return lista;
+    return lista.filter(
+      (l) =>
+        l.module_name.toLowerCase().includes(term) ||
+        (l.module_description ?? "").toLowerCase().includes(term)
+    );
+  }, [lista, busca]);
+
   const grupos = useMemo(() => {
     const map = new Map<string, OverviewLinhaCidade[]>();
-    lista.forEach((l) => {
+    listaFiltrada.forEach((l) => {
       const cat = CATEGORY_META[l.module_category] ? l.module_category : "general";
       if (!map.has(cat)) map.set(cat, []);
       map.get(cat)!.push(l);
@@ -132,7 +143,7 @@ export default function AbaCidades() {
     return ORDEM_CATEGORIAS
       .filter((cat) => map.has(cat))
       .map((cat) => ({ cat, items: map.get(cat)! }));
-  }, [lista]);
+  }, [listaFiltrada]);
 
   const handleBrandChange = (id: string) => {
     setBrandId(id);
@@ -226,12 +237,28 @@ export default function AbaCidades() {
             </p>
           </div>
 
+          <div className="relative max-w-md">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar módulo…"
+              className="pl-9"
+            />
+          </div>
+
           {loadingLista ? (
             <div className="text-sm text-muted-foreground">Carregando módulos…</div>
           ) : lista.length === 0 ? (
             <Card>
               <CardContent className="py-10 text-center text-sm text-muted-foreground">
                 Esta marca não tem módulos ativos. Nada a sobrescrever.
+              </CardContent>
+            </Card>
+          ) : listaFiltrada.length === 0 ? (
+            <Card>
+              <CardContent className="py-10 text-center text-sm text-muted-foreground">
+                Nenhum módulo corresponde a “{busca}”.
               </CardContent>
             </Card>
           ) : (
