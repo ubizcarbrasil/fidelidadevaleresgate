@@ -19,6 +19,7 @@ import {
   useSetCustomName, useResetBrandToPlan, type BrandModuloLinha,
 } from "../hooks/hook_brand_modules_admin";
 import { PLANS } from "../constants/constantes_planos";
+import PainelAplicacaoMassa from "./painel_aplicacao_massa";
 
 export const __PHASE_4_1B_EMP_REBUILD = "2026-04-18-v3";
 
@@ -152,6 +153,9 @@ export default function AbaEmpreendedores() {
           <strong className="text-foreground">Aqui você liga/desliga funcionalidades por empreendedor (marca).</strong> A cascata é: Catálogo → Empreendedor → Cidade. O que estiver desligado aqui some do painel da marca em tempo real.
         </p>
       </div>
+
+      <PainelAplicacaoMassa />
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
