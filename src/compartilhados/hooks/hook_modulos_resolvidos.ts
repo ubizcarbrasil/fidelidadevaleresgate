@@ -1,6 +1,6 @@
 /**
- * useResolvedModules — Fase 3
- * ---------------------------
+ * useResolvedModules — Fase 4.3a
+ * ------------------------------
  * Hook unificado de resolução de módulos via RPC `resolve_active_modules`.
  *
  * - Cascata server-side: cidade > marca > is_core > inativo
@@ -9,20 +9,14 @@
  *   algum admin altera um toggle.
  * - Mantém fallback explícito (staleTime curto + refetch on focus/reconnect)
  *   para o caso do canal Realtime cair silenciosamente.
- * - `ALWAYS_ON_MODULES` mantido como guardrail (Fase 4 elimina via is_core=true).
+ * - Guardrail ALWAYS_ON_MODULES removido em 4.3a: agora os módulos legados
+ *   (brand_settings, csv_import, subscription, users_management) têm
+ *   is_core=true no banco e são honrados pela RPC.
  */
 import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { CACHE } from "@/config/constants";
-
-/** Guardrail: módulos sempre visíveis mesmo sem linha em brand_modules e sem is_core. */
-const ALWAYS_ON_MODULES = new Set<string>([
-  "brand_settings",
-  "csv_import",
-  "subscription",
-  "users_management",
-]);
 
 interface ResolvedModulesData {
   /** key -> is_enabled (resolvido no servidor) */
@@ -128,9 +122,7 @@ export function useResolvedModules(
   const isModuleEnabled = (moduleKey: string): boolean => {
     if (!brandId) return false;
     if (isLoading || !data) return false;
-    if (moduleKey in data.enabledMap) return data.enabledMap[moduleKey];
-    // Guardrail: módulos legados sem registro em catálogo
-    return ALWAYS_ON_MODULES.has(moduleKey);
+    return data.enabledMap[moduleKey] ?? false;
   };
 
   return {
