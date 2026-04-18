@@ -19,6 +19,7 @@ import {
   useSetCustomName, useResetBrandToPlan, type BrandModuloLinha,
 } from "../hooks/hook_brand_modules_admin";
 import { PLANS } from "../constants/constantes_planos";
+import PainelAplicacaoMassa from "./painel_aplicacao_massa";
 
 export const __PHASE_4_1B_EMP_REBUILD = "2026-04-18-v3";
 
