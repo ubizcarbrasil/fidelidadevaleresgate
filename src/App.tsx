@@ -128,6 +128,7 @@ const DriverPanelPage = lazyWithRetry(() => import("@/pages/DriverPanelPage"));
 const McpDashboardPage = lazyWithRetry(() => import("@/pages/McpDashboardPage"));
 const OfferGovernancePage = lazyWithRetry(() => import("@/pages/OfferGovernancePage"));
 const ProductRedemptionOrdersPage = lazyWithRetry(() => import("@/pages/ProductRedemptionOrdersPage"));
+const PaginaCentralModulos = lazyWithRetry(() => import("@/features/central_modulos/pagina_central_modulos"));
 const ProdutosResgatePage = lazyWithRetry(() => import("@/pages/ProdutosResgatePage"));
 const RegrasResgatePage = lazyWithRetry(() => import("@/pages/RegrasResgatePage"));
 const PaginaConversaoResgate = lazyWithRetry(() => import("@/pages/conversao_resgate/pagina_conversao_resgate"));
@@ -214,6 +215,7 @@ function AnimatedRoutes() {
               <Route path="csv-import" element={<ModuleGuard moduleKey="csv_import"><CsvImportPage /></ModuleGuard>} />
               <Route path="clone-branch" element={<RootGuard><CloneBranchPage /></RootGuard>} />
               <Route path="brand-modules" element={<BrandModulesPage />} />
+              <Route path="admin/central-modulos" element={<RootGuard><PaginaCentralModulos /></RootGuard>} />
               <Route path="pdv" element={<ModuleGuard moduleKey="earn_points_store"><OperatorRedeemPage /></ModuleGuard>} />
               <Route path="points-rules" element={<ModuleGuard moduleKey="earn_points_store"><PointsRulesPage /></ModuleGuard>} />
               <Route path="earn-points" element={<ModuleGuard moduleKey="earn_points_store"><EarnPointsPage /></ModuleGuard>} />
