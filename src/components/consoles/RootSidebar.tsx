@@ -147,6 +147,7 @@ function CollapsibleGroup({
             <SidebarMenu>
               {items.map((item) => {
                 const badgeCount = badges[item.key];
+                const isNovo = item.key === "sidebar.central_modulos";
                 return (
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
@@ -157,7 +158,12 @@ function CollapsibleGroup({
                       <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
-                        {badgeCount && badgeCount > 0 && (
+                        {!collapsed && isNovo && (
+                          <Badge className="ml-auto h-5 px-1.5 text-[10px] font-bold bg-emerald-500 text-white hover:bg-emerald-500">
+                            Novo
+                          </Badge>
+                        )}
+                        {!isNovo && badgeCount && badgeCount > 0 && (
                           <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold">
                             {badgeCount > 99 ? "99+" : badgeCount}
                           </Badge>
