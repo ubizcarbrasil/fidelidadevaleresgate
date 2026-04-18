@@ -19,6 +19,8 @@ import {
   useClearAllOverrides, type EstadoOverride, type OverviewLinhaCidade,
 } from "../hooks/hook_city_overrides";
 
+export const __PHASE_4_1B_CID_REBUILD = "2026-04-18-v3";
+
 function resolveIcon(name?: string) {
   const Lib = LucideIcons as any;
   return (Lib[name ?? "Blocks"] ?? Lib.Blocks) as any;
