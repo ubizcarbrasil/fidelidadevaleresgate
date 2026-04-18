@@ -237,12 +237,28 @@ export default function AbaCidades() {
             </p>
           </div>
 
+          <div className="relative max-w-md">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar módulo…"
+              className="pl-9"
+            />
+          </div>
+
           {loadingLista ? (
             <div className="text-sm text-muted-foreground">Carregando módulos…</div>
           ) : lista.length === 0 ? (
             <Card>
               <CardContent className="py-10 text-center text-sm text-muted-foreground">
                 Esta marca não tem módulos ativos. Nada a sobrescrever.
+              </CardContent>
+            </Card>
+          ) : listaFiltrada.length === 0 ? (
+            <Card>
+              <CardContent className="py-10 text-center text-sm text-muted-foreground">
+                Nenhum módulo corresponde a “{busca}”.
               </CardContent>
             </Card>
           ) : (
