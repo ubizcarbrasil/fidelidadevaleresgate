@@ -138,13 +138,23 @@ export default function BrandModulesPage() {
   };
 
   // Filter definitions: non-ROOT users only see modules allocated to their brand
-  const visibleDefinitions = definitions?.filter(d => {
+  const baseVisibleDefinitions = definitions?.filter(d => {
     if (isRootAdmin) return true;
     // Non-ROOT: show all customer-facing, non-core modules (even without brand_modules row)
     if (!(d as any).customer_facing) return false;
     if (d.is_core) return false;
     return true;
   });
+
+  const visibleDefinitions = useMemo(() => {
+    const term = busca.trim().toLowerCase();
+    if (!term) return baseVisibleDefinitions;
+    return baseVisibleDefinitions?.filter(d =>
+      d.name.toLowerCase().includes(term) ||
+      d.key.toLowerCase().includes(term) ||
+      (d.description ?? "").toLowerCase().includes(term)
+    );
+  }, [baseVisibleDefinitions, busca]);
 
   const grouped = visibleDefinitions?.reduce((acc, d) => {
     if (!acc[d.category]) acc[d.category] = [];
@@ -159,8 +169,10 @@ export default function BrandModulesPage() {
     return a.localeCompare(b);
   });
 
-  const enabledCount = visibleDefinitions?.filter(d => isEnabled(d.id)).length || 0;
-  const totalCount = visibleDefinitions?.length || 0;
+  const enabledCount = baseVisibleDefinitions?.filter(d => isEnabled(d.id)).length || 0;
+  const totalCount = baseVisibleDefinitions?.length || 0;
+  const filteredCount = visibleDefinitions?.length || 0;
+  const isFiltering = busca.trim().length > 0;
 
   if (isLoading) {
     return (
