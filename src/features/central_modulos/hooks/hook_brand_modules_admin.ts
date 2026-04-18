@@ -177,6 +177,88 @@ export function useSetCustomName() {
 }
 
 /**
+ * Aplica ON/OFF de um módulo em várias marcas de uma vez.
+ * Para cada marca: faz UPDATE se já existe linha em brand_modules,
+ * caso contrário INSERT. Retorna contagens para feedback.
+ */
+export function useBulkApplyModule() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      brandIds,
+      moduleDefinitionId,
+      isEnabled,
+    }: {
+      brandIds: string[];
+      moduleDefinitionId: string;
+      isEnabled: boolean;
+    }) => {
+      if (brandIds.length === 0) throw new Error("Nenhuma marca selecionada");
+
+      // Busca linhas existentes para decidir update vs insert
+      const { data: existing, error: eErr } = await supabase
+        .from("brand_modules")
+        .select("id, brand_id")
+        .eq("module_definition_id", moduleDefinitionId)
+        .in("brand_id", brandIds);
+      if (eErr) throw eErr;
+
+      const existingMap = new Map<string, string>();
+      (existing ?? []).forEach((r: any) => existingMap.set(r.brand_id, r.id));
+
+      let updated = 0;
+      let inserted = 0;
+      const errors: string[] = [];
+
+      // UPDATEs em paralelo
+      const updateIds = brandIds.filter((b) => existingMap.has(b)).map((b) => existingMap.get(b)!);
+      if (updateIds.length > 0) {
+        const { data: upd, error: uErr } = await supabase
+          .from("brand_modules")
+          .update({ is_enabled: isEnabled })
+          .in("id", updateIds)
+          .select("id");
+        if (uErr) errors.push(uErr.message);
+        else updated = upd?.length ?? 0;
+      }
+
+      // INSERTs em batch
+      const toInsert = brandIds
+        .filter((b) => !existingMap.has(b))
+        .map((b) => ({
+          brand_id: b,
+          module_definition_id: moduleDefinitionId,
+          is_enabled: isEnabled,
+          config_json: {},
+        }));
+      if (toInsert.length > 0) {
+        const { data: ins, error: iErr } = await supabase
+          .from("brand_modules")
+          .insert(toInsert)
+          .select("id");
+        if (iErr) errors.push(iErr.message);
+        else inserted = ins?.length ?? 0;
+      }
+
+      return { updated, inserted, total: brandIds.length, errors };
+    },
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ["brand-modules-admin"] });
+      qc.invalidateQueries({ queryKey: ["resolved-modules"] });
+      qc.invalidateQueries({ queryKey: ["city-overrides"] });
+      qc.invalidateQueries({ queryKey: ["module-usage-counts"] });
+      const ok = res.updated + res.inserted;
+      if (res.errors.length > 0) {
+        toast.warning(`Aplicado em ${ok}/${res.total} marcas. Erros: ${res.errors.join("; ")}`);
+      } else {
+        toast.success(`Aplicado em ${ok} marca(s) (${res.updated} atualizadas, ${res.inserted} criadas)`);
+      }
+    },
+    onError: (e: any) => toast.error(e.message ?? "Falha na aplicação em massa"),
+  });
+}
+
+/**
  * DEBITO TÉCNICO (registrado): DELETE + INSERT sem atomicidade.
  * Aceitável porque é protegido por confirmação obrigatória.
  * Migrar para Edge Function transacional na Fase 5 (hardening).
