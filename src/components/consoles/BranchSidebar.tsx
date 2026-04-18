@@ -191,20 +191,22 @@ export function BranchSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup className="pb-0">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={location.pathname === "/"} tooltip={getLabel(dashboardItem.key)}>
-                  <NavLink to="/" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
-                    <LayoutDashboard className="h-4 w-4" />
-                    {!collapsed && <span className="flex-1">{getLabel(dashboardItem.key)}</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {(!dashboardItem.moduleKey || isModuleEnabled(dashboardItem.moduleKey)) && (
+          <SidebarGroup className="pb-0">
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={location.pathname === "/"} tooltip={getLabel(dashboardItem.key)}>
+                    <NavLink to="/" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
+                      <LayoutDashboard className="h-4 w-4" />
+                      {!collapsed && <span className="flex-1">{getLabel(dashboardItem.key)}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {visibleGroups.map((group) => {
           if (group.items.length === 0) return null;

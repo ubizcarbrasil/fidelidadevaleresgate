@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Building2, Lock, RotateCcw, Search, ShieldCheck } from "lucide-react";
+import { Building2, Info, RotateCcw, Search, ShieldCheck } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -43,7 +43,8 @@ function CardModuloEmp({
   const [customName, setCustomName] = useState<string>(initialName);
   const isOn = row?.is_enabled ?? false;
 
-  const disabled = def.is_core || !planAllowed;
+  // Item-por-item: somente módulos core são travados; plano vira aviso.
+  const disabled = def.is_core;
   const effectiveOn = def.is_core ? true : isOn;
 
   const handleToggle = (next: boolean) => {
@@ -71,8 +72,8 @@ function CardModuloEmp({
             <span className="font-medium text-sm">{def.name}</span>
             {def.is_core && <Badge variant="secondary" className="text-[10px]">Core</Badge>}
             {!planAllowed && !def.is_core && (
-              <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-600 dark:text-amber-400">
-                <Lock className="h-3 w-3 mr-1" />Não disponível no plano
+              <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                <Info className="h-3 w-3 mr-1" />Fora do plano padrão
               </Badge>
             )}
           </div>
@@ -92,9 +93,7 @@ function CardModuloEmp({
               </div>
             </TooltipTrigger>
             {disabled && (
-              <TooltipContent side="left">
-                {def.is_core ? "Módulo core sempre ativo" : "Faça upgrade do plano"}
-              </TooltipContent>
+              <TooltipContent side="left">Módulo core sempre ativo</TooltipContent>
             )}
           </Tooltip>
         </TooltipProvider>
@@ -108,7 +107,7 @@ function CardModuloEmp({
           onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
           placeholder="Nome customizado (opcional)"
           className="h-8 text-xs"
-          disabled={!planAllowed && !def.is_core}
+          disabled={def.is_core}
         />
       </div>
     </div>

@@ -301,25 +301,27 @@ export function BrandSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-2">
-        <SidebarGroup className="pb-0">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={location.pathname === "/"} tooltip={getLabel(dashboardItem.key)}>
-                  <NavLink
-                    to="/" end
-                    className={`transition-colors rounded-md ${location.pathname === '/' ? 'bg-primary/10 text-primary border-l-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}
-                    activeClassName=""
-                    onClick={() => setOpenMobile(false)}
-                  >
-                    <LayoutDashboard className="h-4 w-4" />
-                    {!collapsed && <span className="flex-1">{getLabel(dashboardItem.key)}</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {(!dashboardItem.moduleKey || isModuleEnabled(dashboardItem.moduleKey)) && (
+          <SidebarGroup className="pb-0">
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={location.pathname === "/"} tooltip={getLabel(dashboardItem.key)}>
+                    <NavLink
+                      to="/" end
+                      className={`transition-colors rounded-md ${location.pathname === '/' ? 'bg-primary/10 text-primary border-l-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}
+                      activeClassName=""
+                      onClick={() => setOpenMobile(false)}
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      {!collapsed && <span className="flex-1">{getLabel(dashboardItem.key)}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {sortedGroups.map((group) => {
           if (group.items.length === 0) return null;

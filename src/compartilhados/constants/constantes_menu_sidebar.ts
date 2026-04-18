@@ -21,13 +21,14 @@ export interface RegistroItemMenu {
 /**
  * Registro central único de todos os itens de menu usados nos sidebars.
  * Fonte única da verdade para key, defaultTitle, url, icon, moduleKey e scoringFilter.
- * 
- * Cada sidebar referencia este registro pela key e pode sobrescrever campos localmente.
+ *
+ * REGRA: cada item deve ter um `moduleKey` único (item-por-item) para que o Root
+ * possa ligar/desligar individualmente via Central de Módulos.
  */
 export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
   // ─── Dashboard ───
   "sidebar.dashboard": {
-    key: "sidebar.dashboard", defaultTitle: "Visão Geral", url: "/", icon: LayoutDashboard,
+    key: "sidebar.dashboard", defaultTitle: "Visão Geral", url: "/", icon: LayoutDashboard, moduleKey: "dashboard",
   },
 
   // ─── Guias Inteligentes ───
@@ -43,7 +44,7 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
 
   // ─── Manuais ───
   "sidebar.manuais": {
-    key: "sidebar.manuais", defaultTitle: "Manuais", url: "/manuais", icon: BookOpen, moduleKey: "achadinhos_motorista",
+    key: "sidebar.manuais", defaultTitle: "Manuais", url: "/manuais", icon: BookOpen, moduleKey: "manuais",
   },
 
   // ─── Organização / Cidades ───
@@ -54,16 +55,16 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
     key: "sidebar.marcas", defaultTitle: "Marcas", url: "/brands", icon: Store,
   },
   "sidebar.branches": {
-    key: "sidebar.branches", defaultTitle: "Cidades", url: "/branches", icon: MapPin,
+    key: "sidebar.branches", defaultTitle: "Cidades", url: "/branches", icon: MapPin, moduleKey: "branches",
   },
   "sidebar.clonar_cidade": {
-    key: "sidebar.clonar_cidade", defaultTitle: "Duplicar Região", url: "/clone-branch", icon: Copy,
+    key: "sidebar.clonar_cidade", defaultTitle: "Duplicar Região", url: "/clone-branch", icon: Copy, moduleKey: "clone_branch",
   },
   "sidebar.dominios": {
-    key: "sidebar.dominios", defaultTitle: "Domínios", url: "/domains", icon: Globe,
+    key: "sidebar.dominios", defaultTitle: "Domínios", url: "/domains", icon: Globe, moduleKey: "domains",
   },
   "sidebar.painel_motorista": {
-    key: "sidebar.painel_motorista", defaultTitle: "Configurar Painel Motorista", url: "/driver-config", icon: Car,
+    key: "sidebar.painel_motorista", defaultTitle: "Configurar Painel Motorista", url: "/driver-config", icon: Car, moduleKey: "driver_panel_config",
   },
   "sidebar.provisionar_marca": {
     key: "sidebar.provisionar_marca", defaultTitle: "Nova Marca", url: "/provision-brand", icon: Rocket,
@@ -72,25 +73,25 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
     key: "sidebar.central_acessos", defaultTitle: "Gestão de Acessos", url: "/access-hub", icon: Eye, moduleKey: "access_hub",
   },
   "sidebar.pacotes_pontos": {
-    key: "sidebar.pacotes_pontos", defaultTitle: "Catálogo de Pacotes", url: "/points-packages", icon: Package,
+    key: "sidebar.pacotes_pontos", defaultTitle: "Catálogo de Pacotes", url: "/points-packages", icon: Package, moduleKey: "points_packages",
   },
   "sidebar.regras_resgate": {
-    key: "sidebar.regras_resgate", defaultTitle: "Regras de Resgate", url: "/regras-resgate", icon: Settings2,
+    key: "sidebar.regras_resgate", defaultTitle: "Regras de Resgate", url: "/regras-resgate", icon: Settings2, moduleKey: "redemption_rules",
   },
   "sidebar.jornada_cidades": {
-    key: "sidebar.jornada_cidades", defaultTitle: "Guia de Cidades", url: "/brand-cidades-journey", icon: BookOpen,
+    key: "sidebar.jornada_cidades", defaultTitle: "Guia de Cidades", url: "/brand-cidades-journey", icon: BookOpen, moduleKey: "cities_guide",
   },
   "sidebar.onboarding_cidade": {
-    key: "sidebar.onboarding_cidade", defaultTitle: "Onboarding Cidade", url: "/city-onboarding", icon: Rocket,
+    key: "sidebar.onboarding_cidade", defaultTitle: "Onboarding Cidade", url: "/city-onboarding", icon: Rocket, moduleKey: "city_onboarding",
   },
   "sidebar.configuracao_cidade": {
-    key: "sidebar.configuracao_cidade", defaultTitle: "Configuração por Cidade", url: "/configuracao-cidade", icon: Settings2,
+    key: "sidebar.configuracao_cidade", defaultTitle: "Configuração por Cidade", url: "/configuracao-cidade", icon: Settings2, moduleKey: "city_settings",
   },
   "sidebar.configuracao_modulos_cidade": {
-    key: "sidebar.configuracao_modulos_cidade", defaultTitle: "Funcionalidades por Cidade", url: "/configuracao-modulos-cidade", icon: Settings2,
+    key: "sidebar.configuracao_modulos_cidade", defaultTitle: "Funcionalidades por Cidade", url: "/configuracao-modulos-cidade", icon: Settings2, moduleKey: "city_modules_config",
   },
   "sidebar.dominios_marca": {
-    key: "sidebar.dominios_marca", defaultTitle: "Meus Domínios", url: "/brand-domains", icon: Globe,
+    key: "sidebar.dominios_marca", defaultTitle: "Meus Domínios", url: "/brand-domains", icon: Globe, moduleKey: "brand_domains",
   },
 
   // ─── Personalização & Vitrine ───
@@ -98,19 +99,19 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
     key: "sidebar.galeria_icones", defaultTitle: "Biblioteca de Ícones", url: "/icon-library", icon: Grip, moduleKey: "icon_library",
   },
   "sidebar.app_icons": {
-    key: "sidebar.app_icons", defaultTitle: "Ícones do Aplicativo", url: "/app-icons", icon: AppWindow,
+    key: "sidebar.app_icons", defaultTitle: "Ícones do Aplicativo", url: "/app-icons", icon: AppWindow, moduleKey: "app_icons",
   },
   "sidebar.central_banners": {
     key: "sidebar.central_banners", defaultTitle: "Mídia & Banners", url: "/banner-manager", icon: GalleryHorizontal, moduleKey: "banners",
   },
   "sidebar.nomes_rotulos": {
-    key: "sidebar.nomes_rotulos", defaultTitle: "Nomenclaturas", url: "/menu-labels", icon: Palette,
+    key: "sidebar.nomes_rotulos", defaultTitle: "Nomenclaturas", url: "/menu-labels", icon: Palette, moduleKey: "menu_labels",
   },
   "sidebar.page_builder": {
     key: "sidebar.page_builder", defaultTitle: "Editor de Páginas", url: "/page-builder-v2", icon: Layers, moduleKey: "page_builder",
   },
   "sidebar.tema_plataforma": {
-    key: "sidebar.tema_plataforma", defaultTitle: "Tema da Plataforma", url: "/platform-theme", icon: Settings2,
+    key: "sidebar.tema_plataforma", defaultTitle: "Tema da Plataforma", url: "/platform-theme", icon: Settings2, moduleKey: "platform_theme",
   },
   "sidebar.tema_marca": {
     key: "sidebar.tema_marca", defaultTitle: "Identidade Visual", url: "/brands", icon: Palette, moduleKey: "brand_theme",
@@ -154,24 +155,24 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
     key: "sidebar.motoristas", defaultTitle: "Motoristas", url: "/motoristas", icon: Truck, moduleKey: "machine_integration", scoringFilter: "DRIVER",
   },
   "sidebar.compra_pontos_motorista": {
-    key: "sidebar.compra_pontos_motorista", defaultTitle: "Vendas para Motoristas", url: "/driver-points-purchase", icon: Coins, moduleKey: "machine_integration", scoringFilter: "DRIVER",
+    key: "sidebar.compra_pontos_motorista", defaultTitle: "Vendas para Motoristas", url: "/driver-points-purchase", icon: Coins, moduleKey: "driver_points_purchase", scoringFilter: "DRIVER",
   },
   "sidebar.painel_motorista_view": {
-    key: "sidebar.painel_motorista_view", defaultTitle: "Painel do Motorista", url: "/driver", icon: Car, scoringFilter: "DRIVER",
+    key: "sidebar.painel_motorista_view", defaultTitle: "Painel do Motorista", url: "/driver", icon: Car, moduleKey: "driver_panel_view", scoringFilter: "DRIVER",
   },
 
-  // ─── Achadinhos ───
+  // ─── Achadinhos (granular) ───
   "sidebar.achadinhos": {
     key: "sidebar.achadinhos", defaultTitle: "Achadinhos", url: "/affiliate-deals", icon: ShoppingCart, moduleKey: "affiliate_deals",
   },
   "sidebar.categorias_achadinhos": {
-    key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: FolderHeart, moduleKey: "affiliate_deals",
+    key: "sidebar.categorias_achadinhos", defaultTitle: "Categorias de Achadinhos", url: "/affiliate-categories", icon: FolderHeart, moduleKey: "affiliate_categories",
   },
   "sidebar.espelhamento": {
-    key: "sidebar.espelhamento", defaultTitle: "Espelhamento", url: "/mirror-sync", icon: RefreshCw, moduleKey: "affiliate_deals",
+    key: "sidebar.espelhamento", defaultTitle: "Espelhamento", url: "/mirror-sync", icon: RefreshCw, moduleKey: "affiliate_mirror",
   },
   "sidebar.governanca_ofertas": {
-    key: "sidebar.governanca_ofertas", defaultTitle: "Governança de Ofertas", url: "/offer-governance", icon: Shield, moduleKey: "affiliate_deals",
+    key: "sidebar.governanca_ofertas", defaultTitle: "Governança de Ofertas", url: "/offer-governance", icon: Shield, moduleKey: "affiliate_governance",
   },
 
   // ─── Aprovações ───
@@ -195,30 +196,30 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
     key: "sidebar.pontuar", defaultTitle: "Pontuar", url: "/earn-points", icon: Coins, moduleKey: "earn_points_store",
   },
   "sidebar.regras_pontos": {
-    key: "sidebar.regras_pontos", defaultTitle: "Regras de Fidelidade", url: "/points-rules", icon: Settings2, moduleKey: "earn_points_store",
+    key: "sidebar.regras_pontos", defaultTitle: "Regras de Fidelidade", url: "/points-rules", icon: Settings2, moduleKey: "points_rules",
   },
   "sidebar.extrato_pontos": {
-    key: "sidebar.extrato_pontos", defaultTitle: "Extrato de Fidelidade", url: "/points-ledger", icon: ScrollText, moduleKey: "earn_points_store",
+    key: "sidebar.extrato_pontos", defaultTitle: "Extrato de Fidelidade", url: "/points-ledger", icon: ScrollText, moduleKey: "points",
   },
   "sidebar.tier_pontos": {
-    key: "sidebar.tier_pontos", defaultTitle: "Pontuação por Tier", url: "/tier-points-rules", icon: CreditCard, moduleKey: "earn_points_store", scoringFilter: "PASSENGER",
+    key: "sidebar.tier_pontos", defaultTitle: "Pontuação por Tier", url: "/tier-points-rules", icon: CreditCard, moduleKey: "points_rules", scoringFilter: "PASSENGER",
   },
 
   // ─── Motoristas & Resgate ───
   "sidebar.carteira_pontos": {
-    key: "sidebar.carteira_pontos", defaultTitle: "Carteira de Pontos", url: "/branch-wallet", icon: Coins, moduleKey: "achadinhos_motorista",
+    key: "sidebar.carteira_pontos", defaultTitle: "Carteira de Pontos", url: "/branch-wallet", icon: Coins, moduleKey: "branch_wallet",
   },
   "sidebar.comprar_pontos": {
-    key: "sidebar.comprar_pontos", defaultTitle: "Comprar Pontos", url: "/points-packages-store", icon: ShoppingCart, moduleKey: "achadinhos_motorista",
+    key: "sidebar.comprar_pontos", defaultTitle: "Comprar Pontos", url: "/points-packages-store", icon: ShoppingCart, moduleKey: "points_packages_store",
   },
   "sidebar.produtos_resgate": {
-    key: "sidebar.produtos_resgate", defaultTitle: "Produtos de Resgate", url: "/produtos-resgate", icon: ShoppingBag, scoringFilter: "DRIVER",
+    key: "sidebar.produtos_resgate", defaultTitle: "Produtos de Resgate", url: "/produtos-resgate", icon: ShoppingBag, moduleKey: "product_redemptions", scoringFilter: "DRIVER",
   },
   "sidebar.pedidos_resgate": {
-    key: "sidebar.pedidos_resgate", defaultTitle: "Pedidos de Resgate", url: "/product-redemption-orders", icon: ReceiptText, scoringFilter: "DRIVER",
+    key: "sidebar.pedidos_resgate", defaultTitle: "Pedidos de Resgate", url: "/product-redemption-orders", icon: ReceiptText, moduleKey: "product_redemption_orders", scoringFilter: "DRIVER",
   },
   "sidebar.relatorios_cidade": {
-    key: "sidebar.relatorios_cidade", defaultTitle: "Relatórios", url: "/branch-reports", icon: BarChart3, moduleKey: "achadinhos_motorista",
+    key: "sidebar.relatorios_cidade", defaultTitle: "Relatórios", url: "/branch-reports", icon: BarChart3, moduleKey: "branch_reports",
   },
 
   // ─── Gamificação ───
@@ -228,7 +229,7 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
 
   // ─── Cashback Inteligente ───
   "sidebar.gg_dashboard": {
-    key: "sidebar.gg_dashboard", defaultTitle: "Painel Cashback", url: "/ganha-ganha-dashboard", icon: Handshake,
+    key: "sidebar.gg_dashboard", defaultTitle: "Painel Cashback", url: "/ganha-ganha-dashboard", icon: Handshake, moduleKey: "gg_dashboard",
   },
   "sidebar.gg_config": {
     key: "sidebar.gg_config", defaultTitle: "Config. Cashback", url: "/ganha-ganha-config", icon: Settings2, moduleKey: "ganha_ganha",
@@ -240,7 +241,7 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
     key: "sidebar.gg_closing", defaultTitle: "Fechamento Financeiro", url: "/ganha-ganha-closing", icon: ScrollText, moduleKey: "ganha_ganha",
   },
   "sidebar.gg_store_summary": {
-    key: "sidebar.gg_store_summary", defaultTitle: "Resumo por Parceiro", url: "/ganha-ganha-store-summary", icon: Handshake,
+    key: "sidebar.gg_store_summary", defaultTitle: "Resumo por Parceiro", url: "/ganha-ganha-store-summary", icon: Handshake, moduleKey: "gg_store_summary",
   },
 
   // ─── Equipe & Acessos ───
@@ -262,7 +263,7 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
     key: "sidebar.auditoria", defaultTitle: "Auditoria", url: "/audit", icon: ClipboardList, moduleKey: "audit",
   },
   "sidebar.importar_csv": {
-    key: "sidebar.importar_csv", defaultTitle: "Importação de Dados", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "stores",
+    key: "sidebar.importar_csv", defaultTitle: "Importação de Dados", url: "/csv-import", icon: FileSpreadsheet, moduleKey: "csv_import",
   },
   "sidebar.taxonomia": {
     key: "sidebar.taxonomia", defaultTitle: "Taxonomia", url: "/taxonomy", icon: FolderTree, moduleKey: "taxonomy",

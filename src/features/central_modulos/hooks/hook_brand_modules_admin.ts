@@ -81,6 +81,8 @@ export function useBrandModulesAdmin(brandId: string | null) {
         planAvailableMap.set(r.module_definition_id, r.is_enabled);
       });
 
+      // Total de módulos ativos é contado a partir das linhas de brand_modules
+      // Total disponível é o catálogo todo (visualizado fora deste hook)
       const totalAvailable = Array.from(planAvailableMap.values()).filter(Boolean).length;
       const totalActive = Array.from(rowMap.values()).filter((r) => r.is_enabled).length;
 
