@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -6,12 +6,13 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { toast } from "sonner";
 import {
   Blocks, Shield, Store, MapPin, Users, Tag, Ticket, PackageSearch,
   Sparkles, Coins, Settings2, Image, Layers, Bell, BarChart3, Palette,
-  Type, FileSpreadsheet, Globe, TrendingUp, ClipboardList, Plug, Home,
+  Type, FileSpreadsheet, Globe, TrendingUp, ClipboardList, Plug, Home, Search,
 } from "lucide-react";
 import HomeSectionOrderEditor from "@/components/brand-modules/HomeSectionOrderEditor";
 import SidebarOrderEditor from "@/components/brand-modules/SidebarOrderEditor";
@@ -71,6 +72,7 @@ export default function BrandModulesPage() {
   const qc = useQueryClient();
   const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
 
   const brandId = isRootAdmin ? (selectedBrandId || currentBrandId) : currentBrandId;
 
@@ -136,13 +138,23 @@ export default function BrandModulesPage() {
   };
 
   // Filter definitions: non-ROOT users only see modules allocated to their brand
-  const visibleDefinitions = definitions?.filter(d => {
+  const baseVisibleDefinitions = definitions?.filter(d => {
     if (isRootAdmin) return true;
     // Non-ROOT: show all customer-facing, non-core modules (even without brand_modules row)
     if (!(d as any).customer_facing) return false;
     if (d.is_core) return false;
     return true;
   });
+
+  const visibleDefinitions = useMemo(() => {
+    const term = busca.trim().toLowerCase();
+    if (!term) return baseVisibleDefinitions;
+    return baseVisibleDefinitions?.filter(d =>
+      d.name.toLowerCase().includes(term) ||
+      d.key.toLowerCase().includes(term) ||
+      (d.description ?? "").toLowerCase().includes(term)
+    );
+  }, [baseVisibleDefinitions, busca]);
 
   const grouped = visibleDefinitions?.reduce((acc, d) => {
     if (!acc[d.category]) acc[d.category] = [];
@@ -157,8 +169,10 @@ export default function BrandModulesPage() {
     return a.localeCompare(b);
   });
 
-  const enabledCount = visibleDefinitions?.filter(d => isEnabled(d.id)).length || 0;
-  const totalCount = visibleDefinitions?.length || 0;
+  const enabledCount = baseVisibleDefinitions?.filter(d => isEnabled(d.id)).length || 0;
+  const totalCount = baseVisibleDefinitions?.length || 0;
+  const filteredCount = visibleDefinitions?.length || 0;
+  const isFiltering = busca.trim().length > 0;
 
   if (isLoading) {
     return (
@@ -210,16 +224,44 @@ export default function BrandModulesPage() {
             <Blocks className="h-5 w-5 text-primary" />
             <span className="text-sm font-medium">
               <strong className="text-primary">{enabledCount}</strong> de {totalCount} módulos ativos
+              {isFiltering && (
+                <span className="ml-2 text-muted-foreground font-normal">
+                  · {filteredCount} resultado(s) para "{busca.trim()}"
+                </span>
+              )}
             </span>
           </div>
 
-          <HomeSectionOrderEditor brandId={brandId} isModuleEnabled={(key) => {
-            const def = definitions?.find(d => d.key === key);
-            if (!def) return true;
-            return isEnabled(def.id);
-          }} />
+          {/* Busca */}
+          <div className="relative max-w-md">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar funcionalidade por nome…"
+              className="pl-9"
+            />
+          </div>
 
-          <SidebarOrderEditor brandId={brandId} />
+          {!isFiltering && (
+            <>
+              <HomeSectionOrderEditor brandId={brandId} isModuleEnabled={(key) => {
+                const def = definitions?.find(d => d.key === key);
+                if (!def) return true;
+                return isEnabled(def.id);
+              }} />
+
+              <SidebarOrderEditor brandId={brandId} />
+            </>
+          )}
+
+          {isFiltering && filteredCount === 0 && (
+            <Card>
+              <CardContent className="py-10 text-center text-sm text-muted-foreground">
+                Nenhuma funcionalidade encontrada para "{busca.trim()}".
+              </CardContent>
+            </Card>
+          )}
 
           {sortedCategories.map((category) => {
             const mods = grouped[category]!;
