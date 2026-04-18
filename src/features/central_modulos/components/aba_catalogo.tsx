@@ -27,6 +27,7 @@ function getIcon(name?: string): React.ComponentType<any> {
 
 export default function AbaCatalogo() {
   const { data, isLoading } = useCatalogoModulos();
+  const { data: usageMap } = useModulosUsoCount();
   const toggleAtivo = useToggleModuloAtivo();
   const deletar = useDeletarModulo();
 
