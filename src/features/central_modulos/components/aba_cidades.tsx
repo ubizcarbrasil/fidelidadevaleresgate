@@ -106,6 +106,7 @@ export default function AbaCidades() {
   const [branchId, setBranchId] = useState("");
   const [confirmClear, setConfirmClear] = useState(false);
   const [textConfirm, setTextConfirm] = useState("");
+  const [busca, setBusca] = useState("");
 
   const { data: brands = [] } = useBrandList();
   const { data: branches = [], isLoading: loadingBranches } = useBranchList(brandId || null);
@@ -122,9 +123,19 @@ export default function AbaCidades() {
     [lista]
   );
 
+  const listaFiltrada = useMemo(() => {
+    const term = busca.trim().toLowerCase();
+    if (!term) return lista;
+    return lista.filter(
+      (l) =>
+        l.module_name.toLowerCase().includes(term) ||
+        (l.module_description ?? "").toLowerCase().includes(term)
+    );
+  }, [lista, busca]);
+
   const grupos = useMemo(() => {
     const map = new Map<string, OverviewLinhaCidade[]>();
-    lista.forEach((l) => {
+    listaFiltrada.forEach((l) => {
       const cat = CATEGORY_META[l.module_category] ? l.module_category : "general";
       if (!map.has(cat)) map.set(cat, []);
       map.get(cat)!.push(l);
@@ -132,7 +143,7 @@ export default function AbaCidades() {
     return ORDEM_CATEGORIAS
       .filter((cat) => map.has(cat))
       .map((cat) => ({ cat, items: map.get(cat)! }));
-  }, [lista]);
+  }, [listaFiltrada]);
 
   const handleBrandChange = (id: string) => {
     setBrandId(id);
