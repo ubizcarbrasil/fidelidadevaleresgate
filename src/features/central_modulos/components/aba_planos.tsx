@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import * as Icons from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -103,13 +103,13 @@ export default function AbaPlanos() {
         <Card>
           <CardContent className="p-0 overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted/40 sticky top-0">
+              <thead className="bg-muted/40 sticky top-0 z-20">
                 <tr>
-                  <th className="text-left p-3 font-medium min-w-[280px]">Módulo</th>
+                  <th className="text-left p-3 font-medium min-w-[200px] sm:min-w-[280px] sticky left-0 bg-muted/40 z-30">Módulo</th>
                   {PLANS.map((p) => {
                     const PIcon = p.icon;
                     return (
-                      <th key={p.key} className="p-3 text-center min-w-[120px]">
+                      <th key={p.key} className="p-3 text-center min-w-[110px]">
                         <div className="flex flex-col items-center gap-1">
                           <div className="flex items-center gap-1.5">
                             <PIcon className={`h-4 w-4 ${p.colorClass}`} />
@@ -129,9 +129,9 @@ export default function AbaPlanos() {
                 {sortedCats.map((cat) => {
                   const meta = CATEGORY_META[cat];
                   return (
-                    <>
-                      <tr key={`h-${cat}`} className="bg-muted/20">
-                        <td colSpan={PLANS.length + 1} className="px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+                    <Fragment key={cat}>
+                      <tr className="bg-muted/20">
+                        <td colSpan={PLANS.length + 1} className="px-3 py-1.5 text-xs font-semibold text-muted-foreground sticky left-0 bg-muted/20">
                           {meta.emoji} {meta.label}
                         </td>
                       </tr>
@@ -139,9 +139,9 @@ export default function AbaPlanos() {
                         const Icon = getIcon(m.schema_json?.icon);
                         return (
                           <tr key={m.id} className="border-t hover:bg-muted/20">
-                            <td className="p-3">
+                            <td className="p-3 sticky left-0 bg-background z-10">
                               <div className="flex items-center gap-2">
-                                <Icon className="h-4 w-4 text-muted-foreground" />
+                                <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
                                 <div className="min-w-0">
                                   <div className="font-medium truncate">{m.name}</div>
                                   <code className="text-[10px] text-muted-foreground font-mono">{m.key}</code>
@@ -174,7 +174,7 @@ export default function AbaPlanos() {
                           </tr>
                         );
                       })}
-                    </>
+                    </Fragment>
                   );
                 })}
               </tbody>
