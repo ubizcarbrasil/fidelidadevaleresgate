@@ -1,49 +1,92 @@
 
 
-## Diagnóstico — Permissões do painel raiz não desaparecem do empreendedor
+## Entendendo o pedido
 
-### Causa raiz (confirmada com leitura de código + query no banco)
+Você quer um fluxo onde:
+1. **Root admin** seleciona uma marca (empreendedor) e habilita/desabilita as funcionalidades que aquela marca pode usar
+2. **Empreendedor** (brand admin), dentro do que o root liberou, faz o mesmo para cada cidade franqueada dele
 
-A plataforma tem **dois sistemas de governança paralelos e desconectados**:
+Isso já existe parcialmente no projeto. Vou mapear o que tem e o que falta.
 
-1. **Módulos** (`module_definitions` / `brand_modules` / `city_module_overrides`)
-   - Controla **visibilidade do menu** do empreendedor via `useBrandModules` / `useResolvedModules`
-   - Toda filtragem da `BrandSidebar.tsx` (linha 261) usa `isModuleEnabled(item.moduleKey)`
-   - **Esse é o sistema que efetivamente esconde itens do menu**
+## O que já existe hoje
 
-2. **Permissões** (`permissions` / `brand_permission_config` / `brand_sub_permission_config`)
-   - Tela onde você desativa: `/permissions-overflow` (`BrandPermissionOverflowPage.tsx`)
-   - Salva linhas em `brand_permission_config` com `allowed_for_brand = false`
-   - **Nenhum hook do projeto consome essa tabela na sidebar/guards do empreendedor**
-   - Confirmação por busca: zero ocorrências de `brand_permission_config`, `allowed_for_brand` ou `useBrandPermissions` em qualquer hook/guard/sidebar
-   - A função RPC `user_has_permission` existe mas só lê `user_permission_overrides` (overrides por usuário individual), não a config da marca
+**Backend (100% pronto):**
+- `module_definitions` — catálogo de funcionalidades com flag `is_core` e `customer_facing`
+- `brand_modules` — toggle por marca (escopo root)
+- `city_module_overrides` — override por cidade (escopo empreendedor)
+- RPC `resolve_active_modules` — cascata cidade > marca > is_core
+- Hook `useResolvedModules` com Realtime
 
-**Estado atual no banco**: 17 permissões salvas com `allowed_for_brand=false`, todas ignoradas pelo runtime.
+**UI Root (`/admin/central-modulos`):**
+- Aba "Empreendedores": lista marcas e permite ligar/desligar módulos por marca (escreve em `brand_modules`)
+- Aba "Cidades": dentro de cada marca, lista cidades e permite override (escreve em `city_module_overrides`)
 
-### Por que o usuário vê isso como bug
-O painel raiz oferece uma UI rica para "desativar permissões da marca" (com toggles, sub-itens, scoping por filial), mas o resultado desse trabalho não tem efeito nenhum no painel do empreendedor. O sistema está incompleto: a escrita funciona, a leitura nunca foi implementada.
+**O problema real:** essa tela existe e funciona, mas ela é **Root-only**. O empreendedor não tem acesso equivalente para gerenciar as cidades dele dentro do que o root liberou.
 
-### Pergunta antes de planejar a correção
+## O que falta (o gap)
 
-Existem 3 caminhos legítimos. Preciso saber qual é a intenção do produto antes de escolher.
+Uma versão da aba "Cidades" acessível ao **empreendedor (BRAND_ADMIN)**, dentro do painel da marca, que:
+- Liste apenas as cidades da marca dele (já isolado por `useBrandGuard`)
+- Mostre apenas os módulos que o **root liberou para essa marca** (filtrar por `brand_modules.is_enabled = true`)
+- Permita o empreendedor fazer override por cidade (mesma lógica de cyclar inherit → override_on → override_off → inherit)
+- Não deixe o empreendedor ligar módulos que o root desligou (gate visual + RLS)
 
-### Caminhos possíveis
+## Plano de execução
 
-**Caminho A — Conectar `brand_permission_config` ao runtime (completar o sistema)**
-Implementar o consumo: criar `useBrandPermissions(brandId, branchId)`, usar em `BrandSidebar` como filtro adicional após `isModuleEnabled`, e em um novo `PermissionGuard` para rotas. Adicionar coluna `permission_key` opcional no `MENU_REGISTRY` para os itens que devem responder a permissão. Mudança grande (~6 arquivos), exige mapear cada item de menu para sua `permission_key`, risco médio de regredir telas.
+### 1. Nova página: `/configuracao-cidades` (escopo empreendedor)
+Arquivo: `src/features/configuracao_cidades/pagina_configuracao_cidades.tsx`
 
-**Caminho B — Esconder/depreciar a tela `/permissions-overflow`**
-Se o controle real é feito por **módulos** (Central de Módulos da Fase 4.1a/4.3), a tela de permissões está duplicando função e confundindo. Esconder do menu raiz com aviso "use a Central de Módulos", manter dados intactos para futura ativação. Mudança pequena (~2 arquivos), zero risco de regressão.
+Reaproveita 100% a lógica das abas "Cidades" do root, mas:
+- Usa `useBrandGuard` para travar `brandId` automaticamente (sem seletor de marca)
+- Esconde módulos onde `brand_modules.is_enabled = false` (esses ficam invisíveis pro empreendedor)
+- Desabilita visualmente módulos `is_core = true` (não pode ser desligado nunca)
 
-**Caminho C — Refatorar `brand_permission_config` para escrever em `brand_modules`**
-Quando o root desativar uma permissão cujo `permission_key` mapeie para um módulo (ex: `redemptions.read` → módulo `redemption_qr`), também desativar o `brand_modules` correspondente. Mantém a UI familiar e faz funcionar. Risco: mapeamento `permission_key → module_key` é manual e parcial (não há cobertura 1:1).
+### 2. Hook reaproveitado
+`useCityModulesOverview` já filtra pelos módulos ativos da marca (linha 47-54 de `hook_city_overrides.ts`). **Está pronto.** Só preciso reusar.
 
-### Pergunta única
-Antes de eu detalhar o plano de execução, qual é a intenção de produto?
+`useCycleOverrideState` e `useClearAllOverrides` também já existem e são reaproveitáveis.
 
-- Você **espera** que desativar permissão no `/permissions-overflow` esconda menus do empreendedor? → **Caminho A** (completar a leitura)
-- Ou esse painel ficou obsoleto depois que a Central de Módulos passou a existir, e ele só está confundindo? → **Caminho B** (esconder e migrar para módulos)
-- Ou quer que as duas telas coexistam mas que mexer numa reflita na outra? → **Caminho C** (sincronização)
+### 3. Componentes reutilizáveis
+Quebrar o conteúdo atual de `aba_cidades.tsx` (Root) em:
+- `compartilhados/components/seletor_cidade.tsx` — dropdown de cidades
+- `compartilhados/components/tabela_modulos_cidade.tsx` — tabela com 3 estados (herda/on/off)
 
-Sem essa decisão, qualquer plano que eu detalhe vai assumir intenção e arriscar fazer a coisa errada em produção com 42 usuários ativos.
+Tanto a aba Root quanto a nova página do empreendedor consomem esses componentes. Zero duplicação.
+
+### 4. Menu lateral
+Adicionar item no `BrandSidebar.tsx` no grupo "Cidades":
+- Label: "Configuração por Cidade"
+- Icon: `Settings2`
+- Rota: `/configuracao-cidades`
+- Visível só para `BRAND_ADMIN` (não para `BRANCH_ADMIN`, que é franqueado e não deve mexer em outras cidades)
+
+### 5. RLS — proteção dupla
+Verificar políticas em `city_module_overrides` para garantir que:
+- BRAND_ADMIN só pode INSERT/UPDATE/DELETE em cidades da própria marca
+- BRAND_ADMIN não consegue criar override para módulo onde `brand_modules.is_enabled = false` (validação via trigger ou check policy)
+
+### 6. Rota e guard
+Em `App.tsx`: adicionar rota protegida por `BrandGuard` (já existente). Sem `ModuleGuard` porque é uma página de configuração estrutural.
+
+## Resumo do que muda
+
+| Arquivo | Ação |
+|---|---|
+| `src/features/configuracao_cidades/pagina_configuracao_cidades.tsx` | CRIAR |
+| `src/compartilhados/components/seletor_cidade.tsx` | CRIAR (extrair de aba_cidades) |
+| `src/compartilhados/components/tabela_modulos_cidade.tsx` | CRIAR (extrair de aba_cidades) |
+| `src/features/central_modulos/components/aba_cidades.tsx` | REFATORAR para usar os novos compartilhados |
+| `src/components/consoles/BrandSidebar.tsx` | ADICIONAR item de menu |
+| `src/App.tsx` | ADICIONAR rota |
+| Migration RLS em `city_module_overrides` | VALIDAR/AJUSTAR policies |
+
+Estimativa: 1 commit, ~350 linhas, 7 arquivos tocados.
+
+## Perguntas antes de executar
+
+Preciso confirmar 2 decisões antes de codar:
+
+1. **Sobre o root habilitar coisas para o empreendedor**: a tela `/admin/central-modulos` aba "Empreendedores" **já faz isso hoje** (root liga/desliga módulos por marca). Você quer que eu apenas confirme que está funcionando, ou tem alguma melhoria específica em mente nessa tela também?
+
+2. **Sobre o BRANCH_ADMIN (franqueado da cidade)**: ele deve ter acesso a essa nova tela `/configuracao-cidades` para mexer **só na cidade dele**, ou apenas o BRAND_ADMIN (dono da marca) configura tudo?
 
