@@ -1131,21 +1131,24 @@ export const gruposManuais: GrupoManual[] = [
     manuais: [
       {
         id: "modulos",
-        titulo: "Módulos",
-        descricao: "Ative ou desative funcionalidades da plataforma. Cada módulo controla uma área do sistema, permitindo personalizar exatamente o que sua marca precisa.",
-        comoAtivar: "Disponível por padrão. Acesse 'Módulos' no menu lateral.",
+        titulo: "Funcionalidades da Marca",
+        descricao: "Ative ou desative funcionalidades da plataforma para sua marca. Cada módulo controla uma área do sistema, permitindo personalizar exatamente o que sua operação precisa. Inclui busca rápida para encontrar funcionalidades em catálogos extensos.",
+        comoAtivar: "Disponível por padrão. Acesse 'Funcionalidades da Marca' no menu lateral.",
         passos: [
-          "Acesse 'Módulos' no menu lateral.",
+          "Acesse 'Funcionalidades da Marca' no menu lateral.",
+          "Use o campo de busca no topo para localizar rapidamente um módulo pelo nome, chave ou descrição.",
           "Visualize todos os módulos disponíveis organizados por categoria.",
           "Clique no toggle para ativar ou desativar cada módulo.",
           "Módulos ativos ficam visíveis no menu lateral e acessíveis.",
           "Módulos inativos são ocultados e suas funcionalidades desabilitadas.",
-          "As alterações são aplicadas imediatamente."
+          "As alterações são aplicadas imediatamente e ficam registradas na auditoria."
         ],
         dicas: [
+          "Use a busca quando houver muitos módulos — ela filtra por nome, chave técnica e descrição.",
+          "Enquanto a busca está ativa, os editores de ordem (Home e Sidebar) ficam ocultos para manter o foco.",
           "Ative apenas os módulos que sua operação realmente precisa.",
           "Desativar um módulo não apaga os dados — você pode reativá-lo depois.",
-          "Consulte os manuais de cada módulo antes de ativar para entender o funcionamento."
+          "Toda alteração é registrada na Auditoria da Central de Módulos (acesso Root)."
         ],
         rota: "/brand-modules"
       },
@@ -1188,6 +1191,112 @@ export const gruposManuais: GrupoManual[] = [
           "Consulte o suporte para planos corporativos personalizados."
         ],
         rota: "/subscription"
+      },
+    ],
+  },
+  {
+    categoria: "Central de Módulos (Root)",
+    icone: "LayoutGrid",
+    manuais: [
+      {
+        id: "central-modulos-catalogo",
+        titulo: "Catálogo de Módulos",
+        descricao: "Cadastre, edite e organize todas as definições de módulos disponíveis na plataforma. O catálogo é a fonte única de verdade — define quais funcionalidades existem, suas chaves técnicas, categorias e quem pode habilitá-las.",
+        comoAtivar: "Acesso restrito ao Root Admin. Disponível em 'Central de Módulos' → aba 'Catálogo'.",
+        passos: [
+          "Acesse '/admin/central-modulos' (somente Root Admin).",
+          "Selecione a aba 'Catálogo'.",
+          "Use a busca para encontrar um módulo pelo nome, chave ou categoria.",
+          "Clique em 'Novo Módulo' para cadastrar uma nova definição (chave, nome, descrição, categoria, ícone, customer_facing).",
+          "Edite módulos existentes clicando no card correspondente.",
+          "Visualize o contador de uso para saber quantas marcas e cidades têm o módulo ativo."
+        ],
+        dicas: [
+          "A chave técnica (key) é imutável após a criação — escolha com cuidado.",
+          "Use 'customer_facing = true' para módulos visíveis ao cliente final; 'false' para ferramentas administrativas.",
+          "Não exclua módulos em uso — desative-os via Empreendedores ou Cidades primeiro."
+        ],
+        rota: "/admin/central-modulos"
+      },
+      {
+        id: "central-modulos-empreendedores",
+        titulo: "Aba Empreendedores",
+        descricao: "Gerencie individualmente quais módulos cada marca (empreendedor) tem habilitada. Permite ativar/desativar módulos por marca com visão consolidada e busca rápida.",
+        comoAtivar: "Acesso restrito ao Root Admin. Disponível em 'Central de Módulos' → aba 'Empreendedores'.",
+        passos: [
+          "Acesse '/admin/central-modulos' e abra a aba 'Empreendedores'.",
+          "Selecione a marca que deseja gerenciar na lista.",
+          "Use o campo de busca para filtrar módulos pelo nome ou chave.",
+          "Clique no toggle ao lado de cada módulo para ativar ou desativar para aquela marca.",
+          "As alterações são aplicadas imediatamente e refletem no painel da marca.",
+          "Toda mudança é registrada automaticamente na aba 'Auditoria'."
+        ],
+        dicas: [
+          "Use a busca quando o catálogo for extenso — economiza rolagem.",
+          "Para alterar o mesmo módulo em várias marcas, use 'Aplicação em Massa'.",
+          "Marcas com plano restrito podem ter módulos bloqueados pelo template do plano."
+        ],
+        rota: "/admin/central-modulos"
+      },
+      {
+        id: "central-modulos-aplicacao-massa",
+        titulo: "Aplicação em Massa",
+        descricao: "Ative ou desative um mesmo módulo em várias marcas de uma só vez. Ideal para rollouts de novas funcionalidades, correções emergenciais ou padronizações em lote.",
+        comoAtivar: "Acesso Root Admin. Dentro da aba 'Empreendedores', use o botão 'Aplicação em Massa'.",
+        passos: [
+          "Na aba 'Empreendedores', clique em 'Aplicação em Massa'.",
+          "Selecione o módulo que deseja aplicar (use a busca se necessário).",
+          "Marque as marcas que receberão a alteração (seleção múltipla).",
+          "Escolha a ação: Ativar ou Desativar.",
+          "Revise o resumo da operação antes de confirmar.",
+          "Confirme — todas as marcas selecionadas serão atualizadas em uma única operação."
+        ],
+        dicas: [
+          "Sempre revise a lista de marcas afetadas antes de confirmar — a ação é em lote.",
+          "Cada alteração entra individualmente no log de Auditoria, identificando marca e responsável.",
+          "Use seleção em massa com cautela em módulos críticos (faturamento, autenticação)."
+        ],
+        rota: "/admin/central-modulos"
+      },
+      {
+        id: "central-modulos-cidades",
+        titulo: "Aba Cidades (Overrides)",
+        descricao: "Aplique exceções por cidade sobre a configuração da marca. Permite ligar/desligar módulos pontualmente em uma filial específica sem afetar as outras cidades da mesma marca.",
+        comoAtivar: "Acesso Root Admin. Disponível em 'Central de Módulos' → aba 'Cidades'.",
+        passos: [
+          "Acesse '/admin/central-modulos' e abra a aba 'Cidades'.",
+          "Selecione a cidade (branch) que receberá o override.",
+          "Use a busca para localizar o módulo desejado entre os disponíveis.",
+          "Clique no toggle para forçar o módulo como ATIVO ou INATIVO naquela cidade.",
+          "Para remover o override e voltar a herdar da marca, use a opção 'Restaurar padrão'.",
+          "As mudanças são aplicadas instantaneamente para usuários daquela cidade."
+        ],
+        dicas: [
+          "Override sempre prevalece sobre a configuração da marca — use com critério.",
+          "Cidades sem override herdam automaticamente a configuração da marca.",
+          "Útil para pilotos, regiões com restrições legais ou rollout gradual."
+        ],
+        rota: "/admin/central-modulos"
+      },
+      {
+        id: "central-modulos-auditoria",
+        titulo: "Auditoria de Módulos",
+        descricao: "Histórico completo e rastreável de todas as alterações de módulos: quem ativou ou desativou o quê, quando, em qual marca ou cidade. Essencial para compliance e troubleshooting.",
+        comoAtivar: "Acesso Root Admin. Disponível em 'Central de Módulos' → aba 'Auditoria'.",
+        passos: [
+          "Acesse '/admin/central-modulos' e abra a aba 'Auditoria'.",
+          "Visualize a lista cronológica de eventos (mais recentes primeiro).",
+          "Cada linha mostra: data/hora, responsável, ação (ON/OFF), módulo, marca e cidade (se aplicável).",
+          "Use os filtros para restringir por marca, módulo ou período.",
+          "Clique em um evento para ver detalhes completos (valores antes/depois).",
+          "Exporte o log quando necessário para auditorias externas."
+        ],
+        dicas: [
+          "A cobertura de auditoria é daqui pra frente — eventos anteriores à ativação não aparecem.",
+          "Toggles individuais e aplicações em massa são registrados com a mesma granularidade.",
+          "Use a auditoria para investigar reclamações de 'sumiu uma funcionalidade'."
+        ],
+        rota: "/admin/central-modulos"
       },
     ],
   },
