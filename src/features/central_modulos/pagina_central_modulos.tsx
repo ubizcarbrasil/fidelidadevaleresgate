@@ -2,7 +2,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutGrid, Package, Layers, Building2, MapPin } from "lucide-react";
 import AbaCatalogo from "./components/aba_catalogo";
 import AbaPlanos from "./components/aba_planos";
-import AbaPlaceholder from "./components/aba_placeholder";
+import AbaEmpreendedores from "./components/aba_empreendedores";
+import AbaCidades from "./components/aba_cidades";
 
 export default function PaginaCentralModulos() {
   return (
@@ -29,12 +30,8 @@ export default function PaginaCentralModulos() {
 
         <TabsContent value="catalogo" className="mt-4"><AbaCatalogo /></TabsContent>
         <TabsContent value="planos" className="mt-4"><AbaPlanos /></TabsContent>
-        <TabsContent value="empreendedores" className="mt-4">
-          <AbaPlaceholder titulo="Empreendedores" fase="Fase 4.1b" />
-        </TabsContent>
-        <TabsContent value="cidades" className="mt-4">
-          <AbaPlaceholder titulo="Cidades & Overrides" fase="Fase 4.1b" />
-        </TabsContent>
+        <TabsContent value="empreendedores" className="mt-4"><AbaEmpreendedores /></TabsContent>
+        <TabsContent value="cidades" className="mt-4"><AbaCidades /></TabsContent>
       </Tabs>
     </div>
   );
