@@ -141,6 +141,12 @@ export default function AbaCidades() {
 
   return (
     <div className="space-y-4">
+      <div className="flex gap-2 items-start rounded-md border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
+        <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+        <p>
+          <strong className="text-foreground">Override por cidade — só desliga o que o empreendedor já tem ativo.</strong> Cascata: Catálogo → Empreendedor → Cidade. Se um módulo não foi liberado para a marca, ele não aparecerá aqui.
+        </p>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
