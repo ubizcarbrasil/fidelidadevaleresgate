@@ -72,6 +72,7 @@ export default function BrandModulesPage() {
   const qc = useQueryClient();
   const { currentBrandId, isRootAdmin } = useBrandGuard();
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
 
   const brandId = isRootAdmin ? (selectedBrandId || currentBrandId) : currentBrandId;
 
