@@ -16,6 +16,7 @@ import { useBrand } from "@/contexts/BrandContext";
 import { ContextBadge } from "@/components/ContextBadge";
 import BranchSelector from "@/components/BranchSelector";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
+import { ScopeSwitcher } from "@/components/ScopeSwitcher";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -168,6 +169,8 @@ export default function AppLayout() {
                 <span className="hidden sm:inline">Domínio próprio</span>
               </div>
             )}
+
+            <ScopeSwitcher />
 
             <Breadcrumb className="hidden md:flex">
               <BreadcrumbList>
