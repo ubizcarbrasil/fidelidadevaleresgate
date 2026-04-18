@@ -44,7 +44,7 @@ export function useCatalogoModulos() {
   });
 }
 
-function buildSchemaJson(input: NovoModuloInput, prev?: any) {
+function buildSchemaJson(input: { icon?: string; route?: string }, prev?: any) {
   return {
     ...(prev ?? {}),
     icon: input.icon ?? prev?.icon ?? "Blocks",
