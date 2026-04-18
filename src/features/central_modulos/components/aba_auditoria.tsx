@@ -14,7 +14,7 @@ import { useCatalogoModulos } from "../hooks/hook_catalogo";
 
 function ActionIcon({ action, newEnabled }: { action: string; newEnabled: boolean | null }) {
   if (action === "MODULE_REMOVED") return <Trash2 className="h-4 w-4 text-destructive" />;
-  if (newEnabled) return <ToggleRight className="h-4 w-4 text-emerald-500" />;
+  if (newEnabled) return <ToggleRight className="h-4 w-4 text-primary" />;
   return <ToggleLeft className="h-4 w-4 text-muted-foreground" />;
 }
 
