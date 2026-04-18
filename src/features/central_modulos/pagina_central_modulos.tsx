@@ -4,11 +4,12 @@ if (typeof window !== "undefined") {
   (window as unknown as { __BUILD_TAG__?: string }).__BUILD_TAG__ = BUILD_TAG_FASE_4_1B;
 }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutGrid, Package, Layers, Building2, MapPin } from "lucide-react";
+import { LayoutGrid, Package, Layers, Building2, MapPin, History } from "lucide-react";
 import AbaCatalogo from "./components/aba_catalogo";
 import AbaPlanos from "./components/aba_planos";
 import AbaEmpreendedores from "./components/aba_empreendedores";
 import AbaCidades from "./components/aba_cidades";
+import AbaAuditoria from "./components/aba_auditoria";
 
 export default function PaginaCentralModulos() {
   return (
