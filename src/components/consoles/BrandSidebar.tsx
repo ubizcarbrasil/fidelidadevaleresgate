@@ -66,8 +66,8 @@ const brandGroupDefs: DefinicaoGrupoSidebar[] = [
     label: "Achadinhos",
     items: [
       "sidebar.achadinhos", "sidebar.categorias_achadinhos",
-      { key: "sidebar.espelhamento", overrides: { defaultTitle: "Espelhamento Achadinho" } },
-      { key: "sidebar.governanca_ofertas", overrides: { defaultTitle: "Governança Achadinho" } },
+      { key: "sidebar.espelhamento", overrides: { defaultTitle: "Espelhar Achadinhos" } },
+      { key: "sidebar.governanca_ofertas", overrides: { defaultTitle: "Governança de Achadinhos" } },
     ],
   },
   {

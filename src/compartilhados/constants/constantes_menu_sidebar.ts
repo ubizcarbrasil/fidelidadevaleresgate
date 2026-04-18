@@ -119,7 +119,7 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
     key: "sidebar.profile_links", defaultTitle: "Links do Perfil", url: "/profile-links", icon: FileText, moduleKey: "profile_links",
   },
   "sidebar.partner_landing": {
-    key: "sidebar.partner_landing", defaultTitle: "Landing Page Parceiros", url: "/partner-landing-config", icon: FileUp, moduleKey: "partner_landing",
+    key: "sidebar.partner_landing", defaultTitle: "Configurar Landing Parceiros", url: "/partner-landing-config", icon: FileUp, moduleKey: "partner_landing",
   },
   "sidebar.offer_card_config": {
     key: "sidebar.offer_card_config", defaultTitle: "Layout de Ofertas", url: "/offer-card-config", icon: LayoutTemplate, moduleKey: "offer_card_config",
@@ -145,13 +145,13 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
     key: "sidebar.cupons", defaultTitle: "Cupons", url: "/vouchers", icon: Ticket, moduleKey: "vouchers",
   },
   "sidebar.patrocinados": {
-    key: "sidebar.patrocinados", defaultTitle: "Patrocinados", url: "/sponsored-placements", icon: Zap, moduleKey: "sponsored",
+    key: "sidebar.patrocinados", defaultTitle: "Patrocinados", url: "/sponsored-placements", icon: Zap, moduleKey: "sponsored", scoringFilter: "PASSENGER",
   },
   "sidebar.motoristas": {
     key: "sidebar.motoristas", defaultTitle: "Motoristas", url: "/motoristas", icon: Truck, moduleKey: "machine_integration", scoringFilter: "DRIVER",
   },
   "sidebar.compra_pontos_motorista": {
-    key: "sidebar.compra_pontos_motorista", defaultTitle: "Venda de Pontos", url: "/driver-points-purchase", icon: Coins, moduleKey: "machine_integration", scoringFilter: "DRIVER",
+    key: "sidebar.compra_pontos_motorista", defaultTitle: "Vendas para Motoristas", url: "/driver-points-purchase", icon: Coins, moduleKey: "machine_integration", scoringFilter: "DRIVER",
   },
   "sidebar.painel_motorista_view": {
     key: "sidebar.painel_motorista_view", defaultTitle: "Painel do Motorista", url: "/driver", icon: Car, scoringFilter: "DRIVER",
@@ -311,7 +311,7 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
     key: "sidebar.kit_inicial", defaultTitle: "Starter Kit", url: "/starter-kit", icon: PackageSearch,
   },
   "sidebar.configuracoes": {
-    key: "sidebar.configuracoes", defaultTitle: "Configurações", url: "/brand-settings", icon: Settings2, moduleKey: "brand_settings",
+    key: "sidebar.configuracoes", defaultTitle: "Configurações da Marca", url: "/brand-settings", icon: Settings2, moduleKey: "brand_settings",
   },
   "sidebar.subscription": {
     key: "sidebar.subscription", defaultTitle: "Assinatura", url: "/subscription", icon: CreditCard, moduleKey: "subscription",
