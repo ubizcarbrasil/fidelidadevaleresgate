@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { MapPin, Building2, Info, Trash2, ArrowDownUp } from "lucide-react";
+import { MapPin, Building2, Info, Trash2, ArrowDownUp, Search } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
