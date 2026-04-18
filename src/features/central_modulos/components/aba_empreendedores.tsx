@@ -162,7 +162,7 @@ export default function AbaEmpreendedores() {
         </CardHeader>
         <CardContent className="flex flex-col md:flex-row gap-3 md:items-center">
           <Select value={brandId} onValueChange={setBrandId} disabled={loadingBrands}>
-            <SelectTrigger className="md:w-[320px]">
+            <SelectTrigger className="w-full md:w-[320px]">
               <SelectValue placeholder={loadingBrands ? "Carregando…" : "Escolha uma marca"} />
             </SelectTrigger>
             <SelectContent>
@@ -179,8 +179,8 @@ export default function AbaEmpreendedores() {
                 Plano {planMeta.label}
               </Badge>
               {overview && (
-                <Badge variant="outline">
-                  {overview.totalActive} de {overview.totalAvailable} módulos ativos
+                <Badge variant="outline" className="text-[10px] sm:text-xs">
+                  {overview.totalActive}/{overview.totalAvailable} ativos
                 </Badge>
               )}
               <Button
@@ -188,9 +188,11 @@ export default function AbaEmpreendedores() {
                 variant="outline"
                 onClick={() => setConfirmReset(true)}
                 disabled={!overview}
+                className="w-full sm:w-auto"
               >
                 <RotateCcw className="h-3.5 w-3.5 mr-1" />
-                Resetar para padrão do plano
+                <span className="sm:hidden">Resetar plano</span>
+                <span className="hidden sm:inline">Resetar para padrão do plano</span>
               </Button>
             </div>
           )}

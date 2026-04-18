@@ -156,7 +156,7 @@ export default function AbaCidades() {
         </CardHeader>
         <CardContent className="flex flex-col md:flex-row gap-3 md:items-center">
           <Select value={brandId} onValueChange={handleBrandChange}>
-            <SelectTrigger className="md:w-[280px]">
+            <SelectTrigger className="w-full md:w-[280px]">
               <SelectValue placeholder="Empreendedor" />
             </SelectTrigger>
             <SelectContent>
@@ -175,7 +175,7 @@ export default function AbaCidades() {
             onValueChange={setBranchId}
             disabled={!brandId || loadingBranches}
           >
-            <SelectTrigger className="md:w-[280px]">
+            <SelectTrigger className="w-full md:w-[280px]">
               <SelectValue placeholder={!brandId ? "Selecione a marca primeiro" : "Cidade"} />
             </SelectTrigger>
             <SelectContent>
@@ -188,15 +188,16 @@ export default function AbaCidades() {
           </Select>
 
           {brand && branch && (
-            <div className="flex items-center gap-2 ml-auto">
-              <Badge variant="outline">
-                {overrideCount} override(s) ativo(s)
+            <div className="flex items-center gap-2 flex-wrap md:ml-auto">
+              <Badge variant="outline" className="text-[10px] sm:text-xs">
+                {overrideCount} override(s)
               </Badge>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => { setTextConfirm(""); setConfirmClear(true); }}
                 disabled={overrideCount === 0}
+                className="w-full sm:w-auto"
               >
                 <Trash2 className="h-3.5 w-3.5 mr-1" />
                 Limpar todos
