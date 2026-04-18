@@ -11,10 +11,10 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Blocks } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Blocks, Building2, MapPin } from "lucide-react";
 import { CATEGORY_META, ORDEM_CATEGORIAS } from "@/compartilhados/constants/constantes_categorias_modulos";
 import {
-  useCatalogoModulos, useToggleModuloAtivo, useDeletarModulo,
+  useCatalogoModulos, useToggleModuloAtivo, useDeletarModulo, useModulosUsoCount,
   type ModuleDefinitionRow,
 } from "../hooks/hook_catalogo";
 import ModalModuloForm from "./modal_modulo_form";
