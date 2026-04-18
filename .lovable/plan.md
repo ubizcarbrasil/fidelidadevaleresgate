@@ -1,46 +1,49 @@
 
-## Fase 4.1b — Tentativa 2: ghost commit nos chunks-filhos
 
-### Hipótese
-O ghost commit anterior mudou só `pagina_central_modulos.tsx` (chunk pai). Os componentes `AbaEmpreendedores` e `AbaCidades` provavelmente são chunks separados pelo code-splitting do Vite, e o CDN do preview pode estar servindo versões antigas desses chunks-filhos. Forçar mudança no conteúdo dos próprios arquivos das abas deve gerar novos hashes para esses chunks específicos.
+## Diagnóstico — Permissões do painel raiz não desaparecem do empreendedor
 
-### Ação (3 edits triviais)
+### Causa raiz (confirmada com leitura de código + query no banco)
 
-1. `src/features/central_modulos/components/aba_empreendedores.tsx` — adicionar após os imports:
-```ts
-export const __PHASE_4_1B_EMP_REBUILD = "2026-04-18-v3";
-```
+A plataforma tem **dois sistemas de governança paralelos e desconectados**:
 
-2. `src/features/central_modulos/components/aba_cidades.tsx` — adicionar após os imports:
-```ts
-export const __PHASE_4_1B_CID_REBUILD = "2026-04-18-v3";
-```
+1. **Módulos** (`module_definitions` / `brand_modules` / `city_module_overrides`)
+   - Controla **visibilidade do menu** do empreendedor via `useBrandModules` / `useResolvedModules`
+   - Toda filtragem da `BrandSidebar.tsx` (linha 261) usa `isModuleEnabled(item.moduleKey)`
+   - **Esse é o sistema que efetivamente esconde itens do menu**
 
-3. Nenhuma outra mudança. Zero alteração de lógica, UI ou comportamento.
+2. **Permissões** (`permissions` / `brand_permission_config` / `brand_sub_permission_config`)
+   - Tela onde você desativa: `/permissions-overflow` (`BrandPermissionOverflowPage.tsx`)
+   - Salva linhas em `brand_permission_config` com `allowed_for_brand = false`
+   - **Nenhum hook do projeto consome essa tabela na sidebar/guards do empreendedor**
+   - Confirmação por busca: zero ocorrências de `brand_permission_config`, `allowed_for_brand` ou `useBrandPermissions` em qualquer hook/guard/sidebar
+   - A função RPC `user_has_permission` existe mas só lê `user_permission_overrides` (overrides por usuário individual), não a config da marca
 
-### Verificação após salvar (modo execução)
-- `npm run build` (capturar exit code + tempo)
-- `ls dist/assets/aba_empreendedores-*.js dist/assets/aba_cidades-*.js dist/assets/pagina_central_modulos-*.js` (capturar hashes novos)
-- `grep -l "__PHASE_4_1B_EMP_REBUILD" dist/assets/*.js` (confirmar string no bundle)
-- `grep -l "__PHASE_4_1B_CID_REBUILD" dist/assets/*.js` (confirmar string no bundle)
-- `npx tsc --noEmit` (zero erros)
+**Estado atual no banco**: 17 permissões salvas com `allowed_for_brand=false`, todas ignoradas pelo runtime.
 
-### Entrega ao usuário
-- Exit code do build
-- Hashes novos dos 3 chunks (ou confirmação se as abas estão inlined no chunk pai)
-- Confirmação dos greps
-- Instrução para o usuário testar no preview em Safari aba privada na URL `https://id-preview--3ff47979-b8b4-4666-bfef-7987c2d119c3.lovable.app/admin/central-modulos`
+### Por que o usuário vê isso como bug
+O painel raiz oferece uma UI rica para "desativar permissões da marca" (com toggles, sub-itens, scoping por filial), mas o resultado desse trabalho não tem efeito nenhum no painel do empreendedor. O sistema está incompleto: a escrita funciona, a leitura nunca foi implementada.
 
-### O que NÃO vou fazer
-- Não publicar em produção
-- Não tocar `vite.config.ts` / Service Worker
-- Não tocar nada de 4.1a, 4.2, 4.3
-- Não alterar lógica das abas
+### Pergunta antes de planejar a correção
 
-### Plano de escalação
-Se mesmo após esse rebuild o preview continuar mostrando 2 abas:
-- Entregar relatório técnico fechado (hashes antes/depois, greps, build limpo)
-- Recomendar abertura de ticket com suporte do Lovable com evidência de cache CDN não invalidando chunks-filhos
+Existem 3 caminhos legítimos. Preciso saber qual é a intenção do produto antes de escolher.
 
-### Risco
-Mínimo. 2 linhas em 2 arquivos. Constantes não importadas em lugar nenhum. Rollback trivial.
+### Caminhos possíveis
+
+**Caminho A — Conectar `brand_permission_config` ao runtime (completar o sistema)**
+Implementar o consumo: criar `useBrandPermissions(brandId, branchId)`, usar em `BrandSidebar` como filtro adicional após `isModuleEnabled`, e em um novo `PermissionGuard` para rotas. Adicionar coluna `permission_key` opcional no `MENU_REGISTRY` para os itens que devem responder a permissão. Mudança grande (~6 arquivos), exige mapear cada item de menu para sua `permission_key`, risco médio de regredir telas.
+
+**Caminho B — Esconder/depreciar a tela `/permissions-overflow`**
+Se o controle real é feito por **módulos** (Central de Módulos da Fase 4.1a/4.3), a tela de permissões está duplicando função e confundindo. Esconder do menu raiz com aviso "use a Central de Módulos", manter dados intactos para futura ativação. Mudança pequena (~2 arquivos), zero risco de regressão.
+
+**Caminho C — Refatorar `brand_permission_config` para escrever em `brand_modules`**
+Quando o root desativar uma permissão cujo `permission_key` mapeie para um módulo (ex: `redemptions.read` → módulo `redemption_qr`), também desativar o `brand_modules` correspondente. Mantém a UI familiar e faz funcionar. Risco: mapeamento `permission_key → module_key` é manual e parcial (não há cobertura 1:1).
+
+### Pergunta única
+Antes de eu detalhar o plano de execução, qual é a intenção de produto?
+
+- Você **espera** que desativar permissão no `/permissions-overflow` esconda menus do empreendedor? → **Caminho A** (completar a leitura)
+- Ou esse painel ficou obsoleto depois que a Central de Módulos passou a existir, e ele só está confundindo? → **Caminho B** (esconder e migrar para módulos)
+- Ou quer que as duas telas coexistam mas que mexer numa reflita na outra? → **Caminho C** (sincronização)
+
+Sem essa decisão, qualquer plano que eu detalhe vai assumir intenção e arriscar fazer a coisa errada em produção com 42 usuários ativos.
+
