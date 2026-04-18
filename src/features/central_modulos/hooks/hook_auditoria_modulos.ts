@@ -60,9 +60,9 @@ export function useAuditoriaModulos(filtros: {
           : Promise.resolve({ data: [], error: null } as any),
       ]);
 
-      const brandMap = new Map((brandsRes.data ?? []).map((b: any) => [b.id, b.name]));
-      const modMap = new Map((modulesRes.data ?? []).map((m: any) => [m.id, m]));
-      const userMap = new Map((profilesRes.data ?? []).map((p: any) => [p.id, p.email]));
+      const brandMap = new Map<string, string>((brandsRes.data ?? []).map((b: any) => [b.id, b.name]));
+      const modMap = new Map<string, { name: string; key: string }>((modulesRes.data ?? []).map((m: any) => [m.id, m]));
+      const userMap = new Map<string, string>((profilesRes.data ?? []).map((p: any) => [p.id, p.email]));
 
       return list.map((r: any) => {
         const modId = (r.details_json as any)?.module_definition_id ?? null;
