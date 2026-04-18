@@ -1,3 +1,8 @@
+// Fase 4.1b - rebuild forçado em 2026-04-18 (invalidar cache de bundle do preview)
+const BUILD_TAG_FASE_4_1B = "fase-4.1b-rebuild-2026-04-18-v2";
+if (typeof window !== "undefined") {
+  (window as unknown as { __BUILD_TAG__?: string }).__BUILD_TAG__ = BUILD_TAG_FASE_4_1B;
+}
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutGrid, Package, Layers, Building2, MapPin } from "lucide-react";
 import AbaCatalogo from "./components/aba_catalogo";
