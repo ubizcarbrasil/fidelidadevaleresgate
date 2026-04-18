@@ -224,16 +224,44 @@ export default function BrandModulesPage() {
             <Blocks className="h-5 w-5 text-primary" />
             <span className="text-sm font-medium">
               <strong className="text-primary">{enabledCount}</strong> de {totalCount} módulos ativos
+              {isFiltering && (
+                <span className="ml-2 text-muted-foreground font-normal">
+                  · {filteredCount} resultado(s) para "{busca.trim()}"
+                </span>
+              )}
             </span>
           </div>
 
-          <HomeSectionOrderEditor brandId={brandId} isModuleEnabled={(key) => {
-            const def = definitions?.find(d => d.key === key);
-            if (!def) return true;
-            return isEnabled(def.id);
-          }} />
+          {/* Busca */}
+          <div className="relative max-w-md">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar funcionalidade por nome…"
+              className="pl-9"
+            />
+          </div>
 
-          <SidebarOrderEditor brandId={brandId} />
+          {!isFiltering && (
+            <>
+              <HomeSectionOrderEditor brandId={brandId} isModuleEnabled={(key) => {
+                const def = definitions?.find(d => d.key === key);
+                if (!def) return true;
+                return isEnabled(def.id);
+              }} />
+
+              <SidebarOrderEditor brandId={brandId} />
+            </>
+          )}
+
+          {isFiltering && filteredCount === 0 && (
+            <Card>
+              <CardContent className="py-10 text-center text-sm text-muted-foreground">
+                Nenhuma funcionalidade encontrada para "{busca.trim()}".
+              </CardContent>
+            </Card>
+          )}
 
           {sortedCategories.map((category) => {
             const mods = grouped[category]!;
