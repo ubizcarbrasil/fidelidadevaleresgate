@@ -1,3 +1,5 @@
+// Fase 4.1b — chunk version bump para forçar invalidação de CDN
+export const __PHASE_4_1B_CAT_REBUILD = "2026-04-18-v3";
 import { useMemo, useState } from "react";
 import * as Icons from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

@@ -147,6 +147,12 @@ export default function AbaEmpreendedores() {
 
   return (
     <div className="space-y-4">
+      <div className="flex gap-2 items-start rounded-md border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
+        <ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+        <p>
+          <strong className="text-foreground">Aqui você liga/desliga funcionalidades por empreendedor (marca).</strong> A cascata é: Catálogo → Empreendedor → Cidade. O que estiver desligado aqui some do painel da marca em tempo real.
+        </p>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
