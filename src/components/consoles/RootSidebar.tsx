@@ -89,7 +89,7 @@ const rootGroupDefs: DefinicaoGrupoSidebar[] = [
     label: "Equipe & Acessos",
     items: [
       "sidebar.usuarios",
-      { key: "sidebar.perm_parceiros", overrides: { icon: ShieldCheck } },
+      // sidebar.perm_parceiros — depreciado: controle migrado para a Central de Módulos
     ],
   },
   {

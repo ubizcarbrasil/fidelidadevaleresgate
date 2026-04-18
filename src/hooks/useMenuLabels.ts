@@ -118,7 +118,7 @@ const BRAND_SIDEBAR_GROUPS: LabelGroup[] = [
     groupLabel: "Equipe & Acessos",
     items: [
       { key: "sidebar.usuarios", defaultLabel: "Usuários" },
-      { key: "sidebar.perm_parceiros", defaultLabel: "Permissão de Parceiros" },
+      // sidebar.perm_parceiros — depreciado: controle migrado para a Central de Módulos
       { key: "sidebar.central_acessos", defaultLabel: "Gestão de Acessos" },
     ],
   },
