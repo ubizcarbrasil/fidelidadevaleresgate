@@ -118,7 +118,8 @@ const brandGroupDefs: DefinicaoGrupoSidebar[] = [
   },
   {
     label: "Equipe & Acessos",
-    items: ["sidebar.usuarios", "sidebar.perm_parceiros", "sidebar.central_acessos"],
+    // sidebar.perm_parceiros — depreciado: controle migrado para a Central de Módulos
+    items: ["sidebar.usuarios", "sidebar.central_acessos"],
   },
   {
     label: "Inteligência & Dados",
