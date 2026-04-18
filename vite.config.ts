@@ -51,11 +51,16 @@ return ({
         ],
       },
       workbox: {
+        // Bump cacheId quando precisar invalidar SW + caches antigos no cliente.
+        // v2 (Fase 4.1b) — força recarga do bundle com Empreendedores e Cidades.
+        cacheId: "vale-resgate-v2",
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,jpg,jpeg,webp}"],
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/~oauth/],
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
