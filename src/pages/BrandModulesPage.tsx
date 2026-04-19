@@ -17,6 +17,10 @@ import {
 import HomeSectionOrderEditor from "@/components/brand-modules/HomeSectionOrderEditor";
 import SidebarOrderEditor from "@/components/brand-modules/SidebarOrderEditor";
 import { CATEGORY_META } from "@/compartilhados/constants/constantes_categorias_modulos";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Briefcase, Settings } from "lucide-react";
+import { useBusinessModelsUiEnabled } from "@/compartilhados/hooks/hook_business_models_ui_flag";
+import AbaModelosNegocioBrand from "@/features/painel_modelos_negocio/aba_modelos_negocio_brand";
 
 const MODULE_ICONS: Record<string, any> = {
   stores: Store,
