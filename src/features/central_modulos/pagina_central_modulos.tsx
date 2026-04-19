@@ -18,8 +18,6 @@ const ABAS_VALIDAS = ["catalogo", "modelos", "planos", "empreendedores", "cidade
 type AbaValida = typeof ABAS_VALIDAS[number];
 
 export default function PaginaCentralModulos() {
-  return (
-    <div className="container mx-auto p-3 sm:p-4 space-y-4 max-w-7xl">
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
   const abaAtiva: AbaValida = (ABAS_VALIDAS as readonly string[]).includes(tabParam ?? "")
