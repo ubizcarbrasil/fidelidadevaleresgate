@@ -20,6 +20,20 @@ type AbaValida = typeof ABAS_VALIDAS[number];
 export default function PaginaCentralModulos() {
   return (
     <div className="container mx-auto p-3 sm:p-4 space-y-4 max-w-7xl">
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const abaAtiva: AbaValida = (ABAS_VALIDAS as readonly string[]).includes(tabParam ?? "")
+    ? (tabParam as AbaValida)
+    : "catalogo";
+
+  const handleTabChange = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", value);
+    setSearchParams(next, { replace: true });
+  };
+
+  return (
+    <div className="container mx-auto p-3 sm:p-4 space-y-4 max-w-7xl">
       <div className="flex items-start gap-2 sm:gap-3">
         <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
           <LayoutGrid className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
@@ -32,7 +46,7 @@ export default function PaginaCentralModulos() {
         </div>
       </div>
 
-      <Tabs defaultValue="catalogo" className="w-full">
+      <Tabs value={abaAtiva} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 h-auto gap-1 p-1">
           <TabsTrigger value="catalogo" className="text-[11px] sm:text-sm flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 px-1">
             <Package className="h-4 w-4" />
