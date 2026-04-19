@@ -1,19 +1,21 @@
 /**
- * AbaModelosNegocio — Sub-fase 5.3
+ * AbaModelosNegocio — Sub-fase 5.3 + 5.4
  * Wrapper da aba "Modelos de Negócio" da Central de Módulos.
- * Contém duas sub-tabs:
+ * Sub-tabs:
  *  - Catálogo de Modelos
  *  - Modelos × Planos
+ *  - Pricing (Ganha-Ganha)
  */
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Briefcase, Layers } from "lucide-react";
+import { Briefcase, Layers, DollarSign } from "lucide-react";
 import SecaoCatalogoModelos from "./secao_catalogo_modelos";
 import SecaoModelosPlanos from "./secao_modelos_planos";
+import SecaoPricingGanhaGanha from "./secao_pricing_ganha_ganha";
 
 export default function AbaModelosNegocio() {
   return (
     <Tabs defaultValue="catalogo-modelos" className="w-full">
-      <TabsList className="grid w-full grid-cols-2 h-auto gap-1 p-1">
+      <TabsList className="grid w-full grid-cols-3 h-auto gap-1 p-1">
         <TabsTrigger
           value="catalogo-modelos"
           className="text-[11px] sm:text-sm flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 px-1"
@@ -28,6 +30,13 @@ export default function AbaModelosNegocio() {
           <Layers className="h-4 w-4" />
           <span className="leading-none">Modelos × Planos</span>
         </TabsTrigger>
+        <TabsTrigger
+          value="pricing"
+          className="text-[11px] sm:text-sm flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 px-1"
+        >
+          <DollarSign className="h-4 w-4" />
+          <span className="leading-none">Pricing</span>
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="catalogo-modelos" className="mt-4">
@@ -35,6 +44,9 @@ export default function AbaModelosNegocio() {
       </TabsContent>
       <TabsContent value="modelos-planos" className="mt-4">
         <SecaoModelosPlanos />
+      </TabsContent>
+      <TabsContent value="pricing" className="mt-4">
+        <SecaoPricingGanhaGanha />
       </TabsContent>
     </Tabs>
   );
