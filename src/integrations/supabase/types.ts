@@ -8919,6 +8919,70 @@ export type Database = {
           value_rescue: number
         }[]
       }
+      rpc_gg_report_by_branch: {
+        Args: {
+          p_brand_id: string
+          p_period_end: string
+          p_period_start: string
+        }
+        Returns: {
+          branch_city: string
+          branch_id: string
+          branch_name: string
+          branch_state: string
+          n_stores: number
+          total_fee: number
+          total_pts: number
+        }[]
+      }
+      rpc_gg_report_by_month: {
+        Args: { p_brand_id: string; p_year: number }
+        Returns: {
+          earn_fee: number
+          earn_pts: number
+          month: string
+          n_events: number
+          redeem_fee: number
+          redeem_pts: number
+          total_fee: number
+        }[]
+      }
+      rpc_gg_report_by_store: {
+        Args: {
+          p_branch_id?: string
+          p_brand_id: string
+          p_period_end: string
+          p_period_start: string
+        }
+        Returns: {
+          branch_id: string
+          earn_fee: number
+          earn_pts: number
+          redeem_fee: number
+          redeem_pts: number
+          store_id: string
+          store_name: string
+          total_fee: number
+        }[]
+      }
+      rpc_gg_report_summary: {
+        Args: {
+          p_branch_id?: string
+          p_brand_id: string
+          p_period_end: string
+          p_period_start: string
+          p_store_id?: string
+        }
+        Returns: {
+          n_events: number
+          n_stores: number
+          total_earn_fee: number
+          total_earn_pts: number
+          total_fee: number
+          total_redeem_fee: number
+          total_redeem_pts: number
+        }[]
+      }
       seed_affiliate_categories: {
         Args: { p_brand_id: string }
         Returns: undefined
