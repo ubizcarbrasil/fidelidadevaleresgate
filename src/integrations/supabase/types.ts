@@ -8850,6 +8850,14 @@ export type Database = {
         Args: { p_branch_id: string }
         Returns: Json
       }
+      resolve_active_business_models: {
+        Args: { p_branch_id?: string; p_brand_id: string }
+        Returns: {
+          is_enabled: boolean
+          model_key: string
+          source: string
+        }[]
+      }
       resolve_active_modules: {
         Args: { p_branch_id?: string; p_brand_id: string }
         Returns: {

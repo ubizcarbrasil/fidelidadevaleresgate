@@ -12,3 +12,11 @@
  * legado via `useBrandModules` / `useBranchModules`.
  */
 export const USE_RESOLVED_MODULES = true;
+
+/**
+ * Liga a nova camada de Modelos de Negócio (Sub-fase 5.2+).
+ * Quando `true`, sidebars e painéis usam `useResolvedBusinessModels`
+ * em paralelo ao `useResolvedModules` existente (não substitui
+ * ainda — substituição vem na Sub-fase 5.7).
+ */
+export const USE_BUSINESS_MODELS = false;
