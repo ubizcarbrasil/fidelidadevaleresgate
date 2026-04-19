@@ -115,6 +115,7 @@ const brandGroupDefs: DefinicaoGrupoSidebar[] = [
       "sidebar.gg_config",
       "sidebar.gg_billing",
       { key: "sidebar.gg_closing", overrides: { icon: FileText } },
+      "sidebar.gg_reports",
     ],
   },
   {
