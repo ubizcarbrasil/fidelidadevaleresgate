@@ -40,8 +40,8 @@ export function GraficoTemporalGg({ rows, loading, year }: Props) {
                     border: "1px solid hsl(var(--border))",
                     borderRadius: 8,
                   }}
-                  formatter={(v: number) =>
-                    "R$ " + v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })
+                  formatter={(v) =>
+                    "R$ " + Number(v ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })
                   }
                 />
                 <Legend />

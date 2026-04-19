@@ -36,15 +36,15 @@ async function logExport(
 ) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    await supabase.from("audit_logs").insert({
+    await supabase.from("audit_logs").insert([{
       actor_user_id: user?.id ?? null,
       entity_type: "report_export",
       entity_id: brandId,
       action,
       scope_type: brandId ? "BRAND" : "PLATFORM",
       scope_id: brandId,
-      details_json: details,
-    });
+      details_json: details as never,
+    }]);
   } catch {
     // best-effort
   }

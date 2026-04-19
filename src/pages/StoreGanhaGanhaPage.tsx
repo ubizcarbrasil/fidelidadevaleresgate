@@ -91,7 +91,7 @@ export default function StoreGanhaGanhaPage() {
       <div className="p-6 max-w-xl mx-auto">
         <Card>
           <CardContent className="pt-6 flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+            <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold mb-1">Loja não encontrada</p>
               <p className="text-sm text-muted-foreground">

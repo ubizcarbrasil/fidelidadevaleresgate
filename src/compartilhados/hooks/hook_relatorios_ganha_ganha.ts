@@ -70,11 +70,11 @@ export function useGgReportSummary(filters: GgReportFilters) {
     staleTime: 30_000,
     queryFn: async (): Promise<GgSummary> => {
       const { data, error } = await supabase.rpc("rpc_gg_report_summary", {
-        p_brand_id: filters.brandId,
+        p_brand_id: filters.brandId as string,
         p_period_start: filters.periodStart,
         p_period_end: filters.periodEnd,
-        p_store_id: filters.storeId ?? null,
-        p_branch_id: filters.branchId ?? null,
+        p_store_id: (filters.storeId ?? undefined) as string | undefined,
+        p_branch_id: (filters.branchId ?? undefined) as string | undefined,
       });
       if (error) throw error;
       const row = (Array.isArray(data) ? data[0] : data) as Record<string, unknown> | undefined;
@@ -98,10 +98,10 @@ export function useGgReportByStore(filters: GgReportFilters) {
     staleTime: 30_000,
     queryFn: async (): Promise<GgByStoreRow[]> => {
       const { data, error } = await supabase.rpc("rpc_gg_report_by_store", {
-        p_brand_id: filters.brandId,
+        p_brand_id: filters.brandId as string,
         p_period_start: filters.periodStart,
         p_period_end: filters.periodEnd,
-        p_branch_id: filters.branchId ?? null,
+        p_branch_id: (filters.branchId ?? undefined) as string | undefined,
       });
       if (error) throw error;
       return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
@@ -125,7 +125,7 @@ export function useGgReportByBranch(filters: GgReportFilters) {
     staleTime: 30_000,
     queryFn: async (): Promise<GgByBranchRow[]> => {
       const { data, error } = await supabase.rpc("rpc_gg_report_by_branch", {
-        p_brand_id: filters.brandId,
+        p_brand_id: filters.brandId as string,
         p_period_start: filters.periodStart,
         p_period_end: filters.periodEnd,
       });
@@ -150,7 +150,7 @@ export function useGgReportByMonth(brandId: string | null, year: number) {
     staleTime: 60_000,
     queryFn: async (): Promise<GgByMonthRow[]> => {
       const { data, error } = await supabase.rpc("rpc_gg_report_by_month", {
-        p_brand_id: brandId,
+        p_brand_id: brandId as string,
         p_year: year,
       });
       if (error) throw error;

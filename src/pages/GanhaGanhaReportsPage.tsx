@@ -88,7 +88,7 @@ export default function GanhaGanhaReportsPage() {
       <div className="p-6 max-w-2xl mx-auto">
         <Card>
           <CardContent className="pt-6 flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+            <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold mb-1">Relatórios Cashback indisponíveis</p>
               <p className="text-sm text-muted-foreground">
