@@ -8,7 +8,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Save, Crown, Rocket, Zap, RefreshCw } from "lucide-react";
+import { Loader2, Save, Crown, Rocket, Zap, RefreshCw, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -156,6 +157,16 @@ export default function PlanModuleTemplatesPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Perfil de Planos" description="Configure quais módulos estão disponíveis em cada plano de assinatura" />
+
+      <Alert>
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Tela legada</AlertTitle>
+        <AlertDescription>
+          Esta configuração será substituída por <strong>Modelos × Planos</strong> (parte da nova arquitetura de Modelos de Negócio).
+          Para brands em beta, configure em <strong>Central de Módulos → Modelos × Planos</strong>.
+          Esta tela continua funcional e é a fonte para todas as brands fora do beta.
+        </AlertDescription>
+      </Alert>
 
       {isLoading ? (
         <div className="flex justify-center py-12">
