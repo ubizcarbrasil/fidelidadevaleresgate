@@ -3,6 +3,7 @@ const BUILD_TAG_FASE_4_1B = "fase-4.1b-rebuild-2026-04-18-v3";
 if (typeof window !== "undefined") {
   (window as unknown as { __BUILD_TAG__?: string }).__BUILD_TAG__ = BUILD_TAG_FASE_4_1B;
 }
+import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutGrid, Package, Layers, Building2, MapPin, History, Briefcase, BookOpen } from "lucide-react";
 import AbaCatalogo from "./components/aba_catalogo";
@@ -12,6 +13,9 @@ import AbaEmpreendedores from "./components/aba_empreendedores";
 import AbaCidades from "./components/aba_cidades";
 import AbaAuditoria from "./components/aba_auditoria";
 import AbaManual from "./components/aba_manual";
+
+const ABAS_VALIDAS = ["catalogo", "modelos", "planos", "empreendedores", "cidades", "auditoria", "manual"] as const;
+type AbaValida = typeof ABAS_VALIDAS[number];
 
 export default function PaginaCentralModulos() {
   return (
