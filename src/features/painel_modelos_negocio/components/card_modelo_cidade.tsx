@@ -159,7 +159,7 @@ export default function CardModeloCidade({ brandId, branchId, data }: Props) {
             <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
           )}
           {isOrphan && (
-            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+            <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
           )}
         </div>
 
