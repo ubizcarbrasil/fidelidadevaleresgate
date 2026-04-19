@@ -243,6 +243,9 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
   "sidebar.gg_store_summary": {
     key: "sidebar.gg_store_summary", defaultTitle: "Resumo por Parceiro", url: "/ganha-ganha-store-summary", icon: Handshake, moduleKey: "gg_store_summary",
   },
+  "sidebar.gg_reports": {
+    key: "sidebar.gg_reports", defaultTitle: "Relatórios Cashback", url: "/ganha-ganha-reports", icon: BarChart3, moduleKey: "ganha_ganha",
+  },
 
   // ─── Equipe & Acessos ───
   "sidebar.usuarios": {

@@ -93,6 +93,8 @@ const GanhaGanhaBillingPage = lazyWithRetry(() => import("@/pages/GanhaGanhaBill
 const GanhaGanhaRootDashboardPage = lazyWithRetry(() => import("@/pages/GanhaGanhaRootDashboardPage"));
 const GanhaGanhaClosingReportsPage = lazyWithRetry(() => import("@/pages/GanhaGanhaClosingReportsPage"));
 const GanhaGanhaStoreSummaryPage = lazyWithRetry(() => import("@/pages/GanhaGanhaStoreSummaryPage"));
+const GanhaGanhaReportsPage = lazyWithRetry(() => import("@/pages/GanhaGanhaReportsPage"));
+const StoreGanhaGanhaPage = lazyWithRetry(() => import("@/pages/StoreGanhaGanhaPage"));
 
 const BrandApiKeysPage = lazyWithRetry(() => import("@/pages/BrandApiKeysPage"));
 const ApiDocsPage = lazyWithRetry(() => import("@/pages/ApiDocsPage"));
@@ -265,6 +267,8 @@ function AnimatedRoutes() {
               <Route path="ganha-ganha-closing" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaClosingReportsPage /></ModuleGuard>} />
               <Route path="ganha-ganha-dashboard" element={<RootGuard><GanhaGanhaRootDashboardPage /></RootGuard>} />
               <Route path="ganha-ganha-store-summary" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaStoreSummaryPage /></ModuleGuard>} />
+              <Route path="ganha-ganha-reports" element={<ModuleGuard moduleKey="ganha_ganha"><GanhaGanhaReportsPage /></ModuleGuard>} />
+              <Route path="store/ganha-ganha" element={<StoreGanhaGanhaPage />} />
               
               <Route path="api-keys" element={<ModuleGuard moduleKey="api_keys"><BrandApiKeysPage /></ModuleGuard>} />
               <Route path="api-docs" element={<ModuleGuard moduleKey="api_keys"><ApiDocsPage /></ModuleGuard>} />
