@@ -210,6 +210,31 @@ export function BranchSidebar() {
           </SidebarGroup>
         )}
 
+        {businessModelsUiEnabled && (
+          <SidebarGroup className="pb-0">
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname.startsWith("/branch-business-models")}
+                    tooltip="Modelos da Cidade"
+                  >
+                    <NavLink
+                      to="/branch-business-models"
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    >
+                      <Briefcase className="h-4 w-4" />
+                      {!collapsed && <span className="flex-1">Modelos da Cidade</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
         {visibleGroups.map((group) => {
           if (group.items.length === 0) return null;
           return (
