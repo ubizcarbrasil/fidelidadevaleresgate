@@ -18,6 +18,7 @@ import {
   type ModuleDefinitionRow,
 } from "../hooks/hook_catalogo";
 import ModalModuloForm from "./modal_modulo_form";
+import { BadgesModelosDoModulo } from "./badges_modelos_do_modulo";
 
 function getIcon(name?: string): React.ComponentType<any> {
   if (!name) return Blocks;
@@ -129,6 +130,9 @@ export default function AbaCatalogo() {
                               </Badge>
                             </div>
                             {m.description && <p className="text-xs text-muted-foreground truncate">{m.description}</p>}
+                            <div className="mt-1.5">
+                              <BadgesModelosDoModulo moduleId={m.id} />
+                            </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             <Button variant="ghost" size="icon" onClick={() => toggleAtivo.mutate({ id: m.id, is_active: !m.is_active })} title={m.is_active ? "Desativar" : "Ativar"}>
