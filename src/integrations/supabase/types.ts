@@ -736,6 +736,64 @@ export type Database = {
           },
         ]
       }
+      brand_business_models: {
+        Row: {
+          activated_at: string | null
+          brand_id: string
+          business_model_id: string
+          config_json: Json
+          created_at: string
+          ganha_ganha_margin_pct: number | null
+          id: string
+          is_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          brand_id: string
+          business_model_id: string
+          config_json?: Json
+          created_at?: string
+          ganha_ganha_margin_pct?: number | null
+          id?: string
+          is_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          brand_id?: string
+          business_model_id?: string
+          config_json?: Json
+          created_at?: string
+          ganha_ganha_margin_pct?: number | null
+          id?: string
+          is_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_business_models_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_business_models_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_business_models_business_model_id_fkey"
+            columns: ["business_model_id"]
+            isOneToOne: false
+            referencedRelation: "business_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_domains: {
         Row: {
           brand_id: string
@@ -1204,6 +1262,87 @@ export type Database = {
           },
         ]
       }
+      business_model_modules: {
+        Row: {
+          business_model_id: string
+          created_at: string
+          is_required: boolean
+          module_definition_id: string
+        }
+        Insert: {
+          business_model_id: string
+          created_at?: string
+          is_required?: boolean
+          module_definition_id: string
+        }
+        Update: {
+          business_model_id?: string
+          created_at?: string
+          is_required?: boolean
+          module_definition_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_model_modules_business_model_id_fkey"
+            columns: ["business_model_id"]
+            isOneToOne: false
+            referencedRelation: "business_models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_model_modules_module_definition_id_fkey"
+            columns: ["module_definition_id"]
+            isOneToOne: false
+            referencedRelation: "module_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_models: {
+        Row: {
+          audience: string
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          key: string
+          name: string
+          pricing_model: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          audience: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          key: string
+          name: string
+          pricing_model?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          key?: string
+          name?: string
+          pricing_model?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       catalog_cart_orders: {
         Row: {
           branch_id: string
@@ -1385,6 +1524,65 @@ export type Database = {
             columns: ["champion_customer_id"]
             isOneToOne: false
             referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_business_model_overrides: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          business_model_id: string
+          created_at: string
+          id: string
+          is_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          business_model_id: string
+          created_at?: string
+          id?: string
+          is_enabled: boolean
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          business_model_id?: string
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_business_model_overrides_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_business_model_overrides_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_business_model_overrides_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_business_model_overrides_business_model_id_fkey"
+            columns: ["business_model_id"]
+            isOneToOne: false
+            referencedRelation: "business_models"
             referencedColumns: ["id"]
           },
         ]
@@ -5351,6 +5549,68 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      plan_business_models: {
+        Row: {
+          business_model_id: string
+          created_at: string
+          is_included: boolean
+          plan_key: string
+        }
+        Insert: {
+          business_model_id: string
+          created_at?: string
+          is_included?: boolean
+          plan_key: string
+        }
+        Update: {
+          business_model_id?: string
+          created_at?: string
+          is_included?: boolean
+          plan_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_business_models_business_model_id_fkey"
+            columns: ["business_model_id"]
+            isOneToOne: false
+            referencedRelation: "business_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_ganha_ganha_pricing: {
+        Row: {
+          created_at: string
+          max_margin_pct: number | null
+          min_margin_pct: number | null
+          plan_key: string
+          price_per_point_cents: number
+          updated_at: string
+          valid_from: string
+          valid_to: string | null
+        }
+        Insert: {
+          created_at?: string
+          max_margin_pct?: number | null
+          min_margin_pct?: number | null
+          plan_key: string
+          price_per_point_cents: number
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Update: {
+          created_at?: string
+          max_margin_pct?: number | null
+          min_margin_pct?: number | null
+          plan_key?: string
+          price_per_point_cents?: number
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: []
       }
       plan_module_templates: {
         Row: {
