@@ -3,6 +3,7 @@ const BUILD_TAG_FASE_4_1B = "fase-4.1b-rebuild-2026-04-18-v3";
 if (typeof window !== "undefined") {
   (window as unknown as { __BUILD_TAG__?: string }).__BUILD_TAG__ = BUILD_TAG_FASE_4_1B;
 }
+import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutGrid, Package, Layers, Building2, MapPin, History, Briefcase, BookOpen } from "lucide-react";
 import AbaCatalogo from "./components/aba_catalogo";
@@ -13,7 +14,22 @@ import AbaCidades from "./components/aba_cidades";
 import AbaAuditoria from "./components/aba_auditoria";
 import AbaManual from "./components/aba_manual";
 
+const ABAS_VALIDAS = ["catalogo", "modelos", "planos", "empreendedores", "cidades", "auditoria", "manual"] as const;
+type AbaValida = typeof ABAS_VALIDAS[number];
+
 export default function PaginaCentralModulos() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const abaAtiva: AbaValida = (ABAS_VALIDAS as readonly string[]).includes(tabParam ?? "")
+    ? (tabParam as AbaValida)
+    : "catalogo";
+
+  const handleTabChange = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", value);
+    setSearchParams(next, { replace: true });
+  };
+
   return (
     <div className="container mx-auto p-3 sm:p-4 space-y-4 max-w-7xl">
       <div className="flex items-start gap-2 sm:gap-3">
@@ -28,7 +44,7 @@ export default function PaginaCentralModulos() {
         </div>
       </div>
 
-      <Tabs defaultValue="catalogo" className="w-full">
+      <Tabs value={abaAtiva} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 h-auto gap-1 p-1">
           <TabsTrigger value="catalogo" className="text-[11px] sm:text-sm flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 px-1">
             <Package className="h-4 w-4" />

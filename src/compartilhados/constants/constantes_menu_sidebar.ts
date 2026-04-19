@@ -293,6 +293,9 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
   "sidebar.central_modulos": {
     key: "sidebar.central_modulos", defaultTitle: "Central de Módulos", url: "/admin/central-modulos", icon: LayoutTemplate,
   },
+  "sidebar.central_modulos_manual": {
+    key: "sidebar.central_modulos_manual", defaultTitle: "Como Configurar", url: "/admin/central-modulos?tab=manual", icon: BookOpen,
+  },
   "sidebar.funcionalidades": {
     key: "sidebar.funcionalidades", defaultTitle: "Tipos de Módulo", url: "/modules", icon: Blocks,
   },
