@@ -1,302 +1,198 @@
 
 
-# Sub-fase 5.2 — RPC `resolve_active_business_models` + Hook + Flag
+# Sub-fase 5.3 — UI Raiz: Modelos de Negócio + Matriz × Planos + Badges
 
-## Investigação feita
+## Respostas às 8 questões
 
-Li:
-- `hook_modulos_resolvidos.ts` (padrão a espelhar)
-- `constantes_features.ts` (onde adicionar flag)
-- Estrutura da migration 5.1 (tabelas, colunas, índices)
-- RPC `resolve_active_modules` (não preciso reler — sigo padrão equivalente)
+1. **Delete**: Confirmado — **NÃO** permitir delete nesta sub-fase. Apenas toggle `is_active` (soft-delete). Card de modelo inativo fica com `opacity-60` igual ao padrão da aba Catálogo. Hard-delete fica para sub-fase futura com confirmação dupla mostrando quantas marcas/cidades serão impactadas.
 
-## Confirmações
+2. **Ordem das badges no Catálogo**: Confirmado — **required primeiro (sólidas), depois optional (outlined), ambos em ordem alfabética** dentro do grupo. Truncar nome em 14 chars. Máximo 3 visíveis + popover "+N".
 
-- ✅ **Nada de 4.1a/4.1b/4.2/4.3 é tocado**: a Sub-fase 5.2 é puramente aditiva — 1 RPC nova + 1 arquivo de hook novo + 1 linha de flag. Zero edição em código existente.
-- ✅ **Hook não tem consumidor**: fica disponível, sem ser importado em lugar nenhum.
-- ✅ **Rollback trivial**: `DROP FUNCTION resolve_active_business_models`, deletar hook, remover linha da flag.
+3. **Hook CRUD separado**: Confirmado — criar `hook_modelos_negocio_crud.ts` com mutations isoladas. Cada mutation invalida 3 queryKeys: `["business-models-catalog"]`, `["resolved-business-models", *]` (refetch global), e `["business-model-modules", modelId]` quando vínculos mudam. Mantém `useResolvedBusinessModels` puro (read-only resolvido).
+
+4. **Audit log**: Confirmado — escrever em `audit_logs` com `entity_type='business_model'` ou `'plan_business_model'` ou `'business_model_modules'`. Action: `created` | `updated` | `toggled_active` | `module_linked` | `module_unlinked` | `plan_included` | `plan_excluded`. Trigger DB virá na 5.7; nesta fase, escrita feita pelo cliente após mutation OK (mesmo padrão de 4.1a/4.1b).
+
+5. **Estilo dos cards**: Confirmado — **variante distinta**. Cards maiores (h ~140px), barra lateral colorida de 4px com a `color` do modelo, ícone grande (h-10 w-10) em chip arredondado, título em `text-base font-semibold`, badges de audience+pricing no topo direito, contador "usa X módulos" como texto secundário no rodapé. Visual claramente "produto comercial" vs cards técnicos da aba Catálogo.
+
+6. **Mockup textual**: ver seção "Mockups" abaixo.
+
+7. **Responsividade**: Confirmado — desktop-first. Grid `grid-cols-1 md:grid-cols-2 lg:grid-cols-3` para cards. Matriz Modelos×Planos com scroll horizontal em mobile (`overflow-x-auto`), coluna fixa com nome do modelo via `sticky left-0`.
+
+8. **Estimativa**: ~10 arquivos novos + 2 edições, ~1500–1800 LOC TS/TSX, **~25–35 minutos** de execução (inclui tsc + commit atômico).
 
 ---
 
-## 1. SQL da RPC (completo)
+## Mockups das duas tabs
 
-```sql
-CREATE OR REPLACE FUNCTION public.resolve_active_business_models(
-  p_brand_id uuid,
-  p_branch_id uuid DEFAULT NULL
-)
-RETURNS TABLE (
-  model_key text,
-  is_enabled boolean,
-  source text
-)
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  WITH all_models AS (
-    SELECT id, key
-    FROM business_models
-    WHERE is_active = true
-  ),
-  brand_state AS (
-    SELECT business_model_id, is_enabled
-    FROM brand_business_models
-    WHERE brand_id = p_brand_id
-  ),
-  branch_state AS (
-    SELECT business_model_id, is_enabled
-    FROM city_business_model_overrides
-    WHERE brand_id = p_brand_id
-      AND p_branch_id IS NOT NULL
-      AND branch_id = p_branch_id
-  )
-  SELECT
-    m.key AS model_key,
-    CASE
-      WHEN br.business_model_id IS NOT NULL THEN br.is_enabled
-      WHEN bs.business_model_id IS NOT NULL THEN bs.is_enabled
-      ELSE false
-    END AS is_enabled,
-    CASE
-      WHEN br.business_model_id IS NOT NULL THEN 'branch'
-      WHEN bs.business_model_id IS NOT NULL THEN 'brand'
-      ELSE 'inactive'
-    END AS source
-  FROM all_models m
-  LEFT JOIN brand_state bs ON bs.business_model_id = m.id
-  LEFT JOIN branch_state br ON br.business_model_id = m.id
-  ORDER BY m.key;
-$$;
+### Tab "Catálogo de Modelos"
 
-GRANT EXECUTE ON FUNCTION public.resolve_active_business_models(uuid, uuid) TO authenticated, anon;
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│ [🔍 buscar modelo...]                          [+ Novo Modelo]  │
+│ [Todos 13] [Cliente 4] [Motorista 8] [B2B 1]                    │
+├─────────────────────────────────────────────────────────────────┤
+│ CLIENTE (4)                                                     │
+│ ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐ │
+│ │▌🎁 Achadinho... │ │▌⭐ Pontua Cliente│ │▌🔁 Resgate Pts..│ │
+│ │  cliente · incl.│ │  cliente · incl. │ │  cliente · incl. │ │
+│ │  Vitrine de    │ │  Acúmulo de     │ │  Resgate por     │ │
+│ │  ofertas...    │ │  pontos por...  │ │  produtos...     │ │
+│ │  ─────────     │ │  ─────────      │ │  ─────────       │ │
+│ │  9 módulos     │ │  6 módulos      │ │  10 módulos      │ │
+│ └──────────────────┘ └──────────────────┘ └──────────────────┘ │
+│                                                                 │
+│ MOTORISTA (8)                                                   │
+│ ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐ │
+│ │▌🚗 Achadinho M. │ │▌🏆 Duelo M.    │ │▌👑 Cinturão M.  │ │
+│ │  motorista·incl.│ │  motorista·incl │ │  motorista·incl. │ │
+│ │  ...             │ │  ...             │ │  ...             │ │
+│ └──────────────────┘ └──────────────────┘ └──────────────────┘ │
+│ (...continua)                                                   │
+│                                                                 │
+│ B2B (1)                                                         │
+│ ┌──────────────────┐                                            │
+│ │▌🤝 Ganha-Ganha  │                                            │
+│ │  b2b · usage    │                                            │
+│ │  Ecossistema... │                                            │
+│ │  11 módulos     │                                            │
+│ └──────────────────┘                                            │
+└─────────────────────────────────────────────────────────────────┘
+
+Click em qualquer card → Dialog de edição (3 seções):
+  1. Identidade: name, description, icon, color, sort_order, is_active
+  2. Imutáveis: key, audience, pricing_model (cinza, read-only)
+  3. Vínculos com Módulos Técnicos:
+     [busca módulo...]
+     ☑ points · Pontos                           [Required ⚪→🟢]
+     ☑ stores · Lojas                            [Required ⚪→🟢]
+     ☐ home_sections · Seções da Home            [Optional ○→○]
+     (lista dos 82 módulos com checkbox + switch req/opt)
 ```
 
-**Cascata implementada**:
-1. Se há override de cidade → usa `branch.is_enabled`, `source='branch'`
-2. Senão, se há registro na marca → usa `brand.is_enabled`, `source='brand'`
-3. Senão → `is_enabled=false`, `source='inactive'`
+### Tab "Modelos × Planos"
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│ Matriz Modelos × Planos                  [Ações em massa ▼]     │
+├─────────────────────────────────────────────────────────────────┤
+│                       │  Free  │ Starter │ Profis. │ Enterpr. │ │
+│                       │ (13)   │  (13)   │  (13)   │  (13)    │ │
+├───────────────────────┼────────┼─────────┼─────────┼──────────┤ │
+│ CLIENTE                                                         │
+│ achadinho_cliente     │  ☑    │   ☑    │   ☑    │   ☑     │ │
+│ pontua_cliente        │  ☑    │   ☑    │   ☑    │   ☑     │ │
+│ resgate_pontos_cli.   │  ☑    │   ☑    │   ☑    │   ☑     │ │
+│ resgate_cidade_cli.   │  ☑    │   ☑    │   ☑    │   ☑     │ │
+│ MOTORISTA                                                       │
+│ achadinho_motorista   │  ☑    │   ☑    │   ☑    │   ☑     │ │
+│ pontua_motorista      │  ☑    │   ☑    │   ☑    │   ☑     │ │
+│ duelo_motorista       │  ☑    │   ☑    │   ☑    │   ☑     │ │
+│ aposta_motorista      │  ☑    │   ☑    │   ☑    │   ☑     │ │
+│ cinturao_motorista    │  ☑    │   ☑    │   ☑    │   ☑     │ │
+│ resgate_pontos_mot.   │  ☑    │   ☑    │   ☑    │   ☑     │ │
+│ resgate_cidade_mot.   │  ☑    │   ☑    │   ☑    │   ☑     │ │
+│ rank_motorista        │  ☑    │   ☑    │   ☑    │   ☑     │ │
+│ B2B                                                             │
+│ ganha_ganha           │  ☑    │   ☑    │   ☑    │   ☑     │ │
+└─────────────────────────────────────────────────────────────────┘
+
+Click checkbox → mutation otimista → invalida → audit log
+"Ações em massa" → Dialog: [select plano] + [select all/none] + apply
+Mobile: scroll horizontal, primeira coluna sticky com fundo sólido
+```
+
+### Badges no Catálogo (Tab existente)
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│ 🟦 points · Pontos                                              │
+│    [pontua_cli] [pontua_mot] [resgate_pts_cli] +5    [Building2 X] [MapPin X] │
+│    └─ sólidas (required)                  └─ +N popover         │
+│                                                                 │
+│ 🟦 brand_settings · Configurações                               │
+│    [Transversal]                                                │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 2. Hook `useResolvedBusinessModels` (completo)
+## Arquitetura técnica
 
-**Arquivo novo**: `src/compartilhados/hooks/hook_modelos_negocio_resolvidos.ts`
+### Hooks novos
+
+**`hook_modelos_negocio_crud.ts`**
+- `useBusinessModelsCatalog()` → SELECT * FROM business_models ORDER BY audience, sort_order
+- `useBusinessModelModules(modelId)` → SELECT * FROM business_model_modules + JOIN module_definitions
+- `useCreateBusinessModel()` → INSERT + audit
+- `useUpdateBusinessModel()` → UPDATE com `.select()` + audit
+- `useToggleBusinessModelActive()` → UPDATE is_active + audit
+- `useSetBusinessModelModule()` → UPSERT business_model_modules (link/unlink + req/opt) + audit
+- `useModulesGroupedByModel()` → query agregadora para badges no Catálogo (Map<module_id, Array<{model, is_required}>>)
+
+**`hook_plan_business_models.ts`**
+- `usePlanBusinessModelsMatrix()` → SELECT * FROM plan_business_models
+- `useTogglePlanBusinessModel()` → UPSERT/DELETE + audit
+- `useBulkSetPlan()` → bulk include/exclude todos os modelos de um plano
+
+### Componentes novos (10 arquivos)
+
+| Arquivo | Função |
+|---|---|
+| `aba_modelos_negocio.tsx` | Wrapper com `<Tabs>` interno (Catálogo de Modelos / Modelos × Planos) |
+| `secao_catalogo_modelos.tsx` | Grid agrupado por audience + busca + botão "Novo" |
+| `secao_modelos_planos.tsx` | Tabela matriz com sticky col + bulk actions |
+| `card_modelo_negocio.tsx` | Card visual distinto (barra lateral, ícone grande) |
+| `dialog_editar_modelo.tsx` | Form com 3 seções (identidade, imutáveis, vínculos) |
+| `dialog_criar_modelo.tsx` | Form completo + validação `key` slug-format único |
+| `badge_modelo_negocio.tsx` | Badge atômica com `color`+name truncado, variante sólida/outline |
+| `badges_modelos_do_modulo.tsx` | Container que recebe `module_id`, busca vínculos, renderiza max 3 + popover |
+
+### Edições (2 arquivos)
+
+- `pagina_central_modulos.tsx`: adicionar `<TabsTrigger value="modelos">` entre Catálogo e Planos, ajustar `grid-cols-5` → `grid-cols-6` no `TabsList` e adicionar `<TabsContent value="modelos">`. Ícone: `Briefcase` (lucide).
+- `aba_catalogo.tsx`: importar `BadgesModelosDoModulo` e renderizar logo abaixo da linha de badges existentes em cada Card de módulo (linha ~130).
+
+### Audit log padrão
 
 ```ts
-/**
- * useResolvedBusinessModels — Sub-fase 5.2
- * ----------------------------------------
- * Hook unificado de resolução de Modelos de Negócio via RPC
- * `resolve_active_business_models`.
- *
- * - Cascata server-side: cidade > marca > inativo
- * - Subscribe Realtime em 3 tabelas (business_models,
- *   brand_business_models, city_business_model_overrides)
- * - Fallback: staleTime curto + refetch on focus/reconnect
- *
- * Disponível mas SEM CONSUMIDOR ATIVO. Será adotado a partir
- * da Sub-fase 5.3 conforme USE_BUSINESS_MODELS for ligado.
- */
-import { useEffect, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { CACHE } from "@/config/constants";
-
-interface ResolvedBusinessModelsData {
-  enabledMap: Record<string, boolean>;
-  definitions: Array<{ key: string; source: string }>;
-}
-
-async function fetchResolvedBusinessModels(
-  brandId: string,
-  branchId: string | null
-): Promise<ResolvedBusinessModelsData> {
-  const { data, error } = await supabase.rpc("resolve_active_business_models", {
-    p_brand_id: brandId,
-    p_branch_id: branchId ?? undefined,
-  });
-
-  if (error) throw error;
-
-  const rows = (data || []) as Array<{
-    model_key: string;
-    is_enabled: boolean;
-    source: string;
-  }>;
-
-  const enabledMap: Record<string, boolean> = {};
-  const definitions: Array<{ key: string; source: string }> = [];
-
-  for (const row of rows) {
-    enabledMap[row.model_key] = row.is_enabled;
-    definitions.push({ key: row.model_key, source: row.source });
-  }
-
-  return { enabledMap, definitions };
-}
-
-export function useResolvedBusinessModels(
-  brandId: string | null | undefined,
-  branchId?: string | null
-) {
-  const qc = useQueryClient();
-  const normalizedBranchId = branchId ?? null;
-
-  const queryKey = useMemo(
-    () => ["resolved-business-models", brandId ?? null, normalizedBranchId] as const,
-    [brandId, normalizedBranchId]
-  );
-
-  const { data, isLoading } = useQuery({
-    queryKey,
-    queryFn: () => fetchResolvedBusinessModels(brandId!, normalizedBranchId),
-    enabled: !!brandId,
-    staleTime: CACHE.STALE_TIME_SHORT,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-  });
-
-  useEffect(() => {
-    if (!brandId) return;
-
-    const channel = supabase
-      .channel(`resolved-business-models-v1-${brandId}-${normalizedBranchId ?? "no-branch"}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "brand_business_models",
-          filter: `brand_id=eq.${brandId}`,
-        },
-        () => qc.invalidateQueries({ queryKey })
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "business_models" },
-        () => qc.invalidateQueries({ queryKey })
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "city_business_model_overrides",
-          filter: `brand_id=eq.${brandId}`,
-        },
-        () => qc.invalidateQueries({ queryKey })
-      );
-
-    channel.subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [brandId, normalizedBranchId, qc, queryKey]);
-
-  const isModelEnabled = (modelKey: string): boolean => {
-    if (!brandId) return false;
-    if (isLoading || !data) return false;
-    return data.enabledMap[modelKey] ?? false;
-  };
-
-  return {
-    isModelEnabled,
-    isLoading,
-    models: data?.enabledMap ?? {},
-    definitions: data?.definitions ?? [],
-  };
-}
+await supabase.from("audit_logs").insert({
+  entity_type: "business_model",
+  entity_id: modelId,
+  action: "updated",
+  changes: { name: { from, to } },
+  actor_id: userId,
+});
 ```
+
+### Realtime
+
+Já tratado pelo `useResolvedBusinessModels` da 5.2 (que outros consumidores usarão futuramente). Os novos hooks CRUD usam `staleTime: 30s` + invalidação manual após mutation; **não** subscrevem Realtime adicional para não duplicar canais.
 
 ---
 
-## 3. Flag em `constantes_features.ts`
+## Plano de execução (commit atômico único)
 
-Adicionar ao final do arquivo:
+1. Criar 10 arquivos novos (hooks + componentes)
+2. Editar `pagina_central_modulos.tsx` (adicionar tab)
+3. Editar `aba_catalogo.tsx` (renderizar badges)
+4. `npx tsc --noEmit` (esperado exit 0)
+5. Commit único
 
-```ts
-/**
- * Liga a nova camada de Modelos de Negócio (Sub-fase 5.2+).
- * Quando `true`, sidebars e painéis usam `useResolvedBusinessModels`
- * em paralelo ao `useResolvedModules` existente (não substitui
- * ainda — substituição vem na Sub-fase 5.7).
- */
-export const USE_BUSINESS_MODELS = false;
-```
+## Rollback trivial
 
----
+- Reverter as 2 edições (página central e aba catálogo)
+- Deletar os 10 arquivos novos
+- Sem mudanças de schema. Sem migrations. Zero impacto em dados.
 
-## 4. Plano de execução (commit atômico único)
+## Riscos
 
-1. **Migration**: `<timestamp>_resolve_active_business_models_phase_52.sql` — apenas o `CREATE OR REPLACE FUNCTION` + `GRANT`
-2. **Novo arquivo**: `src/compartilhados/hooks/hook_modelos_negocio_resolvidos.ts`
-3. **Edição**: `src/compartilhados/constants/constantes_features.ts` (adicionar 1 const + JSDoc)
-4. **`npx tsc --noEmit`** (esperado: exit 0)
+- **Baixos**: nada existente quebra. Aba nova é aditiva. Badges no Catálogo só somam visual; se a query de vínculos falhar, fallback é renderizar nada (não bloqueia o card).
+- Flag `USE_BUSINESS_MODELS` permanece `false` — nenhum consumidor downstream é afetado.
+- Audit logs novos usam tabela existente — sem migração.
 
----
+## Entregáveis pós-execução
 
-## 5. Testes de aceite (após executar)
-
-**Aceite (a)** — brand vazia:
-```sql
-SELECT * FROM resolve_active_business_models('<brand_id>', NULL);
--- Esperado: 13 linhas, todas is_enabled=false, source='inactive'
-```
-
-**Aceite (b)** — modelo ligado na marca:
-```sql
-INSERT INTO brand_business_models (brand_id, business_model_id, is_enabled)
-SELECT '<brand_id>', id, true FROM business_models WHERE key='pontua_cliente';
-
-SELECT * FROM resolve_active_business_models('<brand_id>', NULL)
-WHERE model_key='pontua_cliente';
--- Esperado: is_enabled=true, source='brand'
-
-DELETE FROM brand_business_models
-WHERE brand_id='<brand_id>'
-  AND business_model_id=(SELECT id FROM business_models WHERE key='pontua_cliente');
-```
-
-**Aceite (c)** — override de cidade desligando:
-```sql
--- Pré: liga na marca
-INSERT INTO brand_business_models (brand_id, business_model_id, is_enabled)
-SELECT '<brand_id>', id, true FROM business_models WHERE key='pontua_cliente';
-
--- Override cidade desliga
-INSERT INTO city_business_model_overrides (brand_id, branch_id, business_model_id, is_enabled)
-SELECT '<brand_id>', '<branch_id>', id, false FROM business_models WHERE key='pontua_cliente';
-
-SELECT * FROM resolve_active_business_models('<brand_id>', '<branch_id>')
-WHERE model_key='pontua_cliente';
--- Esperado: is_enabled=false, source='branch'
-
--- Cleanup
-DELETE FROM city_business_model_overrides WHERE brand_id='<brand_id>' AND branch_id='<branch_id>';
-DELETE FROM brand_business_models WHERE brand_id='<brand_id>';
-```
-
-**Aceite (d)** — hook compila: `npx tsc --noEmit` exit 0.
-
-**Aceite (e)** — build válido: já garantido pelo tsc + Vite (sem código novo no bundle ativo, hook é tree-shakable enquanto não importado).
-
----
-
-## 6. Estimativa
-
-**~6-8 minutos** (1 migration pequena + 1 arquivo TS + 1 linha de flag + tsc + 3 queries de aceite).
-
-## 7. Riscos
-
-- **Zero**. RPC não é chamada por nada hoje. Hook não é importado por nada hoje. Flag default `false`.
-
-## 8. Entregáveis pós-execução
-
-1. Nome do arquivo de migration
-2. Resultado dos 3 testes de aceite SQL (a, b, c)
-3. Exit code do `npx tsc --noEmit`
-4. Confirmação de criação do hook e da flag
+1. Lista dos 10 arquivos criados + 2 editados
+2. Exit code do `npx tsc --noEmit`
+3. Screenshot textual confirmando: aba aparece entre Catálogo e Planos, 13 cards renderizam, matriz mostra 13×4=52 checkboxes marcadas, badges aparecem nos módulos do Catálogo
 
