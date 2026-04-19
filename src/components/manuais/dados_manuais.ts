@@ -1199,6 +1199,27 @@ export const gruposManuais: GrupoManual[] = [
     icone: "LayoutGrid",
     manuais: [
       {
+        id: "central-modulos-visao-geral",
+        titulo: "Visão Geral da Central de Módulos",
+        descricao: "A Central de Módulos é o painel mestre do Root Admin para governar TODA a plataforma: define o catálogo de funcionalidades, os Modelos de Negócio, os Planos comerciais, ativações por marca, overrides por cidade e auditoria. É a fonte única de verdade da arquitetura SaaS.",
+        comoAtivar: "Acesso exclusivo do Root Admin. Disponível em '/admin/central-modulos' ou pelo menu lateral 'Central de Módulos'.",
+        passos: [
+          "Acesse '/admin/central-modulos' (somente Root Admin).",
+          "A página é organizada em 6 abas no topo: Catálogo, Modelos, Planos, Empreendedores, Cidades e Auditoria.",
+          "Cada aba representa uma camada da arquitetura: Catálogo (módulos técnicos), Modelos (pacotes comerciais), Planos (combos de Modelos), Empreendedores (ativação por marca), Cidades (overrides locais) e Auditoria (histórico).",
+          "Use a aba mais à esquerda quando estiver criando coisas novas; as do meio para vincular; as da direita para liberar e auditar.",
+          "Toda alteração feita aqui é registrada automaticamente na aba 'Auditoria' com responsável, data e contexto.",
+          "Mudanças em módulos refletem em tempo real nos painéis das marcas e cidades afetadas."
+        ],
+        dicas: [
+          "Hierarquia mental: Catálogo é o 'estoque' técnico → Modelos empacotam comercialmente → Planos juntam Modelos → Empreendedores compram Planos → Cidades podem ajustar finos.",
+          "Use a Auditoria sempre que houver dúvida sobre 'quem mudou o quê' antes de abrir chamado.",
+          "Comece pela Aba Catálogo se for cadastrar funcionalidade nova; pela Aba Empreendedores se for liberar para uma marca específica.",
+          "A flag 'business_models_ui_enabled' controla quem vê a nova arquitetura de Modelos — hoje apenas marcas em beta."
+        ],
+        rota: "/admin/central-modulos"
+      },
+      {
         id: "central-modulos-catalogo",
         titulo: "Catálogo de Módulos",
         descricao: "Cadastre, edite e organize todas as definições de módulos disponíveis na plataforma. O catálogo é a fonte única de verdade — define quais funcionalidades existem, suas chaves técnicas, categorias e quem pode habilitá-las.",
