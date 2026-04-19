@@ -79,6 +79,7 @@ export default function BrandModulesPage() {
   const [busca, setBusca] = useState("");
 
   const brandId = isRootAdmin ? (selectedBrandId || currentBrandId) : currentBrandId;
+  const { data: businessModelsUiEnabled } = useBusinessModelsUiEnabled(brandId);
 
   const { data: allBrands } = useQuery({
     queryKey: ["brands-list"],
