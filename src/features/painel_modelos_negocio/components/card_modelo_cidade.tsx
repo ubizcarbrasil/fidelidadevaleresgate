@@ -116,7 +116,7 @@ export default function CardModeloCidade({ brandId, branchId, data }: Props) {
       className={`relative overflow-hidden transition-all ${
         isOn && state === "inherited_on" ? "border-primary/30 shadow-sm" : ""
       } ${isInheritedOff ? "opacity-60" : ""} ${
-        isOrphan ? "border-amber-500/40" : ""
+        isOrphan ? "border-warning/40" : ""
       }`}
     >
       {/* Barra colorida lateral quando ligado normal */}
