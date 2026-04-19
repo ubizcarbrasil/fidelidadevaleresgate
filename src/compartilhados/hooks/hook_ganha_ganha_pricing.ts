@@ -107,8 +107,8 @@ export function useUpdateGanhaGanhaPricing() {
       const { data, error } = await supabase.rpc("update_ganha_ganha_pricing", {
         p_plan_key: input.plan_key,
         p_price_cents: input.price_per_point_cents,
-        p_min_margin_pct: input.min_margin_pct,
-        p_max_margin_pct: input.max_margin_pct,
+        p_min_margin_pct: input.min_margin_pct ?? undefined,
+        p_max_margin_pct: input.max_margin_pct ?? undefined,
       });
       if (error) throw error;
 
