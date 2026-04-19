@@ -18,9 +18,10 @@ import HomeSectionOrderEditor from "@/components/brand-modules/HomeSectionOrderE
 import SidebarOrderEditor from "@/components/brand-modules/SidebarOrderEditor";
 import { CATEGORY_META } from "@/compartilhados/constants/constantes_categorias_modulos";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Briefcase, Settings } from "lucide-react";
+import { Briefcase, Settings, MapPin as MapPinTab } from "lucide-react";
 import { useBusinessModelsUiEnabled } from "@/compartilhados/hooks/hook_business_models_ui_flag";
 import AbaModelosNegocioBrand from "@/features/painel_modelos_negocio/aba_modelos_negocio_brand";
+import AbaModelosPorCidade from "@/features/painel_modelos_negocio/aba_modelos_por_cidade";
 
 const MODULE_ICONS: Record<string, any> = {
   stores: Store,
@@ -224,13 +225,20 @@ export default function BrandModulesPage() {
 
       {brandId && businessModelsUiEnabled ? (
         <Tabs defaultValue="negocio" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 h-auto gap-1 p-1">
+          <TabsList className="grid w-full grid-cols-3 h-auto gap-1 p-1">
             <TabsTrigger
               value="negocio"
               className="text-[11px] sm:text-sm flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 px-1"
             >
               <Briefcase className="h-4 w-4" />
               <span className="leading-none">Modelos de Negócio</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="cidades"
+              className="text-[11px] sm:text-sm flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 px-1"
+            >
+              <MapPinTab className="h-4 w-4" />
+              <span className="leading-none">Modelos por Cidade</span>
             </TabsTrigger>
             <TabsTrigger
               value="modulos"
@@ -243,6 +251,10 @@ export default function BrandModulesPage() {
 
           <TabsContent value="negocio" className="mt-4">
             <AbaModelosNegocioBrand brandId={brandId} />
+          </TabsContent>
+
+          <TabsContent value="cidades" className="mt-4">
+            <AbaModelosPorCidade brandId={brandId} />
           </TabsContent>
 
           <TabsContent value="modulos" className="mt-4 space-y-6">

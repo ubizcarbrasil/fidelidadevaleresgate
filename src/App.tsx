@@ -59,6 +59,7 @@ const CsvImportPage = lazyWithRetry(() => import("@/pages/CsvImportPage"));
 const CloneBranchPage = lazyWithRetry(() => import("@/pages/CloneBranchPage"));
 const BrandModulesPage = lazyWithRetry(() => import("@/pages/BrandModulesPage"));
 const PaginaConfigurarGanhaGanha = lazyWithRetry(() => import("@/features/painel_modelos_negocio/pagina_configurar_ganha_ganha"));
+const PaginaModelosPorCidadeBranch = lazyWithRetry(() => import("@/features/painel_modelos_negocio/pagina_modelos_por_cidade_branch"));
 const PointsRulesPage = lazyWithRetry(() => import("@/pages/PointsRulesPage"));
 const EarnPointsPage = lazyWithRetry(() => import("@/pages/EarnPointsPage"));
 const PointsLedgerPage = lazyWithRetry(() => import("@/pages/PointsLedgerPage"));
@@ -218,6 +219,7 @@ function AnimatedRoutes() {
               <Route path="clone-branch" element={<RootGuard><CloneBranchPage /></RootGuard>} />
               <Route path="brand-modules" element={<BrandModulesPage />} />
               <Route path="brand-modules/ganha-ganha" element={<PaginaConfigurarGanhaGanha />} />
+              <Route path="branch-business-models" element={<PaginaModelosPorCidadeBranch />} />
               <Route path="admin/central-modulos" element={<RootGuard><PaginaCentralModulos /></RootGuard>} />
               <Route path="pdv" element={<ModuleGuard moduleKey="earn_points_store"><OperatorRedeemPage /></ModuleGuard>} />
               <Route path="points-rules" element={<ModuleGuard moduleKey="earn_points_store"><PointsRulesPage /></ModuleGuard>} />

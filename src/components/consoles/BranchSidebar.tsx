@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutDashboard, LogOut, ChevronRight } from "lucide-react";
+import { LayoutDashboard, LogOut, ChevronRight, Briefcase } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,6 +10,7 @@ import { useBranchScoringModel } from "@/hooks/useBranchScoringModel";
 import { useBranchModules } from "@/hooks/useBranchModules";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useResolvedModules } from "@/compartilhados/hooks/hook_modulos_resolvidos";
+import { useBusinessModelsUiEnabled } from "@/compartilhados/hooks/hook_business_models_ui_flag";
 import { USE_RESOLVED_MODULES } from "@/compartilhados/constants/constantes_features";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -162,6 +163,7 @@ export function BranchSidebar() {
   const { isBranchModuleEnabled } = useBranchModules();
   const { name: brandName, logoUrl } = useBrandInfo();
   const cityName = useBranchCityName();
+  const { data: businessModelsUiEnabled } = useBusinessModelsUiEnabled(currentBrandId);
 
   const visibleGroups = groups
     .filter((group) => {
@@ -200,6 +202,31 @@ export function BranchSidebar() {
                     <NavLink to="/" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
                       <LayoutDashboard className="h-4 w-4" />
                       {!collapsed && <span className="flex-1">{getLabel(dashboardItem.key)}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {businessModelsUiEnabled && (
+          <SidebarGroup className="pb-0">
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname.startsWith("/branch-business-models")}
+                    tooltip="Modelos da Cidade"
+                  >
+                    <NavLink
+                      to="/branch-business-models"
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    >
+                      <Briefcase className="h-4 w-4" />
+                      {!collapsed && <span className="flex-1">Modelos da Cidade</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
