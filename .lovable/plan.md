@@ -1,119 +1,163 @@
 
 
-# Sub-fase 5.8 — Relatórios Ganha-Ganha
+# Sub-fase 5.9 — Depreciação conservadora + documentação
 
-## 1. Investigação: dado já existe e está bem modelado
+## 1. Investigação de "/permissions-overflow"
 
-Tabela canônica: **`ganha_ganha_billing_events`** (10 colunas, 2 índices úteis, RLS 3-níveis correta, FKs em `brands` e `stores`, em publication realtime).
+**A rota `/permissions-overflow` NÃO existe.** A referência é a `/brand-permissions`, página `BrandPermissionOverflowPage.tsx`.
 
-| Coluna | Uso |
+**O que faz:** Apenas uma tela informativa (já depreciada em 2026-04-18, antes desta sub-fase). Mostra um Alert "Esta tela foi descontinuada" + 2 botões: "Ir para a Central de Módulos" e "Voltar". Não lê nem grava em `brand_permission_config` mais.
+
+**Quem linka:**
+- `RootSidebar` via menu "sidebar.perm_parceiros" → `/brand-permissions`
+- `BrandJourneyGuidePage.tsx` (guia de onboarding) referencia a rota
+- `helpContent.ts` tem entrada de ajuda
+- `dados_manuais.ts` referencia em manual
+
+**Relação com Modelos de Negócio:** Indireta. O motivo da depreciação original (2026-04-18) foi que `brand_permission_config` não era consumido em runtime — controle real é `brand_modules` (Central de Módulos). Modelos de Negócio reforça essa decisão (sub-fase 5.7 sincroniza `brand_business_models → brand_modules` via trigger).
+
+**Recomendação:** **Manter intocada.** Página já é uma tombstone funcional com mensagem clara. Apenas registrar formalmente no `DEPRECATION_LOG.md` para deixar histórico em um único lugar consolidado. Não mexer em sidebar/journey/help nesta fase (out of scope conservador).
+
+## 2. ATENÇÃO — descoberta crítica sobre depreciação de tabelas
+
+A diretriz do usuário fala em "DEPRECATED" para `city_module_overrides` e `plan_module_templates`. Mas a investigação mostra que **ambas continuam ativamente em uso pelo fluxo legado de módulos técnicos**:
+
+| Tabela | Consumidores ativos hoje |
 |---|---|
-| brand_id, store_id | Pivots principais |
-| event_type | `EARN` (Custo Raiz / Receita Empreend.) ou `REDEEM` |
-| points_amount | Pontos da operação |
-| fee_per_point, fee_total | Receita do empreendedor (já com margem aplicada na lib) |
-| reference_id/type | Link a EARNING_EVENT / REDEMPTION |
-| period_month | `YYYY-MM` (default `now()`) — usado como bucket primário |
-| created_at | Para range arbitrário |
+| `city_module_overrides` | `hook_modulos_resolvidos.ts` (Realtime + cascata sidebar), `hook_city_overrides.ts` (Central de Módulos por cidade), `hook_catalogo.ts` |
+| `plan_module_templates` | `PlanModuleTemplatesPage.tsx` (UI do Raiz, ainda no menu RootSidebar), Edge Function `apply-plan-template` |
 
-**Quem grava hoje:** `src/lib/ganhaGanhaBilling.ts` (chamada por fluxos de earn/redeem) + `supabase/functions/earn-webhook`. Já populando com `fee_total = points_amount × fee_per_point` resolvido via `ganha_ganha_config` + `ganha_ganha_store_fees`.
+**Ajuste de redação do COMMENT** (mantendo o espírito conservador):
 
-**Volumetria:** 0 hoje. Projeção razoável: até ~100k eventos/mês para 1 brand grande (1k clientes × 100 transações). Em 1 ano = ~1.2M. Os índices `(brand_id, period_month)` e `(store_id, period_month)` cobrem 95% dos filtros. Aggregação client-side só vai começar a doer >50k linhas/período → vamos blindar com **RPCs server-side com filtros opcionais** que retornam já agregado.
-
-## 2. Recomendação: NÃO criar tabela nova. Agregar via 4 RPCs SECURITY DEFINER
-
-`ganha_ganha_billing_events` é o ledger. Não duplicar. Para escalar:
-- Criar 4 RPCs que rodam a agregação no Postgres (1 round trip, JSON pequeno, índices usados).
-- Filtros: `p_brand_id uuid` (NULL = todas, só root pode), `p_period_start date`, `p_period_end date`, `p_store_id uuid` (opcional), `p_branch_id uuid` (opcional, via `stores.branch_id`).
-- Cada RPC valida role do caller no início (root_admin OR brand_admin com escopo OR store_admin com escopo).
-
-## 3. Performance
-
-Com índices `(brand_id, period_month)` + `(store_id, period_month)` já no banco:
-- Query "1 mês, 1 brand, 200 stores, 50k eventos" → ~30ms agregada server-side.
-- Sem RPC, client baixa 50k linhas em JSON ≈ 8MB → 3-5s no mobile. Inaceitável.
-- **Único índice extra recomendado:** `(brand_id, created_at)` para ranges arbitrários cross-mês. Adicionar via migration.
-
-## 4. RPCs novas (SECURITY DEFINER, search_path=public)
-
-| RPC | Args | Retorna |
-|---|---|---|
-| `rpc_gg_report_summary` | brand, start, end, store?, branch? | 1 row: total_earn_pts, total_redeem_pts, total_earn_fee, total_redeem_fee, total_fee, n_events, n_stores |
-| `rpc_gg_report_by_store` | brand, start, end | N rows: store_id, store_name, earn_pts, redeem_pts, total_fee |
-| `rpc_gg_report_by_branch` | brand, start, end | N rows: branch_id, branch_city, branch_state, total_pts, total_fee |
-| `rpc_gg_report_by_month` | brand, year | 12 rows: month, earn_fee, redeem_fee, total_fee, n_events |
-
-Validação no início de cada RPC:
 ```sql
-IF NOT (has_role(auth.uid(),'root_admin')
-        OR (p_brand_id IS NOT NULL AND p_brand_id IN (SELECT get_user_brand_ids(auth.uid())))
-        OR (p_store_id IN (SELECT id FROM stores WHERE owner_user_id = auth.uid()))
-       ) THEN RAISE EXCEPTION 'forbidden'; END IF;
+COMMENT ON TABLE public.city_module_overrides IS
+  'Overrides técnicos de módulos por cidade. Para o fluxo novo de Modelos de Negócio (Sub-fase 5.6+) usar city_business_model_overrides. Esta tabela permanece ativa para o caminho legado da Central de Módulos. Re-avaliar após validação completa do beta Ubiz Resgata.';
+
+COMMENT ON TABLE public.plan_module_templates IS
+  'Templates de módulos técnicos por plano. Para o fluxo novo de Modelos de Negócio (Sub-fase 5.3+) usar plan_business_models. Esta tabela permanece ativa para o caminho legado de Perfil de Planos. Re-avaliar após validação completa do beta Ubiz Resgata.';
 ```
 
-## 5. Navegação proposta
+Sem `DEPRECATED` cru — porque hoje ainda são as tabelas operacionais para 100% das brands fora do beta. Quando o beta expandir para todas, aí sim depreciamos formal. O `DEPRECATION_LOG.md` deixa isso explícito.
 
-Reaproveitar o que existe + 1 página nova consolidada:
+## 3. Banner em `PlanModuleTemplatesPage.tsx`
 
-| Rota | Quem vê | Estado |
-|---|---|---|
-| `/ganha-ganha-dashboard` | root | já existe |
-| `/ganha-ganha-billing` | brand admin | já existe |
-| `/ganha-ganha-closing` | brand admin | já existe (PDF por parceiro) |
-| `/ganha-ganha-store-summary` | brand admin / store admin | já existe |
-| **`/ganha-ganha-reports`** ⭐ NOVO | root + brand admin | Hub de relatórios c/ filtros range, breakdowns, CSV+PDF consolidado |
-| **`/store/ganha-ganha`** ⭐ NOVO | store admin (console parceiro) | Visão de auto-serviço da loja |
+Adicionar `<Alert variant="default">` no topo do JSX (logo após `<PageHeader>`), com ícone `AlertTriangle`, texto:
 
-A página NOVA `/ganha-ganha-reports` é o entregável real desta sub-fase: range customizável, 3 breakdowns lado-a-lado (loja/cidade/mês), CSV + PDF unificados. Telas existentes ficam intactas (rollback trivial).
+> ⚠️ **Tela legada.** Esta configuração será substituída por **Modelos × Planos** (parte da nova arquitetura de Modelos de Negócio). Para brands em beta, configure em **Central de Módulos → Modelos × Planos**. Esta tela continua funcional e é a fonte para todas as brands fora do beta.
 
-**Beta flag**: as 2 rotas novas são gateadas por `business_models_ui_enabled` da brand (memória `architecture/city-flag-resolution-rule` — `=== true`). Outras brands continuam vendo só as telas antigas.
+Sem alterar comportamento. Sem remover do menu.
 
-**Sidebar**: 1 entrada nova "Relatórios Cashback" no `BrandSidebar` (módulo `ganha_ganha`, gateada por flag) e 1 entrada no `StoreSidebar` (procurar arquivo correto se existe; se não, deixar pronto-mas-sem-link e documentar).
+## 4. Arquivos
 
-## 6. Mockup textual — `/ganha-ganha-reports`
+**Criados (1):**
+- `DEPRECATION_LOG.md` (raiz do projeto, junto com `ARCHITECTURE_DECISION_RECORD.md` e `TECH_DEBT.md`)
+
+**Editados (2):**
+- `src/pages/PlanModuleTemplatesPage.tsx` — adicionar banner Alert no topo (~10 linhas)
+- **`BUSINESS_MODELS_ARCHITECTURE.md` não existe** — vou **criá-lo** ao invés de "atualizar". Vai conter o histórico de execução das sub-fases 5.1 a 5.9 + visão geral da arquitetura final + ponteiros para os arquivos-chave (RPCs, hooks, trigger, tabelas). Isso vira o documento canônico que a diretriz pediu.
+
+Total final:
+- **Criados:** `DEPRECATION_LOG.md`, `BUSINESS_MODELS_ARCHITECTURE.md`
+- **Editado:** `src/pages/PlanModuleTemplatesPage.tsx` (banner)
+- **Migration SQL:** 1 arquivo só com 2 `COMMENT ON TABLE` (zero risco, idempotente)
+
+## 5. Conteúdo do `DEPRECATION_LOG.md` (estrutura)
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│ Relatórios Cashback                          [📤 CSV] [📄 PDF] │
-│ Visão consolidada com filtros e breakdowns                     │
-├────────────────────────────────────────────────────────────────┤
-│ Período: [01/04/2026]→[30/04/2026]  Atalhos: [Mês][Trim][Ano]  │
-│ Loja: [Todas ▾]   Cidade: [Todas ▾]   [Apenas root: Marca ▾]   │
-├────────────────────────────────────────────────────────────────┤
-│ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐                  │
-│ │Pts   │ │Pts   │ │Fat.  │ │Fat.  │ │Total │                  │
-│ │Gerad.│ │Resg. │ │Geraç.│ │Resg. │ │R$    │                  │
-│ │ 145k │ │ 38k  │ │1.450 │ │ 380  │ │1.830 │                  │
-│ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘                  │
-├────────────────────────────────────────────────────────────────┤
-│ [Gráfico de barras temporal — recharts, 12 meses]              │
-├────────────────────────────────────────────────────────────────┤
-│ Tabs: [Por Loja] [Por Cidade] [Por Mês]                        │
-│ ┌──────────────────────────────────────────────────────────┐   │
-│ │ Loja                Pts G  Pts R  Fat.G  Fat.R   Total   │   │
-│ │ Mercado Bom Preço   45k    12k    450    120     570     │   │
-│ │ Padaria Central     30k    8k     300    80      380     │   │
-│ │ Posto BR Olímpia    25k    7k     250    70      320     │   │
-│ │ ...                                                      │   │
-│ │ TOTAL              145k    38k   1.450   380    1.830    │   │
-│ └──────────────────────────────────────────────────────────┘   │
-└────────────────────────────────────────────────────────────────┘
+# Log de Depreciações — Vale Resgate
+
+## 2026-04-19 — Sub-fase 5.9: Modelos de Negócio em beta
+
+### Status: DEPRECAÇÃO PARCIAL (apenas para brands em beta)
+A flag `business_models_ui_enabled` controla quem usa a nova
+arquitetura. Hoje: apenas Ubiz Resgata
+(db15bd21-9137-4965-a0fb-540d8e8b26f1).
+
+### city_module_overrides (tabela)
+- Substituída por: city_business_model_overrides (5.6)
+- Status: ativa para fluxo legado, COMMENT SQL adicionado
+- Ainda consumida por: hook_modulos_resolvidos, hook_city_overrides,
+  hook_catalogo
+- Remoção prevista: após beta validar e expandir para 100% das brands
+- Rollback: remover COMMENT
+
+### plan_module_templates (tabela)
+- Substituída por: plan_business_models (5.3)
+- Status: ativa para fluxo legado, COMMENT SQL adicionado
+- Ainda consumida por: PlanModuleTemplatesPage, edge apply-plan-template
+- Remoção prevista: idem
+- Rollback: remover COMMENT
+
+### /plan-templates (rota e página)
+- Substituída por: /brand-modules → aba "Modelos de Negócio" → "Modelos × Planos"
+  (apenas para brands em beta)
+- Status: rota e link no RootSidebar mantidos. Banner de aviso adicionado no topo.
+- Remoção prevista: fase 6
+- Rollback: remover banner
+
+### /brand-permissions (rota e BrandPermissionOverflowPage)
+- Já estava depreciada desde 2026-04-18 (Caminho B do diagnóstico
+  pré-Modelos de Negócio)
+- Substituída por: Central de Módulos (/admin/central-modulos)
+- Status: tela é tombstone informativa; tabela brand_permission_config
+  preservada com dados intactos
+- Remoção prevista: avaliar junto com city_module_overrides
+- Rollback: nenhum (já é só uma página de aviso)
+
+### Contexto
+Parte do rollout de Modelos de Negócio (Sub-fases 5.1–5.9),
+documentado em BUSINESS_MODELS_ARCHITECTURE.md.
 ```
 
-## 7. Mockups dos exports
+## 6. Conteúdo do `BUSINESS_MODELS_ARCHITECTURE.md` (estrutura)
 
-**CSV (1 linha)** — formato achatado para contador:
-```
-periodo;data_evento;loja;cidade;estado;tipo;pontos;taxa_unit;valor_total
-2026-04;2026-04-19;Mercado Bom Preço;Olímpia;SP;EARN;120;0,15;18,00
+Seções:
+1. Visão geral (problema, solução, decisões fundamentais)
+2. Modelo de dados (catálogo `business_models`, ligações N-N, overrides, pricing GG)
+3. RPCs principais (`resolve_active_business_models`, `rpc_gg_report_*`)
+4. Hooks-chave (`useResolvedBusinessModels`, `useBusinessModelsUiEnabled`, etc.)
+5. Trigger de sincronização (Sub-fase 5.7)
+6. UI por persona (Raiz / Empreendedor / Filial / Loja)
+7. Beta gate (`brand_settings_json.business_models_ui_enabled === true`)
+8. Relatórios e exports (5.8)
+9. Convivência com fluxo legado (link p/ DEPRECATION_LOG)
+10. Fluxo de rollback global (1 UPDATE para flag = OFF)
+11. Permissões e RLS
+12. Audit log (entity types e actions)
+13. Pendências (Fase 4.1b travada, Fase 4.3c pendente, expansão pós-beta)
+14. **Histórico de execução** (5.1–5.9 com data, escopo entregue, arquivos principais)
+
+## 7. Migração SQL
+
+```sql
+-- Sub-fase 5.9 — Depreciação conservadora (apenas COMMENTs)
+COMMENT ON TABLE public.city_module_overrides IS
+  'Overrides técnicos de módulos por cidade. Para Modelos de Negócio (5.6+) usar city_business_model_overrides. Tabela permanece ativa para fluxo legado da Central de Módulos.';
+
+COMMENT ON TABLE public.plan_module_templates IS
+  'Templates de módulos técnicos por plano. Para Modelos de Negócio (5.3+) usar plan_business_models. Tabela permanece ativa para fluxo legado de Perfil de Planos.';
 ```
 
-**PDF (1 página A4)**:
-```
-┌────────────────────────────────────────────────────────────┐
-│ [logo]  Ubiz Resgata — Relatório Cashback                  │
-│ Período: 01/04/2026 a 30/04/2026                           │
-│ Gerado em: 19/04/2026 14:32                                │
-├────────────────────────────────────────────────────────────┤
-│ RESUMO                                                     │
-│ Pts Gerados: 145.000     Faturamento Ge
+Idempotente, sem efeito em dados, RLS ou índices.
+
+## 8. Estimativa
+- Tempo: ~10–15 min
+- LOC: ~250 (docs MD) + ~10 (banner JSX) + 4 (SQL)
+- Commit atômico único
+- `npx tsc --noEmit` esperado limpo (apenas adição de Alert visual)
+
+## 9. Rollback (item por item)
+
+| Ação | Como reverter |
+|---|---|
+| `DEPRECATION_LOG.md` | Deletar arquivo |
+| `BUSINESS_MODELS_ARCHITECTURE.md` | Deletar arquivo |
+| Banner em `PlanModuleTemplatesPage.tsx` | Remover bloco `<Alert>` (linhas isoladas) |
+| `COMMENT ON TABLE city_module_overrides` | `COMMENT ON TABLE public.city_module_overrides IS NULL;` |
+| `COMMENT ON TABLE plan_module_templates` | `COMMENT ON TABLE public.plan_module_templates IS NULL;` |
+
+Zero código operacional alterado. Zero RLS. Zero dados afetados. Zero alterações em audit_logs/trigger 5.7. Beta flag intocada.
+
+## 10. Riscos
+**Mínimos.** Apenas docs + 1 banner visual + 2 COMMENTs SQL. Não há caminho que regrede comportamento. Único cuidado: validar que o componente `Alert` já está importado em `PlanModuleTemplatesPage.tsx` ou adicionar o import.
+
