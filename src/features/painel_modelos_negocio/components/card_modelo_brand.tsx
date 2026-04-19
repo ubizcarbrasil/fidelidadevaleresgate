@@ -70,10 +70,7 @@ export default function CardModeloBrand({ brandId, resolved }: Props) {
               backgroundColor: isActive ? `${color}1A` : "hsl(var(--muted))",
             }}
           >
-            <Icon
-              className="h-5 w-5"
-              {...({ style: { color: isActive ? color : undefined } } as never)}
-            />
+            <Icon className={`h-5 w-5 ${isActive ? "" : "text-muted-foreground"}`} />
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-semibold truncate">{def.name}</h4>

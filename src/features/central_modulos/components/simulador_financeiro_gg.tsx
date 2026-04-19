@@ -20,6 +20,8 @@ import type { GanhaGanhaPricingRow } from "@/compartilhados/hooks/hook_ganha_gan
 
 interface Props {
   pricing: GanhaGanhaPricingRow[];
+  /** Quando definido, esconde o seletor de plano e fixa nesse plano (modo painel do empreendedor). */
+  lockedPlanKey?: PlanKey;
 }
 
 function fmtBRL(value: number): string {
@@ -29,8 +31,8 @@ function fmtBRL(value: number): string {
   });
 }
 
-export default function SimuladorFinanceiroGG({ pricing }: Props) {
-  const [planKey, setPlanKey] = useState<PlanKey>("profissional");
+export default function SimuladorFinanceiroGG({ pricing, lockedPlanKey }: Props) {
+  const [planKey, setPlanKey] = useState<PlanKey>(lockedPlanKey ?? "profissional");
   const [pointsStr, setPointsStr] = useState("10000");
   const [marginStr, setMarginStr] = useState("50");
 
@@ -84,23 +86,32 @@ export default function SimuladorFinanceiroGG({ pricing }: Props) {
         <div className="grid gap-4 md:grid-cols-2">
           {/* Inputs */}
           <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="sim-plan" className="text-xs">
-                Plano do empreendedor
-              </Label>
-              <Select value={planKey} onValueChange={(v) => setPlanKey(v as PlanKey)}>
-                <SelectTrigger id="sim-plan">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PLANS.map((p) => (
-                    <SelectItem key={p.key} value={p.key}>
-                      {p.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {lockedPlanKey ? (
+              <div className="space-y-1.5">
+                <Label className="text-xs">Plano do empreendedor</Label>
+                <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm font-medium">
+                  {PLANS.find((p) => p.key === lockedPlanKey)?.label ?? lockedPlanKey}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <Label htmlFor="sim-plan" className="text-xs">
+                  Plano do empreendedor
+                </Label>
+                <Select value={planKey} onValueChange={(v) => setPlanKey(v as PlanKey)}>
+                  <SelectTrigger id="sim-plan">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PLANS.map((p) => (
+                      <SelectItem key={p.key} value={p.key}>
+                        {p.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <Label htmlFor="sim-points" className="text-xs">
