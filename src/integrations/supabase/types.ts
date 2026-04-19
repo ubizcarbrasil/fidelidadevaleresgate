@@ -5582,6 +5582,7 @@ export type Database = {
       plan_ganha_ganha_pricing: {
         Row: {
           created_at: string
+          id: string
           max_margin_pct: number | null
           min_margin_pct: number | null
           plan_key: string
@@ -5592,6 +5593,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          id?: string
           max_margin_pct?: number | null
           min_margin_pct?: number | null
           plan_key: string
@@ -5602,6 +5604,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          id?: string
           max_margin_pct?: number | null
           min_margin_pct?: number | null
           plan_key?: string
@@ -8936,6 +8939,15 @@ export type Database = {
       update_city_belt: {
         Args: { p_branch_id: string; p_brand_id: string }
         Returns: Json
+      }
+      update_ganha_ganha_pricing: {
+        Args: {
+          p_max_margin_pct?: number
+          p_min_margin_pct?: number
+          p_plan_key: string
+          p_price_cents: number
+        }
+        Returns: string
       }
       user_has_permission: {
         Args: {
