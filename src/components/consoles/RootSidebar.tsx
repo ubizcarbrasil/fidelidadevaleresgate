@@ -108,6 +108,7 @@ const rootGroupDefs: DefinicaoGrupoSidebar[] = [
     label: "Configurações",
     items: [
       { key: "sidebar.central_modulos", overrides: { defaultTitle: "Central de Módulos" } },
+      { key: "sidebar.central_modulos_manual", overrides: { defaultTitle: "Como Configurar" } },
       "sidebar.funcionalidades",
       { key: "sidebar.modulos", overrides: { defaultTitle: "Módulos das Marcas" } },
       "sidebar.permissoes_globais", "sidebar.secoes_home", "sidebar.modelos_home",
