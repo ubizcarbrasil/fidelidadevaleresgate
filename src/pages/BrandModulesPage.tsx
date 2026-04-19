@@ -17,6 +17,10 @@ import {
 import HomeSectionOrderEditor from "@/components/brand-modules/HomeSectionOrderEditor";
 import SidebarOrderEditor from "@/components/brand-modules/SidebarOrderEditor";
 import { CATEGORY_META } from "@/compartilhados/constants/constantes_categorias_modulos";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Briefcase, Settings } from "lucide-react";
+import { useBusinessModelsUiEnabled } from "@/compartilhados/hooks/hook_business_models_ui_flag";
+import AbaModelosNegocioBrand from "@/features/painel_modelos_negocio/aba_modelos_negocio_brand";
 
 const MODULE_ICONS: Record<string, any> = {
   stores: Store,
@@ -75,6 +79,7 @@ export default function BrandModulesPage() {
   const [busca, setBusca] = useState("");
 
   const brandId = isRootAdmin ? (selectedBrandId || currentBrandId) : currentBrandId;
+  const { data: businessModelsUiEnabled } = useBusinessModelsUiEnabled(brandId);
 
   const { data: allBrands } = useQuery({
     queryKey: ["brands-list"],
@@ -217,101 +222,134 @@ export default function BrandModulesPage() {
         <p className="text-muted-foreground text-sm">Selecione uma marca para gerenciar seus módulos.</p>
       )}
 
-      {brandId && (
-        <>
-          {/* Summary bar */}
-          <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
-            <Blocks className="h-5 w-5 text-primary" />
-            <span className="text-sm font-medium">
-              <strong className="text-primary">{enabledCount}</strong> de {totalCount} módulos ativos
-              {isFiltering && (
-                <span className="ml-2 text-muted-foreground font-normal">
-                  · {filteredCount} resultado(s) para "{busca.trim()}"
-                </span>
-              )}
-            </span>
-          </div>
+      {brandId && businessModelsUiEnabled ? (
+        <Tabs defaultValue="negocio" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 h-auto gap-1 p-1">
+            <TabsTrigger
+              value="negocio"
+              className="text-[11px] sm:text-sm flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 px-1"
+            >
+              <Briefcase className="h-4 w-4" />
+              <span className="leading-none">Modelos de Negócio</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="modulos"
+              className="text-[11px] sm:text-sm flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 px-1"
+            >
+              <Settings className="h-4 w-4" />
+              <span className="leading-none">Funcionalidades técnicas</span>
+            </TabsTrigger>
+          </TabsList>
 
-          {/* Busca */}
-          <div className="relative max-w-md">
-            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar funcionalidade por nome…"
-              className="pl-9"
-            />
-          </div>
+          <TabsContent value="negocio" className="mt-4">
+            <AbaModelosNegocioBrand brandId={brandId} />
+          </TabsContent>
 
-          {!isFiltering && (
-            <>
-              <HomeSectionOrderEditor brandId={brandId} isModuleEnabled={(key) => {
-                const def = definitions?.find(d => d.key === key);
-                if (!def) return true;
-                return isEnabled(def.id);
-              }} />
-
-              <SidebarOrderEditor brandId={brandId} />
-            </>
-          )}
-
-          {isFiltering && filteredCount === 0 && (
-            <Card>
-              <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                Nenhuma funcionalidade encontrada para "{busca.trim()}".
-              </CardContent>
-            </Card>
-          )}
-
-          {sortedCategories.map((category) => {
-            const mods = grouped[category]!;
-            const meta = CATEGORY_META[category] || CATEGORY_META.general;
-
-            return (
-              <div key={category} className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{meta.emoji}</span>
-                  <div>
-                    <h3 className="text-sm font-bold">{meta.label}</h3>
-                    <p className="text-xs text-muted-foreground">{meta.description}</p>
-                  </div>
-                </div>
-                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                  {mods.map(def => {
-                    const IconComp = MODULE_ICONS[def.key] || Blocks;
-                    const enabled = isEnabled(def.id);
-                    return (
-                      <Card key={def.id} className={`transition-all ${enabled ? "border-primary/30 shadow-sm" : "opacity-60"}`}>
-                        <CardHeader className="pb-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                              <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${enabled ? "bg-primary/10" : "bg-muted"}`}>
-                                <IconComp className={`h-4.5 w-4.5 ${enabled ? "text-primary" : "text-muted-foreground"}`} />
-                              </div>
-                              <CardTitle className="text-sm">{def.name}</CardTitle>
-                            </div>
-                            <Switch
-                              checked={enabled}
-                              onCheckedChange={v => toggle.mutate({ defId: def.id, enabled: v })}
-                              disabled={def.is_core}
-                            />
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <CardDescription className="text-xs">{def.description || "Sem descrição"}</CardDescription>
-                          <div className="mt-2 flex gap-2">
-                            {def.is_core && <Badge variant="secondary" className="text-[10px]">Essencial</Badge>}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </>
+          <TabsContent value="modulos" className="mt-4 space-y-6">
+            {renderLegacyModulesPanel()}
+          </TabsContent>
+        </Tabs>
+      ) : (
+        brandId && <div className="space-y-6">{renderLegacyModulesPanel()}</div>
       )}
     </div>
   );
+
+  function renderLegacyModulesPanel() {
+    return (
+      <>
+        {/* Summary bar */}
+        <div className="flex items-center gap-3 rounded-xl bg-muted p-3">
+          <Blocks className="h-5 w-5 text-primary" />
+          <span className="text-sm font-medium">
+            <strong className="text-primary">{enabledCount}</strong> de {totalCount} módulos ativos
+            {isFiltering && (
+              <span className="ml-2 text-muted-foreground font-normal">
+                · {filteredCount} resultado(s) para "{busca.trim()}"
+              </span>
+            )}
+          </span>
+        </div>
+
+        {/* Busca */}
+        <div className="relative max-w-md">
+          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar funcionalidade por nome…"
+            className="pl-9"
+          />
+        </div>
+
+        {!isFiltering && (
+          <>
+            <HomeSectionOrderEditor brandId={brandId!} isModuleEnabled={(key) => {
+              const def = definitions?.find(d => d.key === key);
+              if (!def) return true;
+              return isEnabled(def.id);
+            }} />
+
+            <SidebarOrderEditor brandId={brandId!} />
+          </>
+        )}
+
+        {isFiltering && filteredCount === 0 && (
+          <Card>
+            <CardContent className="py-10 text-center text-sm text-muted-foreground">
+              Nenhuma funcionalidade encontrada para "{busca.trim()}".
+            </CardContent>
+          </Card>
+        )}
+
+        {sortedCategories.map((category) => {
+          const mods = grouped[category]!;
+          const meta = CATEGORY_META[category] || CATEGORY_META.general;
+
+          return (
+            <div key={category} className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{meta.emoji}</span>
+                <div>
+                  <h3 className="text-sm font-bold">{meta.label}</h3>
+                  <p className="text-xs text-muted-foreground">{meta.description}</p>
+                </div>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {mods.map(def => {
+                  const IconComp = MODULE_ICONS[def.key] || Blocks;
+                  const enabled = isEnabled(def.id);
+                  return (
+                    <Card key={def.id} className={`transition-all ${enabled ? "border-primary/30 shadow-sm" : "opacity-60"}`}>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${enabled ? "bg-primary/10" : "bg-muted"}`}>
+                              <IconComp className={`h-4.5 w-4.5 ${enabled ? "text-primary" : "text-muted-foreground"}`} />
+                            </div>
+                            <CardTitle className="text-sm">{def.name}</CardTitle>
+                          </div>
+                          <Switch
+                            checked={enabled}
+                            onCheckedChange={v => toggle.mutate({ defId: def.id, enabled: v })}
+                            disabled={def.is_core}
+                          />
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <CardDescription className="text-xs">{def.description || "Sem descrição"}</CardDescription>
+                        <div className="mt-2 flex gap-2">
+                          {def.is_core && <Badge variant="secondary" className="text-[10px]">Essencial</Badge>}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </>
+    );
+  }
 }
