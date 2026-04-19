@@ -1199,6 +1199,27 @@ export const gruposManuais: GrupoManual[] = [
     icone: "LayoutGrid",
     manuais: [
       {
+        id: "central-modulos-visao-geral",
+        titulo: "Visão Geral da Central de Módulos",
+        descricao: "A Central de Módulos é o painel mestre do Root Admin para governar TODA a plataforma: define o catálogo de funcionalidades, os Modelos de Negócio, os Planos comerciais, ativações por marca, overrides por cidade e auditoria. É a fonte única de verdade da arquitetura SaaS.",
+        comoAtivar: "Acesso exclusivo do Root Admin. Disponível em '/admin/central-modulos' ou pelo menu lateral 'Central de Módulos'.",
+        passos: [
+          "Acesse '/admin/central-modulos' (somente Root Admin).",
+          "A página é organizada em 6 abas no topo: Catálogo, Modelos, Planos, Empreendedores, Cidades e Auditoria.",
+          "Cada aba representa uma camada da arquitetura: Catálogo (módulos técnicos), Modelos (pacotes comerciais), Planos (combos de Modelos), Empreendedores (ativação por marca), Cidades (overrides locais) e Auditoria (histórico).",
+          "Use a aba mais à esquerda quando estiver criando coisas novas; as do meio para vincular; as da direita para liberar e auditar.",
+          "Toda alteração feita aqui é registrada automaticamente na aba 'Auditoria' com responsável, data e contexto.",
+          "Mudanças em módulos refletem em tempo real nos painéis das marcas e cidades afetadas."
+        ],
+        dicas: [
+          "Hierarquia mental: Catálogo é o 'estoque' técnico → Modelos empacotam comercialmente → Planos juntam Modelos → Empreendedores compram Planos → Cidades podem ajustar finos.",
+          "Use a Auditoria sempre que houver dúvida sobre 'quem mudou o quê' antes de abrir chamado.",
+          "Comece pela Aba Catálogo se for cadastrar funcionalidade nova; pela Aba Empreendedores se for liberar para uma marca específica.",
+          "A flag 'business_models_ui_enabled' controla quem vê a nova arquitetura de Modelos — hoje apenas marcas em beta."
+        ],
+        rota: "/admin/central-modulos"
+      },
+      {
         id: "central-modulos-catalogo",
         titulo: "Catálogo de Módulos",
         descricao: "Cadastre, edite e organize todas as definições de módulos disponíveis na plataforma. O catálogo é a fonte única de verdade — define quais funcionalidades existem, suas chaves técnicas, categorias e quem pode habilitá-las.",
@@ -1215,6 +1236,90 @@ export const gruposManuais: GrupoManual[] = [
           "A chave técnica (key) é imutável após a criação — escolha com cuidado.",
           "Use 'customer_facing = true' para módulos visíveis ao cliente final; 'false' para ferramentas administrativas.",
           "Não exclua módulos em uso — desative-os via Empreendedores ou Cidades primeiro."
+        ],
+        rota: "/admin/central-modulos"
+      },
+      {
+        id: "central-modulos-modelos-catalogo",
+        titulo: "Modelos de Negócio — Catálogo",
+        descricao: "Cadastre e gerencie os Modelos de Negócio da plataforma. Um Modelo é um pacote comercial (ex.: 'Cashback Inteligente', 'Cardápio Digital', 'Gamificação Motorista') que agrupa um conjunto de módulos técnicos para serem vendidos como uma unidade aos Empreendedores.",
+        comoAtivar: "Acesso Root Admin. Disponível em 'Central de Módulos' → aba 'Modelos' → sub-aba 'Catálogo de Modelos'.",
+        passos: [
+          "Acesse '/admin/central-modulos' e abra a aba 'Modelos'.",
+          "Selecione a sub-aba 'Catálogo de Modelos'.",
+          "Para criar: clique em 'Novo Modelo' e preencha chave técnica (imutável), nome comercial, descrição, audiência (DRIVER/PASSENGER/BOTH), ícone, cor e modelo de cobrança (FIXED, GANHA_GANHA, USAGE).",
+          "Para vincular módulos: abra um Modelo e use a seção 'Módulos incluídos' para marcar quais funcionalidades técnicas pertencem ao pacote, indicando quais são obrigatórias (required) e quais opcionais.",
+          "Para editar: clique no card do Modelo, ajuste os campos comerciais e salve.",
+          "Use o toggle 'Ativo' para tirar um Modelo de circulação sem perder o histórico."
+        ],
+        dicas: [
+          "A chave técnica do Modelo é imutável — escolha um identificador estável (ex.: 'cashback_inteligente').",
+          "Marque como 'required' apenas o que NÃO pode faltar; o restante pode ser ativado opcionalmente pelo empreendedor.",
+          "Audiência define em quais painéis o Modelo aparece: DRIVER (motorista), PASSENGER (cliente final) ou BOTH.",
+          "Modelos inativos não aparecem em Planos novos, mas continuam funcionando para empreendedores que já os ativaram."
+        ],
+        rota: "/admin/central-modulos"
+      },
+      {
+        id: "central-modulos-modelos-planos",
+        titulo: "Modelos × Planos — Matriz",
+        descricao: "Defina QUAIS Modelos de Negócio fazem parte de CADA Plano comercial. Esta matriz é o coração da oferta da plataforma: ao assinar um plano, o empreendedor recebe automaticamente todos os Modelos vinculados a ele.",
+        comoAtivar: "Acesso Root Admin. Disponível em 'Central de Módulos' → aba 'Modelos' → sub-aba 'Modelos × Planos'.",
+        passos: [
+          "Acesse '/admin/central-modulos' e abra a aba 'Modelos' → 'Modelos × Planos'.",
+          "Visualize a matriz: linhas são Modelos de Negócio, colunas são Planos (Free, Starter, Profissional, Enterprise, etc.).",
+          "Clique em qualquer célula para incluir/remover o Modelo daquele Plano.",
+          "Use 'incluído' (verde) para garantir o Modelo no plano e 'opcional' quando o empreendedor pode adquirir como add-on.",
+          "Salve as alterações — empreendedores no plano afetado terão seus módulos sincronizados automaticamente via trigger SQL.",
+          "Use a busca para filtrar Modelos quando a matriz crescer."
+        ],
+        dicas: [
+          "Mexer aqui afeta TODAS as marcas naquele plano — sempre confira em Auditoria antes de aplicar mudanças amplas.",
+          "Adicionar um Modelo a um plano liga automaticamente todos os módulos 'required' dele nas marcas afetadas.",
+          "Remover um Modelo NÃO desliga módulos órfãos — o trigger só desativa o que nenhum outro Modelo ativo precisa.",
+          "Para testes graduais, prefira ativar primeiro só em plano superior antes de descer para os básicos."
+        ],
+        rota: "/admin/central-modulos"
+      },
+      {
+        id: "central-modulos-pricing-ganha-ganha",
+        titulo: "Pricing Ganha-Ganha",
+        descricao: "Configure a cobrança por uso do modelo Ganha-Ganha (cashback compartilhado). Cada Plano define qual o teto de margem e regras de faturamento; o empreendedor escolhe sua margem real dentro desse teto.",
+        comoAtivar: "Acesso Root Admin. Disponível em 'Central de Módulos' → aba 'Modelos' → sub-aba 'Pricing'.",
+        passos: [
+          "Acesse '/admin/central-modulos' → aba 'Modelos' → 'Pricing'.",
+          "Selecione o Plano comercial que será configurado.",
+          "Defina a margem máxima permitida (em %) para o empreendedor cobrar dos parceiros lojistas.",
+          "Configure a taxa por ponto, valor mínimo de fatura e período de fechamento.",
+          "Use 'valid_from' e 'valid_to' para versionar o pricing — alterações futuras não afetam contratos vigentes.",
+          "Salve. Empreendedores nesse plano verão o novo teto ao configurar a margem em 'Funcionalidades' → Ganha-Ganha."
+        ],
+        dicas: [
+          "O pricing é versionado: criar uma nova vigência preserva os contratos antigos automaticamente.",
+          "Empreendedores configuram a margem operacional dentro do teto definido aqui — eles não veem o teto, apenas o limite.",
+          "Combine com a aba 'Relatórios Cashback' (no painel do empreendedor) para acompanhar receita e custo do modelo.",
+          "Para reduzir margem máxima sem afetar contratos vigentes, encerre a vigência atual e crie uma nova com 'valid_from' futuro."
+        ],
+        rota: "/admin/central-modulos"
+      },
+      {
+        id: "central-modulos-planos",
+        titulo: "Aba Planos",
+        descricao: "Cadastre e gerencie os Planos comerciais oferecidos aos empreendedores (Free, Starter, Profissional, Enterprise, etc.). Cada Plano define preço, ciclo de cobrança e — via aba 'Modelos × Planos' — quais Modelos de Negócio estão inclusos.",
+        comoAtivar: "Acesso Root Admin. Disponível em 'Central de Módulos' → aba 'Planos'.",
+        passos: [
+          "Acesse '/admin/central-modulos' e abra a aba 'Planos'.",
+          "Para criar: clique em 'Novo Plano' e preencha chave (imutável), nome comercial, descrição, ordem de exibição e flag de visibilidade.",
+          "Para editar: abra o card do Plano e ajuste descrição, ordem ou disponibilidade pública.",
+          "Para vincular Modelos: vá para a aba 'Modelos' → 'Modelos × Planos' e marque os Modelos inclusos neste Plano.",
+          "Use o toggle 'Ativo' para descontinuar um Plano sem afetar quem já o assina.",
+          "Use 'Visível publicamente' para esconder planos legados ou em construção da página de assinatura."
+        ],
+        dicas: [
+          "A chave do Plano é referenciada em vários lugares (faturamento, provisionamento) — não altere após criar.",
+          "Para descontinuar um Plano: desmarque 'Visível' primeiro, mantenha 'Ativo' até migrar todos os clientes.",
+          "Use a 'ordem de exibição' para controlar como aparecem na página de pricing pública.",
+          "Templates de módulos legados ficam em '/plan-templates' (banner amarelo indica que está sendo substituído por Modelos × Planos)."
         ],
         rota: "/admin/central-modulos"
       },
