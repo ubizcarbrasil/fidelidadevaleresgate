@@ -4,13 +4,14 @@ if (typeof window !== "undefined") {
   (window as unknown as { __BUILD_TAG__?: string }).__BUILD_TAG__ = BUILD_TAG_FASE_4_1B;
 }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutGrid, Package, Layers, Building2, MapPin, History, Briefcase } from "lucide-react";
+import { LayoutGrid, Package, Layers, Building2, MapPin, History, Briefcase, BookOpen } from "lucide-react";
 import AbaCatalogo from "./components/aba_catalogo";
 import AbaModelosNegocio from "./components/aba_modelos_negocio";
 import AbaPlanos from "./components/aba_planos";
 import AbaEmpreendedores from "./components/aba_empreendedores";
 import AbaCidades from "./components/aba_cidades";
 import AbaAuditoria from "./components/aba_auditoria";
+import AbaManual from "./components/aba_manual";
 
 export default function PaginaCentralModulos() {
   return (
@@ -28,7 +29,7 @@ export default function PaginaCentralModulos() {
       </div>
 
       <Tabs defaultValue="catalogo" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto gap-1 p-1">
+        <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 h-auto gap-1 p-1">
           <TabsTrigger value="catalogo" className="text-[11px] sm:text-sm flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 px-1">
             <Package className="h-4 w-4" />
             <span className="leading-none">Catálogo</span>
@@ -53,6 +54,10 @@ export default function PaginaCentralModulos() {
             <History className="h-4 w-4" />
             <span className="leading-none">Auditoria</span>
           </TabsTrigger>
+          <TabsTrigger value="manual" className="text-[11px] sm:text-sm flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 px-1">
+            <BookOpen className="h-4 w-4" />
+            <span className="leading-none">Manual</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="catalogo" className="mt-4"><AbaCatalogo /></TabsContent>
@@ -61,6 +66,7 @@ export default function PaginaCentralModulos() {
         <TabsContent value="empreendedores" className="mt-4"><AbaEmpreendedores /></TabsContent>
         <TabsContent value="cidades" className="mt-4"><AbaCidades /></TabsContent>
         <TabsContent value="auditoria" className="mt-4"><AbaAuditoria /></TabsContent>
+        <TabsContent value="manual" className="mt-4"><AbaManual /></TabsContent>
       </Tabs>
     </div>
   );
