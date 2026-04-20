@@ -184,7 +184,7 @@ export default function DriverManagementPage() {
             <Download className="h-4 w-4 mr-1" />
             Exportar CSV
           </Button>
-          {currentBrandId && <ImportarCsvMotoristas brandId={currentBrandId} />}
+          {currentBrandId && <ModalImportarMotoristas brandId={currentBrandId} branchId={isBranchScope ? currentBranchId : null} />}
         </div>
       </div>
 
