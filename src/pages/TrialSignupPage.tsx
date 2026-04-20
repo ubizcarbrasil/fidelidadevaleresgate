@@ -51,11 +51,18 @@ export default function TrialSignupPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const planSlug = searchParams.get("plan") || undefined;
+  const cycleParam = searchParams.get("cycle");
+  const cycle: "monthly" | "yearly" = cycleParam === "yearly" ? "yearly" : "monthly";
   const [step, setStep] = useState<Step>("guide");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TrialResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [productInfo, setProductInfo] = useState<{ product_name: string; trial_days: number } | null>(null);
+  const [productInfo, setProductInfo] = useState<{
+    product_name: string;
+    trial_days: number;
+    price_cents: number;
+    price_yearly_cents: number | null;
+  } | null>(null);
 
   // Carrega dados do produto quando ?plan=slug está na URL
   useEffect(() => {
@@ -63,7 +70,7 @@ export default function TrialSignupPage() {
     (async () => {
       const { data } = await supabase
         .from("subscription_plans")
-        .select("product_name, label, trial_days")
+        .select("product_name, label, trial_days, price_cents, price_yearly_cents")
         .eq("slug", planSlug)
         .eq("is_active", true)
         .maybeSingle();
@@ -71,6 +78,8 @@ export default function TrialSignupPage() {
         setProductInfo({
           product_name: (data as any).product_name || (data as any).label,
           trial_days: (data as any).trial_days ?? 30,
+          price_cents: (data as any).price_cents ?? 0,
+          price_yearly_cents: (data as any).price_yearly_cents ?? null,
         });
       }
     })();
@@ -125,7 +134,7 @@ export default function TrialSignupPage() {
             "Content-Type": "application/json",
             "apikey": anonKey,
           },
-          body: JSON.stringify({ ...form, plan_slug: planSlug }),
+          body: JSON.stringify({ ...form, plan_slug: planSlug, billing_cycle: cycle }),
         },
       );
       const json = await res.json();
@@ -163,12 +172,33 @@ export default function TrialSignupPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Banner do Produto Comercial (quando vindo de /p/produto/:slug) */}
-      {productInfo && step !== "done" && (
-        <div className="bg-primary text-primary-foreground py-3 px-4 text-center text-sm">
-          <span className="font-semibold">Você está iniciando: {productInfo.product_name}</span>
-          <span className="opacity-90"> — {productInfo.trial_days} dias grátis</span>
-        </div>
-      )}
+      {productInfo && step !== "done" && (() => {
+        const fmt = (c: number) => `R$ ${(c / 100).toFixed(2).replace(".", ",")}`;
+        const mostrarAnual = cycle === "yearly" && productInfo.price_yearly_cents != null;
+        const economia =
+          mostrarAnual && productInfo.price_cents > 0 && productInfo.price_yearly_cents != null
+            ? productInfo.price_cents * 12 - productInfo.price_yearly_cents
+            : 0;
+        const precoTexto = mostrarAnual
+          ? `${fmt(productInfo.price_yearly_cents!)}/ano${
+              economia > 0 ? ` · economize ${fmt(economia)}` : ""
+            }`
+          : productInfo.price_cents > 0
+          ? `${fmt(productInfo.price_cents)}/mês`
+          : null;
+
+        return (
+          <div className="bg-primary text-primary-foreground py-3 px-4 text-center text-sm">
+            <div>
+              <span className="font-semibold">Você está iniciando: {productInfo.product_name}</span>
+              <span className="opacity-90"> — {productInfo.trial_days} dias grátis</span>
+            </div>
+            {precoTexto && (
+              <div className="text-xs opacity-90 mt-0.5">Após o trial: {precoTexto}</div>
+            )}
+          </div>
+        );
+      })()}
       {/* STEP: Guide — Manual passo a passo */}
       {step === "guide" && (
         <>

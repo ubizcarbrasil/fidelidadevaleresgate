@@ -3,6 +3,23 @@
  * Sub-fase 6.3 — estende `subscription_plans` para virar fábrica de produtos.
  */
 
+export interface LandingScreenshot {
+  url: string;
+  caption?: string;
+}
+
+export interface LandingTestimonial {
+  name: string;
+  role?: string;
+  quote: string;
+  avatar_url?: string;
+}
+
+export interface LandingFaqItem {
+  question: string;
+  answer: string;
+}
+
 export interface LandingConfig {
   headline?: string;
   subheadline?: string;
@@ -10,6 +27,11 @@ export interface LandingConfig {
   primary_color?: string;
   hero_image_url?: string;
   cta_label?: string;
+  // Sub-fase 6.5 — landing rica
+  screenshots?: LandingScreenshot[];
+  testimonials?: LandingTestimonial[];
+  faq?: LandingFaqItem[];
+  comparison_highlights?: string[];
 }
 
 export interface ProdutoComercial {
@@ -72,6 +94,10 @@ export const EMPTY_DRAFT: ProdutoComercialDraft = {
     primary_color: "#6366f1",
     hero_image_url: "",
     cta_label: "Começar trial 30 dias grátis",
+    screenshots: [],
+    testimonials: [],
+    faq: [],
+    comparison_highlights: [],
   },
   business_model_ids: [],
   module_definition_ids: [],
