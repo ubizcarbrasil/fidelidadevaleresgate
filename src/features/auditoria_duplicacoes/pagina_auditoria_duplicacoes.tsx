@@ -31,8 +31,8 @@ const CONSOLE_ICON: Record<ConsoleSidebar, typeof Globe2> = {
 export default function PaginaAuditoriaDuplicacoes() {
   const { relatorios, ocorrencias } = useDuplicacoesMenu();
 
-  const totalRotaExata = relatorios.filter((r) => r.severidade === "rota_exata").length;
-  const totalFuncaoSimilar = relatorios.filter((r) => r.severidade === "funcao_similar").length;
+  const intraConsole = relatorios.filter((r) => r.escopo === "intra_console");
+  const entreConsoles = relatorios.filter((r) => r.escopo === "entre_consoles");
 
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-6xl">
