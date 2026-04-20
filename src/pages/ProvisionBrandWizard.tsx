@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Building2, MapPin, Palette, Rocket, CheckCircle2, Loader2, Copy, ExternalLink, LayoutGrid } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +44,7 @@ interface FormData {
   enable_demo_stores: boolean;
   enable_test_credits: boolean;
   selected_sections: number[];
+  subscription_plan: "free" | "starter" | "profissional" | "enterprise";
 }
 
 interface ProvisionResult {
@@ -79,6 +81,7 @@ export default function ProvisionBrandWizard() {
     enable_demo_stores: true,
     enable_test_credits: true,
     selected_sections: [0, 1, 2, 3, 4, 5, 6, 7],
+    subscription_plan: "starter",
   });
 
   const stepIndex = STEPS.indexOf(step);
@@ -128,6 +131,7 @@ export default function ProvisionBrandWizard() {
             enable_demo_stores: form.enable_demo_stores,
             enable_test_credits: form.enable_test_credits,
             selected_sections: form.selected_sections,
+            subscription_plan: form.subscription_plan,
           }),
         },
       );
@@ -192,6 +196,30 @@ export default function ProvisionBrandWizard() {
               <Label>Slug da Marca</Label>
               <Input value={form.brand_slug} onChange={(e) => update("brand_slug", e.target.value)} placeholder="vale-resgate-exemplo" />
               <p className="text-xs text-muted-foreground">URL: {form.brand_slug || "slug"}.valeresgate.com</p>
+            </div>
+
+            <div className="border-t pt-4 space-y-4">
+              <p className="text-sm font-medium text-foreground">Plano da Assinatura</p>
+              <div className="space-y-2">
+                <Label>Plano *</Label>
+                <Select
+                  value={form.subscription_plan}
+                  onValueChange={(v) => update("subscription_plan", v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o plano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="free">Free — Plano gratuito</SelectItem>
+                    <SelectItem value="starter">Starter — Inicial</SelectItem>
+                    <SelectItem value="profissional">Profissional — Intermediário</SelectItem>
+                    <SelectItem value="enterprise">Enterprise — Completo</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Os módulos serão habilitados conforme o template do plano definido na Central de Módulos.
+                </p>
+              </div>
             </div>
 
             <div className="border-t pt-4 space-y-4">
@@ -497,6 +525,7 @@ export default function ProvisionBrandWizard() {
                   logo_url: "", primary_color: "#6366f1", secondary_color: "#f59e0b", test_points: 1000,
                   admin_email: "", admin_password: "", enable_demo_stores: true, enable_test_credits: true,
                   selected_sections: [0, 1, 2, 3, 4, 5, 6, 7],
+                  subscription_plan: "starter",
                 });
               }}>Criar Outra</Button>
             </div>
