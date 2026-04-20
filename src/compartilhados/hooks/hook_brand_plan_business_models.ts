@@ -84,11 +84,30 @@ function useBrandPlan(brandId: string | null | undefined) {
 }
 
 export type ModelState = "active" | "available_inactive" | "locked";
+export type ModelSource = "plan" | "addon" | null;
 
 export interface ResolvedBusinessModel {
   def: BusinessModelDef;
   state: ModelState;
   row: BrandBusinessModelRow | null;
+  source: ModelSource;
+}
+
+function useBrandActiveAddonIds(brandId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["brand-active-addons", brandId] as const,
+    enabled: !!brandId,
+    staleTime: 30_000,
+    queryFn: async (): Promise<string[]> => {
+      const { data, error } = await supabase
+        .from("brand_business_model_addons")
+        .select("business_model_id")
+        .eq("brand_id", brandId!)
+        .eq("status", "active");
+      if (error) throw error;
+      return (data ?? []).map((r) => r.business_model_id as string);
+    },
+  });
 }
 
 export function useBrandPlanBusinessModels(brandId: string | null | undefined) {
@@ -96,26 +115,36 @@ export function useBrandPlanBusinessModels(brandId: string | null | undefined) {
   const planQ = useBrandPlan(brandId);
   const planModelsQ = usePlanBusinessModels(planQ.data);
   const brandModelsQ = useBrandBusinessModels(brandId);
+  const addonsQ = useBrandActiveAddonIds(brandId);
 
   const isLoading =
-    allQ.isLoading || planQ.isLoading || planModelsQ.isLoading || brandModelsQ.isLoading;
+    allQ.isLoading ||
+    planQ.isLoading ||
+    planModelsQ.isLoading ||
+    brandModelsQ.isLoading ||
+    addonsQ.isLoading;
 
   const resolved: ResolvedBusinessModel[] = useMemo(() => {
     const all = allQ.data ?? [];
     const planSet = new Set(planModelsQ.data ?? []);
+    const addonSet = new Set(addonsQ.data ?? []);
     const rowByModel = new Map<string, BrandBusinessModelRow>();
     (brandModelsQ.data ?? []).forEach((r) => rowByModel.set(r.business_model_id, r));
 
     return all.map((def) => {
       const row = rowByModel.get(def.id) ?? null;
       const inPlan = planSet.has(def.id);
+      const inAddon = addonSet.has(def.id);
       let state: ModelState = "locked";
-      if (inPlan) {
+      let source: ModelSource = null;
+      if (inPlan || inAddon) {
         state = row?.is_enabled ? "active" : "available_inactive";
+        // plano tem precedência semântica, mas add-on é destacado quando exclusivo
+        source = inPlan ? "plan" : "addon";
       }
-      return { def, state, row };
+      return { def, state, row, source };
     });
-  }, [allQ.data, planModelsQ.data, brandModelsQ.data]);
+  }, [allQ.data, planModelsQ.data, brandModelsQ.data, addonsQ.data]);
 
   const grouped = useMemo(() => {
     const out: Record<"cliente" | "motorista" | "b2b", ResolvedBusinessModel[]> = {
