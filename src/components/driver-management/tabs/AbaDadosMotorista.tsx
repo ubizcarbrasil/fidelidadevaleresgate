@@ -131,23 +131,63 @@ export default function AbaDadosMotorista({ driver, brandId }: Props) {
   const pagamentos = listarFlagsAtivas(perfil?.accepted_payments ?? null, rotuloPagamento);
   const servicos = listarFlagsAtivas(perfil?.services_offered ?? null, rotuloServico);
 
+  // Badge de origem dos dados (heurística baseada em imported_at vs registered_at)
+  const renderBadgeOrigem = () => {
+    if (!perfil) return null;
+    const importedAt = perfil.imported_at ? new Date(perfil.imported_at) : null;
+    const registeredAt = perfil.registered_at ? new Date(perfil.registered_at) : null;
+    const isAutoCadastro =
+      importedAt && registeredAt
+        ? Math.abs(importedAt.getTime() - registeredAt.getTime()) < 60_000
+        : false;
+    const fichaVazia = !perfil.cnh_number && !driver.cpf && !perfil.vehicle1_plate;
+
+    if (fichaVazia) {
+      return (
+        <Badge variant="outline" className="text-[10px] text-muted-foreground border-muted-foreground/30">
+          ⚪ Aguardando dados
+        </Badge>
+      );
+    }
+    if (isAutoCadastro) {
+      return (
+        <Badge variant="outline" className="text-[10px] text-blue-400 border-blue-400/30">
+          🔵 1ª corrida
+        </Badge>
+      );
+    }
+    if (importedAt) {
+      const dia = String(importedAt.getDate()).padStart(2, "0");
+      const mes = String(importedAt.getMonth() + 1).padStart(2, "0");
+      return (
+        <Badge variant="outline" className="text-[10px] text-emerald-400 border-emerald-400/30">
+          🟢 CSV {dia}/{mes}
+        </Badge>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-4">
       {/* CARD: PESSOAL */}
       <CardFichaMotorista
         titulo="Pessoal"
         acao={
-          !editing && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={startEditing}
-              title="Editar dados básicos"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </Button>
-          )
+          <div className="flex items-center gap-2">
+            {!editing && renderBadgeOrigem()}
+            {!editing && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={startEditing}
+                title="Editar dados básicos"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
         }
       >
         {editing ? (

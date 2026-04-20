@@ -584,20 +584,24 @@ export const gruposManuais: GrupoManual[] = [
       {
         id: "motoristas",
         titulo: "Motoristas",
-        descricao: "Gerencie motoristas parceiros da plataforma. Visualize dados, saldo de pontos, corridas realizadas e status de cada motorista.",
+        descricao: "Gerencie motoristas parceiros da plataforma. Visualize dados, saldo de pontos, corridas realizadas, ficha completa e status de cada motorista. Suporta importação em massa via CSV (até 10 mil linhas) e auto-cadastro automático na primeira corrida.",
         comoAtivar: "Ative o módulo 'Integração Mobilidade' na página de Módulos.",
         passos: [
-          "Acesse 'Motorista' no menu lateral.",
-          "Visualize a lista de motoristas com dados de corridas e pontos.",
-          "Clique em um motorista para ver o perfil completo.",
-          "Consulte o extrato de pontos e histórico de corridas.",
-          "Gerencie o saldo e ajustes de pontos.",
-          "Veja o ranking de motoristas por corridas ou pontos."
+          "Acesse 'Motoristas' no menu lateral.",
+          "Use a barra de busca para filtrar por nome, CPF, telefone, e-mail ou placa do veículo.",
+          "Filtre por status (Ativo / Inativo / Bloqueado).",
+          "Navegue pelas páginas — 50 motoristas por página, paginação server-side suporta bases com milhares de registros.",
+          "Clique em um motorista para abrir a ficha completa em 6 abas: Dados, Veículos, Docs, Pontos, Regras e Extrato.",
+          "Use 'Importar CSV' para subir base completa de motoristas com 100+ campos por linha.",
+          "Use 'Bonificar' para creditar pontos manualmente."
         ],
         dicas: [
+          "Subir CSV antes da primeira corrida = motorista visível imediatamente na lista.",
+          "Subir CSV depois da primeira corrida = enriquece o registro existente sem duplicar (match por external_id, CPF, telefone ou nome).",
+          "Auto-cadastro continua ativo: motoristas novos sem CSV são criados automaticamente na primeira corrida com dados básicos vindos da TaxiMachine.",
+          "Badges na ficha indicam origem: 🟢 CSV (importado), 🔵 1ª corrida (auto-cadastro), ⚪ aguardando dados completos.",
           "Acompanhe os motoristas mais ativos para premiações.",
-          "Use o extrato para resolver contestações de pontos.",
-          "Monitore a saúde geral da base de motoristas."
+          "Use o extrato para resolver contestações de pontos."
         ],
         rota: "/motoristas"
       },
