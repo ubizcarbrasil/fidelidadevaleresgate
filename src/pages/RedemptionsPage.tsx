@@ -48,16 +48,16 @@ export default function RedemptionsPage() {
         <DataSkeleton variant="table-row" rows={5} />
       ) : (
         <Card>
-          <CardContent className="p-0">
+          <CardContent className="p-0 table-wrap-mobile">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Data</TableHead>
                   <TableHead>Oferta</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Filial</TableHead>
-                  <TableHead>Token</TableHead>
-                  <TableHead>Valor Compra</TableHead>
+                  <TableHead className="hidden sm:table-cell">Cliente</TableHead>
+                  <TableHead className="hidden md:table-cell">Filial</TableHead>
+                  <TableHead className="hidden lg:table-cell">Token</TableHead>
+                  <TableHead className="hidden sm:table-cell">Valor Compra</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -71,10 +71,10 @@ export default function RedemptionsPage() {
                   <TableRow key={r.id}>
                     <TableCell className="text-xs whitespace-nowrap">{format(new Date(r.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
                     <TableCell className="font-medium">{(r.offers as any)?.title}</TableCell>
-                    <TableCell>{(r.customers as any)?.name}</TableCell>
-                    <TableCell>{(r.branches as any)?.name}</TableCell>
-                    <TableCell className="font-mono text-xs">{r.token.slice(0, 8)}…</TableCell>
-                    <TableCell>{r.purchase_value ? `R$ ${Number(r.purchase_value).toFixed(2)}` : "—"}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{(r.customers as any)?.name}</TableCell>
+                    <TableCell className="hidden md:table-cell">{(r.branches as any)?.name}</TableCell>
+                    <TableCell className="hidden lg:table-cell font-mono text-xs">{r.token.slice(0, 8)}…</TableCell>
+                    <TableCell className="hidden sm:table-cell">{r.purchase_value ? `R$ ${Number(r.purchase_value).toFixed(2)}` : "—"}</TableCell>
                     <TableCell><Badge variant={(STATUS_VARIANT[r.status as RedemptionStatus] || "secondary") as any}>{r.status}</Badge></TableCell>
                   </TableRow>
                 ))}

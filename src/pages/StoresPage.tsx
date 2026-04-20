@@ -211,7 +211,7 @@ export default function StoresPage() {
 
       {/* Status tabs */}
       <Tabs value={statusTab} onValueChange={v => { setStatusTab(v as StatusTab); setPage(1); }}>
-        <TabsList>
+        <TabsList className="w-full flex overflow-x-auto md:w-auto md:inline-flex tabs-scroll-mobile">
           <TabsTrigger value="ALL">Todos</TabsTrigger>
           <TabsTrigger value="PENDING_APPROVAL" className="gap-1.5">
             Pendentes
@@ -229,15 +229,15 @@ export default function StoresPage() {
       <DataTableControls search={search} onSearchChange={onSearchChange} searchPlaceholder="Buscar parceiro por nome..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="p-0 table-wrap-mobile">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
-                <TableHead>Marca</TableHead>
-                <TableHead>Cidade</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Aprovação</TableHead>
+                <TableHead className="hidden lg:table-cell">Marca</TableHead>
+                <TableHead className="hidden md:table-cell">Cidade</TableHead>
+                <TableHead className="hidden lg:table-cell">Categoria</TableHead>
+                <TableHead className="hidden sm:table-cell">Aprovação</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -263,10 +263,10 @@ export default function StoresPage() {
                       {s.name}
                     </div>
                   </TableCell>
-                  <TableCell>{(s.brands as any)?.name}</TableCell>
-                  <TableCell>{(s.branches as any)?.name}</TableCell>
-                  <TableCell>{s.category || "—"}</TableCell>
-                  <TableCell>{statusBadge(s.approval_status)}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{(s.brands as any)?.name}</TableCell>
+                  <TableCell className="hidden md:table-cell">{(s.branches as any)?.name}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{s.category || "—"}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{statusBadge(s.approval_status)}</TableCell>
                   <TableCell><Badge variant={s.is_active ? "default" : "secondary"}>{s.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
                   <TableCell className="text-right space-x-1">
                     {s.approval_status === "PENDING_APPROVAL" && (

@@ -37,7 +37,7 @@ export default function CrmAnalyticsPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
               <CardContent className="pt-4 pb-3 text-center">
                 <p className="text-3xl font-bold">{contactStats?.total || 0}</p>

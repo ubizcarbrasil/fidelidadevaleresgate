@@ -73,7 +73,7 @@ export default function CrmEmbedPage() {
                 </div>
 
                 {/* Feature highlights */}
-                <div className="grid grid-cols-3 gap-3 w-full mt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full mt-2">
                   {[
                     { icon: Users, label: "Contatos" },
                     { icon: Target, label: "Campanhas" },

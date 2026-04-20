@@ -59,17 +59,18 @@ export default function Branches() {
       <DataTableControls search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} searchPlaceholder="Buscar por nome, slug ou cidade..." page={page} pageSize={PAGE_SIZE} totalCount={data?.count ?? 0} onPageChange={setPage} />
       <Card>
         <CardHeader><CardTitle className="text-base">Lista de Cidades</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent className="px-0 sm:px-6">
           {isLoading ? <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div> : (
+          <div className="table-wrap-mobile">
           <Table>
-            <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Marca</TableHead><TableHead>Cidade/UF</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead className="hidden sm:table-cell">Marca</TableHead><TableHead className="hidden md:table-cell">Cidade/UF</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
             <TableBody>
               {data?.rows?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhuma cidade cadastrada</TableCell></TableRow>}
               {data?.rows?.map((b) => (
                 <TableRow key={b.id}>
                   <TableCell className="font-medium">{b.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{(b.brands as any)?.name || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{[b.city, b.state].filter(Boolean).join(" / ") || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground hidden sm:table-cell">{(b.brands as any)?.name || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground hidden md:table-cell">{[b.city, b.state].filter(Boolean).join(" / ") || "—"}</TableCell>
                   <TableCell><Badge variant={b.is_active ? "default" : "destructive"}>{b.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button variant="ghost" size="icon" asChild><Link to={`/branches/${b.id}`}><Pencil className="h-4 w-4" /></Link></Button>
@@ -78,7 +79,9 @@ export default function Branches() {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>)}
+          </Table>
+          </div>
+          )}
         </CardContent>
       </Card>
     </div>
