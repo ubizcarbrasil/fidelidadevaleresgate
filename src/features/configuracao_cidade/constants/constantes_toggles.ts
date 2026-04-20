@@ -50,8 +50,8 @@ export const TOGGLES_CIDADE: ToggleCidadeConfig[] = [
   },
   {
     key: "enable_points_purchase",
-    label: "Motorista compra com pontos?",
-    descricao: "Exibe a seção 'Compre com Pontos' mesmo que os Achadinhos estejam desativados.",
+    label: "Resgatar produtos com pontos",
+    descricao: "Saída de saldo: motorista usa pontos acumulados na vitrine 'Compre com Pontos'.",
     icon: Package,
   },
   {
@@ -62,8 +62,8 @@ export const TOGGLES_CIDADE: ToggleCidadeConfig[] = [
   },
   {
     key: "enable_driver_points_purchase",
-    label: "Motorista compra pontos?",
-    descricao: "Permite que motoristas comprem pontos diretamente pelo app.",
+    label: "Comprar pontos com dinheiro",
+    descricao: "Entrada de saldo: motorista paga em R$ e recebe pontos diretamente no app.",
     icon: Coins,
   },
 ];
