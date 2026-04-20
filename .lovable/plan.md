@@ -1,56 +1,106 @@
 
+Objetivo: deixar a aplicação realmente utilizável no celular como web app instalável, ajustando o shell global, os componentes compartilhados e as páginas críticas para comportamento mobile-first sem quebrar o fluxo desktop.
 
-# Status da Sub-fase 6.6 + Próximos Passos
+## Diagnóstico atual
+O projeto já tem base de PWA:
+- `vite-plugin-pwa` no `vite.config.ts`
+- manifest/meta tags no `index.html`
+- banners de instalar/atualizar em `App.tsx`
+- safe-area CSS em `src/index.css`
 
-## ✅ O que está pronto e funcional
+Mas a experiência mobile ainda está inconsistente porque:
+- `AppLayout.tsx` concentra muitos elementos no topo e aperta a navegação em telas pequenas
+- várias páginas usam tabelas/listas largas, grids densos e barras de ação horizontais
+- alguns sheets/dialogs/tabs ficam espremidos no celular
+- não existe um padrão único para “versão mobile” de listagens administrativas
+- a experiência PWA precisa de acabamento de instalação/uso em modo standalone
 
-| Item | Status |
-|---|---|
-| Tabela `driver_profiles` (1:1 com customers, ~70 campos) | ✅ migrado |
-| Tabela `driver_import_jobs` (rastreio de jobs) | ✅ migrado |
-| Edge Function `import-drivers-bulk` (chunks de 500, até 5 mil linhas) | ✅ deployada |
-| Auto-cadastro `driver_profiles` na 1ª corrida (idempotente, falha-silente) | ✅ webhook |
-| Match anti-duplicação (`external_id → CPF → telefone → nome`) | ✅ reforçado |
-| Modal multi-etapa (Upload → Preview → Progresso → Resultado) | ✅ |
-| Suporte CSV + XLSX via SheetJS | ✅ |
-| Mapeamento heurístico de 117 colunas TaxiMachine | ✅ |
-| Listagem `/motoristas` com paginação real (50/página + count exato) | ✅ |
-| Busca server-side por nome/CPF/telefone/placa | ✅ |
-| Filtro por status (Ativo / Inativo / Bloqueado) | ✅ |
-| Ficha em 6 abas (Dados, Veículos, Docs, Pontos, Regras, Extrato) | ✅ |
-| Badge de origem dos dados (CSV / 1ª corrida / vazio) | ✅ |
-| Manual atualizado | ✅ |
-| Compat 100% com motoristas existentes | ✅ |
+## O que será implementado
 
-## 🧪 Antes de publicar — testes recomendados (5 min)
+### 1) Shell global mobile/PWA
+Ajustar a estrutura base para o app funcionar bem em celular em qualquer rota:
+- refinar `AppLayout.tsx` para topbar mobile mais enxuta
+- reorganizar busca, breadcrumbs, seletor de cidade e ações secundárias para não estourarem largura
+- garantir `main` com espaçamento, altura e rolagem corretos em mobile/standalone
+- aplicar `safe-area` no topo e rodapé de forma consistente
+- revisar sidebar mobile (`src/components/ui/sidebar.tsx`) para abertura/fechamento confortável em PWA
 
-1. **Importar uma planilha pequena** (10-20 linhas) primeiro pra validar mapeamento real do seu arquivo
-2. **Importar a planilha completa** de 4 mil linhas e confirmar tempo (~30-60s) + contadores
-3. **Abrir uma ficha** importada e checar Veículos / Documentação preenchidos
-4. **Buscar por placa** na listagem
-5. **Re-importar a mesma planilha** → resultado deve mostrar "atualizados" sem duplicar
+### 2) Padrão compartilhado de responsividade
+Criar/ajustar componentes e utilitários para evitar correções isoladas página por página:
+- `PageHeader` com ações empilháveis no mobile
+- `DataTableControls` com busca/filtros/paginação em coluna no celular
+- padrão para tabelas: wrapper horizontal + fallback em cards quando necessário
+- padrão para dialogs/sheets: largura total no mobile, altura máxima segura e scroll interno
+- padrão para tabs densas: scroll horizontal ou seleção compacta no mobile
+- reforço em `src/index.css` para touch targets, overflow e standalone mode
 
-## 🚀 Próximos passos sugeridos (em ordem de valor)
+### 3) Adequação das páginas administrativas principais
+Fazer um passe nas rotas com maior uso e maior risco de quebra mobile, começando pelas que concentram operação diária:
+- Dashboard
+- Gestão de Motoristas
+- Ofertas
+- Clientes
+- Parceiros
+- Cidades
+- Resgates
+- Relatórios
+- Configurações da cidade/marca
+- páginas com tabelas de CRM e páginas de administração com tabs
 
-### Curto prazo (1-2 sub-fases)
-- **6.7 — Edição manual da ficha**: hoje só importação grava; adicionar formulários para corrigir CNH, banco, veículo direto na ficha
-- **6.8 — Export reverso**: exportar lista filtrada de motoristas em CSV/XLSX (útil pra relatórios da prefeitura, sindicato, etc.)
-- **6.9 — Alertas de CNH vencendo**: notificação 30/15/7 dias antes do vencimento + badge na listagem
+Critérios de ajuste por página:
+- nenhum conteúdo cortado horizontalmente sem alternativa
+- filtros e botões principais acessíveis com uma mão
+- grids virando 1 coluna ou 2 colunas quando necessário
+- tabelas críticas com leitura possível no celular
+- cabeçalhos, KPIs, badges e cards sem sobreposição
 
-### Médio prazo
-- **6.10 — Sync automático com TaxiMachine API**: cron diário que atualiza status / avaliação / aceitação de todos os motoristas ativos
-- **6.11 — Histórico de mudanças por motorista**: timeline mostrando importações, transferências de cidade, bloqueios
+### 4) Fluxos já afetados no módulo de motoristas
+Consolidar o módulo que você está usando agora:
+- `modal_importar_motoristas.tsx`: manter modal 100% navegável em telas pequenas
+- `DriverManagementPage.tsx`: barra de busca, badges, ações e paginação em layout mobile
+- `DriverDetailSheet.tsx`: substituir a grade fixa de 6 abas por navegação horizontal/compacta no celular
+- revisar abas internas da ficha do motorista para evitar campos e blocos quebrados
 
-### Voltando à fase 6.4 (Stripe)
-- Retomar a integração de pagamentos da landing rica (que ficou pausada na 6.5)
+### 5) Experiência PWA instalável
+Como você pediu “versão PWA mobile”, finalizar a experiência de uso instalável:
+- revisar manifest e apresentação mobile já existente
+- garantir consistência de tema, ícones e título no modo instalado
+- adicionar uma tela/ajuda de instalação simples (`/install`) com instruções para Android e iPhone
+- manter o comportamento seguro do preview e evitar problemas de cache do service worker no editor
+- validar banners de instalar/atualizar para não cobrirem botões importantes no celular
 
-## 📤 Posso publicar?
+## Arquivos com maior chance de edição
+- `src/components/AppLayout.tsx`
+- `src/components/ui/sidebar.tsx`
+- `src/components/PageHeader.tsx`
+- `src/components/DataTableControls.tsx`
+- `src/components/driver-management/DriverDetailSheet.tsx`
+- `src/features/importacao_motoristas/components/modal_importar_motoristas.tsx`
+- `src/pages/DriverManagementPage.tsx`
+- `src/pages/Dashboard.tsx`
+- páginas administrativas com tabelas/listas em `src/pages/`
+- `src/index.css`
+- `src/App.tsx`
+- possivelmente `vite.config.ts` e `index.html` apenas se precisar acabamento extra do PWA
 
-**Sim, pode publicar.** Tudo é retrocompatível, sem migrações destrutivas. Os motoristas atuais continuam funcionando exatamente como antes; os novos campos são opcionais e aparecem com `—` quando vazios.
+## Estratégia de execução
+1. Corrigir primeiro o shell global e os componentes compartilhados
+2. Aplicar o padrão nas páginas administrativas mais usadas
+3. Ajustar os fluxos de motorista/importação
+4. Fechar a experiência PWA instalável
+5. Fazer revisão final rota a rota em viewport mobile
 
-**Como publicar:**
-- **Desktop**: botão **Publish** no canto superior direito → **Update**
-- **Mobile**: botão **…** no canto inferior direito (modo Preview) → **Publish** → **Update**
+## Critérios de aceite
+Ao final, a aplicação deverá:
+- funcionar em celular sem cortes visuais nas páginas principais
+- abrir menus, modais, sheets e tabs corretamente no mobile
+- permitir uso confortável em modo PWA instalado
+- preservar o desktop atual
+- manter navegação, importação e consulta de motoristas operando normalmente
 
-Lembrando: mudanças de **frontend** (listagem, modal, ficha) só vão pro ar depois do **Update**. Mudanças de **backend** (Edge Functions, migração) já estão ativas em produção desde que foram aplicadas.
-
+## Publicação
+Depois da implementação, a recomendação é:
+- testar no preview em viewport mobile
+- publicar
+- validar no celular real pelo domínio publicado
+- instalar na tela inicial e checar 3 fluxos: login, navegação entre páginas e importação/consulta de motoristas
