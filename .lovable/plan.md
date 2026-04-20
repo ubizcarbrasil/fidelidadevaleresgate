@@ -1,65 +1,56 @@
 
 
-# Botão "Ver Manual" na página /admin/produtos-comerciais
+# Auditoria de Duplicações de Ação nos 3 Painéis
 
-## O que vou fazer
+## O que você está pedindo
 
-Adicionar um botão **"Ver Manual"** no header da página de Produtos Comerciais que, ao clicar, abre um **Dialog modal** exibindo os 2 manuais da seção Produtos Comerciais (o manual base + o exemplo prático "Vale Resgate Motorista Premium") sem o usuário sair da tela.
+Mapear todos os pontos onde **a mesma ação/funcionalidade aparece em mais de um lugar** (ex.: "Configurar Painel do Motorista" pode estar acessível tanto pelo menu Root quanto via Cidades) e marcar visualmente esses itens com uma **tag de sinalização** ("⚠️ DUPLICADO") para você decidir, item por item, se mantém ou remove.
 
-## Componentes envolvidos
+A varredura cobre os 3 consoles: **Root**, **Empreendedor (Brand)** e **Cidade (Branch)**.
 
-### 1. Componente novo (reutilizável)
-**`src/compartilhados/components/manual_modal.tsx`**
-- Dialog do shadcn (sobreposição modal)
-- Recebe via prop `manualIds: string[]` — array de IDs dos manuais a exibir
-- Busca os manuais nos `gruposManuais` (em `dados_manuais.ts`)
-- Renderiza cada manual usando o **`ManualRenderer`** existente (mesmo componente da página /manuais → consistência visual 100%)
-- Header do modal: ícone BookOpen + título "Manuais — Produtos Comerciais" + botão fechar
-- Scroll interno (`max-h-[85vh] overflow-y-auto`) para conteúdo longo
-- Estado local de qual manual está aberto (mesmo padrão da AbaManual)
+## Antes de implementar — preciso confirmar 2 decisões
 
-### 2. Botão no header da página
-**`src/pages/admin/ProdutosComerciaisPage.tsx`** (ou nome equivalente — vou localizar primeiro)
-- Adicionar botão `<Button variant="outline" size="sm">` com ícone `BookOpen` + texto "Ver Manual"
-- Posicionado ao lado do botão "Criar Produto" (canto direito do header)
-- Mobile: mantém só o ícone (`sm:` para mostrar texto em telas maiores) — economia de espaço
-- Estado local `manualOpen, setManualOpen` que controla o `<ManualModal open={...} onOpenChange={...} />`
+### Decisão 1 — O que conta como "duplicado"?
 
-## Arquivos editados/criados
+**Opção A — Mesma rota repetida em mais de um menu/grupo.** Ex: `/branches` em "Organização" E em "Cidades". Detecção: comparar `url` no `MENU_REGISTRY`.
 
-| Arquivo | Ação | Mudança |
-|---|---|---|
-| `src/compartilhados/components/manual_modal.tsx` | **NOVO** | Componente reutilizável de modal de manual |
-| `src/pages/admin/ProdutosComerciaisPage.tsx` (caminho real a confirmar) | Editar | Adicionar botão + estado + render do modal |
+**Opção B — Mesma funcionalidade em rotas diferentes.** Ex: `/configuracao-cidade` + `/configuracao-modulos-cidade` + `/branches/:id/edit` fazem coisas parecidas. Detecção: agrupar por similaridade de propósito (subjetivo, exige minha análise + sua revisão).
 
-## Por que reutilizar `ManualRenderer`?
+**Opção C — Mesma ação em locais diferentes da UI (não só sidebar).** Ex: botão "Criar produto" no header da página E dentro do Wizard; "Ver Manual" tem botão na página E entrada em /manuais. Muito mais ampla — exige varrer páginas, modais, headers.
 
-- Já tem todas as 4 seções (O que é, Como ativar, Passo a passo, Dicas)
-- Já tem o botão "Ir para esta página" (que dentro do modal pode ser útil quando o manual aponta para OUTRA rota)
-- Visual consistente com /manuais — usuário aprende uma vez, reconhece em todo lugar
-- Zero duplicação de código
+**Recomendo A + B** (cobre 90% da confusão real). Se quiser estender pra C depois, abro outro plano.
 
-## Comportamento esperado
+### Decisão 2 — Como marcar visualmente?
 
-1. Usuário entra em `/admin/produtos-comerciais` 
-2. Vê no canto direito do header: `[📖 Ver Manual] [+ Criar Produto]`
-3. Clica em "Ver Manual" → modal abre centralizado, ocupando até 85% da altura
-4. Vê os 2 manuais da seção (manual base + exemplo prático Vale Resgate Motorista Premium) listados, ambos colapsados
-5. Clica em qualquer um → expande inline (passo a passo, valores sugeridos, dicas)
-6. Pode fechar com X, ESC ou clicando fora — volta exatamente onde estava
-7. Mobile (430px): modal ocupa quase toda a tela com scroll interno suave
+**Opção 1** — Badge `⚠️` ou `2x` ao lado do label no sidebar. Limpo, varredura rápida.
+**Opção 2** — Página dedicada `/admin/auditoria-duplicacoes` com tabela: console, item, rotas duplicadas, sugestão. Mais formal.
+**Opção 3** — **Os dois** (recomendado): sinaliza no momento + relatório consolidado.
 
-## Reutilização futura
+## Como vou executar (após sua resposta)
 
-O componente `ManualModal` fica genérico — qualquer outra página pode adicionar seu próprio botão "Ver Manual" passando os IDs relevantes. Ex: a página de Cidades poderia abrir os manuais de "Cidades (Branches)" e "Minhas Cidades" sem duplicação de código.
+1. **Inventariar** todos os itens do `MENU_REGISTRY` agrupados por console (Root, Brand, Branch) — já sei que são ~80 entradas
+2. **Detectar duplicações** por: mesma `url`, mesma `moduleKey`, ou nomes muito parecidos apontando pra rotas diferentes
+3. **Criar utilitário** `src/compartilhados/utils/utilitarios_duplicacao_menu.ts` que retorna o conjunto de keys duplicadas
+4. **Adicionar `<DuplicateBadge />`** nos itens duplicados dos 3 sidebars (visível só pra Root Admin por padrão)
+5. **Criar página de relatório** `/admin/auditoria-duplicacoes` (acesso Root) com tabela: item, consoles, rota, módulo, severidade. Categorias: "Rota duplicada exata", "Mesma função, rotas diferentes", "Suspeita". **Sem remoção automática** — só sinalização.
 
-## Risco e rollback
+## O que NÃO vou fazer
 
-- **Risco zero**: novo componente isolado + uma única edição cosmética no header
-- **Sem mudanças** em lógica de negócio, banco, RLS, edge functions
-- **Rollback**: deletar `manual_modal.tsx` e reverter o header da página
+- ❌ Remover ou esconder qualquer item automaticamente
+- ❌ Renomear rotas, mexer em RLS, edge functions ou banco
+- ❌ Estender pra botões/modais dentro de páginas (Opção C) sem você confirmar
+
+## Risco
+
+Zero — só leitura + badges visuais + uma rota nova de relatório. Tudo reversível.
 
 ## Estimativa
 
-~5 min. `npx tsc --noEmit` esperado limpo.
+~25 min após suas respostas.
+
+---
+
+**Para destravar:**
+1. Escopo: A, B, **A+B (recomendado)**, ou A+B+C?
+2. Sinalização: só badge, só relatório, ou **os dois (recomendado)**?
 
