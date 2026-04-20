@@ -1434,6 +1434,35 @@ export const gruposManuais: GrupoManual[] = [
         ],
         rota: "/admin/central-modulos"
       },
+      {
+        id: "produtos-comerciais-bundles-vendaveis",
+        titulo: "Produtos Comerciais — Montar Bundle Vendável com Landing Page",
+        descricao: "Permite ao Root Admin transformar o painel numa fábrica de produtos comerciais (bundles vendáveis). Cada produto combina: nome comercial, preço mensal/anual, modelos de negócio inclusos, módulos liberados e uma landing page pública dedicada com link de trial 30 dias. Ideal para criar 'produtos de prateleira' (ex: Vale Resgate Motorista Premium, Pacote Cidade Pequena, Combo Cliente + Achadinhos) e divulgar links exclusivos para cada um. Quem clica no link vê uma landing personalizada, inicia o trial e a marca é provisionada exatamente naquele bundle.",
+        comoAtivar: "Acesso Root Admin. Disponível em 'Produtos Comerciais' no menu Raiz, substituindo a antiga gestão de planos fixos.",
+        passos: [
+          "Acesse 'Produtos Comerciais' (menu Raiz) — você verá a lista de produtos existentes (os 4 planos antigos foram migrados automaticamente).",
+          "Clique em 'Criar Produto' para iniciar o wizard de 5 passos.",
+          "PASSO 1 — Identificação: defina o nome comercial (visível ao público), nome interno do plano, chave técnica, slug da landing (URL) e preços mensal/anual.",
+          "PASSO 2 — Modelos de Negócio: selecione quais modelos vêm liberados nesse produto (cliente parceiros, motorista duelo, achadinhos, ganha-ganha etc.).",
+          "PASSO 3 — Funcionalidades: o sistema sugere automaticamente os módulos OBRIGATÓRIOS dos modelos escolhidos (via business_model_modules). Adicione opcionais se quiser.",
+          "PASSO 4 — Landing Page: configure headline, subheadline, lista de benefícios visuais, cor primária, imagem hero (upload), badge 'Popular' e se deve aparecer no catálogo público /produtos.",
+          "PASSO 5 — Revisão: confira o preview da landing e copie o link público (/p/produto/{slug}).",
+          "Salve. O produto fica imediatamente vendável: divulgue o link gerado.",
+          "Quando alguém clicar no link e iniciar o trial, a marca é provisionada já no plano escolhido, com modelos e módulos exatos do bundle."
+        ],
+        dicas: [
+          "Slug é a URL pública: 'motorista-premium' vira 'app.valeresgate.com.br/p/produto/motorista-premium'.",
+          "Marque 'Listar publicamente' se quiser que o produto apareça no catálogo /produtos (vitrine única para múltiplos produtos).",
+          "Você pode ter vários produtos com modelos sobrepostos — útil para criar bundles para nichos diferentes (motorista, cliente, ambos).",
+          "O preço mensal e anual servem como referência na landing — a cobrança após trial continua manual via 'Renovar Assinatura' (Stripe é sub-fase futura).",
+          "Editar um produto existente NÃO altera marcas que já contrataram via aquele link — o efeito vale só para novas contratações.",
+          "Trial em dias é configurável por produto (default 30) — útil para campanhas de 7, 15 ou 60 dias grátis.",
+          "Cor primária e imagem hero personalizam a landing — escolha algo alinhado ao público-alvo do produto.",
+          "Os 4 planos legados (Free, Starter, Profissional, Enterprise) continuam funcionando — eles ganharam slug automático e são editáveis pelo wizard.",
+          "Use o botão 'Excluir' apenas em produtos sem marcas vinculadas — apagar um produto com clientes ativos não cancela as contratações, mas remove a referência."
+        ],
+        rota: "/admin/produtos-comerciais"
+      },
     ],
   },
   {
