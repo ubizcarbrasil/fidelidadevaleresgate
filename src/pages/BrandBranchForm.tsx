@@ -205,7 +205,15 @@ export default function BrandBranchForm() {
       setCidade(existing.city || existing.name || "");
       setUf(existing.state || "");
       setAtivo(existing.is_active);
-      if ((existing as any).scoring_model) setScoringModel((existing as any).scoring_model);
+      if ((existing as any).scoring_model) {
+        const bruto = (existing as any).scoring_model as string;
+        // Normaliza silenciosamente: se a cidade tem configuração legada
+        // incompatível com o plano, força o valor permitido sem alarmar o usuário.
+        const ajustado = !escopo.isLoading && !escopo.isPermissive
+          ? normalizarScoringModel(bruto, escopo.allowedScoringModels)
+          : bruto;
+        setScoringModel(ajustado);
+      }
       setIsCityRedemptionEnabled(!!(existing as any).is_city_redemption_enabled);
       // Gamificação flags
       const bs = existing.branch_settings_json as Record<string, any> | null;
