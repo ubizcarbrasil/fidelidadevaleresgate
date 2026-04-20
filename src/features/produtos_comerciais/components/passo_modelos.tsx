@@ -2,16 +2,17 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ProdutoComercialDraft } from "../types/tipos_produto";
 
 interface Props {
   draft: ProdutoComercialDraft;
   onChange: (patch: Partial<ProdutoComercialDraft>) => void;
+  templateName?: string;
 }
 
-export default function PassoModelos({ draft, onChange }: Props) {
+export default function PassoModelos({ draft, onChange, templateName }: Props) {
   const { data, isLoading } = useQuery({
     queryKey: ["bm-list-active"],
     queryFn: async () => {
@@ -60,6 +61,29 @@ export default function PassoModelos({ draft, onChange }: Props) {
       <p className="text-sm text-muted-foreground">
         Selecione quais Modelos de Negócio serão liberados automaticamente para empreendedores que contratarem este produto.
       </p>
+
+      {templateName && draft.business_model_ids.length === 0 && (
+        <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">
+          <p className="font-medium text-primary flex items-center gap-2">
+            <Sparkles className="h-4 w-4" />
+            Sugestão para "{templateName}"
+          </p>
+          <p className="text-foreground/80 mt-1 text-xs">
+            Marque os modelos voltados para o público-alvo deste produto. Eles definem
+            quais módulos (passo 3) serão liberados automaticamente.
+          </p>
+        </div>
+      )}
+
+      {draft.business_model_ids.length === 0 && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-xs flex items-start gap-2">
+          <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+          <p className="text-foreground/80">
+            Selecione ao menos <strong>1 modelo</strong> para conseguir avançar ao passo 3.
+          </p>
+        </div>
+      )}
+
       {Object.entries(groups).map(([audience, models]) => (
         <div key={audience} className="space-y-2">
           <Badge variant="secondary" className="uppercase text-[10px]">
