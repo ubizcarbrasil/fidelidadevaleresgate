@@ -18,6 +18,13 @@ export interface ConfigDuelos {
   provocacoesAutomaticas: boolean;
   rankingPeriodos: string[];
   premiacaoPontos: boolean;
+  // Sub-fase 7.0 — limites, ciclo e integração corridas
+  limiteApostaMinIndividual: number | null;
+  limiteApostaMaxIndividual: number | null;
+  limiteApostaMaxTotal: number | null;
+  cicloResetAtivo: boolean;
+  contarPontosCorrida: boolean;
+  fatorPontosCorrida: number;
 }
 
 const DEFAULTS: ConfigDuelos = {
@@ -34,6 +41,12 @@ const DEFAULTS: ConfigDuelos = {
   provocacoesAutomaticas: false,
   rankingPeriodos: ["monthly"],
   premiacaoPontos: false,
+  limiteApostaMinIndividual: null,
+  limiteApostaMaxIndividual: null,
+  limiteApostaMaxTotal: null,
+  cicloResetAtivo: false,
+  contarPontosCorrida: false,
+  fatorPontosCorrida: 1,
 };
 
 export function useConfigDuelos(branch: { branch_settings_json?: any } | null | undefined): ConfigDuelos {
@@ -57,5 +70,11 @@ export function useConfigDuelos(branch: { branch_settings_json?: any } | null | 
     provocacoesAutomaticas: s.enable_auto_provocations === true,
     rankingPeriodos: Array.isArray(s.ranking_periods) ? (s.ranking_periods as string[]) : ["monthly"],
     premiacaoPontos: s.enable_prize_points === true,
+    limiteApostaMinIndividual: typeof s.duel_bet_min_individual === "number" ? s.duel_bet_min_individual : null,
+    limiteApostaMaxIndividual: typeof s.duel_bet_max_individual === "number" ? s.duel_bet_max_individual : null,
+    limiteApostaMaxTotal: typeof s.duel_bet_max_total === "number" ? s.duel_bet_max_total : null,
+    cicloResetAtivo: s.duel_cycle_reset_enabled === true,
+    contarPontosCorrida: s.duel_count_ride_points === true,
+    fatorPontosCorrida: typeof s.duel_ride_points_factor === "number" ? s.duel_ride_points_factor : 1,
   };
 }

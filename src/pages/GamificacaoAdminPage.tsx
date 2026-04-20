@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Swords, MapPin } from "lucide-react";
 import EstatisticasGamificacao from "@/components/admin/gamificacao/EstatisticasGamificacao";
-import ConfiguracaoModulo from "@/components/admin/gamificacao/ConfiguracaoModulo";
+import PaginaConfiguracoesDuelo from "@/features/duelo_configuracoes/pagina_configuracoes_duelo";
 import ListaDuelosAdmin from "@/components/admin/gamificacao/ListaDuelosAdmin";
 import RankingAdminView from "@/components/admin/gamificacao/RankingAdminView";
 import CinturaoAdminView from "@/components/admin/gamificacao/CinturaoAdminView";
@@ -146,7 +146,7 @@ export default function GamificacaoAdminPage() {
         </TabsList>
 
         <TabsContent value="configuracao">
-          <ConfiguracaoModulo branchId={branch.id} settings={settings} />
+          <PaginaConfiguracoesDuelo branchId={branch.id} brandId={branch.brand_id} settings={settings} />
         </TabsContent>
         <TabsContent value="duelos">
           <ListaDuelosAdmin branchId={branch.id} onCriarDuelo={() => setCriarDueloOpen(true)} />
