@@ -53,9 +53,9 @@ export default function PaginaAuditoriaDuplicacoes() {
       </div>
 
       {/* Aviso */}
-      <Card className="border-info/30 bg-info/5">
+      <Card className="border-primary/20 bg-primary/5">
         <CardContent className="pt-4 pb-4 flex gap-3 items-start">
-          <Info className="h-4 w-4 text-info shrink-0 mt-0.5" />
+          <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
           <p className="text-xs text-muted-foreground">
             Esta tela é <strong>somente leitura</strong>. Nada é removido automaticamente.
             Itens duplicados também recebem um selo <Badge variant="outline" className="mx-1 border-warning/40 text-warning text-[10px] py-0">⚠ DUP</Badge>
