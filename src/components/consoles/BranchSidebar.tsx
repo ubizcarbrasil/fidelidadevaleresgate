@@ -13,6 +13,8 @@ import { useResolvedModules } from "@/compartilhados/hooks/hook_modulos_resolvid
 import { useBusinessModelsUiEnabled } from "@/compartilhados/hooks/hook_business_models_ui_flag";
 import { USE_RESOLVED_MODULES } from "@/compartilhados/constants/constantes_features";
 import { Badge } from "@/components/ui/badge";
+import { BadgeDuplicado } from "@/compartilhados/components/badge_duplicado";
+import { useDuplicacoesMenu } from "@/compartilhados/hooks/hook_duplicacoes_menu";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -93,7 +95,7 @@ const branchGroupDefs: DefinicaoGrupoSidebar[] = [
 const groups = buildSidebarGroups(branchGroupDefs);
 
 function CollapsibleGroup({
-  label, items, collapsed, location, getLabel, badges,
+  label, items, collapsed, location, getLabel, badges, chavesDuplicadas, mostrarDup,
 }: {
   label: string;
   items: RegistroItemMenu[];
@@ -101,6 +103,8 @@ function CollapsibleGroup({
   location: { pathname: string };
   getLabel: (key: string) => string;
   badges: Record<string, number>;
+  chavesDuplicadas: Set<string>;
+  mostrarDup: boolean;
 }) {
   const hasActiveRoute = items.some(
     (item) => location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url))
@@ -118,6 +122,7 @@ function CollapsibleGroup({
             <SidebarMenu>
               {items.map((item) => {
                 const badgeCount = badges[item.key];
+                const isDuplicado = mostrarDup && chavesDuplicadas.has(item.key);
                 return (
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
@@ -128,7 +133,8 @@ function CollapsibleGroup({
                       <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
-                        {badgeCount && badgeCount > 0 && (
+                        {!collapsed && isDuplicado && <BadgeDuplicado />}
+                        {!isDuplicado && badgeCount && badgeCount > 0 && (
                           <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold">
                             {badgeCount > 99 ? "99+" : badgeCount}
                           </Badge>

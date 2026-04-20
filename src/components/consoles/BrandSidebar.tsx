@@ -15,6 +15,8 @@ import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { BadgeDuplicado } from "@/compartilhados/components/badge_duplicado";
+import { useDuplicacoesMenu } from "@/compartilhados/hooks/hook_duplicacoes_menu";
 import PlatformLogo from "@/components/PlatformLogo";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -151,7 +153,7 @@ const brandGroupDefs: DefinicaoGrupoSidebar[] = [
 const groups = buildSidebarGroups(brandGroupDefs);
 
 function CollapsibleGroup({
-  label, items, collapsed, location, getLabel, badges, brandId, isOpen, onToggle,
+  label, items, collapsed, location, getLabel, badges, brandId, isOpen, onToggle, chavesDuplicadas, mostrarDup,
 }: {
   label: string;
   items: RegistroItemMenu[];
@@ -162,6 +164,8 @@ function CollapsibleGroup({
   brandId?: string;
   isOpen: boolean;
   onToggle: () => void;
+  chavesDuplicadas: Set<string>;
+  mostrarDup: boolean;
 }) {
   const { setOpenMobile } = useSidebar();
 
@@ -179,6 +183,7 @@ function CollapsibleGroup({
               {items.map((item) => {
                 const badgeCount = badges[item.key];
                 const isActive = location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url));
+                const isDuplicado = mostrarDup && chavesDuplicadas.has(item.key);
                 return (
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton asChild isActive={isActive} tooltip={getLabel(item.key)}>
@@ -191,7 +196,9 @@ function CollapsibleGroup({
                       >
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
-                        {badgeCount && badgeCount > 0 ? (
+                        {!collapsed && isDuplicado ? (
+                          <BadgeDuplicado />
+                        ) : badgeCount && badgeCount > 0 ? (
                           <span className="ml-auto h-2 w-2 rounded-full bg-destructive shrink-0" title={`${badgeCount}`} />
                         ) : null}
                       </NavLink>
