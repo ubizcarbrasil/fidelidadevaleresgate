@@ -8,6 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMenuLabels } from "@/hooks/useMenuLabels";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { Badge } from "@/components/ui/badge";
+import { BadgeDuplicado } from "@/compartilhados/components/badge_duplicado";
+import { useDuplicacoesMenu } from "@/compartilhados/hooks/hook_duplicacoes_menu";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -116,6 +118,7 @@ const rootGroupDefs: DefinicaoGrupoSidebar[] = [
       "sidebar.configuracoes",
       { key: "sidebar.subscription", overrides: { defaultTitle: "Assinatura" } },
       "sidebar.plan_templates", "sidebar.plan_pricing",
+      "sidebar.auditoria_duplicacoes",
     ],
   },
 ];
@@ -123,7 +126,7 @@ const rootGroupDefs: DefinicaoGrupoSidebar[] = [
 const groups = buildSidebarGroups(rootGroupDefs);
 
 function CollapsibleGroup({
-  label, items, collapsed, location, getLabel, badges,
+  label, items, collapsed, location, getLabel, badges, chavesDuplicadas, mostrarDup,
 }: {
   label: string;
   items: RegistroItemMenu[];
@@ -131,6 +134,8 @@ function CollapsibleGroup({
   location: { pathname: string };
   getLabel: (key: string) => string;
   badges: Record<string, number>;
+  chavesDuplicadas: Set<string>;
+  mostrarDup: boolean;
 }) {
   const hasActiveRoute = items.some(
     (item) => location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url))
@@ -149,6 +154,7 @@ function CollapsibleGroup({
               {items.map((item) => {
                 const badgeCount = badges[item.key];
                 const isNovo = item.key === "sidebar.central_modulos";
+                const isDuplicado = mostrarDup && chavesDuplicadas.has(item.key);
                 return (
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
@@ -159,12 +165,13 @@ function CollapsibleGroup({
                       <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="flex-1">{getLabel(item.key)}</span>}
+                        {!collapsed && isDuplicado && <BadgeDuplicado />}
                         {!collapsed && isNovo && (
                           <Badge className="ml-auto h-5 px-1.5 text-[10px] font-bold bg-primary text-primary-foreground hover:bg-primary">
                             Novo
                           </Badge>
                         )}
-                        {!isNovo && badgeCount && badgeCount > 0 && (
+                        {!isNovo && !isDuplicado && badgeCount && badgeCount > 0 && (
                           <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold">
                             {badgeCount > 99 ? "99+" : badgeCount}
                           </Badge>
@@ -186,9 +193,10 @@ export function RootSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isRootAdmin } = useAuth();
   const { getLabel } = useMenuLabels("admin");
   const badges = useSidebarBadges();
+  const { chavesDuplicadas } = useDuplicacoesMenu();
 
   const { data: brands } = useQuery({
     queryKey: ["brands-for-sidebar"],
@@ -229,7 +237,17 @@ export function RootSidebar() {
         </SidebarGroup>
 
         {groups.map((group) => (
-          <CollapsibleGroup key={group.label} label={group.label} items={group.items} collapsed={collapsed} location={location} getLabel={getLabel} badges={badges} />
+          <CollapsibleGroup
+            key={group.label}
+            label={group.label}
+            items={group.items}
+            collapsed={collapsed}
+            location={location}
+            getLabel={getLabel}
+            badges={badges}
+            chavesDuplicadas={chavesDuplicadas}
+            mostrarDup={isRootAdmin}
+          />
         ))}
 
         <Collapsible defaultOpen={false} className="group/collapsible">
