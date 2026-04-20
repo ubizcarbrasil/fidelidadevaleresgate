@@ -31,11 +31,11 @@ export default function EtapaProgresso({ resultado, totalLinhas }: Props) {
         <div className="grid grid-cols-4 gap-2 text-center">
           <div className="rounded-md border border-border p-2">
             <p className="text-[10px] text-muted-foreground uppercase">Criados</p>
-            <p className="text-base font-semibold text-blue-500">{resultado.created_count}</p>
+            <p className="text-base font-semibold text-primary">{resultado.created_count}</p>
           </div>
           <div className="rounded-md border border-border p-2">
             <p className="text-[10px] text-muted-foreground uppercase">Atualizados</p>
-            <p className="text-base font-semibold text-green-500">{resultado.updated_count}</p>
+            <p className="text-base font-semibold text-primary">{resultado.updated_count}</p>
           </div>
           <div className="rounded-md border border-border p-2">
             <p className="text-[10px] text-muted-foreground uppercase">Ignorados</p>

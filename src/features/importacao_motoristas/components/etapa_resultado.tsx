@@ -36,7 +36,7 @@ export default function EtapaResultado({ resultado, onNovaImportacao, onFechar }
         {houveErro && sucesso === 0 ? (
           <AlertTriangle className="h-10 w-10 text-destructive" />
         ) : (
-          <CheckCircle2 className="h-10 w-10 text-green-500" />
+          <CheckCircle2 className="h-10 w-10 text-primary" />
         )}
         <h3 className="text-base font-semibold">
           {houveErro && sucesso === 0 ? "Importação falhou" : "Importação concluída"}
@@ -47,10 +47,10 @@ export default function EtapaResultado({ resultado, onNovaImportacao, onFechar }
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/30 justify-center py-1.5">
+        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 justify-center py-1.5">
           {resultado.created_count} criados
         </Badge>
-        <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/30 justify-center py-1.5">
+        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 justify-center py-1.5">
           {resultado.updated_count} atualizados
         </Badge>
         <Badge variant="outline" className="bg-muted text-muted-foreground justify-center py-1.5">

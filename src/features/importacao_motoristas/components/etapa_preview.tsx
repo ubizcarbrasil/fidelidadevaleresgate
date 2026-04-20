@@ -78,7 +78,7 @@ export default function EtapaPreview({ linhas, resumo, enviando, onVoltar, onCon
         </ScrollArea>
       </div>
 
-      <div className="rounded-md border border-yellow-500/30 bg-yellow-500/5 p-3 text-xs text-yellow-600 dark:text-yellow-400">
+      <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-xs text-warning-foreground">
         Ao confirmar: <strong>{linhas.length}</strong> linha(s) serão processadas. Motoristas existentes serão atualizados (match por CPF, telefone ou nome). Campos vazios na planilha <strong>não</strong> sobrescrevem dados existentes.
       </div>
 
