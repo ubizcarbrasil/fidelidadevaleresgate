@@ -44,6 +44,7 @@ interface FormData {
   enable_demo_stores: boolean;
   enable_test_credits: boolean;
   selected_sections: number[];
+  subscription_plan: "free" | "starter" | "profissional" | "enterprise";
 }
 
 interface ProvisionResult {
@@ -80,6 +81,7 @@ export default function ProvisionBrandWizard() {
     enable_demo_stores: true,
     enable_test_credits: true,
     selected_sections: [0, 1, 2, 3, 4, 5, 6, 7],
+    subscription_plan: "starter",
   });
 
   const stepIndex = STEPS.indexOf(step);
@@ -129,6 +131,7 @@ export default function ProvisionBrandWizard() {
             enable_demo_stores: form.enable_demo_stores,
             enable_test_credits: form.enable_test_credits,
             selected_sections: form.selected_sections,
+            subscription_plan: form.subscription_plan,
           }),
         },
       );
