@@ -202,6 +202,63 @@ export function DialogConcederAddon({ open, onOpenChange, prefill }: Props) {
             </Select>
           </div>
 
+          {/* Escopo: Marca inteira ou Cidade específica */}
+          <div className="space-y-1.5">
+            <Label>Escopo</Label>
+            <Select
+              value={scope}
+              onValueChange={(v) => setScope(v as "brand" | "branch")}
+              disabled={!brandId}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="brand">Marca inteira (todas as cidades)</SelectItem>
+                <SelectItem value="branch">Cidade específica</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground">
+              {scope === "brand"
+                ? "O add-on valerá para todas as cidades da marca."
+                : "O add-on valerá apenas para a cidade selecionada abaixo."}
+            </p>
+          </div>
+
+          {scope === "branch" && (
+            <div className="space-y-1.5">
+              <Label>Cidade</Label>
+              <Select
+                value={branchId}
+                onValueChange={setBranchId}
+                disabled={!brandId || loadBranches}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a cidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(branches ?? []).map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      <div className="flex items-center gap-2">
+                        <span>{b.name}</span>
+                        {b.city && (
+                          <Badge variant="outline" className="text-[10px]">
+                            {b.city}
+                          </Badge>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                  {(branches ?? []).length === 0 && brandId && !loadBranches && (
+                    <div className="px-2 py-3 text-xs text-muted-foreground">
+                      Esta marca não tem cidades ativas.
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <Label>Modelo de Negócio</Label>
             <Select value={modelId} onValueChange={setModelId} disabled={loadModelos}>
