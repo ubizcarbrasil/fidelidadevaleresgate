@@ -1,198 +1,92 @@
 
 
-# Sub-fase 7.0 — Configurações Avançadas do Duelo (Ciclo + Prêmios)
+# Status Mobile/PWA — O que falta antes de publicar
 
-## O que já existe (não vamos refazer)
+## ✅ Já está pronto (passe anterior)
+- Shell global (`AppLayout.tsx`) com topbar mobile, safe-areas e título dinâmico
+- Tela `/install` com instruções iOS/Android
+- Banners de instalar/atualizar PWA
+- `index.css` com utilitários `pwa-safe-*`, touch targets e `tabs-scroll-mobile`
+- Ficha do motorista (`DriverDetailSheet`) com abas roláveis
+- Modal de importação de motoristas 100% navegável no celular
+- Página de Gestão de Motoristas
+- Aba de Configurações do Duelo (5 sub-abas) — já foi feita pensando em mobile
 
-| Já pronto | Onde |
+## ⚠️ O que ainda NÃO está adaptado (verificado agora no código)
+
+Pesquisei o repositório e encontrei **43 páginas administrativas com grids densos** (`grid-cols-3/4/5/6` sem breakpoint mobile) e **13 páginas com tabelas largas** que vão estourar no celular. As mais críticas:
+
+| Página | Problema |
 |---|---|
-| Tabela `driver_duels` com `challenger_points_bet`, `challenged_points_bet`, `prize_points`, `points_reserved`, `season_id` | banco |
-| Tabela `duel_side_bets` (apostas paralelas) | banco |
-| Tabela `gamification_seasons` (temporadas/ciclos) | banco |
-| Tabela `points_ledger` (fonte única de pontos) | banco |
-| Página `/gamificacao-admin` com 6 abas (Configuração / Duelos / Apostas / Ranking / Cinturão / Moderação) | `GamificacaoAdminPage.tsx` |
-| Aba "Configuração" com toggles de módulos, métricas, frases de recusa | `ConfiguracaoModulo.tsx` |
-| Settings persistidos em `branches.branch_settings_json` | padrão da plataforma |
-| RLS por brand/branch + `useBrandGuard` | padrão da plataforma |
+| `Dashboard.tsx` | KPIs e gráficos podem cortar no mobile |
+| `OffersPage.tsx` | Formulário com `grid-cols-3` sem fallback |
+| `ReportsPage.tsx` | 4 tabelas largas com `overflow-x-auto` mas controles apertados |
+| `CrmDashboardPage.tsx` | `grid-cols-5` em "ações críticas" |
+| `CrmCampaignsPage.tsx` / `CrmAudiencesPage.tsx` | Formulários `grid-cols-3` fixos |
+| `Branches.tsx` / `BrandBranchesPage.tsx` | Listagens de cidades com tabelas |
+| `Customers.tsx` / `Stores.tsx` / `Vouchers.tsx` | Listagens densas |
+| `RedemptionsPage.tsx` / `ProductRedemptionOrdersPage.tsx` | Tabelas de resgates |
+| `MachineIntegrationPage.tsx` | TabsList `grid-cols-4` apertada |
+| `IconLibraryPage.tsx`, `BannerManagerPage.tsx`, `WelcomeTourConfigPage.tsx` | Grids visuais densos |
+| `BrandModulesPage.tsx`, `BrandSettingsPage.tsx` | Configurações com cards lado a lado |
+| `GanhaGanha*` (5 páginas) | Dashboards e relatórios |
+| `Crm*` (10+ páginas) | Listagens e formulários |
+| `Driver*Config / Subscription / Plans / Users / AccessHub` | Configurações administrativas |
 
-**Conclusão**: não precisa criar tabelas novas para "duelo" e "aposta" — já existem. Vamos **adicionar 2 tabelas pequenas** (campanhas de prêmio + histórico de resets) e **estender a aba Configuração** com 4 sub-abas internas. Sem rota nova, sem submenu novo.
+## 🎯 O que vou fazer na próxima execução
 
-## O que vai ser construído
+**Passe 2 — Adequação mobile das páginas administrativas (sem refazer o shell)**
 
-### 1. Refatorar a aba "Configuração" em sub-abas
+### Estratégia
+Aplicar 4 padrões repetíveis para não tocar individualmente em cada página:
 
-Hoje é uma única tela longa. Vai virar abas internas (componentização extrema, padrão workspace):
+1. **Grids densos** → trocar `grid-cols-N` por `grid-cols-1 sm:grid-cols-2 lg:grid-cols-N` em formulários e cards
+2. **Tabelas largas** → garantir wrapper `overflow-x-auto` + reduzir colunas não-essenciais no mobile (`hidden sm:table-cell`)
+3. **TabsList apertadas** → trocar `grid grid-cols-N` por `flex overflow-x-auto` no mobile (padrão já criado)
+4. **Barras de filtros** → empilhar verticalmente no mobile com `flex-col sm:flex-row`
 
-```
-Aba Configuração
- ├─ Geral          (o que já existe: toggles, métricas, frases)
- ├─ Limites de Aposta   ← NOVO
- ├─ Ciclo & Reset       ← NOVO
- ├─ Campanhas de Prêmio ← NOVO
- └─ Integração Corridas ← NOVO
-```
+### Páginas que serão tratadas (em ordem de uso real)
+**Prioridade 1 — operação diária**
+- Dashboard
+- OffersPage
+- RedemptionsPage
+- ProductRedemptionOrdersPage
+- CustomersPage
+- Branches / BrandBranchesPage
+- ReportsPage / BranchReportsPage
+- StoresPage
 
-Estrutura feature-based:
-```
-src/features/duelo_configuracoes/
- ├─ pagina_configuracoes_duelo.tsx          (orquestra as 5 sub-abas)
- ├─ components/
- │   ├─ aba_geral.tsx                       (move ConfiguracaoModulo atual)
- │   ├─ aba_limites_aposta.tsx
- │   ├─ aba_ciclo_reset.tsx
- │   ├─ aba_campanhas_premio.tsx
- │   ├─ aba_integracao_corridas.tsx
- │   ├─ card_campanha_premio.tsx
- │   ├─ formulario_campanha_premio.tsx
- │   ├─ preview_proximo_reset.tsx
- │   └─ historico_resets.tsx
- ├─ hooks/
- │   ├─ hook_config_duelo_avancada.ts       (load + save de branch_settings)
- │   ├─ hook_campanhas_premio.ts            (CRUD)
- │   ├─ hook_historico_resets.ts            (listagem)
- │   └─ hook_preview_reset.ts               (calcula motoristas elegíveis)
- ├─ services/
- │   └─ servico_campanhas_premio.ts
- ├─ schemas/
- │   ├─ schema_limites_aposta.ts            (zod)
- │   ├─ schema_ciclo_reset.ts
- │   └─ schema_campanha_premio.ts
- ├─ types/
- │   └─ tipos_configuracao_duelo.ts
- └─ constants/
-     └─ constantes_configuracao_duelo.ts    (frequências, ações, etc.)
-```
+**Prioridade 2 — configurações**
+- BrandModulesPage / BrandSettingsPage
+- MachineIntegrationPage
+- PointsRulesPage / DriverPointsRulesPage
+- GamificacaoAdminPage (header e abas externas)
+- VouchersPage / VoucherWizardPage
 
-### 2. Banco — 2 tabelas novas + extensão de settings
+**Prioridade 3 — CRM e gestão**
+- CrmDashboardPage, CrmCampaignsPage, CrmAudiencesPage, CrmCustomersPage
+- GanhaGanha (5 telas)
+- UsersPage / AccessHubPage / SubscriptionPage
 
-#### 2.1 Settings (sem migração — já existe `branch_settings_json`)
-Adicionar chaves novas em `branch_settings_json` (regra `=== true`, ausente = OFF):
-- **Limites de aposta**: `duel_bet_max_individual`, `duel_bet_max_total`, `duel_bet_min_individual`
-- **Ciclo**: `duel_cycle_reset_enabled`, `duel_cycle_frequency` (`daily`|`weekly`|`monthly`|`quarterly`), `duel_cycle_day` (1–31), `duel_cycle_action` (`zero_duel`|`zero_rides`|`zero_both`|`no_zero`), `duel_cycle_initial_points`, `duel_cycle_eligibility_json` (`{min_rides_prev_period: number, only_active: boolean}`)
-- **Integração corridas**: `duel_count_ride_points` (bool), `duel_ride_points_factor` (decimal)
+**Prioridade 4 — admin avançado (Root)**
+- IconLibraryPage / BannerManagerPage / WelcomeTourConfigPage
+- PlanModuleTemplatesPage / FeatureFlagsPage / ReleasesPage
 
-#### 2.2 Nova tabela `duel_prize_campaigns`
-```
-id uuid pk
-brand_id uuid not null fk brands
-branch_id uuid not null fk branches
-season_id uuid nullable fk gamification_seasons
-name text not null
-description text
-image_url text
-points_cost integer not null check (>0)
-quantity_total integer not null check (>0)
-quantity_redeemed integer not null default 0
-starts_at timestamptz not null
-ends_at timestamptz not null
-status text not null default 'active'  -- active|paused|ended
-created_by uuid fk auth.users
-created_at, updated_at timestamptz
-```
-RLS: brand_admin/root vê e edita por `brand_id`; branch_admin por `branch_id`; motorista lê apenas `status='active'` da própria cidade.
+### O que NÃO entra
+- Refatoração funcional (apenas responsividade)
+- Páginas públicas/cliente (`/loja/:slug`, `/p/:slug`, `/driver`) — já são mobile-first
+- Tela do parceiro (`/store-panel`) — escopo separado
 
-#### 2.3 Nova tabela `duel_cycle_reset_history`
-```
-id uuid pk
-brand_id uuid not null
-branch_id uuid not null
-executed_at timestamptz not null default now()
-drivers_affected integer not null
-total_points_distributed bigint not null
-action_executed text not null
-config_snapshot jsonb not null   -- snapshot dos settings no momento
-details_json jsonb               -- erros, ids ignorados, etc.
-triggered_by text not null       -- 'cron'|'manual'
-triggered_by_user uuid           -- nullable
-```
-RLS: leitura por brand/branch admin (auditoria, somente leitura via UI).
+## 📤 Posso publicar agora?
 
-### 3. Edge Functions
+**Tecnicamente sim, mas não recomendo ainda**:
 
-#### 3.1 `reset-duelo-ciclo` (nova, agendada via pg_cron diário 00:05)
-- Itera todas as `branches` com `duel_cycle_reset_enabled = true`
-- Para cada uma: verifica se hoje é o dia de reset conforme `duel_cycle_frequency` + `duel_cycle_day`
-- Se sim:
-  - Lista motoristas elegíveis (filtra por `duel_cycle_eligibility_json`)
-  - Aplica ação (`zero_duel`/`zero_rides`/`zero_both`/`no_zero`) via INSERT em `points_ledger` (débito de saldo atual, mantendo histórico — fonte única de verdade)
-  - Credita `duel_cycle_initial_points` para cada elegível (INSERT em `points_ledger` tipo `CYCLE_BONUS`)
-  - Insere registro em `duel_cycle_reset_history`
-  - Dispara mensagens via `send-driver-message` (engine unificado já existe)
-- Pagina em chunks de 500 motoristas (padrão da plataforma)
-- Usa `SUPABASE_ANON_KEY` no header (padrão cron)
+✅ **Funciona no celular**: login, navegação, ficha de motorista, importação, configuração de duelo, instalação PWA — tudo testado e adaptado.
 
-#### 3.2 `validar-aposta-duelo` (nova, chamada antes de criar duelo/side bet)
-- Recebe `branch_id`, `points_individual`, `points_total`
-- Lê limites de `branch_settings_json`
-- Retorna `{ ok: true }` ou `{ ok: false, reason: string }`
-- Validação JWT obrigatória
-- **Backup defensivo**: trigger SQL `BEFORE INSERT` em `driver_duels` que rejeita se exceder limites (não confiar só no front)
+⚠️ **Mas vai ficar feio em várias páginas**: Dashboard, Ofertas, Relatórios, CRM e Configurações ainda têm grids e tabelas que estouram horizontalmente no celular. Se você abrir essas telas no PWA instalado, vai precisar de scroll lateral e os formulários ficam apertados.
 
-#### 3.3 RPC `redeem_prize_campaign(campaign_id, driver_id)` (nova)
-- Atômica com `FOR UPDATE` lock
-- Valida saldo via `points_ledger`
-- Decrementa `quantity_redeemed`
-- Cria `points_ledger` débito tipo `PRIZE_REDEEM`
-- Cria registro em `product_redemption_orders` (já existe, padrão da plataforma) vinculado por `campaign_id` em metadata
-- Retorna `{ order_id, remaining_balance }`
+**Recomendação**: rodar o **Passe 2** primeiro (estimativa ~40 min, sem mudança funcional, só CSS responsivo) e **publicar tudo de uma vez**. Assim você instala o PWA e usa qualquer tela com conforto.
 
-### 4. UI — 4 sub-abas novas
+## ⏱️ Estimativa
+~40 min para tratar as ~30 páginas prioritárias aplicando os 4 padrões. Sem migração, sem mudança de lógica, sem risco de regressão funcional. `npx tsc --noEmit` esperado limpo.
 
-#### Limites de Aposta
-3 inputs numéricos (min individual, max individual, max total do duelo) + preview "Exemplo: motorista A aposta 500 + motorista B aposta 500 = 1.000 (dentro do limite de X)"
-
-#### Ciclo & Reset
-- Toggle principal "Ativar reset automático"
-- Select frequência (diário/semanal/mensal/trimestral)
-- Input dia (1-31, com validação contextual — se mensal, 1-28 recomendado)
-- RadioGroup ação (4 opções com explicação curta cada)
-- Input pontos iniciais
-- Bloco "Quem recebe": checkbox "Apenas ativos" + input "Mín. corridas no período anterior"
-- **Componente `PreviewProximoReset`**: cálculo em tempo real "No próximo dia 01/05/2026, **47 motoristas** receberão **1.000 pontos** cada — total **47.000 pontos** distribuídos. Saldo atual de duelos será **zerado**."
-- Botão "Executar reset agora" (manual, com confirmação dupla)
-- Tabela "Histórico dos últimos 10 resets"
-
-#### Campanhas de Prêmio
-- Botão "Nova Campanha" → abre `formulario_campanha_premio` (Sheet)
-- Grid de cards `CardCampanhaPremio` com: imagem, nome, custo, qtd disponível/resgatada, status badge, datas, ações (editar/pausar/encerrar)
-- Filtro por status
-
-#### Integração Corridas
-- Toggle "Pontos de corrida somam no saldo de duelo"
-- Input "Fator de conversão" (1 corrida = X pontos), aparece só se toggle ativo
-- Explicação inline do efeito
-
-### 5. Segurança (checklist obrigatório)
-
-- [x] RLS em `duel_prize_campaigns` (brand/branch isolation)
-- [x] RLS em `duel_cycle_reset_history` (read-only para admins)
-- [x] Trigger SQL valida limites no INSERT/UPDATE de `driver_duels` e `duel_side_bets`
-- [x] Edge functions validam JWT via `getClaims()`
-- [x] RPC `redeem_prize_campaign` é `SECURITY DEFINER` com lock `FOR UPDATE`
-- [x] Auditoria: cada save de configuração registra `created_by` + `updated_at` (já temos colunas, basta gravar)
-- [x] Server-side enforcement (nunca confiar só no front)
-
-## Arquivos editados/criados
-
-| Arquivo | Ação |
-|---|---|
-| `src/features/duelo_configuracoes/...` (15 arquivos novos) | criar feature completa |
-| `src/pages/GamificacaoAdminPage.tsx` | trocar `<ConfiguracaoModulo>` por `<PaginaConfiguracoesDuelo>` |
-| `src/components/admin/gamificacao/ConfiguracaoModulo.tsx` | mover conteúdo para `aba_geral.tsx`, deletar |
-| `src/components/driver/duels/hook_config_duelos.ts` | adicionar leitura das novas flags (limites, ciclo, integração) |
-| `src/lib/queryKeys.ts` | adicionar `dueloConfig`, `dueloCampanhas`, `dueloResetHistory` |
-| `supabase/functions/reset-duelo-ciclo/index.ts` | nova |
-| `supabase/functions/validar-aposta-duelo/index.ts` | nova |
-| migração SQL | 2 tabelas + RLS + trigger validação + RPC + cron job |
-
-## Riscos e rollback
-
-- **Risco baixo**: features novas isoladas; sub-aba "Geral" preserva 100% do comportamento atual; ciclo de reset só roda se `duel_cycle_reset_enabled === true` (default OFF)
-- **Defensivo**: trigger de validação e RPC atômica garantem integridade mesmo sem UI
-- **Rollback**: reverter migração drop das 2 tabelas novas + remover chaves novas do `branch_settings_json` (idempotente)
-
-## O que NÃO entra
-
-- Refatoração das tabelas atuais de duelo (já estão maduras)
-- Mudanças no fluxo de criação/aceite de duelo do motorista (apenas validação extra silenciosa)
-- Editor visual r
