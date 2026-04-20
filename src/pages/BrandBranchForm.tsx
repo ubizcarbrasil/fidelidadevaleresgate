@@ -60,10 +60,10 @@ export default function BrandBranchForm() {
   const audienciaCliente = escopo.hasAudience("cliente");
 
   // Visibilidade dos toggles de Módulos de Negócio (segundo o plano)
-  const podeDuelos = escopo.hasAnyModuleKey("duels", "achadinhos_motorista");
+  const podeDuelos = escopo.hasAnyModuleKey("duels", "achadinhos_motorista") && audienciaMotorista;
   const podeAchadinhos = escopo.hasModuleKey("affiliate_deals");
-  const podeMarketplace = escopo.hasModuleKey("product_redemptions");
-  const podeRaceEarn = escopo.hasModuleKey("points") || audienciaMotorista;
+  const podeMarketplace = escopo.hasModuleKey("product_redemptions") && audienciaMotorista;
+  const podeRaceEarn = (escopo.hasModuleKey("points") || escopo.hasModuleKey("driver_scoring")) && audienciaMotorista;
   const podeClientePontua = escopo.hasModuleKey("earn_points_store") && audienciaCliente;
   const algumModuloVisivel =
     podeDuelos || podeAchadinhos || podeMarketplace || podeRaceEarn || podeClientePontua;
@@ -688,7 +688,11 @@ export default function BrandBranchForm() {
                 Módulo Achadinho
               </Label>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Vitrine de ofertas afiliadas para clientes e motoristas.
+                {audienciaMotorista && audienciaCliente
+                  ? "Vitrine de ofertas afiliadas para clientes e motoristas."
+                  : audienciaCliente
+                    ? "Vitrine de ofertas afiliadas para clientes."
+                    : "Vitrine de ofertas afiliadas para motoristas."}
               </p>
             </div>
             <Switch checked={enableAchadinhosModule} onCheckedChange={setEnableAchadinhosModule} />
