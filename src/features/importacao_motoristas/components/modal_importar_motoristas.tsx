@@ -65,10 +65,10 @@ export default function ModalImportarMotoristas({ brandId, branchId }: Props) {
       </Button>
 
       <Dialog open={aberto} onOpenChange={(open) => !open && etapa !== "progresso" && fechar()}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{tituloPorEtapa[etapa]}</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="max-w-2xl w-[calc(100vw-1rem)] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-base sm:text-lg pr-6">{tituloPorEtapa[etapa]}</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
               {etapa === "upload" && "Aceita CSV ou XLSX. Até 5.000 linhas por importação."}
               {etapa === "preview" && "Confira os dados detectados antes de enviar."}
               {etapa === "progresso" && "Não feche esta janela até a importação concluir."}
