@@ -39,6 +39,8 @@ const ApiKeyOnboardingDialog = lazyWithRetry(() => import("@/components/ApiKeyOn
 const routeLabels: Record<string, string> = {
   "/": "Visão Geral",
   "/branches": "Cidades",
+  "/brand-branches": "Cidades",
+  "/brand-branches/new": "Nova Cidade",
   "/brands": "Aparência",
   "/offers": "Ofertas",
   "/redemptions": "Resgates",
@@ -58,6 +60,8 @@ const routeLabels: Record<string, string> = {
   "/api-docs": "Documentação API",
 };
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function useBreadcrumbs() {
   const location = useLocation();
   const path = location.pathname;
@@ -67,7 +71,16 @@ function useBreadcrumbs() {
   let accumulated = "";
   for (const seg of segments) {
     accumulated += `/${seg}`;
-    const label = routeLabels[accumulated] || seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, " ");
+    let label: string;
+    if (routeLabels[accumulated]) {
+      label = routeLabels[accumulated];
+    } else if (UUID_REGEX.test(seg)) {
+      label = "Editar";
+    } else if (seg.toLowerCase() === "new") {
+      label = "Novo";
+    } else {
+      label = seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, " ");
+    }
     crumbs.push({ label, href: accumulated });
   }
   return crumbs;
