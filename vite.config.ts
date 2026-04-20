@@ -53,7 +53,8 @@ return ({
       workbox: {
         // Bump cacheId quando precisar invalidar SW + caches antigos no cliente.
         // v2 (Fase 4.1b) — força recarga do bundle com Empreendedores e Cidades.
-        cacheId: "vale-resgate-v2",
+        // v3 (Mobile Hardening) — invalida caches antigos após correção de removeChild/Sheet portal.
+        cacheId: "vale-resgate-v3",
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,jpg,jpeg,webp}"],
