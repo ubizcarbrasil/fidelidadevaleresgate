@@ -92,8 +92,8 @@ export default function CardModeloBrand({ brandId, resolved }: Props) {
           )}
           {resolved.source === "addon_branch" && !isLocked && (
             <Badge
-              variant="secondary"
-              className="text-[10px] bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+              variant="outline"
+              className="text-[10px] border-primary/40 text-primary"
             >
               Add-on Cidade
             </Badge>
