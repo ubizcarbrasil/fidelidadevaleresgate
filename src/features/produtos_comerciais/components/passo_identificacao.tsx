@@ -74,40 +74,63 @@ export default function PassoIdentificacao({ draft, onChange }: Props) {
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label>Preço mensal (R$) *</Label>
-          <Input
-            type="number"
-            step="0.01"
-            value={(draft.price_cents / 100).toFixed(2)}
-            onChange={(e) =>
-              onChange({ price_cents: Math.round(parseFloat(e.target.value || "0") * 100) })
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-semibold">Preços</Label>
+          {(() => {
+            if (draft.price_cents <= 0 || draft.price_yearly_cents == null) return null;
+            const mensalAno = draft.price_cents * 12;
+            if (draft.price_yearly_cents > mensalAno) {
+              return (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium">
+                  ⚠ Anual maior que 12× mensal
+                </span>
+              );
             }
-          />
+            const desc = Math.round(((mensalAno - draft.price_yearly_cents) / mensalAno) * 100);
+            if (desc <= 0) return null;
+            return (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium">
+                {desc}% de desconto vs mensal
+              </span>
+            );
+          })()}
         </div>
-        <div className="space-y-2">
-          <Label>Preço anual (R$)</Label>
-          <Input
-            type="number"
-            step="0.01"
-            value={draft.price_yearly_cents != null ? (draft.price_yearly_cents / 100).toFixed(2) : ""}
-            onChange={(e) => {
-              const raw = e.target.value;
-              onChange({
-                price_yearly_cents: raw === "" ? null : Math.round(parseFloat(raw) * 100),
-              });
-            }}
-            placeholder="opcional"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Trial (dias) *</Label>
-          <Input
-            type="number"
-            value={draft.trial_days}
-            onChange={(e) => onChange({ trial_days: parseInt(e.target.value || "30") })}
-          />
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>Preço mensal (R$) *</Label>
+            <Input
+              type="number"
+              step="0.01"
+              value={(draft.price_cents / 100).toFixed(2)}
+              onChange={(e) =>
+                onChange({ price_cents: Math.round(parseFloat(e.target.value || "0") * 100) })
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Preço anual (R$)</Label>
+            <Input
+              type="number"
+              step="0.01"
+              value={draft.price_yearly_cents != null ? (draft.price_yearly_cents / 100).toFixed(2) : ""}
+              onChange={(e) => {
+                const raw = e.target.value;
+                onChange({
+                  price_yearly_cents: raw === "" ? null : Math.round(parseFloat(raw) * 100),
+                });
+              }}
+              placeholder="opcional"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Trial (dias) *</Label>
+            <Input
+              type="number"
+              value={draft.trial_days}
+              onChange={(e) => onChange({ trial_days: parseInt(e.target.value || "30") })}
+            />
+          </div>
         </div>
       </div>
 
