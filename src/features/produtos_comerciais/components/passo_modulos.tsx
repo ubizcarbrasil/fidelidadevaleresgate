@@ -114,9 +114,9 @@ export default function PassoModulos({ draft, onChange, onVoltarPasso }: Props) 
       </p>
 
       {semModulos && (
-        <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-4 text-sm">
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-4 text-sm">
           <p className="font-medium text-foreground flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertTriangle className="h-4 w-4 text-destructive" />
             Nenhum módulo vinculado a esses modelos
           </p>
           <p className="text-muted-foreground mt-1">
