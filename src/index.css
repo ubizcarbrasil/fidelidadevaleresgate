@@ -180,12 +180,16 @@ html, body {
 @supports (padding: env(safe-area-inset-top)) {
   .pwa-safe-top { padding-top: env(safe-area-inset-top); }
   .pwa-safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .pwa-safe-x {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
 }
 
 /* ── Mobile touch ── */
 @media (max-width: 640px) {
-  button, a, [role="button"] {
-    min-height: 44px;
+  button:not(.no-touch-min), a:not(.no-touch-min), [role="button"]:not(.no-touch-min) {
+    min-height: 40px;
   }
   table {
     font-size: 0.8rem;
@@ -193,7 +197,34 @@ html, body {
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
   }
+  /* Evita overflow horizontal indesejado em PWA mobile */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+  /* Dialogs/Sheets ocupam toda a largura */
+  [data-radix-dialog-content],
+  [data-radix-sheet-content] {
+    max-width: 100vw;
+  }
 }
+
+/* ── PWA standalone ── */
+@media all and (display-mode: standalone) {
+  body {
+    overscroll-behavior-y: none;
+  }
+  /* Esconde elementos só-web quando instalado */
+  .hide-in-standalone { display: none !important; }
+}
+
+/* ── Tabs com scroll horizontal mobile ── */
+.tabs-scroll-mobile {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.tabs-scroll-mobile::-webkit-scrollbar { display: none; }
 
 /* ── Glass effects ── */
 .vb-glass {
