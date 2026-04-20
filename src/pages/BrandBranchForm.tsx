@@ -205,7 +205,15 @@ export default function BrandBranchForm() {
       setCidade(existing.city || existing.name || "");
       setUf(existing.state || "");
       setAtivo(existing.is_active);
-      if ((existing as any).scoring_model) setScoringModel((existing as any).scoring_model);
+      if ((existing as any).scoring_model) {
+        const bruto = (existing as any).scoring_model as string;
+        // Normaliza silenciosamente: se a cidade tem configuração legada
+        // incompatível com o plano, força o valor permitido sem alarmar o usuário.
+        const ajustado = !escopo.isLoading && !escopo.isPermissive
+          ? normalizarScoringModel(bruto, escopo.allowedScoringModels)
+          : bruto;
+        setScoringModel(ajustado);
+      }
       setIsCityRedemptionEnabled(!!(existing as any).is_city_redemption_enabled);
       // Gamificação flags
       const bs = existing.branch_settings_json as Record<string, any> | null;
@@ -537,31 +545,6 @@ export default function BrandBranchForm() {
               onClick={() => navigate("/brand-subscription")}
             >
               Ver assinatura
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Aviso de inconsistência: scoring_model atual fora do permitido pelo plano */}
-      {isEdit && !escopo.isLoading && !escopo.isPermissive &&
-        !escopo.allowedScoringModels.includes(scoringModel as any) && (
-        <Card className="rounded-xl border-destructive/40 bg-destructive/5">
-          <CardContent className="p-3 flex items-center gap-3 flex-wrap">
-            <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium">Modelo de pontuação incompatível</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                Esta cidade está como <span className="font-mono">{scoringModel}</span>, mas seu plano só
-                permite: <span className="font-mono">{escopo.allowedScoringModels.join(", ")}</span>.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => setScoringModel(escopo.allowedScoringModels[0])}
-            >
-              Ajustar
             </Button>
           </CardContent>
         </Card>
