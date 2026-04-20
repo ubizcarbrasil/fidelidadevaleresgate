@@ -305,6 +305,17 @@ export default function BrandBranchForm() {
       const existingSettings = (existing?.branch_settings_json && typeof existing.branch_settings_json === "object")
         ? (existing.branch_settings_json as Record<string, any>)
         : {};
+
+      // Normalização defensiva: zerar flags de módulos que não estão no plano
+      const flagDuels = podeDuelos ? enableDuelsModule : false;
+      const flagAchadinhos = podeAchadinhos ? enableAchadinhosModule : false;
+      const flagMarketplace = podeMarketplace ? enableMarketplaceModule : false;
+      const flagRace = podeRaceEarn ? enableRaceEarnModule : false;
+      const flagCustomer = podeClientePontua ? enableCustomerScoringModule : false;
+
+      // Normalização defensiva: scoring_model precisa ser compatível com o plano
+      const scoringNormalizado = normalizarScoringModel(scoringModel, escopo.allowedScoringModels);
+
       const branchSettingsJson = {
         ...existingSettings,
         enable_driver_duels: enableDriverDuels,
@@ -312,11 +323,11 @@ export default function BrandBranchForm() {
         enable_city_belt: enableCityBelt,
         allow_public_duel_viewing: allowPublicDuelViewing,
         // Módulos de Negócio
-        enable_duels_module: enableDuelsModule,
-        enable_achadinhos_module: enableAchadinhosModule,
-        enable_marketplace_module: enableMarketplaceModule,
-        enable_race_earn_module: enableRaceEarnModule,
-        enable_customer_scoring_module: enableCustomerScoringModule,
+        enable_duels_module: flagDuels,
+        enable_achadinhos_module: flagAchadinhos,
+        enable_marketplace_module: flagMarketplace,
+        enable_race_earn_module: flagRace,
+        enable_customer_scoring_module: flagCustomer,
         // Flags do App do Motorista
         enable_driver_points_purchase: enableDriverPointsPurchase,
         enable_whatsapp_access: enableWhatsappAccess,
@@ -328,8 +339,8 @@ export default function BrandBranchForm() {
           min_points_to_redeem: minPointsToRedeem,
           max_redemptions_per_month: maxRedemptionsPerMonth,
           approval_deadline_hours: approvalDeadlineHours,
-          points_per_real_driver: pointsPerRealDriver,
-          points_per_real_customer: pointsPerRealCustomer,
+          points_per_real_driver: audienciaMotorista ? pointsPerRealDriver : pointsPerReal,
+          points_per_real_customer: audienciaCliente ? pointsPerRealCustomer : pointsPerReal,
         },
       };
 
@@ -339,7 +350,7 @@ export default function BrandBranchForm() {
         city: cidade.trim(),
         state: uf,
         is_active: ativo,
-        scoring_model: scoringModel,
+        scoring_model: scoringNormalizado,
         is_city_redemption_enabled: isCityRedemptionEnabled,
         branch_settings_json: branchSettingsJson,
         timezone: "America/Sao_Paulo",
