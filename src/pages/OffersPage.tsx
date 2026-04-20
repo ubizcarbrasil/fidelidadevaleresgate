@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useProductScope } from "@/features/city_onboarding/hooks/hook_escopo_produto";
 import type { Database } from "@/integrations/supabase/types";
 
 type OfferStatus = Database["public"]["Enums"]["offer_status"];
@@ -36,6 +37,10 @@ const emptyForm: OfferForm = { title: "", description: "", brand_id: "", branch_
 export default function OffersPage() {
   const qc = useQueryClient();
   const { currentBrandId, isRootAdmin } = useBrandGuard();
+  const escopoProduto = useProductScope();
+  const temAudienciaCliente = escopoProduto.hasAudience("cliente");
+  const temAudienciaMotorista = escopoProduto.hasAudience("motorista");
+  const mostrarFiltroPublico = temAudienciaCliente && temAudienciaMotorista;
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<OfferForm>(emptyForm);
@@ -161,19 +166,21 @@ export default function OffersPage() {
         <div className="flex-1 w-full">
           <DataTableControls search={search} onSearchChange={onSearchChange} searchPlaceholder="Buscar oferta por título..." page={page} pageSize={PAGE_SIZE} totalCount={data?.total || 0} onPageChange={setPage} />
         </div>
-        <Select value={filtroMotorista} onValueChange={setFiltroMotorista}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <div className="flex items-center gap-2">
-              <Truck className="h-4 w-4 text-muted-foreground" />
-              <SelectValue placeholder="Público" />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas as ofertas</SelectItem>
-            <SelectItem value="driver_only">🚗 Exclusivo Motorista</SelectItem>
-            <SelectItem value="customer_only">👤 Apenas Clientes</SelectItem>
-          </SelectContent>
-        </Select>
+        {mostrarFiltroPublico && (
+          <Select value={filtroMotorista} onValueChange={setFiltroMotorista}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <div className="flex items-center gap-2">
+                <Truck className="h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Público" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as ofertas</SelectItem>
+              <SelectItem value="driver_only">🚗 Exclusivo Motorista</SelectItem>
+              <SelectItem value="customer_only">👤 Apenas Clientes</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {isLoading ? (
