@@ -177,6 +177,7 @@ export default function SecaoAddonsVendidos() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Marca</TableHead>
+                    <TableHead>Cidade</TableHead>
                     <TableHead>Modelo</TableHead>
                     <TableHead>Ciclo</TableHead>
                     <TableHead>Preço</TableHead>
@@ -194,6 +195,20 @@ export default function SecaoAddonsVendidos() {
                         <div className="text-[10px] text-muted-foreground">
                           plano {a.subscription_plan}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {a.branch_id ? (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] border-primary/40 text-primary"
+                          >
+                            {a.branch_name ?? "—"}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-[10px]">
+                            Todas
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
