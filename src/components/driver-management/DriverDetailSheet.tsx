@@ -26,24 +26,26 @@ export default function DriverDetailSheet({ driver, brandId, onClose }: Props) {
   return (
     <>
       <Sheet open={!!driver} onOpenChange={(open) => { if (!open) onClose(); }}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto p-4 sm:p-6 pwa-safe-bottom">
           <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
+            <SheetTitle className="flex items-center gap-2 text-base sm:text-lg pr-6">
               <Truck className="h-5 w-5 text-primary" />
-              {driver ? cleanName(driver.name) : "Motorista"}
+              <span className="truncate">{driver ? cleanName(driver.name) : "Motorista"}</span>
             </SheetTitle>
           </SheetHeader>
 
           {driver && (
             <Tabs defaultValue="dados" className="mt-4">
-              <TabsList className="grid w-full grid-cols-6 h-auto">
-                <TabsTrigger value="dados" className="text-xs px-2">Dados</TabsTrigger>
-                <TabsTrigger value="veiculos" className="text-xs px-2">Veículos</TabsTrigger>
-                <TabsTrigger value="documentacao" className="text-xs px-2">Docs</TabsTrigger>
-                <TabsTrigger value="pontuacao" className="text-xs px-2">Pontos</TabsTrigger>
-                <TabsTrigger value="regras" className="text-xs px-2">Regras</TabsTrigger>
-                <TabsTrigger value="extrato" className="text-xs px-2">Extrato</TabsTrigger>
-              </TabsList>
+              <div className="tabs-scroll-mobile -mx-1 px-1">
+                <TabsList className="inline-flex w-max sm:w-full sm:grid sm:grid-cols-6 h-auto gap-1">
+                  <TabsTrigger value="dados" className="text-xs px-3 py-1.5">Dados</TabsTrigger>
+                  <TabsTrigger value="veiculos" className="text-xs px-3 py-1.5">Veículos</TabsTrigger>
+                  <TabsTrigger value="documentacao" className="text-xs px-3 py-1.5">Docs</TabsTrigger>
+                  <TabsTrigger value="pontuacao" className="text-xs px-3 py-1.5">Pontos</TabsTrigger>
+                  <TabsTrigger value="regras" className="text-xs px-3 py-1.5">Regras</TabsTrigger>
+                  <TabsTrigger value="extrato" className="text-xs px-3 py-1.5">Extrato</TabsTrigger>
+                </TabsList>
+              </div>
 
               <TabsContent value="dados">
                 <AbaDadosMotorista driver={driver} brandId={brandId} />
