@@ -162,6 +162,13 @@ export default function TrialSignupPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Banner do Produto Comercial (quando vindo de /p/produto/:slug) */}
+      {productInfo && step !== "done" && (
+        <div className="bg-primary text-primary-foreground py-3 px-4 text-center text-sm">
+          <span className="font-semibold">Você está iniciando: {productInfo.product_name}</span>
+          <span className="opacity-90"> — {productInfo.trial_days} dias grátis</span>
+        </div>
+      )}
       {/* STEP: Guide — Manual passo a passo */}
       {step === "guide" && (
         <>
