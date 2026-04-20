@@ -17,6 +17,7 @@ import { Users, Car, User, Search, Loader2, History } from "lucide-react";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import HistoricoResetPontos from "@/components/branch/HistoricoResetPontos";
+import { useProductScope } from "@/features/city_onboarding/hooks/hook_escopo_produto";
 
 type ResetTarget = "all" | "drivers" | "clients" | "single";
 
@@ -33,6 +34,8 @@ export default function DialogResetPontos({ open, onClose, branchId, branchName 
   const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; name: string } | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const queryClient = useQueryClient();
+  const escopoProduto = useProductScope();
+  const temAudienciaCliente = escopoProduto.hasAudience("cliente");
 
   useEffect(() => {
     if (!open) {
@@ -106,12 +109,14 @@ export default function DialogResetPontos({ open, onClose, branchId, branchName 
                 <Car className="h-4 w-4 text-primary" /> Apenas motoristas
               </Label>
             </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-              <RadioGroupItem value="clients" id="target-clients" />
-              <Label htmlFor="target-clients" className="flex items-center gap-2 cursor-pointer flex-1">
-                <User className="h-4 w-4 text-primary" /> Apenas clientes
-              </Label>
-            </div>
+            {temAudienciaCliente && (
+              <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
+                <RadioGroupItem value="clients" id="target-clients" />
+                <Label htmlFor="target-clients" className="flex items-center gap-2 cursor-pointer flex-1">
+                  <User className="h-4 w-4 text-primary" /> Apenas clientes
+                </Label>
+              </div>
+            )}
             <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
               <RadioGroupItem value="single" id="target-single" />
               <Label htmlFor="target-single" className="flex items-center gap-2 cursor-pointer flex-1">

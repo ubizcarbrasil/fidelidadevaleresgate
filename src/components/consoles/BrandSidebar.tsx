@@ -12,6 +12,7 @@ import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useResolvedModules } from "@/compartilhados/hooks/hook_modulos_resolvidos";
 import { USE_RESOLVED_MODULES } from "@/compartilhados/constants/constantes_features";
 import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
+import { useProductScope } from "@/features/city_onboarding/hooks/hook_escopo_produto";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -226,6 +227,13 @@ export function BrandSidebar() {
   const { name: brandName, logoUrl: brandLogoUrl, subscriptionPlan, brandId: infoBrandId } = useBrandInfo();
   const { currentBrandId } = useBrandGuard();
   const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
+  const escopoProduto = useProductScope();
+  // Audiência do plano (produto contratado) tem precedência sobre o scoring_model das branches.
+  // Se o plano não cobre a audiência, esconde mesmo que alguma cidade esteja como BOTH (legado).
+  const planoMotorista = escopoProduto.hasAudience("motorista");
+  const planoCliente = escopoProduto.hasAudience("cliente");
+  const audienciaMotoristaAtiva = planoMotorista && isDriverEnabled;
+  const audienciaClienteAtiva = planoCliente && isPassengerEnabled;
   const badges = useSidebarBadges();
   const [openGroupLabel, setOpenGroupLabel] = useState<string | null>(null);
   const { chavesDuplicadasPorConsole } = useDuplicacoesMenu();
@@ -275,8 +283,8 @@ export function BrandSidebar() {
       .filter(item => !isBasicPlan || !BASIC_PLAN_HIDDEN_MODULES.includes(item.moduleKey ?? ""))
       .filter(item => {
         if (!item.scoringFilter) return true;
-        if (item.scoringFilter === "DRIVER") return isDriverEnabled;
-        if (item.scoringFilter === "PASSENGER") return isPassengerEnabled;
+        if (item.scoringFilter === "DRIVER") return audienciaMotoristaAtiva;
+        if (item.scoringFilter === "PASSENGER") return audienciaClienteAtiva;
         return true;
       }),
   }));
