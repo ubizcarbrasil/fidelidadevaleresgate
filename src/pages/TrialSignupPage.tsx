@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,10 +49,32 @@ const BENEFITS = [
 
 export default function TrialSignupPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const planSlug = searchParams.get("plan") || undefined;
   const [step, setStep] = useState<Step>("guide");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TrialResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [productInfo, setProductInfo] = useState<{ product_name: string; trial_days: number } | null>(null);
+
+  // Carrega dados do produto quando ?plan=slug está na URL
+  useEffect(() => {
+    if (!planSlug) return;
+    (async () => {
+      const { data } = await supabase
+        .from("subscription_plans")
+        .select("product_name, label, trial_days")
+        .eq("slug", planSlug)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (data) {
+        setProductInfo({
+          product_name: (data as any).product_name || (data as any).label,
+          trial_days: (data as any).trial_days ?? 30,
+        });
+      }
+    })();
+  }, [planSlug]);
 
   const [form, setForm] = useState<FormData>({
     company_name: "",
@@ -103,7 +125,7 @@ export default function TrialSignupPage() {
             "Content-Type": "application/json",
             "apikey": anonKey,
           },
-          body: JSON.stringify(form),
+          body: JSON.stringify({ ...form, plan_slug: planSlug }),
         },
       );
       const json = await res.json();
