@@ -98,9 +98,16 @@ export function detectarDuplicacoes(
   for (const [url, lista] of porUrl.entries()) {
     const pontosUnicos = new Set(lista.map((l) => `${l.console}::${l.grupo}`));
     if (pontosUnicos.size >= 2) {
+      // intra_console se houver 2+ ocorrências em um MESMO console; senão é só compartilhamento entre painéis
+      const porConsole = new Map<ConsoleSidebar, number>();
+      for (const l of lista) porConsole.set(l.console, (porConsole.get(l.console) ?? 0) + 1);
+      const escopo: EscopoDuplicacao = Array.from(porConsole.values()).some((n) => n >= 2)
+        ? "intra_console"
+        : "entre_consoles";
       relatorios.push({
         id: `url:${url}`,
         severidade: "rota_exata",
+        escopo,
         criterio: `Mesma rota ${url}`,
         ocorrencias: lista,
       });
@@ -120,9 +127,15 @@ export function detectarDuplicacoes(
     // Só sinalizamos se o mesmo módulo aparece em URLs diferentes
     // (mesma URL repetida já foi capturada no caso A).
     if (urlsUnicas.size >= 2) {
+      const porConsole = new Map<ConsoleSidebar, number>();
+      for (const l of lista) porConsole.set(l.console, (porConsole.get(l.console) ?? 0) + 1);
+      const escopo: EscopoDuplicacao = Array.from(porConsole.values()).some((n) => n >= 2)
+        ? "intra_console"
+        : "entre_consoles";
       relatorios.push({
         id: `mod:${mod}`,
         severidade: "funcao_similar",
+        escopo,
         criterio: `Mesmo módulo "${mod}"`,
         ocorrencias: lista,
       });
@@ -146,6 +159,24 @@ export function obterChavesDuplicadas(
   ocorrencias: OcorrenciaItemMenu[],
 ): Set<string> {
   const relatorios = detectarDuplicacoes(ocorrencias);
+  const chaves = new Set<string>();
+  for (const r of relatorios) {
+    for (const o of r.ocorrencias) chaves.add(o.itemKey);
+  }
+  return chaves;
+}
+
+/**
+ * Devolve um Set de itemKey duplicados DENTRO de um único console.
+ * Use no sidebar para marcar apenas duplicações reais do próprio painel,
+ * ignorando itens compartilhados entre painéis (que são esperados pela arquitetura SaaS).
+ */
+export function obterChavesDuplicadasIntraConsole(
+  ocorrenciasDoConsole: OcorrenciaItemMenu[],
+): Set<string> {
+  // Reaproveita a detecção; como só passamos ocorrências de um console,
+  // tudo que vier marcado é, por definição, intra_console.
+  const relatorios = detectarDuplicacoes(ocorrenciasDoConsole);
   const chaves = new Set<string>();
   for (const r of relatorios) {
     for (const o of r.ocorrencias) chaves.add(o.itemKey);

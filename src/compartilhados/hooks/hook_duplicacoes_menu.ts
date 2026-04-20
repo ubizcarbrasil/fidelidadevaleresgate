@@ -12,8 +12,9 @@ import { useMemo } from "react";
 import {
   aplanarConsole,
   detectarDuplicacoes,
-  obterChavesDuplicadas,
+  obterChavesDuplicadasIntraConsole,
   type DefinicaoGrupoSimples,
+  type ConsoleSidebar,
 } from "@/compartilhados/utils/utilitarios_duplicacao_menu";
 
 // ─── ROOT ───────────────────────────────────────────────────────────────
@@ -159,15 +160,29 @@ const BRANCH_GROUPS: DefinicaoGrupoSimples[] = [
 
 export function useDuplicacoesMenu() {
   return useMemo(() => {
-    const ocorrencias = [
-      ...aplanarConsole("ROOT", ROOT_GROUPS),
-      ...aplanarConsole("BRAND", BRAND_GROUPS),
-      ...aplanarConsole("BRANCH", BRANCH_GROUPS),
-    ];
+    const ocorrenciasRoot = aplanarConsole("ROOT", ROOT_GROUPS);
+    const ocorrenciasBrand = aplanarConsole("BRAND", BRAND_GROUPS);
+    const ocorrenciasBranch = aplanarConsole("BRANCH", BRANCH_GROUPS);
+    const ocorrencias = [...ocorrenciasRoot, ...ocorrenciasBrand, ...ocorrenciasBranch];
+
+    const chavesDuplicadasPorConsole: Record<ConsoleSidebar, Set<string>> = {
+      ROOT: obterChavesDuplicadasIntraConsole(ocorrenciasRoot),
+      BRAND: obterChavesDuplicadasIntraConsole(ocorrenciasBrand),
+      BRANCH: obterChavesDuplicadasIntraConsole(ocorrenciasBranch),
+    };
+
+    // União das duplicações intra-console (compatibilidade retroativa)
+    const chavesDuplicadas = new Set<string>([
+      ...chavesDuplicadasPorConsole.ROOT,
+      ...chavesDuplicadasPorConsole.BRAND,
+      ...chavesDuplicadasPorConsole.BRANCH,
+    ]);
+
     return {
       ocorrencias,
       relatorios: detectarDuplicacoes(ocorrencias),
-      chavesDuplicadas: obterChavesDuplicadas(ocorrencias),
+      chavesDuplicadas,
+      chavesDuplicadasPorConsole,
     };
   }, []);
 }
