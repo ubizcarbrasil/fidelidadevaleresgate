@@ -1,235 +1,123 @@
 
 
-# Importação CSV Robusta de Motoristas (4 mil+ linhas) + Ficha Detalhada
+# Sub-fase 6.6 — Sincronização Auto-Cadastro × Importação CSV
 
-## Diagnóstico — 5 problemas encontrados
+## Objetivo
 
-Olhando o seu CSV de exemplo (sistema TaxiMachine, 117 colunas) e o sistema atual:
+Garantir que **fluxo atual da primeira corrida não muda** (motorista continua sendo criado automaticamente), mas que os dados subidos via CSV ficam **visíveis imediatamente** na ficha — sem duplicar registros, sem quebrar nada.
 
-| # | Problema atual | Impacto |
+## Diagnóstico — o que falta
+
+Já está construído: tabela `driver_profiles`, importação CSV em chunks, ficha em 6 abas, match por `external_id → CPF → telefone → nome`.
+
+Faltam 3 ajustes finos:
+
+| # | Gap | Impacto |
 |---|---|---|
-| 1 | **Limite de 100/1000 linhas** — busca de motoristas existentes usa `.limit(1000)`, então da linha 1001 em diante o sistema cria duplicado em vez de atualizar | crítico para 4 mil motoristas |
-| 2 | **Loop sequencial** com 1 INSERT/UPDATE por linha = ~4000 round-trips → trava o navegador / dá timeout | crítico |
-| 3 | **Só lê 4 campos** (nome, cpf, telefone, email). Ignora os outros 113 do seu CSV | dados ricos jogados fora |
-| 4 | **Não suporta XLSX** — só `.csv`. Seu arquivo é `.xlsx` | precisa converter manualmente |
-| 5 | **Ficha do motorista (Aba "Dados") só mostra 5 campos**: nome, CPF, telefone, email, tier | informação rasa |
+| 1 | Listagem `/motoristas` tem `.limit(100)` | Subindo 4 mil, só 100 aparecem. Os 3.900 ficam invisíveis até a primeira corrida. |
+| 2 | `machine-webhook` quando cria customer (primeira corrida) **não cria `driver_profiles`** | Motorista que nunca foi importado fica com ficha vazia eternamente. |
+| 3 | Quando CSV é re-importado depois da primeira corrida, `external_driver_id` no customer pode estar diferente do `external_id` do CSV | Pode criar duplicata em vez de atualizar. |
 
 ## O que vai ser construído
 
-### 1. Banco — nova tabela `driver_profiles` (1:1 com `customers`)
+### 1. `machine-webhook` — auto-criar `driver_profiles` na primeira corrida
 
-Para não inflar a tabela `customers` (compartilhada com clientes não-motoristas), criar tabela paralela só para campos de motorista do TaxiMachine:
+Logo após criar o `customer` (linha 650), inserir em `driver_profiles` com os campos disponíveis vindos da TaxiMachine API (`fetchDriverDetails`):
 
-```sql
-CREATE TABLE driver_profiles (
-  customer_id uuid PRIMARY KEY REFERENCES customers(id) ON DELETE CASCADE,
-  brand_id uuid NOT NULL,
-  branch_id uuid NOT NULL,
-
-  -- Identificação pessoal
-  external_id text,              -- "Id" da TaxiMachine (1898478)
-  gender text,                   -- Masculino/Feminino
-  birth_date date,
-  mother_name text,
-
-  -- CNH
-  cnh_number text,
-  cnh_expiration date,
-  has_ear boolean,               -- inferido de "CNH/SEM/EAR"
-
-  -- Avaliação operacional
-  rating numeric(3,2),           -- 4.9
-  acceptance_rate integer,       -- 72 (em %)
-  acceptance_rate_updated_at timestamptz,
-
-  -- Status cadastral
-  registration_status text,      -- Ativo/Inativo
-  registration_status_at timestamptz,
-  registered_at timestamptz,
-  blocked_until timestamptz,
-  block_reason text,
-  last_os_at timestamptz,
-  last_activity_at timestamptz,
-
-  -- Métodos de pagamento aceitos (JSONB com flags)
-  accepted_payments jsonb,       -- {credito, debito, voucher, ticket, cartao_app, wappa, pix, picpay, whatsapp, faturado, carteira_creditos}
-
-  -- Serviços oferecidos (JSONB)
-  services_offered jsonb,        -- {animais, corrida_central, macaneta, ubiz_whatsapp, ubiz_frete, ubiz_guincho, ubiz_x, ubiz_x_identificado}
-
-  -- Vínculo operacional
-  link_type text,                -- "Motorista sem vínculo"
-  relationship text,             -- "Auxiliar"
-
-  -- Veículo principal (1)
-  vehicle1_model text,
-  vehicle1_year integer,
-  vehicle1_color text,
-  vehicle1_plate text,
-  vehicle1_state text,
-  vehicle1_city text,
-  vehicle1_renavam text,
-  vehicle1_own boolean,
-  vehicle1_exercise_year integer,
-
-  -- Veículo secundário (2)
-  vehicle2_model text,
-  vehicle2_year integer,
-  vehicle2_color text,
-  vehicle2_plate text,
-  vehicle2_state text,
-  vehicle2_city text,
-  vehicle2_renavam text,
-  vehicle2_own boolean,
-  vehicle2_exercise_year integer,
-
-  -- Endereço
-  address_street text,
-  address_number text,
-  address_complement text,
-  address_neighborhood text,
-  address_city text,
-  address_state text,
-  address_zipcode text,
-
-  -- Dados bancários
-  bank_holder_cpf text,
-  bank_holder_name text,
-  bank_code text,
-  bank_agency text,
-  bank_account text,
-  pix_key text,
-
-  -- Observações livres
-  extra_data text,
-  internal_note_1 text,
-  internal_note_2 text,
-  internal_note_3 text,
-
-  -- Equipamento
-  imei_1 text,
-  imei_2 text,
-  vtr text,
-  app_version text,
-
-  -- Indicação
-  referred_by text,
-
-  -- Taxas (JSONB para 30+ campos de faixas) — opcional, só importa se preenchido
-  fees_json jsonb,
-
-  -- Audit
-  raw_import_json jsonb,         -- snapshot da linha original do CSV (para auditoria)
-  imported_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
+```typescript
+await sb.from("driver_profiles").upsert({
+  customer_id: created.id,
+  brand_id: brandId,
+  branch_id: resolveBranchId,
+  external_id: driverId || null,
+  // o que a API retornar:
+  cnh_number: driverDetails.cnh ?? null,
+  birth_date: driverDetails.birth_date ?? null,
+  // ... veículo da corrida atual se vier no payload
+  vehicle1_plate: driverDetails.vehicle_plate ?? null,
+  vehicle1_model: driverDetails.vehicle_model ?? null,
+  registration_status: 'Ativo',
+  registered_at: new Date().toISOString(),
+  imported_at: new Date().toISOString(),
+}, { onConflict: 'customer_id' });
 ```
 
-RLS isolado por `brand_id`/`branch_id` igual ao `customers`. Trigger para sincronizar `branch_id` quando o motorista for transferido.
+E quando o customer **já existe** mas o `driver_profile` ainda não, criar agora também (idempotente via `upsert onConflict`). Resto fica com `null` até a importação CSV preencher.
 
-### 2. Edge Function `import-drivers-bulk`
+Importação CSV continua sobrescrevendo só os campos que vierem preenchidos (fluxo já implementado).
 
-Move o trabalho pesado pro servidor:
+### 2. Listagem `/motoristas` — paginação real + busca
 
-- Recebe CSV/XLSX parseado em JSON do front (até 5 mil linhas)
-- Processa em **chunks de 500** (padrão da plataforma)
-- Para cada chunk:
-  - Busca motoristas existentes da marca em **uma query** (CPFs + telefones + nomes normalizados via array)
-  - Match por: CPF (preferencial) → telefone → nome → `external_id`
-  - **UPSERT em lote**: `customers` (insert ou update) + `driver_profiles` (insert ou update)
-- Retorna resumo: criados, atualizados, ignorados, erros (com linha + motivo)
-- Tempo estimado: 4000 linhas em ~30-60s vs travamento atual
+Refatorar `DriverManagementPage.tsx`:
 
-### 3. Front — modal de importação reformulado
+- Trocar `.limit(100)` por **paginação server-side de 50/página**
+- Barra de busca com debounce 300ms — busca por:
+  - Nome (ilike)
+  - CPF (digits)
+  - Telefone (digits)
+  - **Placa do veículo** (join com `driver_profiles.vehicle1_plate` / `vehicle2_plate`)
+- Filtro existente por cidade mantido
+- Novo filtro por status (Ativo / Inativo / Bloqueado — vindo de `driver_profiles.registration_status`)
+- Contador total: "Exibindo 1-50 de 4.123 motoristas"
+- Botões "Anterior / Próxima" + ir para página
 
-`ImportarCsvMotoristas.tsx` reescrito como `ImportarMotoristas.tsx`:
+Implementação:
+- Query principal usa `.range(from, to)` e `.count: 'exact'`
+- Busca por placa: subquery em `driver_profiles` retorna `customer_ids` que casam, depois `customers.in('id', ids)`
+- Hook próprio `hook_listagem_motoristas.ts` em `src/features/gestao_motoristas/` (segue arquitetura feature-based do workspace)
 
-| Etapa | UX |
-|---|---|
-| **Upload** | Aceita `.csv` **e** `.xlsx` (parser SheetJS já no projeto via `xlsx`) |
-| **Preview** | Tabela mostrando primeiras 10 linhas com colunas detectadas + total de linhas |
-| **Mapeamento** | Auto-detecta cabeçalhos do TaxiMachine (heurística por nome). Mostra "117 colunas detectadas, 95 mapeadas" + tabela colapsável "Colunas ignoradas" |
-| **Confirmação** | Aviso: "Vai processar X linhas. Campos vazios não sobrescrevem dados existentes." |
-| **Progresso** | Barra de progresso real (chunks processados / total) com WebSocket simples via polling |
-| **Resultado** | Cards: criados / atualizados / ignorados / erros + scroll com lista detalhada + botão "Baixar CSV de erros" |
+### 3. Importação CSV — reforço de match por external_id
 
-### 4. Ficha do motorista — 6 abas em vez de 4
+No `import-drivers-bulk` o match já está OK, mas adicionar safeguard:
+- Se uma linha do CSV tem `external_id` E existe um customer com mesmo CPF mas `external_driver_id` diferente / nulo, **atualiza** o `external_driver_id` em vez de criar novo. Isso garante que CSV importado depois da primeira corrida costura os dois registros.
 
-`DriverDetailSheet.tsx` ganha 2 abas novas, e `AbaDadosMotorista` é dividida em sub-cards:
+### 4. Indicador visual na ficha
 
-```text
-┌─── Tabs ───────────────────────────────────────────────┐
-│ Dados │ Veículos │ Documentação │ Pontos │ Regras │ Extrato │
-└────────────────────────────────────────────────────────┘
-```
+No card "Pessoal" da aba Dados, badge sutil mostrando origem dos dados:
+- 🟢 "Importado em DD/MM" — se `driver_profiles.imported_at` foi setado por CSV
+- 🔵 "Auto-cadastrado pela 1ª corrida" — se `imported_at = registered_at` (heurística)
+- ⚪ "Aguardando dados completos" — se `driver_profiles` quase vazio
 
-**Aba "Dados"** (reformulada, 4 cards):
-- **Pessoal**: nome, CPF, sexo, data nascimento, nome da mãe
-- **Contato**: telefone, e-mail, endereço completo
-- **Operacional**: status cadastral, vínculo, função, avaliação ★, taxa aceitação %
-- **Bancário**: banco, agência, conta, chave PIX, titular
-
-**Aba "Veículos"** (nova): cards para Veículo 1 e Veículo 2 (modelo, ano, placa, cor, RENAVAM, próprio?, UF/cidade emplacamento)
-
-**Aba "Documentação"** (nova): CNH, vencimento CNH (com badge vermelho se vencida), EAR sim/não, IMEI 1/2, VTR, versão app, indicado por, observações internas (1, 2, 3 colapsáveis), histórico de importação (timestamp da última importação)
-
-**Cada campo vazio é exibido com `—`** e em cinza claro — nunca quebra layout, nunca polui.
+Pequeno, canto superior direito do card.
 
 ### 5. Manual atualizado
 
-Adicionar entrada `importacao-motoristas-csv` em `dados_manuais.ts` documentando:
-- Formato suportado (CSV / XLSX)
-- Quais cabeçalhos são reconhecidos automaticamente
-- Regra: campo vazio no CSV = não sobrescreve banco
-- Limite de 5 mil linhas por importação
-- Como interpretar "criados / atualizados / erros"
+Adicionar nota em `dados_manuais.ts → importacao-motoristas-csv`:
+- "Subir CSV antes da primeira corrida = motorista visível imediatamente"
+- "Subir CSV depois da primeira corrida = enriquece registro existente sem duplicar"
+- "Auto-cadastro continua ativo: motoristas novos sem CSV são criados na primeira corrida com dados básicos"
 
 ## Arquivos a editar/criar
 
 | Arquivo | Ação |
 |---|---|
-| `supabase/migrations/<nova>.sql` | Criar tabela `driver_profiles` + RLS + índices |
-| `supabase/functions/import-drivers-bulk/index.ts` | **nova** Edge Function |
-| `src/features/importacao_motoristas/types/tipos_importacao.ts` | **novo** — tipagem de linhas + mapeamento |
-| `src/features/importacao_motoristas/utils/mapeador_taximachine.ts` | **novo** — heurística de detecção de cabeçalhos |
-| `src/features/importacao_motoristas/utils/parser_planilha.ts` | **novo** — parse CSV+XLSX usando `xlsx` |
-| `src/features/importacao_motoristas/components/modal_importar_motoristas.tsx` | **novo** — substitui `ImportarCsvMotoristas.tsx` |
-| `src/features/importacao_motoristas/components/etapa_upload.tsx` | **novo** |
-| `src/features/importacao_motoristas/components/etapa_preview.tsx` | **novo** |
-| `src/features/importacao_motoristas/components/etapa_progresso.tsx` | **novo** |
-| `src/features/importacao_motoristas/components/etapa_resultado.tsx` | **novo** |
-| `src/features/importacao_motoristas/hooks/hook_importar_motoristas.ts` | **novo** |
-| `src/components/driver-management/ImportarCsvMotoristas.tsx` | **DELETAR** (substituído) |
-| `src/pages/DriverManagementPage.tsx` | trocar import para o novo modal |
-| `src/components/driver-management/DriverDetailSheet.tsx` | adicionar 2 abas (Veículos, Documentação) |
-| `src/components/driver-management/tabs/AbaDadosMotorista.tsx` | refatorar em 4 cards |
-| `src/components/driver-management/tabs/AbaVeiculosMotorista.tsx` | **novo** |
-| `src/components/driver-management/tabs/AbaDocumentacaoMotorista.tsx` | **novo** |
-| `src/types/driver.ts` | estender `DriverRow` com `driver_profile?: DriverProfile` |
-| `src/components/manuais/dados_manuais.ts` | adicionar entrada `importacao-motoristas-csv` |
+| `supabase/functions/machine-webhook/index.ts` | adicionar upsert em `driver_profiles` após criar customer (linhas ~650) |
+| `supabase/functions/import-drivers-bulk/index.ts` | reforçar match: atualizar `external_driver_id` quando CPF casa mas ext_id difere |
+| `src/features/gestao_motoristas/hooks/hook_listagem_motoristas.ts` | **novo** — paginação + busca server-side |
+| `src/features/gestao_motoristas/components/barra_busca_motoristas.tsx` | **novo** — input + filtros |
+| `src/features/gestao_motoristas/components/paginacao_motoristas.tsx` | **novo** |
+| `src/pages/DriverManagementPage.tsx` | usar novo hook, remover `.limit(100)`, plugar busca/paginação |
+| `src/components/driver-management/tabs/AbaDadosMotorista.tsx` | adicionar badge de origem no card Pessoal |
+| `src/components/manuais/dados_manuais.ts` | atualizar entrada existente |
 
 ## Detalhes técnicos
 
-- **Permissões**: import só para Brand Admin e Branch Admin. Branch admin importa só para a própria cidade (forçado server-side).
-- **Match anti-duplicação**: prioridade CPF > external_id > telefone > nome normalizado (sem acentos, lowercase). Se 2 matches diferentes, marca como erro.
-- **Idempotência**: re-importar mesmo CSV = só "atualizados" sem duplicar.
-- **Chunking servidor**: 500 linhas por chunk (padrão Edge Function da plataforma).
-- **Progresso real**: front faz polling em tabela `driver_import_jobs` (status, processed, total, errors) — simpler que websocket.
-- **Tipagem forte**: tipos completos em `tipos_importacao.ts`, sem `any`.
-- **Compat 100%**: motoristas atuais sem `driver_profiles` continuam funcionando — todos os campos extras são opcionais.
+- **Não interfere no fluxo atual**: `machine-webhook` continua criando customer da mesma forma; `driver_profiles` é só um INSERT extra idempotente (`upsert onConflict: customer_id`). Se falhar, log de aviso e segue (não quebra a corrida).
+- **Performance**: busca por placa usa índice já criado em `driver_profiles.vehicle1_plate` (verificar; se faltar, criar via migração).
+- **RLS**: `driver_profiles` já tem RLS isolado por brand/branch (sub-fase anterior). Webhook usa service role, então não bloqueia.
+- **Idempotência**: re-importar CSV → continua só "atualizado". Primeira corrida em motorista já importado → casa por `external_id` ou CPF, atualiza customer + reforça `driver_profiles.last_activity_at`.
+- **Tipagem forte**: novos hooks 100% tipados, sem `any`.
+- **Compat 100%**: motoristas atuais sem `driver_profiles` ganham um (vazio) na próxima corrida; ficha continua exibindo `—` nos campos vazios.
 
-## O que NÃO entra agora
-- Edição manual dos campos do `driver_profiles` (Veículos/Documentação) na ficha — fase próxima (esta fase só **lê**, importação é a única forma de gravar)
-- Sincronização automática contínua com TaxiMachine via API — fase 6.7+
-- Re-importação seletiva (só motoristas X) — fase futura
+## O que NÃO entra
+- Sincronização proativa de todos os motoristas ativos com a TaxiMachine API (chamada periódica) — sub-fase 6.7+
+- Edição manual dos campos do `driver_profiles` na ficha — fase futura
+- Export reverso (motoristas → CSV) — fase futura
 
 ## Riscos e rollback
-- Tabela nova, sem migração destrutiva — risco zero pra dados existentes.
-- **Rollback**: drop da tabela + reverter os 17 arquivos. CSV antigo continua funcionando (mantém fallback no front se a Edge falhar).
-- Limite duro: 5000 linhas por importação (acima disso pede pra dividir).
+- **Risco baixo**: 1 INSERT a mais no webhook (com try/catch isolado) + paginação na listagem.
+- **Rollback**: reverter os 8 arquivos. Banco intacto. Sem migração nova.
 
-## Confirmações antes de implementar
-
-1. **Os 30+ campos de "Taxa App / Maçaneta / Conveniência / Seguro"** (Faixa 1/2/3) — você quer que apareçam na ficha ou só ficam armazenados em `fees_json` para uso futuro (relatórios/automações)?
-2. **Permissão**: o **branch admin** (login da cidade) **deve poder importar**? Hoje a tela só restringe a leitura por filial — vou estender o mesmo isolamento à importação (importa só para a cidade dele) — confirma?
+## Estimativa
+~25 min. Commit atômico único. `npx tsc --noEmit` esperado limpo.
 
