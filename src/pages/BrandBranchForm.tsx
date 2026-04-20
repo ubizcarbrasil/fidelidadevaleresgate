@@ -756,17 +756,38 @@ export default function BrandBranchForm() {
             <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">App do Motorista</p>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <Label className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-emerald-500" />
-                Motorista compra pontos
-              </Label>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Permite que motoristas comprem pontos diretamente pelo app.
-              </p>
+          {/* Bloco: Carteira de Pontos (entrada + saída) */}
+          <div className="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <Coins className="h-3.5 w-3.5 text-amber-500" />
+              Carteira de Pontos
+            </p>
+
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <Label className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-emerald-500" />
+                  Comprar pontos com dinheiro
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Entrada: motorista paga em R$ e recebe saldo de pontos.
+                </p>
+              </div>
+              <Switch checked={enableDriverPointsPurchase} onCheckedChange={setEnableDriverPointsPurchase} />
             </div>
-            <Switch checked={enableDriverPointsPurchase} onCheckedChange={setEnableDriverPointsPurchase} />
+
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <Label className="flex items-center gap-2">
+                  <ShoppingCart className="h-4 w-4 text-purple-500" />
+                  Resgatar produtos com pontos
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Saída: motorista usa pontos acumulados na vitrine "Compre com Pontos".
+                </p>
+              </div>
+              <Switch checked={enablePointsPurchase} onCheckedChange={setEnablePointsPurchase} />
+            </div>
           </div>
 
           <div className="flex items-center justify-between">
@@ -780,19 +801,6 @@ export default function BrandBranchForm() {
               </p>
             </div>
             <Switch checked={enableWhatsappAccess} onCheckedChange={setEnableWhatsappAccess} />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <Label className="flex items-center gap-2">
-                <ShoppingCart className="h-4 w-4 text-purple-500" />
-                Motorista compra com pontos
-              </Label>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Exibe a seção "Compre com Pontos" no painel do motorista.
-              </p>
-            </div>
-            <Switch checked={enablePointsPurchase} onCheckedChange={setEnablePointsPurchase} />
           </div>
           </>)}
         </CardContent>
