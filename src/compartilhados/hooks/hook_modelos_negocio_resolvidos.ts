@@ -109,6 +109,18 @@ export function useResolvedBusinessModels(
         () => {
           qc.invalidateQueries({ queryKey });
         }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "brand_business_model_addons",
+          filter: `brand_id=eq.${brandId}`,
+        },
+        () => {
+          qc.invalidateQueries({ queryKey });
+        }
       );
 
     channel.subscribe();
