@@ -13,6 +13,7 @@ import {
   Star,
   Package,
   BookOpen,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -31,6 +32,8 @@ import {
 } from "./hooks/hook_produtos_comerciais";
 import WizardProduto from "./components/wizard_produto";
 import { ManualModal } from "@/compartilhados/components/manual_modal";
+import { TEMPLATE_VALE_RESGATE_MOTORISTA_PREMIUM } from "./constants/constantes_template";
+import type { ProdutoComercialDraft } from "./types/tipos_produto";
 
 export default function PaginaProdutosComerciais() {
   const { data: produtos, isLoading } = useProdutosComerciais();
@@ -39,13 +42,21 @@ export default function PaginaProdutosComerciais() {
   const [editKey, setEditKey] = useState<string | undefined>(undefined);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
+  const [templateDraft, setTemplateDraft] = useState<ProdutoComercialDraft | undefined>(undefined);
 
   const openCreate = () => {
     setEditKey(undefined);
+    setTemplateDraft(undefined);
     setWizardOpen(true);
   };
   const openEdit = (planKey: string) => {
     setEditKey(planKey);
+    setTemplateDraft(undefined);
+    setWizardOpen(true);
+  };
+  const openFromTemplate = () => {
+    setEditKey(undefined);
+    setTemplateDraft(TEMPLATE_VALE_RESGATE_MOTORISTA_PREMIUM);
     setWizardOpen(true);
   };
 
@@ -71,6 +82,15 @@ export default function PaginaProdutosComerciais() {
           >
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">Ver Manual</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={openFromTemplate}
+            className="gap-2 border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
+          >
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">Usar template</span>
+            <span className="sm:hidden">Template</span>
           </Button>
           <Button onClick={openCreate} className="gap-2">
             <Plus className="h-4 w-4" />
@@ -181,7 +201,12 @@ export default function PaginaProdutosComerciais() {
         </div>
       )}
 
-      <WizardProduto open={wizardOpen} onOpenChange={setWizardOpen} planKey={editKey} />
+      <WizardProduto
+        open={wizardOpen}
+        onOpenChange={setWizardOpen}
+        planKey={editKey}
+        initialDraft={templateDraft}
+      />
 
       <ManualModal
         open={manualOpen}
