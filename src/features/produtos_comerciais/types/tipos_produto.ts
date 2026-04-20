@@ -20,10 +20,23 @@ export interface LandingFaqItem {
   answer: string;
 }
 
+export interface LandingBenefitObject {
+  title: string;
+  description?: string;
+  icon?: string;
+}
+
+export type LandingBenefit = string | LandingBenefitObject;
+
+export interface LandingMetric {
+  value: string;
+  label: string;
+}
+
 export interface LandingConfig {
   headline?: string;
   subheadline?: string;
-  benefits?: string[];
+  benefits?: LandingBenefit[];
   primary_color?: string;
   hero_image_url?: string;
   cta_label?: string;
@@ -32,6 +45,11 @@ export interface LandingConfig {
   testimonials?: LandingTestimonial[];
   faq?: LandingFaqItem[];
   comparison_highlights?: string[];
+  // Landing 2.0 — venda
+  eyebrow?: string;
+  metrics?: LandingMetric[];
+  problems?: string[];
+  solutions?: string[];
 }
 
 export interface ProdutoComercial {
