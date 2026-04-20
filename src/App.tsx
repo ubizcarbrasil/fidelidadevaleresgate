@@ -106,7 +106,7 @@ const MachineIntegrationPage = lazyWithRetry(() => import("@/pages/MachineIntegr
 const MachineWebhookTestPage = lazyWithRetry(() => import("@/pages/MachineWebhookTestPage"));
 const OfferCardConfigPage = lazyWithRetry(() => import("@/pages/OfferCardConfigPage"));
 const PlanModuleTemplatesPage = lazyWithRetry(() => import("@/pages/PlanModuleTemplatesPage"));
-const SubscriptionPlansAdminPage = lazyWithRetry(() => import("@/pages/SubscriptionPlansAdminPage"));
+
 const PaginaProdutosComerciais = lazyWithRetry(() => import("@/features/produtos_comerciais/pagina_produtos_comerciais"));
 const PaginaLandingProduto = lazyWithRetry(() => import("@/features/landing_produto/pagina_landing_produto"));
 const PaginaCatalogoProdutos = lazyWithRetry(() => import("@/features/catalogo_produtos/pagina_catalogo_produtos"));
@@ -289,7 +289,7 @@ function AnimatedRoutes() {
               <Route path="driver-points-purchase" element={<ModuleGuard moduleKey="machine_integration|achadinhos_motorista"><DriverPointsPurchaseConfigPage /></ModuleGuard>} />
               <Route path="offer-card-config" element={<ModuleGuard moduleKey="offer_card_config"><OfferCardConfigPage /></ModuleGuard>} />
               <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
-              <Route path="plan-pricing" element={<RootGuard><SubscriptionPlansAdminPage /></RootGuard>} />
+              
               <Route path="admin/produtos-comerciais" element={<RootGuard><PaginaProdutosComerciais /></RootGuard>} />
               <Route path="driver-config" element={<ErrorBoundary><DriverPanelConfigPage /></ErrorBoundary>} />
               <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
