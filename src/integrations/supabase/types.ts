@@ -7371,10 +7371,16 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_popular: boolean | null
+          is_public_listed: boolean
           label: string
+          landing_config_json: Json
           plan_key: string
           price_cents: number
+          price_yearly_cents: number | null
+          product_name: string | null
+          slug: string
           sort_order: number | null
+          trial_days: number
           updated_at: string | null
         }
         Insert: {
@@ -7384,10 +7390,16 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_popular?: boolean | null
+          is_public_listed?: boolean
           label: string
+          landing_config_json?: Json
           plan_key: string
           price_cents: number
+          price_yearly_cents?: number | null
+          product_name?: string | null
+          slug: string
           sort_order?: number | null
+          trial_days?: number
           updated_at?: string | null
         }
         Update: {
@@ -7397,10 +7409,16 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_popular?: boolean | null
+          is_public_listed?: boolean
           label?: string
+          landing_config_json?: Json
           plan_key?: string
           price_cents?: number
+          price_yearly_cents?: number | null
+          product_name?: string | null
+          slug?: string
           sort_order?: number | null
+          trial_days?: number
           updated_at?: string | null
         }
         Relationships: []
