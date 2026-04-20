@@ -199,6 +199,30 @@ export default function ProvisionBrandWizard() {
             </div>
 
             <div className="border-t pt-4 space-y-4">
+              <p className="text-sm font-medium text-foreground">Plano da Assinatura</p>
+              <div className="space-y-2">
+                <Label>Plano *</Label>
+                <Select
+                  value={form.subscription_plan}
+                  onValueChange={(v) => update("subscription_plan", v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o plano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="free">Free — Plano gratuito</SelectItem>
+                    <SelectItem value="starter">Starter — Inicial</SelectItem>
+                    <SelectItem value="profissional">Profissional — Intermediário</SelectItem>
+                    <SelectItem value="enterprise">Enterprise — Completo</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Os módulos serão habilitados conforme o template do plano definido na Central de Módulos.
+                </p>
+              </div>
+            </div>
+
+            <div className="border-t pt-4 space-y-4">
               <p className="text-sm font-medium text-foreground">Acesso do Empreendedor</p>
               <div className="space-y-2">
                 <Label>E-mail do Administrador</Label>
@@ -501,6 +525,7 @@ export default function ProvisionBrandWizard() {
                   logo_url: "", primary_color: "#6366f1", secondary_color: "#f59e0b", test_points: 1000,
                   admin_email: "", admin_password: "", enable_demo_stores: true, enable_test_credits: true,
                   selected_sections: [0, 1, 2, 3, 4, 5, 6, 7],
+                  subscription_plan: "starter",
                 });
               }}>Criar Outra</Button>
             </div>
