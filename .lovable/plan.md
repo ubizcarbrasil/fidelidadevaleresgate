@@ -1,97 +1,155 @@
 
 
-# Onde estão os Modelos Contratáveis hoje + Extensão para Cidade
+# Sub-fase 6.3 — Produtos de Prateleira (Bundles vendáveis com Landing Page)
 
-## Resposta direta — onde consultar/contratar HOJE
+## Conceito
 
-Os 13 modelos contratáveis (incluindo os 10 que você listou) já estão acessíveis em **2 telas** do painel Raiz:
+Hoje os planos (Free/Starter/Profissional/Enterprise) são **fixos no banco** e o trial sempre cria a marca no `free`. Você quer transformar o painel Raiz numa **fábrica de produtos comercializáveis**, onde para cada "produto" você define:
 
-### 1. Definir preço do modelo (Catálogo)
-**Rota:** `/admin/central-modulos` → aba **"Modelos de Negócio"** → sub-aba **"Catálogo"**
-- Clique no modelo → modal de edição
-- Toggle "Vendável como add-on" (já está ON nos 13)
-- Campo "Preço mensal (R$)" e "Preço anual (R$)" — **hoje estão TODOS vazios** (`null` no banco). É preciso preencher.
+1. Nome comercial (produto) + nome do plano interno
+2. Preço mensal/anual
+3. Quais **modelos de negócio** vêm liberados
+4. Quais **funcionalidades obrigatórias** (apenas as que esses modelos precisam)
+5. Slug público para gerar uma **landing page com link de trial 30 dias** vinculado àquele produto
 
-### 2. Conceder o add-on a uma marca
-**Rota:** `/admin/central-modulos` → aba **"Modelos de Negócio"** → sub-aba **"Add-ons Vendidos"**
-- Botão **"Conceder Add-on"** abre modal: escolhe Marca + Modelo + Ciclo + Preço
-- Hoje há **0 add-ons concedidos** no banco (sistema pronto, ainda não usado)
+Resultado: você monta "Produto Motorista Premium", "Produto Cidade Pequena", "Produto Cliente + Achadinhos", etc. Cada um vira um link tipo `app.valeresgate.com.br/p/motorista-premium` com a landing já personalizada e CTA de trial que provisiona a marca exatamente naquele bundle.
 
-### 3. Empreendedor vê o resultado
-No painel da marca, em "Modelos de Negócio", o modelo aparece com badge **"Add-on"** (azul, distinto do badge "Plano").
+## O que já existe e vai ser reaproveitado
 
-## ⚠️ O GAP que você apontou agora
+| Peça | Estado |
+|---|---|
+| `subscription_plans` | tem `plan_key`, `label`, `price_cents`, `features[]`, `excluded_features[]` |
+| `plan_business_models` | já liga modelo ↔ plano |
+| `plan_module_templates` | já liga módulo ↔ plano (com `is_enabled`) |
+| `business_model_modules` | já lista módulos obrigatórios de cada modelo |
+| `provision-trial` (edge) | cria marca lendo template do plano `"free"` (hardcoded) |
+| `/trial` | landing single-template do trial |
+| `SubscriptionPlansAdminPage` | edita 4 planos fixos (não tem botão "criar novo") |
 
-Hoje o add-on é concedido **por MARCA inteira** — uma vez ativo, vale para todas as cidades daquela marca. Você quer poder **atribuir add-on a uma CIDADE específica** (ex: Drivetu compra "Duelo Motorista" só para Aracaju, não para Lagarto). E definir preço diferente por contratação (cidade específica pode ter preço diferente).
+**Não precisa criar tabela nova** — vamos estender as 2 existentes (`subscription_plans` + `plan_module_templates`) e dar um CRUD completo no Raiz.
 
-Isso é a **Sub-fase 6.2 — Add-ons por Cidade**.
+## O que vai ser construído
 
-## O que vai ser construído na Sub-fase 6.2
+### 1. Banco — 4 colunas novas + 1 ajuste de RLS
 
-### 1. Banco — 1 coluna nova + ajuste em UNIQUE
+**`subscription_plans` ganha:**
 
-**`brand_business_model_addons` ganha:**
-- `branch_id UUID NULL` — se preenchido, add-on vale só para essa cidade. Se NULL, vale para a marca inteira (comportamento atual mantido).
-- FK para `branches(id) ON DELETE CASCADE`
-- Index `(brand_id, branch_id, business_model_id)`
-- Substitui o UNIQUE atual `(brand_id, business_model_id)` por UNIQUE `(brand_id, COALESCE(branch_id, '00000000...'), business_model_id)` — permite 1 add-on por escopo (marca-toda OU por cidade).
+| Coluna | Tipo | Função |
+|---|---|---|
+| `product_name` | text | Nome comercial ("Vale Resgate Motorista Premium") — diferente do `label` interno |
+| `slug` | text UNIQUE | Slug da landing pública (`motorista-premium`) |
+| `price_yearly_cents` | integer NULL | Preço anual (mensal × 12 com desconto) |
+| `landing_config_json` | jsonb | Config visual da landing: hero, descrição, screenshots, depoimentos, CTA color |
+| `is_public_listed` | boolean default false | Se `true`, aparece em `/produtos` (catálogo público) |
+| `trial_days` | integer default 30 | Dias de trial customizáveis por produto |
 
-### 2. RPC `resolve_active_business_models` — atualizada
+**Ajuste:** RLS já permite `SELECT` público; manter. INSERT/UPDATE/DELETE só `root_admin` (já existe).
 
-Hoje retorna add-ons da marca. Vai passar a fazer **UNION**:
-- add-ons com `branch_id IS NULL` (valem para tudo)
-- add-ons com `branch_id = <cidade-atual>` (valem só para essa cidade)
+### 2. Página Raiz — `/admin/produtos-comerciais` (substitui `SubscriptionPlansAdminPage`)
 
-A RPC `get_branch_active_business_models` (resolução por cidade) também passa a considerar add-ons específicos da branch + overrides da branch.
+Refatorada num **CRUD completo** com lista + botão "Criar novo produto". Cada produto abre um wizard em 5 passos:
 
-### 3. UI — 2 mudanças no Raiz
+```text
+┌─ Passo 1: Identificação ──────────────────┐
+│  • Nome comercial (produto)               │
+│  • Nome do plano (interno)                │
+│  • Slug da landing                        │
+│  • Preço mensal / anual                   │
+│  • Trial em dias                          │
+└───────────────────────────────────────────┘
 
-**a) Modal "Conceder Add-on" (existente) ganha 1 campo:**
-- Novo campo: **"Escopo"** com 2 opções:
-  - "Marca inteira (todas as cidades)" — comportamento atual
-  - "Cidade específica" → mostra Select de branches da marca escolhida
+┌─ Passo 2: Modelos de Negócio ─────────────┐
+│  Lista os 13 modelos com checkbox.        │
+│  Marca quais este produto inclui.         │
+│  → grava em plan_business_models          │
+└───────────────────────────────────────────┘
 
-**b) Tabela "Add-ons Vendidos" ganha 1 coluna:**
-- Nova coluna **"Cidade"** entre Marca e Modelo:
-  - Mostra "Todas" (badge cinza) se `branch_id IS NULL`
-  - Mostra nome da cidade (badge azul) se `branch_id` preenchido
-- Filtro adicional por cidade no header
+┌─ Passo 3: Funcionalidades ────────────────┐
+│  Mostra só os módulos OBRIGATÓRIOS dos    │
+│  modelos selecionados (via               │
+│  business_model_modules) — pré-marcados.  │
+│  Empreendedor pode adicionar opcionais.   │
+│  → grava em plan_module_templates         │
+└───────────────────────────────────────────┘
 
-### 4. UI — 1 mudança no Painel do Empreendedor
+┌─ Passo 4: Landing Page ───────────────────┐
+│  • Headline                                │
+│  • Subheadline                             │
+│  • Lista de benefícios (features visuais)  │
+│  • Cor primária                            │
+│  • Imagem hero (upload)                    │
+│  • is_popular / is_public_listed           │
+└───────────────────────────────────────────┘
 
-Na aba "Modelos por Cidade" (já existe em `/brand-modules` e `/branch-business-models`), o card do modelo ganha badge:
-- **"Add-on Marca"** (azul) — se add-on cobre marca inteira
-- **"Add-on Cidade"** (verde) — se add-on é exclusivo daquela cidade
-- Sem badge — herdado do plano
+┌─ Passo 5: Revisão + Link ─────────────────┐
+│  Mostra preview da landing.               │
+│  Gera link: /p/produto/{slug}             │
+│  Botão "Copiar link de trial"             │
+└───────────────────────────────────────────┘
+```
 
-### 5. Pricing — flexível por contratação
+### 3. Landing pública dinâmica — `/p/produto/:slug`
 
-Já é como funciona hoje: o preço do catálogo (`addon_price_monthly_cents`) é só **sugestão**. No modal de concessão, você pode editar o valor real cobrado para aquela contratação específica. Isso continua igual — vale tanto para add-on de marca quanto de cidade.
+Nova rota pública (sem auth). Lê `subscription_plans` por slug:
+- Renderiza hero, benefícios, preço, lista de funcionalidades
+- Botão **"Começar trial 30 dias grátis"** → leva para `/trial?plan={slug}`
 
-## Arquivos a editar/criar
+### 4. `/trial` aceita parâmetro `?plan=`
+
+Hoje o trial é genérico. Ajuste:
+- Lê `?plan=` da URL → busca `subscription_plans` pelo slug
+- Mostra topo: "Você está iniciando o **{product_name}** — {trial_days} dias grátis"
+- Passa `plan_slug` ao chamar `provision-trial`
+
+### 5. Edge `provision-trial` — usa o plano escolhido
+
+Mudança no `provision-trial/index.ts` (linha 362):
+- Recebe `plan_slug` no body (default = `"free"` para retrocompat)
+- Resolve `plan_key` por slug
+- Aplica template daquele plano (não mais hardcoded `"free"`)
+- Seta `brands.subscription_plan = plan_key` e `brand_business_models` conforme `plan_business_models`
+
+### 6. Catálogo público opcional — `/produtos`
+
+Página pública lista todos os produtos com `is_public_listed = true`. Cards lado a lado com botão "Ver mais" → `/p/produto/:slug`. Útil pra ter uma vitrine única se você quiser.
+
+## Fluxo de uso (do seu lado)
+
+1. Você acessa `/admin/produtos-comerciais` → "Criar produto"
+2. Monta "Vale Resgate Motorista Premium" — escolhe os 6 modelos motorista, marca módulos
+3. Configura landing (cores, headline)
+4. Sistema gera link `app.valeresgate.com.br/p/produto/motorista-premium`
+5. Você divulga esse link
+6. Empreendedor clica → vê a landing daquele produto → clica "Trial 30 dias" → `provision-trial` cria a marca já no plano `motorista-premium` com modelos e módulos certos
+7. Após trial, marca segue paga (cobrança manual via "Renovar Assinatura" — sub-fase futura conecta Stripe)
+
+## Arquivos a criar/editar
 
 | Arquivo | Ação |
 |---|---|
-| `supabase/migrations/<nova>.sql` | adicionar `branch_id` em `brand_business_model_addons`, ajustar UNIQUE/index, atualizar RPCs `resolve_active_business_models` e `list_business_model_addons` |
-| `src/compartilhados/hooks/hook_business_model_addons.ts` | adicionar `branch_id` em `BusinessModelAddonRow` e `GrantAddonInput`; expor branch_label no list |
-| `src/features/central_modulos/components/dialog_conceder_addon.tsx` | adicionar Select "Escopo" + Select de cidade condicional |
-| `src/features/central_modulos/components/secao_addons_vendidos.tsx` | nova coluna "Cidade" + filtro por cidade |
-| `src/features/painel_modelos_negocio/components/card_modelo_brand.tsx` | distinguir badge "Add-on Marca" vs "Add-on Cidade" |
-| `src/compartilhados/hooks/hook_brand_plan_business_models.ts` | considerar add-ons de cidade na resolução |
-| `src/components/manuais/dados_manuais.ts` | atualizar manual "Add-ons Vendidos" com explicação de escopo |
+| `supabase/migrations/<nova>.sql` | adicionar 6 colunas em `subscription_plans` + backfill `product_name = label` e `slug = plan_key` nos 4 atuais |
+| `src/features/produtos_comerciais/pagina_produtos_comerciais.tsx` | **novo** — substitui `SubscriptionPlansAdminPage` (lista + botão criar) |
+| `src/features/produtos_comerciais/components/wizard_produto.tsx` | **novo** — 5 passos |
+| `src/features/produtos_comerciais/components/passo_*.tsx` | **5 novos** — um por passo |
+| `src/features/produtos_comerciais/components/preview_landing.tsx` | **novo** — preview do passo 5 |
+| `src/features/produtos_comerciais/hooks/hook_produtos_comerciais.ts` | **novo** — CRUD + sync `plan_business_models` + `plan_module_templates` |
+| `src/features/produtos_comerciais/types/tipos_produto.ts` | **novo** |
+| `src/features/landing_produto/pagina_landing_produto.tsx` | **novo** — `/p/produto/:slug` |
+| `src/features/catalogo_produtos/pagina_catalogo_produtos.tsx` | **novo** — `/produtos` |
+| `src/pages/TrialSignupPage.tsx` | ler `?plan=` + exibir produto + enviar `plan_slug` ao edge |
+| `supabase/functions/provision-trial/index.ts` | aceitar `plan_slug`, aplicar template do plano correto, popular `plan_business_models` |
+| `src/App.tsx` | adicionar rotas `/p/produto/:slug` e `/produtos` (públicas) |
+| `src/components/manuais/dados_manuais.ts` | manual "Produtos Comerciais — Montar Bundle Vendável" |
 
 ## Riscos e rollback
 
-- **Compatibilidade:** add-ons existentes (0 hoje) ficam com `branch_id = NULL` → comportamento idêntico. Nenhuma quebra.
-- **Rollback:** `ALTER TABLE brand_business_model_addons DROP COLUMN branch_id` + reverter RPCs.
+- **Compatibilidade:** os 4 planos atuais continuam funcionando — backfill preenche `product_name` e `slug` automaticamente. `provision-trial` mantém default `"free"` se `plan_slug` não vier.
+- **Sem quebra:** novas colunas todas com default ou nullable.
+- **Rollback:** drop das 6 colunas + reverter rotas + restaurar `SubscriptionPlansAdminPage` antiga (fica salva no histórico do Lovable).
 
 ## Estimativa
-~20 min. Commit atômico único. `npx tsc --noEmit` esperado limpo.
+~40 min (sub-fase maior por causa da landing dinâmica + wizard). Commit atômico único. `npx tsc --noEmit` esperado limpo.
 
-## Antes de implementar
+## Confirmações antes de implementar
 
-Preciso de 2 confirmações:
-
-1. **Quando você concede um add-on de "Cidade específica" + a marca já tem o add-on de "Marca inteira" no mesmo modelo** — isso é proibido (UNIQUE bloqueia) ou os dois coexistem (o de cidade sobrescreve preço/data daquela cidade, marca-inteira vale para o resto)?
-2. **Preço unitário do modelo:** você quer 1 preço único por modelo (o que está no Catálogo) **OU** preços separados "preço por marca inteira" vs "preço por cidade" (geralmente cidade é mais barato)?
-
+1. **Cobrança automática (Stripe)** desta vez **fica fora** do escopo? (você cria o produto, gera o link, mas a cobrança após trial continua manual via "Renovar Assinatura"
