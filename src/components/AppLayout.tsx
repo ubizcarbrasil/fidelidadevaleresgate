@@ -148,8 +148,8 @@ export default function AppLayout() {
           <SidebarComponent />
         </Suspense>
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center gap-3 px-4 saas-topbar shrink-0 relative z-10 pwa-safe-top">
-            <SidebarTrigger className="mr-1" />
+          <header className="h-14 flex items-center gap-2 sm:gap-3 px-2 sm:px-4 saas-topbar shrink-0 relative z-10 pwa-safe-top pwa-safe-x">
+            <SidebarTrigger className="mr-1 shrink-0" />
 
             {isImpersonating && (
               <Button
@@ -164,13 +164,15 @@ export default function AppLayout() {
             )}
 
             {isWhiteLabel && !isImpersonating && (
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-accent/40 px-2.5 py-1 rounded-md shrink-0">
+              <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground bg-accent/40 px-2.5 py-1 rounded-md shrink-0">
                 <Globe className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Domínio próprio</span>
+                <span>Domínio próprio</span>
               </div>
             )}
 
-            <ScopeSwitcher />
+            <div className="hidden sm:block">
+              <ScopeSwitcher />
+            </div>
 
             <Breadcrumb className="hidden md:flex">
               <BreadcrumbList>
@@ -201,20 +203,27 @@ export default function AppLayout() {
               </kbd>
             </button>
 
-            <div className="flex-1 lg:flex-none" />
+            {/* Título da rota só no mobile */}
+            <div className="md:hidden flex-1 min-w-0">
+              <span className="text-sm font-medium text-foreground truncate block">
+                {crumbs[crumbs.length - 1]?.label}
+              </span>
+            </div>
+
+            <div className="flex-1 lg:flex-none hidden md:block" />
 
             <div className="hidden sm:block">
               <BranchSelector />
             </div>
 
-            <Button ref={bellRef} variant="ghost" size="icon" className="relative h-8 w-8 text-muted-foreground hover:text-foreground">
+            <Button ref={bellRef} variant="ghost" size="icon" className="relative h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground no-touch-min">
               <Bell className="h-4 w-4" />
               <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 pl-2 border-l border-border hover:bg-accent/30 rounded-md px-2 py-1 transition-colors">
+                <button className="flex items-center gap-2 pl-2 border-l border-border hover:bg-accent/30 rounded-md px-2 py-1 transition-colors shrink-0 no-touch-min">
                   <div className="h-7 w-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
                     <span className="text-[10px] font-bold text-primary">{initials}</span>
                   </div>
@@ -242,13 +251,9 @@ export default function AppLayout() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
-            <div className="ml-auto shrink-0 md:hidden">
-              <ContextBadge mode="admin" brandName={brandName || undefined} impersonating={isImpersonating} />
-            </div>
           </header>
 
-          <main className="flex-1 p-4 sm:p-6 overflow-auto scrollbar-thin">
+          <main className="flex-1 p-3 sm:p-6 overflow-auto scrollbar-thin pwa-safe-bottom pwa-safe-x">
             <TrialBanner />
             <Outlet />
           </main>

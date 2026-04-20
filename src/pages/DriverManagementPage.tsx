@@ -109,15 +109,15 @@ export default function DriverManagementPage() {
         }
       />
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <BarraBuscaMotoristas
           busca={busca}
           onBuscaChange={handleBusca}
           status={status}
           onStatusChange={handleStatus}
         />
-        <div className="flex items-center gap-2">
-          <Badge className="bg-blue-500/10 text-blue-400 border border-blue-400/30 text-xs">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge className="bg-blue-500/10 text-blue-400 border border-blue-400/30 text-xs whitespace-nowrap">
             <Users className="h-3 w-3 mr-1" />
             {total.toLocaleString("pt-BR")} motoristas
           </Badge>
@@ -126,9 +126,10 @@ export default function DriverManagementPage() {
             size="sm"
             onClick={handleExportCsv}
             disabled={motoristas.length === 0}
+            className="flex-1 sm:flex-none"
           >
             <Download className="h-4 w-4 mr-1" />
-            Exportar CSV
+            <span className="hidden xs:inline sm:inline">Exportar </span>CSV
           </Button>
           {currentBrandId && (
             <ModalImportarMotoristas
@@ -156,7 +157,7 @@ export default function DriverManagementPage() {
         </div>
       ) : (
         <>
-          <ScrollArea className="h-[calc(100vh-320px)]">
+          <ScrollArea className="h-[calc(100vh-380px)] sm:h-[calc(100vh-320px)]">
             <div className="space-y-2">
               {motoristas.map((driver: DriverRow) => (
                 <div
