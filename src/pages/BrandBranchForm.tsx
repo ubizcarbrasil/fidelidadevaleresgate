@@ -15,6 +15,13 @@ import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import DialogResetPontos from "@/components/branch/DialogResetPontos";
 import CardPontuacaoMotorista, { type PontuacaoMotoristaState } from "@/pages/branches/components/CardPontuacaoMotorista";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles, AlertTriangle } from "lucide-react";
+import {
+  useProductScope,
+  normalizarScoringModel,
+  rotuloDoPlano,
+} from "@/features/city_onboarding/hooks/hook_escopo_produto";
 
 const ESTADOS = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
@@ -46,6 +53,36 @@ export default function BrandBranchForm() {
   const navigate = useNavigate();
   const { currentBrandId } = useBrandGuard();
   const queryClient = useQueryClient();
+
+  // Escopo do produto comercial contratado pela marca
+  const escopo = useProductScope();
+  const audienciaMotorista = escopo.hasAudience("motorista");
+  const audienciaCliente = escopo.hasAudience("cliente");
+
+  // Visibilidade dos toggles de Módulos de Negócio (segundo o plano)
+  const podeDuelos = escopo.hasAnyModuleKey("duels", "achadinhos_motorista");
+  const podeAchadinhos = escopo.hasModuleKey("affiliate_deals");
+  const podeMarketplace = escopo.hasModuleKey("product_redemptions");
+  const podeRaceEarn = escopo.hasModuleKey("points") || audienciaMotorista;
+  const podeClientePontua = escopo.hasModuleKey("earn_points_store") && audienciaCliente;
+  const algumModuloVisivel =
+    podeDuelos || podeAchadinhos || podeMarketplace || podeRaceEarn || podeClientePontua;
+
+  // Visibilidade do card "Regra de Resgate"
+  const podeRegrasResgate = escopo.hasAnyModuleKey("redemption_rules", "redemption_qr");
+
+  // Auto-pré-seleção do scoring_model quando o plano só permite uma opção (cidade nova)
+  useEffect(() => {
+    if (escopo.isLoading || isEdit) return;
+    if (escopo.isPermissive) return;
+    if (escopo.allowedScoringModels.length === 1) {
+      const unico = escopo.allowedScoringModels[0];
+      if (scoringModel !== unico) setScoringModel(unico);
+    } else if (!escopo.allowedScoringModels.includes(scoringModel as any)) {
+      setScoringModel(escopo.allowedScoringModels[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [escopo.isLoading, escopo.isPermissive, escopo.allowedScoringModels.join(","), isEdit]);
 
   const [cidade, setCidade] = useState("");
   const [uf, setUf] = useState("");
@@ -281,6 +318,17 @@ export default function BrandBranchForm() {
       const existingSettings = (existing?.branch_settings_json && typeof existing.branch_settings_json === "object")
         ? (existing.branch_settings_json as Record<string, any>)
         : {};
+
+      // Normalização defensiva: zerar flags de módulos que não estão no plano
+      const flagDuels = podeDuelos ? enableDuelsModule : false;
+      const flagAchadinhos = podeAchadinhos ? enableAchadinhosModule : false;
+      const flagMarketplace = podeMarketplace ? enableMarketplaceModule : false;
+      const flagRace = podeRaceEarn ? enableRaceEarnModule : false;
+      const flagCustomer = podeClientePontua ? enableCustomerScoringModule : false;
+
+      // Normalização defensiva: scoring_model precisa ser compatível com o plano
+      const scoringNormalizado = normalizarScoringModel(scoringModel, escopo.allowedScoringModels);
+
       const branchSettingsJson = {
         ...existingSettings,
         enable_driver_duels: enableDriverDuels,
@@ -288,11 +336,11 @@ export default function BrandBranchForm() {
         enable_city_belt: enableCityBelt,
         allow_public_duel_viewing: allowPublicDuelViewing,
         // Módulos de Negócio
-        enable_duels_module: enableDuelsModule,
-        enable_achadinhos_module: enableAchadinhosModule,
-        enable_marketplace_module: enableMarketplaceModule,
-        enable_race_earn_module: enableRaceEarnModule,
-        enable_customer_scoring_module: enableCustomerScoringModule,
+        enable_duels_module: flagDuels,
+        enable_achadinhos_module: flagAchadinhos,
+        enable_marketplace_module: flagMarketplace,
+        enable_race_earn_module: flagRace,
+        enable_customer_scoring_module: flagCustomer,
         // Flags do App do Motorista
         enable_driver_points_purchase: enableDriverPointsPurchase,
         enable_whatsapp_access: enableWhatsappAccess,
@@ -304,8 +352,8 @@ export default function BrandBranchForm() {
           min_points_to_redeem: minPointsToRedeem,
           max_redemptions_per_month: maxRedemptionsPerMonth,
           approval_deadline_hours: approvalDeadlineHours,
-          points_per_real_driver: pointsPerRealDriver,
-          points_per_real_customer: pointsPerRealCustomer,
+          points_per_real_driver: audienciaMotorista ? pointsPerRealDriver : pointsPerReal,
+          points_per_real_customer: audienciaCliente ? pointsPerRealCustomer : pointsPerReal,
         },
       };
 
@@ -315,7 +363,7 @@ export default function BrandBranchForm() {
         city: cidade.trim(),
         state: uf,
         is_active: ativo,
-        scoring_model: scoringModel,
+        scoring_model: scoringNormalizado,
         is_city_redemption_enabled: isCityRedemptionEnabled,
         branch_settings_json: branchSettingsJson,
         timezone: "America/Sao_Paulo",
@@ -468,6 +516,57 @@ export default function BrandBranchForm() {
         />
       </div>
 
+      {/* Banner do plano contratado */}
+      {!escopo.isLoading && escopo.planKey && (
+        <Card className="rounded-xl border-primary/30 bg-primary/5">
+          <CardContent className="p-3 flex items-center gap-3 flex-wrap">
+            <Sparkles className="h-4 w-4 text-primary shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs">
+                <span className="text-muted-foreground">Plano vigente:</span>{" "}
+                <span className="font-semibold">{rotuloDoPlano(escopo.planKey)}</span>
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Apenas funcionalidades incluídas no seu produto comercial estão visíveis abaixo.
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => navigate("/brand-subscription")}
+            >
+              Ver assinatura
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Aviso de inconsistência: scoring_model atual fora do permitido pelo plano */}
+      {isEdit && !escopo.isLoading && !escopo.isPermissive &&
+        !escopo.allowedScoringModels.includes(scoringModel as any) && (
+        <Card className="rounded-xl border-destructive/40 bg-destructive/5">
+          <CardContent className="p-3 flex items-center gap-3 flex-wrap">
+            <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium">Modelo de pontuação incompatível</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Esta cidade está como <span className="font-mono">{scoringModel}</span>, mas seu plano só
+                permite: <span className="font-mono">{escopo.allowedScoringModels.join(", ")}</span>.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => setScoringModel(escopo.allowedScoringModels[0])}
+            >
+              Ajustar
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="rounded-xl">
         <CardContent className="p-5 space-y-5">
           <div className="space-y-2">
@@ -518,6 +617,7 @@ export default function BrandBranchForm() {
       </Card>
 
       {/* Gamificação de Motoristas */}
+      {audienciaMotorista && (
       <Card className="rounded-xl">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -570,8 +670,10 @@ export default function BrandBranchForm() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Módulos de Negócio */}
+      {algumModuloVisivel && (
       <Card className="rounded-xl">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -583,7 +685,7 @@ export default function BrandBranchForm() {
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          {podeDuelos && (<div className="flex items-center justify-between">
             <div>
               <Label className="flex items-center gap-2">
                 <Swords className="h-4 w-4 text-orange-500" />
@@ -594,9 +696,9 @@ export default function BrandBranchForm() {
               </p>
             </div>
             <Switch checked={enableDuelsModule} onCheckedChange={setEnableDuelsModule} />
-          </div>
+          </div>)}
 
-          <div className="flex items-center justify-between">
+          {podeAchadinhos && (<div className="flex items-center justify-between">
             <div>
               <Label className="flex items-center gap-2">
                 <ShoppingCart className="h-4 w-4 text-pink-500" />
@@ -607,9 +709,9 @@ export default function BrandBranchForm() {
               </p>
             </div>
             <Switch checked={enableAchadinhosModule} onCheckedChange={setEnableAchadinhosModule} />
-          </div>
+          </div>)}
 
-          <div className="flex items-center justify-between">
+          {podeMarketplace && (<div className="flex items-center justify-between">
             <div>
               <Label className="flex items-center gap-2">
                 <Store className="h-4 w-4 text-blue-500" />
@@ -620,9 +722,9 @@ export default function BrandBranchForm() {
               </p>
             </div>
             <Switch checked={enableMarketplaceModule} onCheckedChange={setEnableMarketplaceModule} />
-          </div>
+          </div>)}
 
-          <div className="flex items-center justify-between">
+          {podeRaceEarn && (<div className="flex items-center justify-between">
             <div>
               <Label className="flex items-center gap-2">
                 <Zap className="h-4 w-4 text-yellow-500" />
@@ -633,9 +735,9 @@ export default function BrandBranchForm() {
               </p>
             </div>
             <Switch checked={enableRaceEarnModule} onCheckedChange={setEnableRaceEarnModule} />
-          </div>
+          </div>)}
 
-          <div className="flex items-center justify-between">
+          {podeClientePontua && (<div className="flex items-center justify-between">
             <div>
               <Label className="flex items-center gap-2">
                 <Coins className="h-4 w-4 text-green-500" />
@@ -646,9 +748,10 @@ export default function BrandBranchForm() {
               </p>
             </div>
             <Switch checked={enableCustomerScoringModule} onCheckedChange={setEnableCustomerScoringModule} />
-          </div>
+          </div>)}
 
           {/* Flags do App do Motorista */}
+          {audienciaMotorista && (<>
           <div className="border-t pt-4 mt-2">
             <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">App do Motorista</p>
           </div>
@@ -691,10 +794,13 @@ export default function BrandBranchForm() {
             </div>
             <Switch checked={enablePointsPurchase} onCheckedChange={setEnablePointsPurchase} />
           </div>
+          </>)}
         </CardContent>
       </Card>
+      )}
 
       {/* Card 1 — Regra de Resgate (por cidade) */}
+      {podeRegrasResgate && (
       <Card className="rounded-xl">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -757,21 +863,25 @@ export default function BrandBranchForm() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Card 2 — Conversão por Público */}
+      {(audienciaMotorista || audienciaCliente) && (
       <Card className="rounded-xl">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <ArrowLeftRight className="h-4 w-4 text-primary" />
-            Conversão de Resgate por Público
+            {audienciaMotorista && audienciaCliente ? "Conversão de Resgate por Público" : "Taxa de Conversão"}
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Taxas de conversão diferentes para motoristas e passageiros (apenas nesta cidade).
+            {audienciaMotorista && audienciaCliente
+              ? "Taxas de conversão diferentes para motoristas e passageiros (apenas nesta cidade)."
+              : "Taxa de conversão (apenas nesta cidade)."}
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
+            {audienciaMotorista && (<div className="space-y-1.5">
               <Label className="text-xs flex items-center gap-1.5">
                 <Car className="h-3.5 w-3.5 text-blue-500" />
                 Taxa do Motorista (pts/R$)
@@ -788,8 +898,8 @@ export default function BrandBranchForm() {
                   Produto de R$ 100 = {Math.ceil(100 * pointsPerRealDriver).toLocaleString("pt-BR")} pts
                 </p>
               )}
-            </div>
-            <div className="space-y-1.5">
+            </div>)}
+            {audienciaCliente && (<div className="space-y-1.5">
               <Label className="text-xs flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5 text-emerald-500" />
                 Taxa do Passageiro (pts/R$)
@@ -806,13 +916,14 @@ export default function BrandBranchForm() {
                   Produto de R$ 100 = {Math.ceil(100 * pointsPerRealCustomer).toLocaleString("pt-BR")} pts
                 </p>
               )}
-            </div>
+            </div>)}
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Card 3 — Pontuação do Motorista */}
-      {isEdit && id && (
+      {isEdit && id && audienciaMotorista && (
         <CardPontuacaoMotorista
           brandId={currentBrandId ?? null}
           branchId={id}
@@ -830,39 +941,55 @@ export default function BrandBranchForm() {
           <p className="text-xs text-muted-foreground">
             Define quem será pontuado nesta cidade: motorista, passageiro ou ambos.
           </p>
+          {!escopo.isPermissive && escopo.allowedScoringModels.length === 1 && (
+            <Badge variant="secondary" className="mt-2 w-fit text-[10px] gap-1">
+              <Sparkles className="h-3 w-3" /> Definido pelo seu produto
+            </Badge>
+          )}
         </CardHeader>
         <CardContent>
-          <RadioGroup value={scoringModel} onValueChange={setScoringModel} className="space-y-3">
-            <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
-              <RadioGroupItem value="DRIVER_ONLY" id="scoring-driver" />
-              <Label htmlFor="scoring-driver" className="flex items-center gap-2 cursor-pointer flex-1">
-                <Car className="h-4 w-4 text-blue-500" />
-                <div>
-                  <p className="text-sm font-medium">Pontuar apenas Motorista</p>
-                  <p className="text-xs text-muted-foreground">Foco em fidelização de motoristas</p>
-                </div>
-              </Label>
-            </div>
-            <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
-              <RadioGroupItem value="PASSENGER_ONLY" id="scoring-passenger" />
-              <Label htmlFor="scoring-passenger" className="flex items-center gap-2 cursor-pointer flex-1">
-                <Users className="h-4 w-4 text-green-500" />
-                <div>
-                  <p className="text-sm font-medium">Pontuar apenas Cliente</p>
-                  <p className="text-xs text-muted-foreground">Foco em fidelização de passageiros</p>
-                </div>
-              </Label>
-            </div>
-            <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
-              <RadioGroupItem value="BOTH" id="scoring-both" />
-              <Label htmlFor="scoring-both" className="flex items-center gap-2 cursor-pointer flex-1">
-                <RefreshCw className="h-4 w-4 text-purple-500" />
-                <div>
-                  <p className="text-sm font-medium">Pontuar Ambos</p>
-                  <p className="text-xs text-muted-foreground">Motoristas e passageiros são pontuados</p>
-                </div>
-              </Label>
-            </div>
+          <RadioGroup
+            value={scoringModel}
+            onValueChange={setScoringModel}
+            className="space-y-3"
+            disabled={!escopo.isPermissive && escopo.allowedScoringModels.length === 1}
+          >
+            {escopo.allowedScoringModels.includes("DRIVER_ONLY") && (
+              <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                <RadioGroupItem value="DRIVER_ONLY" id="scoring-driver" />
+                <Label htmlFor="scoring-driver" className="flex items-center gap-2 cursor-pointer flex-1">
+                  <Car className="h-4 w-4 text-blue-500" />
+                  <div>
+                    <p className="text-sm font-medium">Pontuar apenas Motorista</p>
+                    <p className="text-xs text-muted-foreground">Foco em fidelização de motoristas</p>
+                  </div>
+                </Label>
+              </div>
+            )}
+            {escopo.allowedScoringModels.includes("PASSENGER_ONLY") && (
+              <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                <RadioGroupItem value="PASSENGER_ONLY" id="scoring-passenger" />
+                <Label htmlFor="scoring-passenger" className="flex items-center gap-2 cursor-pointer flex-1">
+                  <Users className="h-4 w-4 text-green-500" />
+                  <div>
+                    <p className="text-sm font-medium">Pontuar apenas Cliente</p>
+                    <p className="text-xs text-muted-foreground">Foco em fidelização de passageiros</p>
+                  </div>
+                </Label>
+              </div>
+            )}
+            {escopo.allowedScoringModels.includes("BOTH") && (
+              <div className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                <RadioGroupItem value="BOTH" id="scoring-both" />
+                <Label htmlFor="scoring-both" className="flex items-center gap-2 cursor-pointer flex-1">
+                  <RefreshCw className="h-4 w-4 text-purple-500" />
+                  <div>
+                    <p className="text-sm font-medium">Pontuar Ambos</p>
+                    <p className="text-xs text-muted-foreground">Motoristas e passageiros são pontuados</p>
+                  </div>
+                </Label>
+              </div>
+            )}
           </RadioGroup>
         </CardContent>
       </Card>
