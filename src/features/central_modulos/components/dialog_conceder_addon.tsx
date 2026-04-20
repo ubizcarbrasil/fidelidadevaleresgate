@@ -46,6 +46,12 @@ interface BrandOption {
   subscription_plan: string;
 }
 
+interface BranchOption {
+  id: string;
+  name: string;
+  city: string | null;
+}
+
 function useBrandsList() {
   return useQuery({
     queryKey: ["brands-options-addon"] as const,
@@ -62,17 +68,39 @@ function useBrandsList() {
   });
 }
 
+function useBranchesOfBrand(brandId: string | null) {
+  return useQuery({
+    queryKey: ["branches-options-addon", brandId] as const,
+    enabled: !!brandId,
+    staleTime: 60_000,
+    queryFn: async (): Promise<BranchOption[]> => {
+      const { data, error } = await supabase
+        .from("branches")
+        .select("id, name, city")
+        .eq("brand_id", brandId!)
+        .eq("is_active", true)
+        .order("name", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as BranchOption[];
+    },
+  });
+}
+
 export function DialogConcederAddon({ open, onOpenChange, prefill }: Props) {
   const { data: brands, isLoading: loadBrands } = useBrandsList();
   const { data: modelos, isLoading: loadModelos } = useBusinessModelsCatalog();
   const grant = useGrantBusinessModelAddon();
 
   const [brandId, setBrandId] = useState<string>("");
+  const [scope, setScope] = useState<"brand" | "branch">("brand");
+  const [branchId, setBranchId] = useState<string>("");
   const [modelId, setModelId] = useState<string>("");
   const [cycle, setCycle] = useState<"monthly" | "yearly">("monthly");
   const [priceReais, setPriceReais] = useState<string>("");
   const [expiresAt, setExpiresAt] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
+
+  const { data: branches, isLoading: loadBranches } = useBranchesOfBrand(brandId || null);
 
   const sellableModels = useMemo(
     () => (modelos ?? []).filter((m) => m.is_sellable_addon && m.is_active),
@@ -89,10 +117,17 @@ export function DialogConcederAddon({ open, onOpenChange, prefill }: Props) {
     if (!open) return;
     setBrandId(prefill?.brand_id ?? "");
     setModelId(prefill?.business_model_id ?? "");
+    setScope("brand");
+    setBranchId("");
     setCycle("monthly");
     setExpiresAt("");
     setNotes("");
   }, [open, prefill]);
+
+  // Ao trocar de marca, reseta cidade selecionada
+  useEffect(() => {
+    setBranchId("");
+  }, [brandId]);
 
   // Sugere preço quando modelo ou ciclo mudam
   useEffect(() => {
@@ -109,7 +144,11 @@ export function DialogConcederAddon({ open, onOpenChange, prefill }: Props) {
   }, [selectedModel, cycle]);
 
   const canSubmit =
-    !!brandId && !!modelId && !!priceReais && !grant.isPending;
+    !!brandId &&
+    !!modelId &&
+    !!priceReais &&
+    !grant.isPending &&
+    (scope === "brand" || !!branchId);
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
