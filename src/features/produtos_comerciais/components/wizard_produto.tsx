@@ -21,6 +21,7 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   planKey?: string; // se passado, edita
+  initialDraft?: ProdutoComercialDraft; // pré-preenche (template) no modo criação
 }
 
 const STEPS = [
@@ -31,7 +32,7 @@ const STEPS = [
   { key: "review", label: "Revisão" },
 ] as const;
 
-export default function WizardProduto({ open, onOpenChange, planKey }: Props) {
+export default function WizardProduto({ open, onOpenChange, planKey, initialDraft }: Props) {
   const isEdit = !!planKey;
   const { data: existing, isLoading } = useProdutoComercial(planKey);
   const salvar = useSalvarProdutoComercial();
@@ -44,9 +45,9 @@ export default function WizardProduto({ open, onOpenChange, planKey }: Props) {
     if (open) {
       setStepIdx(0);
       setSavedOnce(isEdit);
-      setDraft(existing ?? EMPTY_DRAFT);
+      setDraft(existing ?? initialDraft ?? EMPTY_DRAFT);
     }
-  }, [open, existing, isEdit]);
+  }, [open, existing, isEdit, initialDraft]);
 
   const update = (patch: Partial<ProdutoComercialDraft>) =>
     setDraft((prev) => ({ ...prev, ...patch }));
@@ -96,9 +97,27 @@ export default function WizardProduto({ open, onOpenChange, planKey }: Props) {
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isEdit ? "Editar Produto Comercial" : "Criar Produto Comercial"}
+            {isEdit
+              ? "Editar Produto Comercial"
+              : initialDraft
+              ? "Criar a partir do Template"
+              : "Criar Produto Comercial"}
           </DialogTitle>
         </DialogHeader>
+
+        {!isEdit && initialDraft && (
+          <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground/80">
+            <p className="font-semibold text-primary mb-0.5">
+              ✨ Template carregado: {initialDraft.product_name}
+            </p>
+            <p>
+              Os campos foram pré-preenchidos como exemplo. Ajuste{" "}
+              <strong>chave técnica</strong> e <strong>slug</strong> antes de
+              salvar e selecione manualmente os <strong>modelos de negócio</strong>{" "}
+              (passo 2) e <strong>módulos</strong> (passo 3).
+            </p>
+          </div>
+        )}
 
         {/* Stepper */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
