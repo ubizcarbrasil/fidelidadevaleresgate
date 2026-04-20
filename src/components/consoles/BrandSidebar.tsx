@@ -52,7 +52,7 @@ const brandGroupDefs: DefinicaoGrupoSidebar[] = [
     label: "Cidades",
     items: [
       { key: "sidebar.branches", overrides: { defaultTitle: "Minhas Cidades", url: "/brand-branches" } },
-      "sidebar.pacotes_pontos", "sidebar.regras_resgate",
+      "sidebar.pacotes_pontos",
       "sidebar.jornada_cidades", "sidebar.onboarding_cidade", "sidebar.configuracao_cidade",
       "sidebar.configuracao_modulos_cidade",
     ],
