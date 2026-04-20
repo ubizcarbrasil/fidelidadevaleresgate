@@ -82,15 +82,6 @@ export function useGrantBusinessModelAddon() {
   return useMutation({
     mutationFn: async (input: GrantAddonInput) => {
       const { data: userData } = await supabase.auth.getUser();
-      // Como o UNIQUE agora envolve COALESCE(branch_id, ...), o upsert via PostgREST
-      // não suporta o índice de expressão. Fazemos manual: tenta update; se 0, insert.
-      const { data: existing } = await supabase
-        .from("brand_business_model_addons")
-        .select("id")
-        .eq("brand_id", input.brand_id)
-        .eq("business_model_id", input.business_model_id)
-        .is("branch_id", input.branch_id ? false : true)
-        .maybeSingle();
 
       const payload = {
         brand_id: input.brand_id,
@@ -105,16 +96,19 @@ export function useGrantBusinessModelAddon() {
         created_by: userData.user?.id ?? null,
       };
 
-      // Buscar registro existente respeitando branch_id (NULL ou específico)
-      let query = supabase
+      // O UNIQUE usa COALESCE(branch_id, '00000…'), então o upsert do PostgREST
+      // não funciona. Buscamos manualmente (NULL = marca-toda; UUID = cidade) e
+      // atualizamos ou inserimos.
+      let q = supabase
         .from("brand_business_model_addons")
         .select("id")
         .eq("brand_id", input.brand_id)
         .eq("business_model_id", input.business_model_id);
-      query = input.branch_id
-        ? query.eq("branch_id", input.branch_id)
-        : query.is("branch_id", null);
-      const { data: found } = await query.maybeSingle();
+      q = input.branch_id
+        ? q.eq("branch_id", input.branch_id)
+        : q.is("branch_id", null);
+      const { data: found, error: findErr } = await q.maybeSingle();
+      if (findErr) throw findErr;
 
       if (found?.id) {
         const { data, error } = await supabase
@@ -132,7 +126,6 @@ export function useGrantBusinessModelAddon() {
         .select()
         .single();
       if (error) throw error;
-      void existing;
       return data;
     },
     onSuccess: (_d, vars) => {
