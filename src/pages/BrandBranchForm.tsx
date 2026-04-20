@@ -71,6 +71,19 @@ export default function BrandBranchForm() {
   // Visibilidade do card "Regra de Resgate"
   const podeRegrasResgate = escopo.hasAnyModuleKey("redemption_rules", "redemption_qr");
 
+  // Auto-pré-seleção do scoring_model quando o plano só permite uma opção (cidade nova)
+  useEffect(() => {
+    if (escopo.isLoading || isEdit) return;
+    if (escopo.isPermissive) return;
+    if (escopo.allowedScoringModels.length === 1) {
+      const unico = escopo.allowedScoringModels[0];
+      if (scoringModel !== unico) setScoringModel(unico);
+    } else if (!escopo.allowedScoringModels.includes(scoringModel as any)) {
+      setScoringModel(escopo.allowedScoringModels[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [escopo.isLoading, escopo.isPermissive, escopo.allowedScoringModels.join(","), isEdit]);
+
   const [cidade, setCidade] = useState("");
   const [uf, setUf] = useState("");
   const [ativo, setAtivo] = useState(true);
