@@ -10,7 +10,6 @@ import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { Badge } from "@/components/ui/badge";
 import { BadgeDuplicado } from "@/compartilhados/components/badge_duplicado";
 import { useDuplicacoesMenu } from "@/compartilhados/hooks/hook_duplicacoes_menu";
-import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
