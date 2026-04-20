@@ -150,7 +150,7 @@ export default function CrmDashboardPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
             {criticalCards.map((c) => (
               <div key={c.label} className={`rounded-xl ${c.bg} p-4 text-center`}>
                 <c.icon className={`h-5 w-5 mx-auto mb-1 ${c.color}`} />

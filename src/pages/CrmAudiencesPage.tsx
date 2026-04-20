@@ -63,9 +63,9 @@ export default function CrmAudiencesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <PageHeader title="Públicos" description="Crie segmentos de contatos para campanhas de disparo" />
-        <Button onClick={() => setShowCreate(true)}>
+        <Button onClick={() => setShowCreate(true)} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" /> Novo Público
         </Button>
       </div>
@@ -122,7 +122,7 @@ export default function CrmAudiencesPage() {
       )}
 
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent>
+        <DialogContent className="max-w-lg w-[calc(100vw-2rem)]">
           <DialogHeader>
             <DialogTitle>Novo Público</DialogTitle>
           </DialogHeader>
@@ -135,7 +135,7 @@ export default function CrmAudiencesPage() {
               <Label>Descrição (opcional)</Label>
               <Input value={description} onChange={(e) => setDescription(e.target.value)} />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <Label>Gênero</Label>
                 <Select value={filters.gender || ""} onValueChange={(v) => setFilters(f => ({ ...f, gender: v === "all" ? undefined : v }))}>

@@ -226,6 +226,13 @@ html, body {
 }
 .tabs-scroll-mobile::-webkit-scrollbar { display: none; }
 
+/* ── Wrapper de tabela larga (scroll horizontal touch) ── */
+.table-wrap-mobile {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
 /* ── Glass effects ── */
 .vb-glass {
   backdrop-filter: blur(20px) saturate(180%);

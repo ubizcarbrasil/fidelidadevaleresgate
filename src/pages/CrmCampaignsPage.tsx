@@ -99,9 +99,9 @@ export default function CrmCampaignsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <PageHeader title="Campanhas" description="Gerencie disparos em massa para seus contatos" />
-        <Button onClick={() => setShowCreate(true)}>
+        <Button onClick={() => setShowCreate(true)} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" /> Nova Campanha
         </Button>
       </div>
@@ -119,9 +119,9 @@ export default function CrmCampaignsPage() {
             return (
               <Card key={c.id}>
                 <CardContent className="pt-4 pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h3 className="font-semibold">{c.title}</h3>
                         <Badge variant="secondary" className={st.color}>
                           <StIcon className="h-3 w-3 mr-1" />
@@ -130,14 +130,14 @@ export default function CrmCampaignsPage() {
                         {ch && <Badge variant="secondary" className={ch.color}>{ch.label}</Badge>}
                       </div>
                       <p className="text-sm text-muted-foreground line-clamp-1">{c.message_template}</p>
-                      <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+                      <div className="flex flex-col sm:flex-row sm:gap-4 gap-1 mt-2 text-xs text-muted-foreground">
                         <span>Público: {c.crm_audiences?.name || "—"}</span>
                         <span>Destinatários: {c.total_recipients}</span>
                         <span>Custo: R$ {Number(c.total_cost).toFixed(2)}</span>
                       </div>
                     </div>
                     {c.status === "PENDING_APPROVAL" && (
-                      <Button size="sm" onClick={() => approveMutation.mutate(c.id)}>
+                      <Button size="sm" onClick={() => approveMutation.mutate(c.id)} className="w-full sm:w-auto">
                         Aprovar
                       </Button>
                     )}
@@ -158,7 +158,7 @@ export default function CrmCampaignsPage() {
       )}
 
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg w-[calc(100vw-2rem)]">
           <DialogHeader>
             <DialogTitle>Nova Campanha de Disparo</DialogTitle>
           </DialogHeader>
@@ -199,7 +199,7 @@ export default function CrmCampaignsPage() {
                 rows={3}
               />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <Label>Valor Giftback (%)</Label>
                 <Input type="number" value={giftbackValue} onChange={(e) => setGiftbackValue(e.target.value)} placeholder="10" />
