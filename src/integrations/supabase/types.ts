@@ -736,6 +736,73 @@ export type Database = {
           },
         ]
       }
+      brand_business_model_addons: {
+        Row: {
+          activated_at: string
+          billing_cycle: string
+          brand_id: string
+          business_model_id: string
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          notes: string | null
+          price_cents: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string
+          billing_cycle?: string
+          brand_id: string
+          business_model_id: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          price_cents?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string
+          billing_cycle?: string
+          brand_id?: string
+          business_model_id?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          price_cents?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_business_model_addons_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_business_model_addons_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_business_model_addons_business_model_id_fkey"
+            columns: ["business_model_id"]
+            isOneToOne: false
+            referencedRelation: "business_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_business_models: {
         Row: {
           activated_at: string | null
@@ -1300,6 +1367,8 @@ export type Database = {
       }
       business_models: {
         Row: {
+          addon_price_monthly_cents: number | null
+          addon_price_yearly_cents: number | null
           audience: string
           color: string | null
           created_at: string
@@ -1307,6 +1376,7 @@ export type Database = {
           icon: string | null
           id: string
           is_active: boolean
+          is_sellable_addon: boolean
           key: string
           name: string
           pricing_model: string
@@ -1314,6 +1384,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          addon_price_monthly_cents?: number | null
+          addon_price_yearly_cents?: number | null
           audience: string
           color?: string | null
           created_at?: string
@@ -1321,6 +1393,7 @@ export type Database = {
           icon?: string | null
           id?: string
           is_active?: boolean
+          is_sellable_addon?: boolean
           key: string
           name: string
           pricing_model?: string
@@ -1328,6 +1401,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          addon_price_monthly_cents?: number | null
+          addon_price_yearly_cents?: number | null
           audience?: string
           color?: string | null
           created_at?: string
@@ -1335,6 +1410,7 @@ export type Database = {
           icon?: string | null
           id?: string
           is_active?: boolean
+          is_sellable_addon?: boolean
           key?: string
           name?: string
           pricing_model?: string
@@ -8783,6 +8859,27 @@ export type Database = {
           display_name: string
           is_enrolled: boolean
           public_nickname: string
+        }[]
+      }
+      list_business_model_addons: {
+        Args: never
+        Returns: {
+          activated_at: string
+          billing_cycle: string
+          brand_id: string
+          brand_name: string
+          brand_slug: string
+          business_model_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          model_audience: string
+          model_key: string
+          model_name: string
+          notes: string
+          price_cents: number
+          status: string
+          subscription_plan: string
         }[]
       }
       lookup_driver_by_cpf: {
