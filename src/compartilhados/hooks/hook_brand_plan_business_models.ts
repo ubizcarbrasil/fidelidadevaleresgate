@@ -84,7 +84,7 @@ function useBrandPlan(brandId: string | null | undefined) {
 }
 
 export type ModelState = "active" | "available_inactive" | "locked";
-export type ModelSource = "plan" | "addon" | null;
+export type ModelSource = "plan" | "addon" | "addon_branch" | null;
 
 export interface ResolvedBusinessModel {
   def: BusinessModelDef;
@@ -93,19 +93,24 @@ export interface ResolvedBusinessModel {
   source: ModelSource;
 }
 
-function useBrandActiveAddonIds(brandId: string | null | undefined) {
+interface BrandActiveAddon {
+  business_model_id: string;
+  branch_id: string | null;
+}
+
+function useBrandActiveAddons(brandId: string | null | undefined) {
   return useQuery({
     queryKey: ["brand-active-addons", brandId] as const,
     enabled: !!brandId,
     staleTime: 30_000,
-    queryFn: async (): Promise<string[]> => {
+    queryFn: async (): Promise<BrandActiveAddon[]> => {
       const { data, error } = await supabase
         .from("brand_business_model_addons")
-        .select("business_model_id")
+        .select("business_model_id, branch_id")
         .eq("brand_id", brandId!)
         .eq("status", "active");
       if (error) throw error;
-      return (data ?? []).map((r) => r.business_model_id as string);
+      return (data ?? []) as BrandActiveAddon[];
     },
   });
 }
@@ -115,7 +120,7 @@ export function useBrandPlanBusinessModels(brandId: string | null | undefined) {
   const planQ = useBrandPlan(brandId);
   const planModelsQ = usePlanBusinessModels(planQ.data);
   const brandModelsQ = useBrandBusinessModels(brandId);
-  const addonsQ = useBrandActiveAddonIds(brandId);
+  const addonsQ = useBrandActiveAddons(brandId);
 
   const isLoading =
     allQ.isLoading ||
@@ -127,20 +132,31 @@ export function useBrandPlanBusinessModels(brandId: string | null | undefined) {
   const resolved: ResolvedBusinessModel[] = useMemo(() => {
     const all = allQ.data ?? [];
     const planSet = new Set(planModelsQ.data ?? []);
-    const addonSet = new Set(addonsQ.data ?? []);
+    const addonBrandSet = new Set<string>();
+    const addonBranchSet = new Set<string>();
+    (addonsQ.data ?? []).forEach((a) => {
+      if (a.branch_id) addonBranchSet.add(a.business_model_id);
+      else addonBrandSet.add(a.business_model_id);
+    });
     const rowByModel = new Map<string, BrandBusinessModelRow>();
     (brandModelsQ.data ?? []).forEach((r) => rowByModel.set(r.business_model_id, r));
 
     return all.map((def) => {
       const row = rowByModel.get(def.id) ?? null;
       const inPlan = planSet.has(def.id);
-      const inAddon = addonSet.has(def.id);
+      const inAddonBrand = addonBrandSet.has(def.id);
+      const inAddonBranch = addonBranchSet.has(def.id);
+      const inAnyAddon = inAddonBrand || inAddonBranch;
       let state: ModelState = "locked";
       let source: ModelSource = null;
-      if (inPlan || inAddon) {
+      if (inPlan || inAnyAddon) {
         state = row?.is_enabled ? "active" : "available_inactive";
-        // plano tem precedência semântica, mas add-on é destacado quando exclusivo
-        source = inPlan ? "plan" : "addon";
+        // Precedência semântica: plano > add-on de marca > add-on de cidade
+        source = inPlan
+          ? "plan"
+          : inAddonBrand
+          ? "addon"
+          : "addon_branch";
       }
       return { def, state, row, source };
     });

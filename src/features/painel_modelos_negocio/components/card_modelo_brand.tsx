@@ -87,7 +87,15 @@ export default function CardModeloBrand({ brandId, resolved }: Props) {
         <div className="flex flex-wrap items-center gap-1.5 min-h-[22px]">
           {resolved.source === "addon" && !isLocked && (
             <Badge variant="secondary" className="text-[10px]">
-              Add-on
+              Add-on Marca
+            </Badge>
+          )}
+          {resolved.source === "addon_branch" && !isLocked && (
+            <Badge
+              variant="secondary"
+              className="text-[10px] bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+            >
+              Add-on Cidade
             </Badge>
           )}
           {isActive && isGG && row?.ganha_ganha_margin_pct != null && (
