@@ -1,95 +1,71 @@
 
 
-# Alinhar “Editar Cidade” ao produto comercial contratado
+# Não é duplicação — são funções diferentes com nomes confusos
 
-## Diagnóstico (confirmado no banco)
+## Diagnóstico
 
-A empresa **Drive Engajamento** contratou o produto **Engajamento Motorista Premium** (`vr_motorista_premium`), que tem:
+Os dois toggles que você circulou **fazem coisas opostas**, mas os nomes são quase idênticos:
 
-- **Modelos de negócio inclusos:** todos com `audience = 'motorista'` (Cinturão, Aposta, Duelo, Resgate por Pontos, Ranking, Resgate na Cidade)
-- **Zero modelos de cliente/passageiro**
-- **19 módulos** habilitados — todos voltados para motorista
+| Toggle | Flag no banco | O que faz | Onde aparece |
+|---|---|---|---|
+| 💳 **Motorista compra pontos** | `enable_driver_points_purchase` | O motorista **compra pontos com dinheiro** (R$) — abre o overlay de compra de saldo | Botão "Comprar Pontos" no painel do motorista |
+| 🛒 **Motorista compra com pontos** | `enable_points_purchase` | O motorista **gasta pontos** comprando produtos/ofertas — exibe a seção "Compre com Pontos" | Vitrine "Compre com Pontos" no marketplace |
 
-Mas a tela `BrandBranchForm.tsx` (Editar Cidade) hoje:
+Ou seja:
+- **"compra pontos"** → entrada de saldo (input de R$)
+- **"compra com pontos"** → saída de saldo (gasta pontos)
 
-1. Renderiza **Card “Modelo de Pontuação”** com 3 opções fixas (Motorista, Cliente, Ambos) — sem checar o que o produto comprou. A cidade Olímpia foi salva como `BOTH` mesmo com produto exclusivamente de motorista.
-2. Renderiza **Card “Módulos de Negócio”** com 5 toggles fixos (Duelo, Achadinho, Mercado Livre, Corra e Ganhe, **Cliente Pontua**) — “Cliente Pontua” e “Achadinho” aparecem mesmo quando não estão no plano.
-3. Renderiza **Card “Conversão de Resgate por Público”** com input de **Taxa do Passageiro** mesmo quando o produto é só motorista.
-4. Renderiza **Card “Regra de Resgate”** independente da audiência.
-5. **Não consulta** `plan_business_models`, `plan_module_templates` nem `business_models.audience` para filtrar a UI.
+A diferença está em uma única letrinha (`com`), o que é horrível de ler num app mobile e gera exatamente a sensação de duplicação que você teve.
 
-Resultado: o franqueado/empreendedor enxerga e ativa funcionalidades que **não fazem parte do produto contratado**, criando inconsistência entre comercial × operacional.
+## O que vou ajustar
 
-## O que vou fazer
+Arquivo: `src/pages/BrandBranchForm.tsx` (seção "App do Motorista", linhas ~759-797)
 
-### 1. Hook novo: `useProductScope`
-Arquivo: `src/features/city_onboarding/hooks/hook_escopo_produto.ts`
+### 1. Renomear para deixar inequívoco
 
-Centraliza a leitura do escopo da marca:
-- Lê `brands.subscription_plan` da marca atual
-- Busca em `plan_business_models` os modelos inclusos
-- Deriva `audiences: Set<'motorista' | 'cliente' | 'b2b'>`
-- Busca em `plan_module_templates` os module_keys habilitados → `Set<string>`
-- Expõe helpers:
-  - `hasAudience('motorista' | 'cliente')`
-  - `hasModuleKey(key)`
-  - `allowedScoringModels: ('DRIVER_ONLY' | 'PASSENGER_ONLY' | 'BOTH')[]` (derivado das audiências)
+| Antes | Depois |
+|---|---|
+| 💳 Motorista compra pontos | 💳 **Comprar pontos com dinheiro** |
+| Permite que motoristas comprem pontos diretamente pelo app. | Motorista compra saldo de pontos pagando em R$ (entrada de pontos). |
+| 🛒 Motorista compra com pontos | 🛒 **Resgatar produtos com pontos** |
+| Exibe a seção "Compre com Pontos" no painel do motorista. | Motorista usa pontos acumulados para resgatar produtos da vitrine. |
 
-### 2. Refatorar `BrandBranchForm.tsx`
-Arquivo: `src/pages/BrandBranchForm.tsx`
+### 2. Agrupar visualmente
+Colocar os dois toggles dentro de um mini-bloco com título sutil **"Carteira de Pontos"** para deixar claro que são as duas pontas (entrada e saída) da mesma carteira:
 
-**Card “Modelo de Pontuação”:**
-- Esconder opções incompatíveis com o produto:
-  - Sem audiência `cliente` → some “Pontuar apenas Cliente” e “Pontuar Ambos”
-  - Sem audiência `motorista` → some “Pontuar apenas Motorista” e “Pontuar Ambos”
-- Se sobrar só uma opção, ela vem **pré-selecionada e bloqueada** com badge “Definido pelo seu produto”
-- Em ambientes legados (cidade já salva como `BOTH` num produto só de motorista), exibir aviso de inconsistência e botão “Ajustar para DRIVER_ONLY”
+```
+┌─ Carteira de Pontos ────────────────────────┐
+│  💳 Comprar pontos com dinheiro      [⚪]  │
+│     Entrada: paga R$ e recebe pontos        │
+│                                              │
+│  🛒 Resgatar produtos com pontos     [⚪]  │
+│     Saída: gasta pontos em produtos         │
+└─────────────────────────────────────────────┘
+```
 
-**Card “Módulos de Negócio”:**
-Cada toggle só renderiza se a `module_key` correspondente estiver habilitada no plano:
-- `enableDuelsModule` → `duels` ou `achadinhos_motorista` no plano
-- `enableAchadinhosModule` → `affiliate_deals` no plano
-- `enableMarketplaceModule` → `product_redemptions` no plano
-- `enableRaceEarnModule` → `points` ou audiência motorista
-- `enableCustomerScoringModule` → `earn_points_store` no plano (audiência cliente)
+### 3. Atualizar também o catálogo de toggles
+Arquivo: `src/features/configuracao_cidade/constants/constantes_toggles.ts` (linhas 50-67)
 
-Quando todos os toggles do card são escondidos, o card inteiro some.
-
-**Card “Gamificação de Motoristas”:**
-- Inteiro escondido se a marca não tem nenhum modelo `audience = 'motorista'`
-
-**Card “Conversão de Resgate por Público”:**
-- Esconder input “Taxa do Passageiro” se sem audiência cliente
-- Esconder input “Taxa do Motorista” se sem audiência motorista
-- Se ficar só um, vira card simples “Taxa de Conversão”
-
-**Card “Regra de Resgate”:**
-- Mantém visível apenas se houver `redemption_rules` ou `redemption_qr` no plano
-
-**Card `<CardPontuacaoMotorista />` (passageiro/motorista):**
-- Só renderiza se houver audiência motorista no plano
-
-### 3. Banner informativo no topo
-Adicionar no header de “Editar Cidade” um chip discreto:
-> 🎯 Plano: **Engajamento Motorista Premium** — apenas funcionalidades incluídas estão visíveis abaixo
-
-Com link para a página de Assinatura caso o usuário queira mudar de plano.
-
-### 4. Defesa no save
-No `handleSave`:
-- Se `scoring_model` salvo for incompatível com o plano (ex: `BOTH` sem audiência cliente), forçar normalização para o valor compatível antes de gravar
-- Mesma defesa para os flags de módulos: zerar flags de módulos que não estão no plano
-
-### 5. Página `BrandBranchesPage.tsx` (lista)
-Pequeno ajuste: o badge de “Cliente/Misto” na lista também não deve aparecer se a marca não tem audiência cliente — usa o mesmo `useProductScope`.
+Mesma renomeação aplicada nos labels e descrições para manter consistência onde quer que esses toggles apareçam.
 
 ## O que NÃO vou mexer
 
-- ❌ Banco, RLS, edge functions, RPC `resolve_active_modules`
-- ❌ Lógica de pontuação na `machine-webhook` (já respeita `scoring_model` da branch)
-- ❌ Wizard de Produtos Comerciais (Root)
-- ❌ Outras telas de configuração que não sejam “Editar Cidade” / “Cidades”
+- ❌ Nomes das flags no banco (`enable_driver_points_purchase`, `enable_points_purchase`) — quebraria o consumo em `DriverPanelPage`, `DriverMarketplace`, `CustomerHomePage`
+- ❌ Comportamento funcional — só rótulos e agrupamento visual
+- ❌ Banco, RLS, edge functions
+- ❌ Outros cards da tela
 
 ## Resultado esperado
 
-Para a empresa **Drive Engajamento** (produ
+- Fica visualmente óbvio que **não é duplicação**: um é entrada de pontos (compra com R$), o outro é saída (gasta pontos em produtos)
+- Agrupamento "Carteira de Pontos" ancora os dois conceitos como faces opostas da mesma moeda
+- Mantém compatibilidade total com o resto do sistema
+
+## Risco
+
+Zero. É só renomear textos e envolver em um bloco visual. `npx tsc --noEmit` esperado limpo.
+
+## Estimativa
+
+~3 min.
+
