@@ -78,7 +78,7 @@ const BRAND_GROUPS: DefinicaoGrupoSimples[] = [
   { label: "Manuais", items: [{ key: "sidebar.manuais" }] },
   { label: "Cidades", items: [
     { key: "sidebar.branches", overrides: { url: "/brand-branches" } },
-    { key: "sidebar.pacotes_pontos" }, { key: "sidebar.regras_resgate" },
+    { key: "sidebar.pacotes_pontos" },
     { key: "sidebar.jornada_cidades" }, { key: "sidebar.onboarding_cidade" },
     { key: "sidebar.configuracao_cidade" }, { key: "sidebar.configuracao_modulos_cidade" },
   ]},
