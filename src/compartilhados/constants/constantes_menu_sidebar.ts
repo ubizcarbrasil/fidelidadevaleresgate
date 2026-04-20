@@ -332,6 +332,9 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
   "sidebar.produtos_comerciais": {
     key: "sidebar.produtos_comerciais", defaultTitle: "Produtos Comerciais", url: "/admin/produtos-comerciais", icon: DollarSign,
   },
+  "sidebar.auditoria_duplicacoes": {
+    key: "sidebar.auditoria_duplicacoes", defaultTitle: "Auditoria de Duplicações", url: "/admin/auditoria-duplicacoes", icon: Shield,
+  },
 };
 
 // ─── Tipagem para definição de grupo de sidebar ───
