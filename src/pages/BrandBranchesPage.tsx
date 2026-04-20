@@ -13,11 +13,15 @@ import { toast } from "sonner";
 import DialogResetPontos from "@/components/branch/DialogResetPontos";
 import DialogCriarFranqueado from "@/components/branch/DialogCriarFranqueado";
 import DialogReprocessarPontos from "@/components/branch/DialogReprocessarPontos";
+import { useProductScope } from "@/features/city_onboarding/hooks/hook_escopo_produto";
 
 export default function BrandBranchesPage() {
   const navigate = useNavigate();
   const { currentBrandId } = useBrandGuard();
   const queryClient = useQueryClient();
+  const escopo = useProductScope();
+  const audienciaCliente = escopo.hasAudience("cliente");
+  const audienciaMotorista = escopo.hasAudience("motorista");
   const [resetBranch, setResetBranch] = useState<{ id: string; name: string } | null>(null);
   const [franqueadoBranch, setFranqueadoBranch] = useState<{ id: string; name: string } | null>(null);
   const [reprocessBranch, setReprocessBranch] = useState<{ id: string; name: string } | null>(null);
@@ -114,19 +118,31 @@ export default function BrandBranchesPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap pl-0 sm:pl-12">
-                  {(branch as any).scoring_model === "DRIVER_ONLY" && (
+                  {(branch as any).scoring_model === "DRIVER_ONLY" && audienciaMotorista && (
                     <Badge variant="outline" className="text-[10px] gap-1">
                       <Car className="h-3 w-3" /> Motorista
                     </Badge>
                   )}
-                  {(branch as any).scoring_model === "PASSENGER_ONLY" && (
+                  {(branch as any).scoring_model === "PASSENGER_ONLY" && audienciaCliente && (
                     <Badge variant="outline" className="text-[10px] gap-1">
                       <Users className="h-3 w-3" /> Cliente
                     </Badge>
                   )}
-                  {((branch as any).scoring_model === "BOTH" || !(branch as any).scoring_model) && (
+                  {((branch as any).scoring_model === "BOTH" || !(branch as any).scoring_model) &&
+                    audienciaMotorista && audienciaCliente && (
                     <Badge variant="outline" className="text-[10px] gap-1">
                       <RefreshCw className="h-3 w-3" /> Misto
+                    </Badge>
+                  )}
+                  {/* Quando o plano só cobre uma audiência mas a cidade legada está como BOTH, mostra o badge da audiência válida */}
+                  {(branch as any).scoring_model === "BOTH" && audienciaMotorista && !audienciaCliente && (
+                    <Badge variant="outline" className="text-[10px] gap-1">
+                      <Car className="h-3 w-3" /> Motorista
+                    </Badge>
+                  )}
+                  {(branch as any).scoring_model === "BOTH" && audienciaCliente && !audienciaMotorista && (
+                    <Badge variant="outline" className="text-[10px] gap-1">
+                      <Users className="h-3 w-3" /> Cliente
                     </Badge>
                   )}
                   {(branch as any).is_city_redemption_enabled && (
