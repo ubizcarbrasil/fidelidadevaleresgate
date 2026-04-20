@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Settings2 } from "lucide-react";
 import type { ProdutoComercialDraft } from "../types/tipos_produto";
 
 interface Props {
@@ -23,6 +24,10 @@ export default function PassoIdentificacao({ draft, onChange }: Props) {
   // ao reformatar a cada tecla (que travava a edição do valor).
   const centsToStr = (c: number | null | undefined) =>
     c == null ? "" : (c / 100).toFixed(2).replace(".", ",");
+
+  // Modo avançado revela campos técnicos (plan_key e slug editável manualmente)
+  // Em edição, abre por padrão para não esconder dados existentes.
+  const [modoAvancado, setModoAvancado] = useState(!!draft.id);
 
   const [precoMensalStr, setPrecoMensalStr] = useState(() =>
     draft.price_cents > 0 ? centsToStr(draft.price_cents) : "",
@@ -70,7 +75,9 @@ export default function PassoIdentificacao({ draft, onChange }: Props) {
             }}
             placeholder="Vale Resgate Motorista Premium"
           />
-          <p className="text-xs text-muted-foreground">Aparece na landing pública.</p>
+          <p className="text-xs text-muted-foreground">
+            Aparece na landing pública. Identificadores técnicos serão gerados automaticamente.
+          </p>
         </div>
         <div className="space-y-2">
           <Label>Nome interno do plano *</Label>
@@ -83,28 +90,55 @@ export default function PassoIdentificacao({ draft, onChange }: Props) {
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Chave técnica (plan_key) *</Label>
-          <Input
-            value={draft.plan_key}
-            onChange={(e) => onChange({ plan_key: slugify(e.target.value) })}
-            placeholder="motorista-premium"
-            disabled={!!draft.id}
-          />
-          <p className="text-xs text-muted-foreground">
-            {draft.id ? "Não editável após criação." : "Identificador único interno."}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <Label>Slug da landing *</Label>
-          <Input
-            value={draft.slug}
-            onChange={(e) => onChange({ slug: slugify(e.target.value) })}
-            placeholder="motorista-premium"
-          />
-          <p className="text-xs text-muted-foreground">URL: /p/produto/{draft.slug || "..."}</p>
-        </div>
+      {/* Identificadores técnicos — escondidos por padrão */}
+      <div className="rounded-md border bg-muted/20">
+        <button
+          type="button"
+          onClick={() => setModoAvancado((v) => !v)}
+          className="flex w-full items-center justify-between gap-2 px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <span className="flex items-center gap-1.5">
+            <Settings2 className="h-3.5 w-3.5" />
+            Identificadores técnicos {modoAvancado ? "(ocultar)" : "(avançado)"}
+          </span>
+          <span className="text-[10px] uppercase tracking-wide">
+            {modoAvancado ? "−" : "+"}
+          </span>
+        </button>
+        {modoAvancado && (
+          <div className="grid sm:grid-cols-2 gap-4 border-t p-3">
+            <div className="space-y-2">
+              <Label className="text-xs">ID interno (plan_key)</Label>
+              <Input
+                value={draft.plan_key}
+                onChange={(e) => onChange({ plan_key: slugify(e.target.value) })}
+                placeholder="motorista-premium"
+                disabled={!!draft.id}
+              />
+              <p className="text-xs text-muted-foreground">
+                {draft.id
+                  ? "Não editável após criação — usado em integrações."
+                  : "Gerado a partir do nome. Edite só se precisar."}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Endereço público (slug)</Label>
+              <Input
+                value={draft.slug}
+                onChange={(e) => onChange({ slug: slugify(e.target.value) })}
+                placeholder="motorista-premium"
+              />
+              <p className="text-xs text-muted-foreground">
+                URL: /p/produto/{draft.slug || "..."}
+              </p>
+            </div>
+          </div>
+        )}
+        {!modoAvancado && (draft.plan_key || draft.slug) && (
+          <div className="border-t px-3 py-2 text-xs text-muted-foreground">
+            URL pública: <span className="font-mono">/p/produto/{draft.slug || "..."}</span>
+          </div>
+        )}
       </div>
 
       <div className="space-y-3">
