@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Star,
   Package,
+  BookOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -29,6 +30,7 @@ import {
   useExcluirProdutoComercial,
 } from "./hooks/hook_produtos_comerciais";
 import WizardProduto from "./components/wizard_produto";
+import { ManualModal } from "@/compartilhados/components/manual_modal";
 
 export default function PaginaProdutosComerciais() {
   const { data: produtos, isLoading } = useProdutosComerciais();
@@ -36,6 +38,7 @@ export default function PaginaProdutosComerciais() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editKey, setEditKey] = useState<string | undefined>(undefined);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [manualOpen, setManualOpen] = useState(false);
 
   const openCreate = () => {
     setEditKey(undefined);
@@ -60,10 +63,21 @@ export default function PaginaProdutosComerciais() {
           title="Produtos Comerciais"
           description="Monte produtos de prateleira com modelos, funcionalidades, preço e landing page para divulgação."
         />
-        <Button onClick={openCreate} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Criar produto
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setManualOpen(true)}
+            className="gap-2"
+          >
+            <BookOpen className="h-4 w-4" />
+            <span className="hidden sm:inline">Ver Manual</span>
+          </Button>
+          <Button onClick={openCreate} className="gap-2">
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Criar produto</span>
+            <span className="sm:hidden">Criar</span>
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -168,6 +182,17 @@ export default function PaginaProdutosComerciais() {
       )}
 
       <WizardProduto open={wizardOpen} onOpenChange={setWizardOpen} planKey={editKey} />
+
+      <ManualModal
+        open={manualOpen}
+        onOpenChange={setManualOpen}
+        manualIds={[
+          "produtos-comerciais-bundles-vendaveis",
+          "produtos-comerciais-exemplo-pratico",
+        ]}
+        titulo="Manuais — Produtos Comerciais"
+        descricao="Aprenda a montar bundles vendáveis e veja um exemplo prático completo."
+      />
 
       <AlertDialog
         open={!!confirmDelete}
