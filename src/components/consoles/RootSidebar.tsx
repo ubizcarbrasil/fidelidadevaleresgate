@@ -192,9 +192,10 @@ export function RootSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isRootAdmin } = useAuth();
   const { getLabel } = useMenuLabels("admin");
   const badges = useSidebarBadges();
+  const { chavesDuplicadas } = useDuplicacoesMenu();
 
   const { data: brands } = useQuery({
     queryKey: ["brands-for-sidebar"],
@@ -235,7 +236,17 @@ export function RootSidebar() {
         </SidebarGroup>
 
         {groups.map((group) => (
-          <CollapsibleGroup key={group.label} label={group.label} items={group.items} collapsed={collapsed} location={location} getLabel={getLabel} badges={badges} />
+          <CollapsibleGroup
+            key={group.label}
+            label={group.label}
+            items={group.items}
+            collapsed={collapsed}
+            location={location}
+            getLabel={getLabel}
+            badges={badges}
+            chavesDuplicadas={chavesDuplicadas}
+            mostrarDup={isRootAdmin}
+          />
         ))}
 
         <Collapsible defaultOpen={false} className="group/collapsible">
