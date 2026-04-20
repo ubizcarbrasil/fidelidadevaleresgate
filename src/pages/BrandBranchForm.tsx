@@ -54,6 +54,23 @@ export default function BrandBranchForm() {
   const { currentBrandId } = useBrandGuard();
   const queryClient = useQueryClient();
 
+  // Escopo do produto comercial contratado pela marca
+  const escopo = useProductScope();
+  const audienciaMotorista = escopo.hasAudience("motorista");
+  const audienciaCliente = escopo.hasAudience("cliente");
+
+  // Visibilidade dos toggles de Módulos de Negócio (segundo o plano)
+  const podeDuelos = escopo.hasAnyModuleKey("duels", "achadinhos_motorista");
+  const podeAchadinhos = escopo.hasModuleKey("affiliate_deals");
+  const podeMarketplace = escopo.hasModuleKey("product_redemptions");
+  const podeRaceEarn = escopo.hasModuleKey("points") || audienciaMotorista;
+  const podeClientePontua = escopo.hasModuleKey("earn_points_store") && audienciaCliente;
+  const algumModuloVisivel =
+    podeDuelos || podeAchadinhos || podeMarketplace || podeRaceEarn || podeClientePontua;
+
+  // Visibilidade do card "Regra de Resgate"
+  const podeRegrasResgate = escopo.hasAnyModuleKey("redemption_rules", "redemption_qr");
+
   const [cidade, setCidade] = useState("");
   const [uf, setUf] = useState("");
   const [ativo, setAtivo] = useState(true);
