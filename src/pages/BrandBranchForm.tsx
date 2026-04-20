@@ -15,6 +15,13 @@ import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import DialogResetPontos from "@/components/branch/DialogResetPontos";
 import CardPontuacaoMotorista, { type PontuacaoMotoristaState } from "@/pages/branches/components/CardPontuacaoMotorista";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles, AlertTriangle } from "lucide-react";
+import {
+  useProductScope,
+  normalizarScoringModel,
+  rotuloDoPlano,
+} from "@/features/city_onboarding/hooks/hook_escopo_produto";
 
 const ESTADOS = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
