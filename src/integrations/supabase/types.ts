@@ -4074,6 +4074,156 @@ export type Database = {
           },
         ]
       }
+      duel_cycle_reset_history: {
+        Row: {
+          action_executed: string
+          branch_id: string
+          brand_id: string
+          config_snapshot: Json
+          details_json: Json | null
+          drivers_affected: number
+          executed_at: string
+          id: string
+          total_points_distributed: number
+          triggered_by: string
+          triggered_by_user: string | null
+        }
+        Insert: {
+          action_executed: string
+          branch_id: string
+          brand_id: string
+          config_snapshot?: Json
+          details_json?: Json | null
+          drivers_affected?: number
+          executed_at?: string
+          id?: string
+          total_points_distributed?: number
+          triggered_by?: string
+          triggered_by_user?: string | null
+        }
+        Update: {
+          action_executed?: string
+          branch_id?: string
+          brand_id?: string
+          config_snapshot?: Json
+          details_json?: Json | null
+          drivers_affected?: number
+          executed_at?: string
+          id?: string
+          total_points_distributed?: number
+          triggered_by?: string
+          triggered_by_user?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duel_cycle_reset_history_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_cycle_reset_history_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_cycle_reset_history_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      duel_prize_campaigns: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string
+          id: string
+          image_url: string | null
+          name: string
+          points_cost: number
+          quantity_redeemed: number
+          quantity_total: number
+          season_id: string | null
+          starts_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at: string
+          id?: string
+          image_url?: string | null
+          name: string
+          points_cost: number
+          quantity_redeemed?: number
+          quantity_total: number
+          season_id?: string | null
+          starts_at: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          points_cost?: number
+          quantity_redeemed?: number
+          quantity_total?: number
+          season_id?: string | null
+          starts_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duel_prize_campaigns_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_prize_campaigns_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_prize_campaigns_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_prize_campaigns_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "gamification_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       duel_side_bets: {
         Row: {
           bettor_a_customer_id: string
@@ -9301,6 +9451,10 @@ export type Database = {
         }
         Returns: Json
       }
+      redeem_prize_campaign: {
+        Args: { p_campaign_id: string; p_customer_id: string }
+        Returns: Json
+      }
       reprocess_missing_driver_points: {
         Args: { p_branch_id: string }
         Returns: Json
@@ -9487,7 +9641,7 @@ export type Database = {
         | "customer"
       earning_source: "STORE" | "PDV" | "ADMIN" | "IMPORT" | "API"
       earning_status: "APPROVED" | "REJECTED"
-      ledger_entry_type: "CREDIT" | "DEBIT"
+      ledger_entry_type: "CREDIT" | "DEBIT" | "PRIZE_REDEEM" | "CYCLE_BONUS"
       ledger_reference_type:
         | "EARNING_EVENT"
         | "REDEMPTION"
@@ -9504,6 +9658,8 @@ export type Database = {
         | "BELT_PRIZE"
         | "DUEL_SETTLEMENT"
         | "BRANCH_RESET"
+        | "PRIZE_CAMPAIGN"
+        | "CYCLE_RESET"
       offer_purpose: "EARN" | "REDEEM" | "BOTH"
       offer_status: "DRAFT" | "PENDING" | "APPROVED" | "ACTIVE" | "EXPIRED"
       points_rule_type: "PER_REAL" | "FIXED" | "TIERED"
@@ -9674,7 +9830,7 @@ export const Constants = {
       ],
       earning_source: ["STORE", "PDV", "ADMIN", "IMPORT", "API"],
       earning_status: ["APPROVED", "REJECTED"],
-      ledger_entry_type: ["CREDIT", "DEBIT"],
+      ledger_entry_type: ["CREDIT", "DEBIT", "PRIZE_REDEEM", "CYCLE_BONUS"],
       ledger_reference_type: [
         "EARNING_EVENT",
         "REDEMPTION",
@@ -9691,6 +9847,8 @@ export const Constants = {
         "BELT_PRIZE",
         "DUEL_SETTLEMENT",
         "BRANCH_RESET",
+        "PRIZE_CAMPAIGN",
+        "CYCLE_RESET",
       ],
       offer_purpose: ["EARN", "REDEEM", "BOTH"],
       offer_status: ["DRAFT", "PENDING", "APPROVED", "ACTIVE", "EXPIRED"],
