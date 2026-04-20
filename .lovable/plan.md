@@ -1,81 +1,110 @@
 
+# Corrigir a confusão “selecionei e mesmo assim ficou vazio” no wizard de Produtos Comerciais
 
-# Por que o passo 3 ficou em branco — e como corrigir
+## Diagnóstico
 
-## Diagnóstico (o que aconteceu na sua tela)
+O comportamento atual está coerente com o código, mas a interface não explica bem o motivo:
 
-O wizard funcionou exatamente como foi programado, mas a UX falhou em explicar:
+- O passo 3 busca os módulos a partir dos vínculos da tabela `business_model_modules`
+- Quando o usuário seleciona um modelo no passo 2 que está com **0 módulos vinculados** na Central de Módulos, o passo 3 mostra:
+  - “Nenhum módulo vinculado a esses modelos”
+- Ou seja: o problema não é o clique do usuário “não ter pegado”; o problema é que os modelos escolhidos no banco **não têm módulos configurados**
 
-1. Você clicou em **"Usar template"** → o template (Vale Resgate Motorista Premium) preencheu o passo 1
-2. O **banner azul** no topo já avisava: *"selecione manualmente os modelos de negócio (passo 2) e módulos (passo 3)"* — mas é fácil passar batido
-3. Você pulou o **passo 2 (Modelos)** sem marcar nenhum modelo de negócio
-4. No **passo 3 (Funcionalidades)**, o componente faz: *"pegar todos os módulos obrigatórios dos modelos selecionados"* — como nenhum modelo foi selecionado, **a lista veio vazia**, mas a tela só mostrou o subtítulo "Funcionalidades obrigatórias dos modelos selecionados são pré-marcadas" sem nenhuma explicação visível
-5. O botão **"Próximo"** ainda ficou ativo, dando a sensação de que está tudo certo
+Pelas telas enviadas, isso está acontecendo exatamente com os modelos escolhidos.
 
-Resumo: **template pré-preenche identificação, mas não pré-seleciona modelos** (de propósito — modelos dependem do escopo do produto). E o passo 3 não avisa quando está vazio porque o passo 2 está vazio.
+## O que vou ajustar
 
-## O que vou corrigir
+### 1. Deixar isso explícito já no passo 2
+Arquivo: `src/features/produtos_comerciais/components/passo_modelos.tsx`
 
-### 1. `src/features/produtos_comerciais/components/wizard_produto.tsx`
-- **Bloquear avanço do passo 1 → 2** já validando o que precisa
-- **Validar passo 2 antes de chegar no 3**: se `business_model_ids.length === 0`, o `next()` já bloqueia (isso já existe — vou reforçar exibindo um toast mais claro)
-- Adicionar **indicador visual de "passo incompleto"** no stepper (bolinha vermelha ou ícone de alerta) quando o passo tem pendência
+Vou enriquecer a listagem de modelos para cada card mostrar:
+- quantidade de módulos vinculados
+- status visual:
+  - “Pronto” quando tiver 1+ módulos
+  - “Sem módulos” quando tiver 0
 
-### 2. `src/features/produtos_comerciais/components/passo_modulos.tsx` (a tela que ficou em branco)
-Adicionar um **estado vazio explícito** quando `draft.business_model_ids.length === 0`:
+Também vou exibir um aviso logo abaixo da seleção quando houver modelos marcados sem vínculos, por exemplo:
+- “Você selecionou 2 modelos, mas 1 deles não possui módulos configurados. Por isso o passo 3 pode ficar vazio.”
 
-```
-┌─────────────────────────────────────────┐
-│  ⚠️  Volte ao passo 2 e selecione        │
-│      ao menos um Modelo de Negócio      │
-│                                          │
-│  As funcionalidades obrigatórias e       │
-│  opcionais aparecem aqui assim que       │
-│  você escolher os modelos.               │
-│                                          │
-│        [ ← Voltar ao passo 2 ]           │
-└─────────────────────────────────────────┘
-```
+## 2. Bloquear avanço “cego” quando todos os modelos selecionados estiverem sem módulos
+Arquivo: `src/features/produtos_comerciais/components/wizard_produto.tsx`
 
-E quando há modelos selecionados mas **zero módulos vinculados** no banco (caso raro), mostrar:
-*"Nenhum módulo vinculado a esses modelos. Selecione opcionais abaixo ou volte ao passo 2."*
+Hoje o passo 2 só valida:
+- “tem ao menos 1 modelo?”
 
-### 3. `src/features/produtos_comerciais/components/passo_modelos.tsx` (passo 2)
-Quando o usuário **chegou aqui via template**, mostrar um destaque visual no topo:
+Vou reforçar a validação para também checar:
+- “os modelos selecionados possuem algum módulo vinculado?”
 
-```
-✨ Sugestão para "Vale Resgate Motorista Premium":
-   marque os modelos voltados para Motorista
-   (audience = DRIVER) — eles dão acesso aos
-   módulos do painel do motorista.
-```
+Se todos estiverem zerados, o botão Próximo continua visível, mas ao clicar vai mostrar uma mensagem clara:
+- “Os modelos selecionados ainda não possuem módulos configurados. Configure os vínculos na Central de Módulos ou escolha outro modelo.”
 
-Não auto-marca nada (mantém controle manual), só orienta.
+## 3. Tornar o passo 3 mais explicativo e auditável
+Arquivo: `src/features/produtos_comerciais/components/passo_modulos.tsx`
 
-### 4. Stepper visual com ícone de alerta
-No `wizard_produto.tsx`, o stepper passa a destacar com 🔴 / ícone `AlertCircle` os passos com pendência (`business_model_ids` vazio = passo 2 incompleto).
+Quando não houver módulos para renderizar, em vez de só mostrar um alerta genérico, vou exibir:
+- a lista dos modelos selecionados
+- quantos módulos cada um possui
+- destaque visual nos que estão com 0
+- orientação objetiva do tipo:
+  - “Modelo X: 0 módulos”
+  - “Modelo Y: 0 módulos”
 
-## O que NÃO vou fazer
+Assim fica impossível parecer que “a seleção não funcionou”.
 
-- ❌ Não vou auto-selecionar modelos pelo template (você é quem decide o escopo do produto)
-- ❌ Não vou mudar a regra de "obrigatórios vêm dos modelos" — está correta
-- ❌ Não vou mexer em banco, RLS, edge functions, rotas
-- ❌ Não vou desbloquear o botão Próximo no passo 2 (a validação já existe e está certa)
+## 4. Criar atalho de correção para o lugar certo
+Arquivos:
+- `src/features/produtos_comerciais/components/passo_modelos.tsx`
+- `src/features/produtos_comerciais/components/passo_modulos.tsx`
+
+Vou adicionar uma ação direta para abrir a configuração correta:
+- botão/atalho para `Central de Módulos`
+- texto explicando que os vínculos são configurados em:
+  - Catálogo de Modelos
+  - edição do modelo
+  - seção de vínculos com módulos
+
+Isso reduz a sensação de travamento.
+
+## 5. Melhorar o template para não parecer “quebrado”
+Arquivo: `src/features/produtos_comerciais/constants/constantes_template.ts` e fluxo do wizard
+
+Sem auto-marcar IDs fixos, vou melhorar a comunicação do template:
+- indicar quais tipos de modelos ele espera
+- informar que ele depende de modelos já configurados com módulos
+- exibir uma observação específica quando o template for de motorista e os modelos selecionados estiverem zerados
 
 ## Resultado esperado
 
-Cenário 1 — você abre o template e pula o passo 2:
-- Passo 2: stepper mostra ⚠️ no número 2
-- Passo 3: tela mostra card vermelho "Volte ao passo 2", impossível confundir
+Depois da correção:
 
-Cenário 2 — você seleciona 1+ modelo no passo 2:
-- Passo 3: lista de módulos obrigatórios aparece pré-marcada (como já funciona hoje)
+- no passo 2, você já enxerga quais modelos estão utilizáveis e quais estão “sem módulos”
+- se escolher um modelo vazio, o sistema te avisa antes
+- no passo 3, a tela explica exatamente por que nada apareceu
+- você terá um caminho claro para corrigir a origem do problema na Central de Módulos
 
-## Risco / Reversão
+## Arquivos previstos
 
-Risco zero — só ajustes visuais e mensagens. `npx tsc --noEmit` esperado limpo. Reversão = remover os estados vazios.
+- `src/features/produtos_comerciais/components/passo_modelos.tsx`
+- `src/features/produtos_comerciais/components/passo_modulos.tsx`
+- `src/features/produtos_comerciais/components/wizard_produto.tsx`
 
-## Estimativa
+Possivelmente também:
+- um pequeno hook/utilitário local da feature para agregar contagem de módulos por modelo, mantendo a organização da feature
 
-~10 min.
+## O que não vou mexer
 
+- não vou alterar banco nem RLS
+- não vou mudar a lógica central de negócio
+- não vou inventar seleção automática perigosa de módulos
+- não vou mexer em `src/integrations/supabase/client.ts`
+
+## Risco
+
+Baixo. É principalmente melhoria de UX, validação e transparência do fluxo.
+
+## Efeito prático
+
+Você conseguirá distinguir claramente entre:
+- “não selecionei direito”
+- “selecionei um modelo vazio”
+- “esse modelo ainda precisa ser configurado na Central de Módulos”
