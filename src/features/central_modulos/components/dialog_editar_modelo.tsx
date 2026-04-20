@@ -38,6 +38,9 @@ export function DialogEditarModelo({ open, onOpenChange, modelo }: DialogEditarM
   const [color, setColor] = useState("#6366F1");
   const [sortOrder, setSortOrder] = useState<number>(0);
   const [isActive, setIsActive] = useState(true);
+  const [isSellable, setIsSellable] = useState(false);
+  const [priceMonthly, setPriceMonthly] = useState<string>("");
+  const [priceYearly, setPriceYearly] = useState<string>("");
   const [busca, setBusca] = useState("");
 
   const { data: modulos, isLoading: loadModulos } = useCatalogoModulos();
@@ -54,6 +57,17 @@ export function DialogEditarModelo({ open, onOpenChange, modelo }: DialogEditarM
       setColor(modelo.color ?? "#6366F1");
       setSortOrder(modelo.sort_order);
       setIsActive(modelo.is_active);
+      setIsSellable(modelo.is_sellable_addon);
+      setPriceMonthly(
+        modelo.addon_price_monthly_cents != null
+          ? (modelo.addon_price_monthly_cents / 100).toFixed(2).replace(".", ",")
+          : ""
+      );
+      setPriceYearly(
+        modelo.addon_price_yearly_cents != null
+          ? (modelo.addon_price_yearly_cents / 100).toFixed(2).replace(".", ",")
+          : ""
+      );
       setBusca("");
     }
   }, [open, modelo]);
@@ -75,6 +89,12 @@ export function DialogEditarModelo({ open, onOpenChange, modelo }: DialogEditarM
 
   if (!modelo) return null;
 
+  const parseReais = (v: string): number | null => {
+    if (!v) return null;
+    const n = parseFloat(v.replace(/\./g, "").replace(",", "."));
+    return Number.isNaN(n) ? null : Math.round(n * 100);
+  };
+
   const handleSalvar = async () => {
     await update.mutateAsync({
       id: modelo.id,
@@ -85,6 +105,9 @@ export function DialogEditarModelo({ open, onOpenChange, modelo }: DialogEditarM
         color: color || null,
         sort_order: sortOrder,
         is_active: isActive,
+        is_sellable_addon: isSellable,
+        addon_price_monthly_cents: isSellable ? parseReais(priceMonthly) : null,
+        addon_price_yearly_cents: isSellable ? parseReais(priceYearly) : null,
       },
     });
     onOpenChange(false);
