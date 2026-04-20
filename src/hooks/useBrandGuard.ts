@@ -21,11 +21,17 @@ export function useBrandGuard() {
 
   /** The effective brand_id for the current user */
   const currentBrandId = useMemo(() => {
-    if (brand) return brand.id;
-    // Fallback: get from user roles
+    if (brand) {
+      // Root admins can see any brand context
+      if (isRootAdmin) return brand.id;
+      // Non-root: brand from context only counts if user has a role in it
+      const hasRoleInBrand = roles.some(r => r.brand_id === brand.id);
+      if (hasRoleInBrand) return brand.id;
+    }
+    // Fallback: use brand_id from the user's role (defense in depth)
     const brandRole = roles.find(r => r.brand_id);
     return brandRole?.brand_id || null;
-  }, [brand, roles]);
+  }, [brand, roles, isRootAdmin]);
 
   /** The effective branch_id for scoped users */
   const currentBranchId = useMemo(() => {

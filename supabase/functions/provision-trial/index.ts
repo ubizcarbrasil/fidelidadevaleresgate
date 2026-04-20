@@ -343,6 +343,26 @@ Deno.serve(async (req) => {
     if (brandErr) throw new Error(`Brand: ${brandErr.message}`);
 
     // ─── 4. Create Branch ────────────────────────────────────────
+    // Infer scoring_model from the audiences of the plan's business_models
+    let inferredScoringModel: "DRIVER_ONLY" | "PASSENGER_ONLY" | "BOTH" = "BOTH";
+    try {
+      const { data: planBms } = await supabaseAdmin
+        .from("plan_business_models")
+        .select("business_model_id, business_models!inner(audience)")
+        .eq("plan_key", resolvedPlanKey)
+        .eq("is_included", true);
+      const audiences = new Set<string>(
+        (planBms || []).map((r: any) => r.business_models?.audience).filter(Boolean),
+      );
+      const hasDriver = audiences.has("motorista");
+      const hasClient = audiences.has("cliente");
+      if (hasDriver && !hasClient) inferredScoringModel = "DRIVER_ONLY";
+      else if (hasClient && !hasDriver) inferredScoringModel = "PASSENGER_ONLY";
+      else inferredScoringModel = "BOTH";
+    } catch (_) {
+      // keep BOTH as safe default if lookup fails
+    }
+
     const { data: branch, error: branchErr } = await supabaseAdmin
       .from("branches").insert({
         name: `${city_name} - ${state}`,
@@ -350,6 +370,7 @@ Deno.serve(async (req) => {
         brand_id: brand.id,
         city: city_name,
         state: state,
+        scoring_model: inferredScoringModel,
       }).select("id").single();
     if (branchErr) throw new Error(`Branch: ${branchErr.message}`);
 

@@ -133,11 +133,17 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // 2) Skip domain resolution for dev/preview/root domains
+        // 2) Skip domain resolution for dev/preview/root/portal domains.
+        // Portal `app.valeresgate.com.br` is a UNIVERSAL login portal — it
+        // must NOT resolve to a specific brand by hostname (would leak data
+        // across tenants). The brand is derived from the user's roles via
+        // useBrandGuard for users logged in on the portal.
+        const PORTAL_HOSTNAMES = ["app.valeresgate.com.br"];
         const isLocal = hostname === "localhost"
           || hostname.includes("lovable.app")
           || hostname.includes("lovableproject.com")
-          || hostname.startsWith("root.");
+          || hostname.startsWith("root.")
+          || PORTAL_HOSTNAMES.includes(hostname);
 
         if (isLocal) {
           return;
