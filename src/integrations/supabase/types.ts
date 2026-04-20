@@ -740,6 +740,7 @@ export type Database = {
         Row: {
           activated_at: string
           billing_cycle: string
+          branch_id: string | null
           brand_id: string
           business_model_id: string
           created_at: string
@@ -754,6 +755,7 @@ export type Database = {
         Insert: {
           activated_at?: string
           billing_cycle?: string
+          branch_id?: string | null
           brand_id: string
           business_model_id: string
           created_at?: string
@@ -768,6 +770,7 @@ export type Database = {
         Update: {
           activated_at?: string
           billing_cycle?: string
+          branch_id?: string | null
           brand_id?: string
           business_model_id?: string
           created_at?: string
@@ -780,6 +783,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "brand_business_model_addons_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "brand_business_model_addons_brand_id_fkey"
             columns: ["brand_id"]
@@ -8866,6 +8876,8 @@ export type Database = {
         Returns: {
           activated_at: string
           billing_cycle: string
+          branch_id: string
+          branch_name: string
           brand_id: string
           brand_name: string
           brand_slug: string

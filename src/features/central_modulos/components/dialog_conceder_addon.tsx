@@ -46,6 +46,12 @@ interface BrandOption {
   subscription_plan: string;
 }
 
+interface BranchOption {
+  id: string;
+  name: string;
+  city: string | null;
+}
+
 function useBrandsList() {
   return useQuery({
     queryKey: ["brands-options-addon"] as const,
@@ -62,17 +68,39 @@ function useBrandsList() {
   });
 }
 
+function useBranchesOfBrand(brandId: string | null) {
+  return useQuery({
+    queryKey: ["branches-options-addon", brandId] as const,
+    enabled: !!brandId,
+    staleTime: 60_000,
+    queryFn: async (): Promise<BranchOption[]> => {
+      const { data, error } = await supabase
+        .from("branches")
+        .select("id, name, city")
+        .eq("brand_id", brandId!)
+        .eq("is_active", true)
+        .order("name", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as BranchOption[];
+    },
+  });
+}
+
 export function DialogConcederAddon({ open, onOpenChange, prefill }: Props) {
   const { data: brands, isLoading: loadBrands } = useBrandsList();
   const { data: modelos, isLoading: loadModelos } = useBusinessModelsCatalog();
   const grant = useGrantBusinessModelAddon();
 
   const [brandId, setBrandId] = useState<string>("");
+  const [scope, setScope] = useState<"brand" | "branch">("brand");
+  const [branchId, setBranchId] = useState<string>("");
   const [modelId, setModelId] = useState<string>("");
   const [cycle, setCycle] = useState<"monthly" | "yearly">("monthly");
   const [priceReais, setPriceReais] = useState<string>("");
   const [expiresAt, setExpiresAt] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
+
+  const { data: branches, isLoading: loadBranches } = useBranchesOfBrand(brandId || null);
 
   const sellableModels = useMemo(
     () => (modelos ?? []).filter((m) => m.is_sellable_addon && m.is_active),
@@ -89,10 +117,17 @@ export function DialogConcederAddon({ open, onOpenChange, prefill }: Props) {
     if (!open) return;
     setBrandId(prefill?.brand_id ?? "");
     setModelId(prefill?.business_model_id ?? "");
+    setScope("brand");
+    setBranchId("");
     setCycle("monthly");
     setExpiresAt("");
     setNotes("");
   }, [open, prefill]);
+
+  // Ao trocar de marca, reseta cidade selecionada
+  useEffect(() => {
+    setBranchId("");
+  }, [brandId]);
 
   // Sugere preço quando modelo ou ciclo mudam
   useEffect(() => {
@@ -109,7 +144,11 @@ export function DialogConcederAddon({ open, onOpenChange, prefill }: Props) {
   }, [selectedModel, cycle]);
 
   const canSubmit =
-    !!brandId && !!modelId && !!priceReais && !grant.isPending;
+    !!brandId &&
+    !!modelId &&
+    !!priceReais &&
+    !grant.isPending &&
+    (scope === "brand" || !!branchId);
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -119,6 +158,7 @@ export function DialogConcederAddon({ open, onOpenChange, prefill }: Props) {
     if (Number.isNaN(cents) || cents < 0) return;
     const input: GrantAddonInput = {
       brand_id: brandId,
+      branch_id: scope === "branch" ? branchId : null,
       business_model_id: modelId,
       billing_cycle: cycle,
       price_cents: cents,
@@ -161,6 +201,63 @@ export function DialogConcederAddon({ open, onOpenChange, prefill }: Props) {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Escopo: Marca inteira ou Cidade específica */}
+          <div className="space-y-1.5">
+            <Label>Escopo</Label>
+            <Select
+              value={scope}
+              onValueChange={(v) => setScope(v as "brand" | "branch")}
+              disabled={!brandId}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="brand">Marca inteira (todas as cidades)</SelectItem>
+                <SelectItem value="branch">Cidade específica</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground">
+              {scope === "brand"
+                ? "O add-on valerá para todas as cidades da marca."
+                : "O add-on valerá apenas para a cidade selecionada abaixo."}
+            </p>
+          </div>
+
+          {scope === "branch" && (
+            <div className="space-y-1.5">
+              <Label>Cidade</Label>
+              <Select
+                value={branchId}
+                onValueChange={setBranchId}
+                disabled={!brandId || loadBranches}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a cidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(branches ?? []).map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      <div className="flex items-center gap-2">
+                        <span>{b.name}</span>
+                        {b.city && (
+                          <Badge variant="outline" className="text-[10px]">
+                            {b.city}
+                          </Badge>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                  {(branches ?? []).length === 0 && brandId && !loadBranches && (
+                    <div className="px-2 py-3 text-xs text-muted-foreground">
+                      Esta marca não tem cidades ativas.
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <Label>Modelo de Negócio</Label>

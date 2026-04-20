@@ -68,6 +68,7 @@ export default function SecaoAddonsVendidos() {
   const [busca, setBusca] = useState("");
   const [statusFiltro, setStatusFiltro] = useState<string>("all");
   const [audienceFiltro, setAudienceFiltro] = useState<string>("all");
+  const [scopeFiltro, setScopeFiltro] = useState<string>("all");
   const [grantOpen, setGrantOpen] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState<BusinessModelAddonRow | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<BusinessModelAddonRow | null>(null);
@@ -76,18 +77,21 @@ export default function SecaoAddonsVendidos() {
     return (data ?? []).filter((a) => {
       if (statusFiltro !== "all" && a.status !== statusFiltro) return false;
       if (audienceFiltro !== "all" && a.model_audience !== audienceFiltro) return false;
+      if (scopeFiltro === "brand" && a.branch_id) return false;
+      if (scopeFiltro === "branch" && !a.branch_id) return false;
       if (busca) {
         const t = busca.toLowerCase();
         if (
           !a.brand_name.toLowerCase().includes(t) &&
           !a.model_name.toLowerCase().includes(t) &&
-          !a.model_key.toLowerCase().includes(t)
+          !a.model_key.toLowerCase().includes(t) &&
+          !(a.branch_name ?? "").toLowerCase().includes(t)
         )
           return false;
       }
       return true;
     });
-  }, [data, busca, statusFiltro, audienceFiltro]);
+  }, [data, busca, statusFiltro, audienceFiltro, scopeFiltro]);
 
   const counts = useMemo(() => {
     const c = { active: 0, cancelled: 0, past_due: 0 };
@@ -132,6 +136,16 @@ export default function SecaoAddonsVendidos() {
             <SelectItem value="b2b">B2B</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={scopeFiltro} onValueChange={setScopeFiltro}>
+          <SelectTrigger className="w-full sm:w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos escopos</SelectItem>
+            <SelectItem value="brand">Marca inteira</SelectItem>
+            <SelectItem value="branch">Cidade específica</SelectItem>
+          </SelectContent>
+        </Select>
         <Button onClick={() => setGrantOpen(true)} className="w-full sm:w-auto">
           <Plus className="h-4 w-4" /> Conceder Add-on
         </Button>
@@ -163,6 +177,7 @@ export default function SecaoAddonsVendidos() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Marca</TableHead>
+                    <TableHead>Cidade</TableHead>
                     <TableHead>Modelo</TableHead>
                     <TableHead>Ciclo</TableHead>
                     <TableHead>Preço</TableHead>
@@ -180,6 +195,20 @@ export default function SecaoAddonsVendidos() {
                         <div className="text-[10px] text-muted-foreground">
                           plano {a.subscription_plan}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {a.branch_id ? (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] border-primary/40 text-primary"
+                          >
+                            {a.branch_name ?? "—"}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-[10px]">
+                            Todas
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">

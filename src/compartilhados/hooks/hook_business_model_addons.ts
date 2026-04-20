@@ -24,6 +24,8 @@ export interface BusinessModelAddonRow {
   brand_name: string;
   brand_slug: string;
   subscription_plan: string;
+  branch_id: string | null;
+  branch_name: string | null;
   business_model_id: string;
   model_key: string;
   model_name: string;
@@ -66,6 +68,8 @@ export function useBusinessModelAddons() {
 
 export interface GrantAddonInput {
   brand_id: string;
+  /** NULL = marca inteira; UUID = cidade específica */
+  branch_id?: string | null;
   business_model_id: string;
   billing_cycle: "monthly" | "yearly";
   price_cents: number;
@@ -78,22 +82,47 @@ export function useGrantBusinessModelAddon() {
   return useMutation({
     mutationFn: async (input: GrantAddonInput) => {
       const { data: userData } = await supabase.auth.getUser();
+
+      const payload = {
+        brand_id: input.brand_id,
+        branch_id: input.branch_id ?? null,
+        business_model_id: input.business_model_id,
+        billing_cycle: input.billing_cycle,
+        price_cents: input.price_cents,
+        expires_at: input.expires_at ?? null,
+        notes: input.notes ?? null,
+        status: "active",
+        activated_at: new Date().toISOString(),
+        created_by: userData.user?.id ?? null,
+      };
+
+      // O UNIQUE usa COALESCE(branch_id, '00000…'), então o upsert do PostgREST
+      // não funciona. Buscamos manualmente (NULL = marca-toda; UUID = cidade) e
+      // atualizamos ou inserimos.
+      let q = supabase
+        .from("brand_business_model_addons")
+        .select("id")
+        .eq("brand_id", input.brand_id)
+        .eq("business_model_id", input.business_model_id);
+      q = input.branch_id
+        ? q.eq("branch_id", input.branch_id)
+        : q.is("branch_id", null);
+      const { data: found, error: findErr } = await q.maybeSingle();
+      if (findErr) throw findErr;
+
+      if (found?.id) {
+        const { data, error } = await supabase
+          .from("brand_business_model_addons")
+          .update(payload)
+          .eq("id", found.id)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      }
       const { data, error } = await supabase
         .from("brand_business_model_addons")
-        .upsert(
-          {
-            brand_id: input.brand_id,
-            business_model_id: input.business_model_id,
-            billing_cycle: input.billing_cycle,
-            price_cents: input.price_cents,
-            expires_at: input.expires_at ?? null,
-            notes: input.notes ?? null,
-            status: "active",
-            activated_at: new Date().toISOString(),
-            created_by: userData.user?.id ?? null,
-          },
-          { onConflict: "brand_id,business_model_id" }
-        )
+        .insert(payload)
         .select()
         .single();
       if (error) throw error;
