@@ -1,110 +1,95 @@
 
-# Corrigir a confusão “selecionei e mesmo assim ficou vazio” no wizard de Produtos Comerciais
 
-## Diagnóstico
+# Alinhar “Editar Cidade” ao produto comercial contratado
 
-O comportamento atual está coerente com o código, mas a interface não explica bem o motivo:
+## Diagnóstico (confirmado no banco)
 
-- O passo 3 busca os módulos a partir dos vínculos da tabela `business_model_modules`
-- Quando o usuário seleciona um modelo no passo 2 que está com **0 módulos vinculados** na Central de Módulos, o passo 3 mostra:
-  - “Nenhum módulo vinculado a esses modelos”
-- Ou seja: o problema não é o clique do usuário “não ter pegado”; o problema é que os modelos escolhidos no banco **não têm módulos configurados**
+A empresa **Drive Engajamento** contratou o produto **Engajamento Motorista Premium** (`vr_motorista_premium`), que tem:
 
-Pelas telas enviadas, isso está acontecendo exatamente com os modelos escolhidos.
+- **Modelos de negócio inclusos:** todos com `audience = 'motorista'` (Cinturão, Aposta, Duelo, Resgate por Pontos, Ranking, Resgate na Cidade)
+- **Zero modelos de cliente/passageiro**
+- **19 módulos** habilitados — todos voltados para motorista
 
-## O que vou ajustar
+Mas a tela `BrandBranchForm.tsx` (Editar Cidade) hoje:
 
-### 1. Deixar isso explícito já no passo 2
-Arquivo: `src/features/produtos_comerciais/components/passo_modelos.tsx`
+1. Renderiza **Card “Modelo de Pontuação”** com 3 opções fixas (Motorista, Cliente, Ambos) — sem checar o que o produto comprou. A cidade Olímpia foi salva como `BOTH` mesmo com produto exclusivamente de motorista.
+2. Renderiza **Card “Módulos de Negócio”** com 5 toggles fixos (Duelo, Achadinho, Mercado Livre, Corra e Ganhe, **Cliente Pontua**) — “Cliente Pontua” e “Achadinho” aparecem mesmo quando não estão no plano.
+3. Renderiza **Card “Conversão de Resgate por Público”** com input de **Taxa do Passageiro** mesmo quando o produto é só motorista.
+4. Renderiza **Card “Regra de Resgate”** independente da audiência.
+5. **Não consulta** `plan_business_models`, `plan_module_templates` nem `business_models.audience` para filtrar a UI.
 
-Vou enriquecer a listagem de modelos para cada card mostrar:
-- quantidade de módulos vinculados
-- status visual:
-  - “Pronto” quando tiver 1+ módulos
-  - “Sem módulos” quando tiver 0
+Resultado: o franqueado/empreendedor enxerga e ativa funcionalidades que **não fazem parte do produto contratado**, criando inconsistência entre comercial × operacional.
 
-Também vou exibir um aviso logo abaixo da seleção quando houver modelos marcados sem vínculos, por exemplo:
-- “Você selecionou 2 modelos, mas 1 deles não possui módulos configurados. Por isso o passo 3 pode ficar vazio.”
+## O que vou fazer
 
-## 2. Bloquear avanço “cego” quando todos os modelos selecionados estiverem sem módulos
-Arquivo: `src/features/produtos_comerciais/components/wizard_produto.tsx`
+### 1. Hook novo: `useProductScope`
+Arquivo: `src/features/city_onboarding/hooks/hook_escopo_produto.ts`
 
-Hoje o passo 2 só valida:
-- “tem ao menos 1 modelo?”
+Centraliza a leitura do escopo da marca:
+- Lê `brands.subscription_plan` da marca atual
+- Busca em `plan_business_models` os modelos inclusos
+- Deriva `audiences: Set<'motorista' | 'cliente' | 'b2b'>`
+- Busca em `plan_module_templates` os module_keys habilitados → `Set<string>`
+- Expõe helpers:
+  - `hasAudience('motorista' | 'cliente')`
+  - `hasModuleKey(key)`
+  - `allowedScoringModels: ('DRIVER_ONLY' | 'PASSENGER_ONLY' | 'BOTH')[]` (derivado das audiências)
 
-Vou reforçar a validação para também checar:
-- “os modelos selecionados possuem algum módulo vinculado?”
+### 2. Refatorar `BrandBranchForm.tsx`
+Arquivo: `src/pages/BrandBranchForm.tsx`
 
-Se todos estiverem zerados, o botão Próximo continua visível, mas ao clicar vai mostrar uma mensagem clara:
-- “Os modelos selecionados ainda não possuem módulos configurados. Configure os vínculos na Central de Módulos ou escolha outro modelo.”
+**Card “Modelo de Pontuação”:**
+- Esconder opções incompatíveis com o produto:
+  - Sem audiência `cliente` → some “Pontuar apenas Cliente” e “Pontuar Ambos”
+  - Sem audiência `motorista` → some “Pontuar apenas Motorista” e “Pontuar Ambos”
+- Se sobrar só uma opção, ela vem **pré-selecionada e bloqueada** com badge “Definido pelo seu produto”
+- Em ambientes legados (cidade já salva como `BOTH` num produto só de motorista), exibir aviso de inconsistência e botão “Ajustar para DRIVER_ONLY”
 
-## 3. Tornar o passo 3 mais explicativo e auditável
-Arquivo: `src/features/produtos_comerciais/components/passo_modulos.tsx`
+**Card “Módulos de Negócio”:**
+Cada toggle só renderiza se a `module_key` correspondente estiver habilitada no plano:
+- `enableDuelsModule` → `duels` ou `achadinhos_motorista` no plano
+- `enableAchadinhosModule` → `affiliate_deals` no plano
+- `enableMarketplaceModule` → `product_redemptions` no plano
+- `enableRaceEarnModule` → `points` ou audiência motorista
+- `enableCustomerScoringModule` → `earn_points_store` no plano (audiência cliente)
 
-Quando não houver módulos para renderizar, em vez de só mostrar um alerta genérico, vou exibir:
-- a lista dos modelos selecionados
-- quantos módulos cada um possui
-- destaque visual nos que estão com 0
-- orientação objetiva do tipo:
-  - “Modelo X: 0 módulos”
-  - “Modelo Y: 0 módulos”
+Quando todos os toggles do card são escondidos, o card inteiro some.
 
-Assim fica impossível parecer que “a seleção não funcionou”.
+**Card “Gamificação de Motoristas”:**
+- Inteiro escondido se a marca não tem nenhum modelo `audience = 'motorista'`
 
-## 4. Criar atalho de correção para o lugar certo
-Arquivos:
-- `src/features/produtos_comerciais/components/passo_modelos.tsx`
-- `src/features/produtos_comerciais/components/passo_modulos.tsx`
+**Card “Conversão de Resgate por Público”:**
+- Esconder input “Taxa do Passageiro” se sem audiência cliente
+- Esconder input “Taxa do Motorista” se sem audiência motorista
+- Se ficar só um, vira card simples “Taxa de Conversão”
 
-Vou adicionar uma ação direta para abrir a configuração correta:
-- botão/atalho para `Central de Módulos`
-- texto explicando que os vínculos são configurados em:
-  - Catálogo de Modelos
-  - edição do modelo
-  - seção de vínculos com módulos
+**Card “Regra de Resgate”:**
+- Mantém visível apenas se houver `redemption_rules` ou `redemption_qr` no plano
 
-Isso reduz a sensação de travamento.
+**Card `<CardPontuacaoMotorista />` (passageiro/motorista):**
+- Só renderiza se houver audiência motorista no plano
 
-## 5. Melhorar o template para não parecer “quebrado”
-Arquivo: `src/features/produtos_comerciais/constants/constantes_template.ts` e fluxo do wizard
+### 3. Banner informativo no topo
+Adicionar no header de “Editar Cidade” um chip discreto:
+> 🎯 Plano: **Engajamento Motorista Premium** — apenas funcionalidades incluídas estão visíveis abaixo
 
-Sem auto-marcar IDs fixos, vou melhorar a comunicação do template:
-- indicar quais tipos de modelos ele espera
-- informar que ele depende de modelos já configurados com módulos
-- exibir uma observação específica quando o template for de motorista e os modelos selecionados estiverem zerados
+Com link para a página de Assinatura caso o usuário queira mudar de plano.
+
+### 4. Defesa no save
+No `handleSave`:
+- Se `scoring_model` salvo for incompatível com o plano (ex: `BOTH` sem audiência cliente), forçar normalização para o valor compatível antes de gravar
+- Mesma defesa para os flags de módulos: zerar flags de módulos que não estão no plano
+
+### 5. Página `BrandBranchesPage.tsx` (lista)
+Pequeno ajuste: o badge de “Cliente/Misto” na lista também não deve aparecer se a marca não tem audiência cliente — usa o mesmo `useProductScope`.
+
+## O que NÃO vou mexer
+
+- ❌ Banco, RLS, edge functions, RPC `resolve_active_modules`
+- ❌ Lógica de pontuação na `machine-webhook` (já respeita `scoring_model` da branch)
+- ❌ Wizard de Produtos Comerciais (Root)
+- ❌ Outras telas de configuração que não sejam “Editar Cidade” / “Cidades”
 
 ## Resultado esperado
 
-Depois da correção:
-
-- no passo 2, você já enxerga quais modelos estão utilizáveis e quais estão “sem módulos”
-- se escolher um modelo vazio, o sistema te avisa antes
-- no passo 3, a tela explica exatamente por que nada apareceu
-- você terá um caminho claro para corrigir a origem do problema na Central de Módulos
-
-## Arquivos previstos
-
-- `src/features/produtos_comerciais/components/passo_modelos.tsx`
-- `src/features/produtos_comerciais/components/passo_modulos.tsx`
-- `src/features/produtos_comerciais/components/wizard_produto.tsx`
-
-Possivelmente também:
-- um pequeno hook/utilitário local da feature para agregar contagem de módulos por modelo, mantendo a organização da feature
-
-## O que não vou mexer
-
-- não vou alterar banco nem RLS
-- não vou mudar a lógica central de negócio
-- não vou inventar seleção automática perigosa de módulos
-- não vou mexer em `src/integrations/supabase/client.ts`
-
-## Risco
-
-Baixo. É principalmente melhoria de UX, validação e transparência do fluxo.
-
-## Efeito prático
-
-Você conseguirá distinguir claramente entre:
-- “não selecionei direito”
-- “selecionei um modelo vazio”
-- “esse modelo ainda precisa ser configurado na Central de Módulos”
+Para a empresa **Drive Engajamento** (produ
