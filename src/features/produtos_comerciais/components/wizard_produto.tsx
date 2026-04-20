@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, ChevronLeft, ChevronRight, Save, AlertCircle } from "lucide-react";
@@ -41,6 +43,21 @@ export default function WizardProduto({ open, onOpenChange, planKey, initialDraf
   const [draft, setDraft] = useState<ProdutoComercialDraft>(EMPTY_DRAFT);
   const [savedOnce, setSavedOnce] = useState(false);
 
+  // Conta módulos vinculados aos modelos selecionados (para validar passo 2 -> 3)
+  const { data: vinculos } = useQuery({
+    queryKey: ["pc-wizard-link-count", draft.business_model_ids],
+    enabled: draft.business_model_ids.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("business_model_modules")
+        .select("business_model_id")
+        .in("business_model_id", draft.business_model_ids);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const totalModulosVinculados = useMemo(() => vinculos?.length ?? 0, [vinculos]);
+
   useEffect(() => {
     if (open) {
       setStepIdx(0);
@@ -62,6 +79,9 @@ export default function WizardProduto({ open, onOpenChange, planKey, initialDraf
     }
     if (stepIdx === 1 && draft.business_model_ids.length === 0) {
       return "Selecione ao menos 1 modelo de negócio antes de avançar para Funcionalidades.";
+    }
+    if (stepIdx === 1 && draft.business_model_ids.length > 0 && totalModulosVinculados === 0) {
+      return "Os modelos selecionados não têm módulos configurados. Abra a Central de Módulos para vincular funcionalidades ou escolha outros modelos.";
     }
     return null;
   };
