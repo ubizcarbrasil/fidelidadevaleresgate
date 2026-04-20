@@ -295,9 +295,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Calculate trial expiration (30 days from now)
+    // Calculate trial expiration (trial_days do produto, default 30)
     const trialExpiresAt = new Date();
-    trialExpiresAt.setDate(trialExpiresAt.getDate() + 30);
+    trialExpiresAt.setDate(trialExpiresAt.getDate() + resolvedTrialDays);
 
     // ─── Helper: get or create user ─────────────────────────────
     const getOrCreateUser = async (email: string, password: string, fullName: string) => {
@@ -338,6 +338,7 @@ Deno.serve(async (req) => {
         brand_settings_json: brandSettings,
         trial_expires_at: trialExpiresAt.toISOString(),
         subscription_status: "TRIAL",
+        subscription_plan: resolvedPlanKey,
       }).select("id").single();
     if (brandErr) throw new Error(`Brand: ${brandErr.message}`);
 
@@ -374,11 +375,11 @@ Deno.serve(async (req) => {
       tenant_id: tenant.id,
     });
 
-    // ─── 7. Enable modules based on "free" plan template ────────
+    // ─── 7. Enable modules based on selected plan template ──────
     const { data: planTemplates } = await supabaseAdmin
       .from("plan_module_templates")
       .select("module_definition_id, is_enabled")
-      .eq("plan_key", "free");
+      .eq("plan_key", resolvedPlanKey);
 
     if (planTemplates && planTemplates.length > 0) {
       // Use plan template to determine which modules to enable
@@ -408,6 +409,24 @@ Deno.serve(async (req) => {
           })),
         );
       }
+    }
+
+    // ─── 7a. Enable business models from plan_business_models ───
+    const { data: planBMs } = await supabaseAdmin
+      .from("plan_business_models")
+      .select("business_model_id, is_included")
+      .eq("plan_key", resolvedPlanKey)
+      .eq("is_included", true);
+
+    if (planBMs && planBMs.length > 0) {
+      await supabaseAdmin.from("brand_business_models").insert(
+        planBMs.map((bm: any) => ({
+          brand_id: brand.id,
+          business_model_id: bm.business_model_id,
+          is_enabled: true,
+          activated_at: new Date().toISOString(),
+        })),
+      );
     }
 
     // ─── 7b. Seed default tier points rules (1pt per R$1) ──────
