@@ -1403,6 +1403,34 @@ export const gruposManuais: GrupoManual[] = [
         ],
         rota: "/admin/central-modulos"
       },
+      {
+        id: "central-modulos-addons-vendidos",
+        titulo: "Add-ons Vendidos — Vender Modelos Avulsos",
+        descricao: "Add-ons permitem vender qualquer Modelo de Negócio individualmente, fora do pacote do Plano contratado pelo empreendedor. É a camada comercial que complementa os Planos: a marca recebe os Modelos do Plano + os Modelos comprados avulsos, sem distinção visual no painel dela. Ideal para upsell pontual, cortesias, trials e contratos personalizados.",
+        comoAtivar: "Acesso Root Admin. Disponível em 'Central de Módulos' → aba 'Modelos de Negócio' → sub-aba 'Add-ons Vendidos'.",
+        passos: [
+          "Antes de tudo, abra a sub-aba 'Catálogo de Modelos', edite o Modelo desejado e marque 'Vendável como add-on', preenchendo o preço mensal e (opcional) o preço anual.",
+          "Volte para a sub-aba 'Add-ons Vendidos' e clique em 'Conceder Add-on'.",
+          "Selecione a Marca (empreendedor) que receberá o add-on.",
+          "Selecione o Modelo de Negócio a ser concedido (apenas modelos marcados como vendáveis aparecem).",
+          "Escolha o ciclo de cobrança: Mensal ou Anual.",
+          "Confirme o preço — o valor sugerido vem do editor do Modelo, mas é editável por concessão.",
+          "Defina a data de expiração (opcional). Deixe em branco para vigência manual sem prazo.",
+          "Adicione notas internas (motivo: cortesia, trial, vendido, contrato especial, etc.).",
+          "Confirme — o add-on entra como 'active' e a marca passa a ver o Modelo liberado imediatamente."
+        ],
+        dicas: [
+          "A marca NÃO distingue Plano vs Add-on no painel dela — apenas vê um badge discreto 'Add-on' no card do Modelo.",
+          "Use a coluna 'Status' para acompanhar add-ons ativos, cancelados ou em atraso (past_due).",
+          "Cancelar suspende o add-on (a marca perde acesso) mas preserva o histórico para auditoria.",
+          "Remover apaga o registro completamente — use apenas em casos de erro de cadastro.",
+          "Preço anual é editável por concessão — útil para descontos de fidelidade ou contratos especiais.",
+          "Data de expiração vazia = vigência manual: você decide quando cancelar.",
+          "Toda concessão é registrada com o ID do Root Admin que executou a ação.",
+          "Para cobrança automática via Stripe, aguarde sub-fases futuras — hoje a concessão é manual."
+        ],
+        rota: "/admin/central-modulos"
+      },
     ],
   },
   {
