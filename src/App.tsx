@@ -341,7 +341,12 @@ const App = () => (
             {/* MountSignal now in BootShell (main.tsx) for instant overlay dismissal */}
             <Toaster />
             <Sonner />
-            <BrowserRouter>
+            <BrowserRouter
+              future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true,
+              }}
+            >
               <AppContent />
             </BrowserRouter>
             <PWABanners />

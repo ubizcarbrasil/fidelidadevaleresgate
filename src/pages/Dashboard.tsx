@@ -129,6 +129,49 @@ function useRealtimeRefresh() {
   }, [queryClient]);
 }
 
+/** Componente-gate que registra o realtime apenas quando habilitado (após idle). */
+function RealtimeRefreshGate({ enabled }: { enabled: boolean }) {
+  const queryClient = useQueryClient();
+  const pendingKeys = useRef<Set<string>>(new Set());
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!enabled) return;
+    const flush = () => {
+      const keys = Array.from(pendingKeys.current);
+      pendingKeys.current.clear();
+      timerRef.current = null;
+      startTransition(() => {
+        keys.forEach((k) => queryClient.invalidateQueries({ queryKey: [k] }));
+      });
+    };
+    const enqueue = (...queryKeys: string[]) => {
+      queryKeys.forEach((k) => pendingKeys.current.add(k));
+      if (!timerRef.current) timerRef.current = setTimeout(flush, 120);
+    };
+    const channel = supabase
+      .channel("dashboard-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "redemptions" }, () => {
+        enqueue("dashboard-kpis", "redemptions-chart");
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "machine_rides" }, () => {
+        enqueue("dashboard-kpis", "earnings-chart", "ranking-pontuacao");
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "customers" }, () => {
+        enqueue("dashboard-kpis");
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "offers" }, () => {
+        enqueue("dashboard-kpis");
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [enabled, queryClient]);
+  return null;
+}
+
 /* ── Dashboard Header ── */
 function DashboardHeader({ consoleScope, scopeLabels, isCityScopedView, viewingBranchId }: { consoleScope: string; scopeLabels: Record<string, string>; isCityScopedView: boolean; viewingBranchId: string | null }) {
   const { name: brandName, logoUrl: brandLogoUrl } = useBrandInfo();
@@ -184,7 +227,15 @@ export default function Dashboard() {
   const isViewingBranch = !!viewingBranchId;
   const isCityScopedView = consoleScope === "BRANCH" || isViewingBranch;
 
-  useRealtimeRefresh();
+  // Realtime adiado para idle — não compete com boot inicial das KPIs
+  const [realtimeReady, setRealtimeReady] = useState(false);
+  useEffect(() => {
+    const ric = (window as any).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1000));
+    const cancelRic = (window as any).cancelIdleCallback ?? clearTimeout;
+    const id = ric(() => setRealtimeReady(true));
+    return () => { try { cancelRic(id); } catch { /* noop */ } };
+  }, []);
+  RealtimeRefreshGate({ enabled: realtimeReady });
 
   const isRoot = consoleScope === "ROOT";
   const showTenant = ["ROOT", "TENANT"].includes(consoleScope);
