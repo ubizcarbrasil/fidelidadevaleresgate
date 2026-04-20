@@ -34,6 +34,10 @@ import WizardProduto from "./components/wizard_produto";
 import { ManualModal } from "@/compartilhados/components/manual_modal";
 import { TEMPLATE_VALE_RESGATE_MOTORISTA_PREMIUM } from "./constants/constantes_template";
 import type { ProdutoComercialDraft } from "./types/tipos_produto";
+import {
+  montarLinkLanding,
+  montarLinkTrial,
+} from "./utils/utilitarios_link_publico";
 
 export default function PaginaProdutosComerciais() {
   const { data: produtos, isLoading } = useProdutosComerciais();
@@ -60,10 +64,8 @@ export default function PaginaProdutosComerciais() {
     setWizardOpen(true);
   };
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-
   const copyTrial = (slug: string) => {
-    navigator.clipboard.writeText(`${origin}/trial?plan=${slug}`);
+    navigator.clipboard.writeText(montarLinkTrial(slug));
     toast.success("Link de trial copiado!");
   };
 
@@ -182,7 +184,7 @@ export default function PaginaProdutosComerciais() {
                     size="icon"
                     variant="outline"
                     title="Abrir landing"
-                    onClick={() => window.open(`${origin}/p/produto/${p.slug}`, "_blank")}
+                    onClick={() => window.open(montarLinkLanding(p.slug), "_blank")}
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                   </Button>

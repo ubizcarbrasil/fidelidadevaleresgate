@@ -6,6 +6,10 @@ import { Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import PreviewLanding from "./preview_landing";
 import type { ProdutoComercialDraft } from "../types/tipos_produto";
+import {
+  montarLinkLanding,
+  montarLinkTrial,
+} from "../utils/utilitarios_link_publico";
 
 interface Props {
   draft: ProdutoComercialDraft;
@@ -13,9 +17,8 @@ interface Props {
 }
 
 export default function PassoRevisao({ draft, saved }: Props) {
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const landingUrl = `${origin}/p/produto/${draft.slug}`;
-  const trialUrl = `${origin}/trial?plan=${draft.slug}`;
+  const landingUrl = montarLinkLanding(draft.slug);
+  const trialUrl = montarLinkTrial(draft.slug);
   const [copied, setCopied] = useState<string | null>(null);
 
   const copy = (text: string, label: string) => {
