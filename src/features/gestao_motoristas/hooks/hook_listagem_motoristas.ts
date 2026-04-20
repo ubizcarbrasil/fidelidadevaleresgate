@@ -76,10 +76,10 @@ export function useListagemMotoristas(params: ParametrosListagem) {
         // Limite alto para suportar bases grandes; aplicado apenas como pré-filtro
         const { data: profilesIds, error: profErr } = await qProfiles.limit(10000);
         if (profErr) throw profErr;
-        customerIdsFiltrados = (profilesIds || []).map((p: any) => p.customer_id);
+        customerIdsFiltrados = (profilesIds || []).map((p: any) => p.customer_id as string);
 
         // Se filtro retornou vazio, já podemos encerrar
-        if (customerIdsFiltrados.length === 0) {
+        if (customerIdsFiltrados!.length === 0) {
           return {
             motoristas: [],
             total: 0,
