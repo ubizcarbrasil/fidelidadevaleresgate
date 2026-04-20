@@ -787,6 +787,7 @@ export default function BrandBranchForm() {
       )}
 
       {/* Card 1 — Regra de Resgate (por cidade) */}
+      {podeRegrasResgate && (
       <Card className="rounded-xl">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -849,21 +850,25 @@ export default function BrandBranchForm() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Card 2 — Conversão por Público */}
+      {(audienciaMotorista || audienciaCliente) && (
       <Card className="rounded-xl">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <ArrowLeftRight className="h-4 w-4 text-primary" />
-            Conversão de Resgate por Público
+            {audienciaMotorista && audienciaCliente ? "Conversão de Resgate por Público" : "Taxa de Conversão"}
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Taxas de conversão diferentes para motoristas e passageiros (apenas nesta cidade).
+            {audienciaMotorista && audienciaCliente
+              ? "Taxas de conversão diferentes para motoristas e passageiros (apenas nesta cidade)."
+              : "Taxa de conversão (apenas nesta cidade)."}
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
+            {audienciaMotorista && (<div className="space-y-1.5">
               <Label className="text-xs flex items-center gap-1.5">
                 <Car className="h-3.5 w-3.5 text-blue-500" />
                 Taxa do Motorista (pts/R$)
@@ -880,8 +885,8 @@ export default function BrandBranchForm() {
                   Produto de R$ 100 = {Math.ceil(100 * pointsPerRealDriver).toLocaleString("pt-BR")} pts
                 </p>
               )}
-            </div>
-            <div className="space-y-1.5">
+            </div>)}
+            {audienciaCliente && (<div className="space-y-1.5">
               <Label className="text-xs flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5 text-emerald-500" />
                 Taxa do Passageiro (pts/R$)
@@ -898,13 +903,14 @@ export default function BrandBranchForm() {
                   Produto de R$ 100 = {Math.ceil(100 * pointsPerRealCustomer).toLocaleString("pt-BR")} pts
                 </p>
               )}
-            </div>
+            </div>)}
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Card 3 — Pontuação do Motorista */}
-      {isEdit && id && (
+      {isEdit && id && audienciaMotorista && (
         <CardPontuacaoMotorista
           brandId={currentBrandId ?? null}
           branchId={id}
