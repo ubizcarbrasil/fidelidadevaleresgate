@@ -29,12 +29,21 @@ export default function PassoIdentificacao({ draft, onChange }: Props) {
   );
   const [precoAnualStr, setPrecoAnualStr] = useState(() => centsToStr(draft.price_yearly_cents));
 
-  // Ressincroniza quando o draft muda de fora (ex: trocar de produto, template)
+  // Foco controla se devemos respeitar a digitação do usuário (não sobrescrever)
+  const [mensalFocado, setMensalFocado] = useState(false);
+  const [anualFocado, setAnualFocado] = useState(false);
+
+  // Sincronia bidirecional: draft.price_cents é a fonte de verdade.
+  // Só ressincroniza o input quando NÃO está focado, para não atrapalhar a digitação.
   useEffect(() => {
+    if (mensalFocado) return;
     setPrecoMensalStr(draft.price_cents > 0 ? centsToStr(draft.price_cents) : "");
+  }, [draft.price_cents, mensalFocado]);
+
+  useEffect(() => {
+    if (anualFocado) return;
     setPrecoAnualStr(centsToStr(draft.price_yearly_cents));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft.id]);
+  }, [draft.price_yearly_cents, anualFocado]);
 
   const parseToCents = (raw: string): number => {
     const normalized = raw.replace(/\./g, "").replace(",", ".");
