@@ -1,126 +1,154 @@
 
 
-# Bug: "Informe um preço válido" mesmo com preço preenchido
+# Bug crítico: vazamento de dados entre empresas + audiência errada no produto
 
-## Diagnóstico
+## Diagnóstico (com evidências do banco)
 
-O input mostra `497,00` mas a validação acusa `draft.price_cents <= 0`. O bug está em `passo_identificacao.tsx`:
+### 🔴 Problema 1 — VAZAMENTO DE DADOS ENTRE TENANTS (gravíssimo)
 
-```tsx
-const [precoMensalStr, setPrecoMensalStr] = useState(() =>
-  draft.price_cents > 0 ? centsToStr(draft.price_cents) : "",
-);
+A marca **"Ubiz Resgata"** (sua marca matriz) está vinculada ao domínio `app.valeresgate.com.br` na tabela `brand_domains`:
 
-useEffect(() => {
-  setPrecoMensalStr(draft.price_cents > 0 ? centsToStr(draft.price_cents) : "");
-  setPrecoAnualStr(centsToStr(draft.price_yearly_cents));
-}, [draft.id]);  // ← só ressincroniza quando draft.id muda
+```
+domain                  | brand
+app.valeresgate.com.br  | Ubiz Resgata    ← portal universal apontando para 1 brand específica
 ```
 
-**O que acontece:**
+**Fluxo do bug:**
+1. Empresa "Drive Clientes" foi criada via trial (brand_id = `e1abe772-...`)
+2. Owner dessa empresa faz login em `app.valeresgate.com.br`
+3. `BrandContext.resolveBrandByDomain("app.valeresgate.com.br")` → encontra match em `brand_domains` → retorna **"Ubiz Resgata"** (brand_id = `1dcbe0c0-...`)
+4. `useBrandGuard.currentBrandId` prioriza `brand.id` do contexto sobre os roles do usuário
+5. **Todas as queries** (Cidades, Dashboard, Configurações) filtram por `brand_id = Ubiz Resgata`
+6. Owner da Drive Clientes vê: cidades Araxa/Leme/Olimpia/Ourinhos (que são da Ubiz Resgata), 2.458 motoristas, 22.945 pontos — **todos dados de outra empresa**
 
-1. Usuário abre wizard de criação → `draft.price_cents = 0`, `draft.id = undefined`
-2. `precoMensalStr` inicializa como `""`
-3. Usuário avança até "Landing" e volta para "Identificação" pelo stepper
-4. `PassoIdentificacao` é **remontado** (porque cada passo usa `{stepIdx === 0 && <PassoIdentificacao/>}`)
-5. No remount, `useState(() => draft.price_cents > 0 ? centsToStr(...) : "")` roda com o `draft` atual **— que tem `price_cents = 49700` correto**, então mostra "497,00"
-6. **MAS o usuário pode também ter feito o caminho inverso**: digitou na UI parcialmente, o `setDraft` no pai disparou re-render, e em algumas situações de mobile (toque rápido + perda de foco) o último `onChange` do input não chegou a propagar — então o estado local exibe um valor "viajado" (cacheado pelo navegador no `value` controlado anterior) enquanto `draft.price_cents` continua 0.
+Confirmado no banco: as 4 cidades visíveis na imagem pertencem à Ubiz Resgata, não à Drive Clientes (que tem só 1 cidade própria: Ourinhos-SP).
 
-**Pior ainda — bug confirmado por inspeção:** o estado local string **não é a fonte de verdade**. Se por qualquer motivo o `draft.price_cents` voltar a 0 (re-mount, reset, navegação entre steps com algum spread perdido), o input continua mostrando "497,00" via `precoMensalStr`, mas a validação olha `draft.price_cents` que está zerado. **Os dois ficam dessincronizados** e o usuário não tem como saber.
+### 🔴 Problema 2 — Provisionamento incompleto
 
-Mesma falha no campo de preço anual.
+A brand "Drive Clientes" foi criada, mas no banco está com:
+- `brand_modules` = **0 registros** (deveria ter 24 do produto Cliente Resgata)
+- `brand_business_models` = **0 registros** (deveria ter 4: Achadinho/Pontua/Resgate Pontos/Resgate Cidade — todos audience=`cliente`)
+
+Provavelmente a `provision-trial` falhou parcialmente ou foi criada sem `plan_slug`. Mesmo com isso resolvido pela governança, o módulo de Cliente Resgata **deveria** trazer só funcionalidades de cliente — mas como o BrandContext está apontando para outra brand, o usuário vê o que a Ubiz Resgata tem ativado (motorista).
+
+### 🟡 Problema 3 — `useBrandGuard` ignora os roles do usuário
+
+```ts
+const currentBrandId = useMemo(() => {
+  if (brand) return brand.id;  // ← prioriza domain resolution
+  const brandRole = roles.find(r => r.brand_id);
+  return brandRole?.brand_id || null;
+}, [brand, roles]);
+```
+
+Mesmo se `BrandContext` for corrigido, a lógica está frágil: se o admin de uma marca cair em domínio errado, `brand.id` ganha sempre. Precisa **validar** que o `brand.id` resolvido bate com algum role do usuário.
 
 ## Correção
 
-### 1. Eliminar a dessincronização (`passo_identificacao.tsx`)
+### 1. `BrandContext.tsx` — portal universal NÃO resolve brand pelo hostname
 
-Tornar `draft.price_cents` a única fonte de verdade. O estado local string é mantido só para preservar o que o usuário está digitando (vírgula, parcial), mas com **garantia de sincronia bidirecional**:
-
-- Sempre que `draft.price_cents` mudar (não só `draft.id`), reformatar `precoMensalStr` se ele não corresponder ao valor do draft (a menos que o input esteja focado, para não atrapalhar a digitação).
-- Mesmo tratamento para `price_yearly_cents`.
-
-Implementação:
-
-```tsx
-const [mensalFocado, setMensalFocado] = useState(false);
-const [anualFocado, setAnualFocado] = useState(false);
-
-// Re-sync quando o valor do draft mudar, EXCETO se o usuário está digitando
-useEffect(() => {
-  if (mensalFocado) return;
-  setPrecoMensalStr(draft.price_cents > 0 ? centsToStr(draft.price_cents) : "");
-}, [draft.price_cents, mensalFocado]);
-
-useEffect(() => {
-  if (anualFocado) return;
-  setPrecoAnualStr(centsToStr(draft.price_yearly_cents));
-}, [draft.price_yearly_cents, anualFocado]);
-```
-
-E nos inputs:
-```tsx
-<Input
-  ...
-  onFocus={() => setMensalFocado(true)}
-  onBlur={() => {
-    setMensalFocado(false);
-    if (precoMensalStr.trim() === "") return;
-    setPrecoMensalStr(centsToStr(parseToCents(precoMensalStr)));
-  }}
-/>
-```
-
-Resultado: input e draft **nunca ficam dessincronizados**. Se draft volta a 0, input mostra vazio. Se o usuário digitou "497,00", draft tem 49700 garantido.
-
-### 2. Mensagem de erro mais útil
-
-Mudar a mensagem genérica `"Informe um preço válido"` para mensagens específicas em `wizard_produto.tsx`:
+Adicionar `app.valeresgate.com.br` à lista de hostnames que pulam resolução por domínio (igual `localhost`/`lovable.app`):
 
 ```ts
-if (draft.price_cents <= 0) {
-  return "O preço mensal precisa ser maior que zero. Verifique o campo no passo de Identificação.";
+const PORTAL_HOSTNAMES = ["app.valeresgate.com.br"];
+
+const isLocal = hostname === "localhost"
+  || hostname.includes("lovable.app")
+  || hostname.includes("lovableproject.com")
+  || hostname.startsWith("root.")
+  || PORTAL_HOSTNAMES.includes(hostname);  // ← portal universal
+
+if (isLocal) {
+  return; // brand fica null, useBrandGuard cai pro role do usuário
 }
 ```
 
-### 3. (Opcional) Defesa adicional — `onBlur` sempre commita o valor
+Resultado: no portal `app.valeresgate.com.br`, o `BrandContext.brand` fica `null` para usuários autenticados (exceto via `?brandId=`), e o `useBrandGuard` resolve pelo role do usuário logado — cada admin vê só a SUA marca.
 
-No `onBlur` do input, sempre chamar `onChange({ price_cents: parseToCents(precoMensalStr) })` mesmo que o valor esteja vazio (passa 0 explícito). Isso garante que o draft reflete o input no momento que o usuário sai do campo, antes de clicar em "Salvar".
+### 2. `useBrandGuard.ts` — validar consistência brand vs roles (defesa em profundidade)
 
-```tsx
-onBlur={() => {
-  setMensalFocado(false);
-  const cents = parseToCents(precoMensalStr);
-  onChange({ price_cents: cents });
-  if (precoMensalStr.trim() !== "") {
-    setPrecoMensalStr(centsToStr(cents));
+Quando há `brand` no contexto e o usuário NÃO é root admin, validar se ele tem role naquela brand. Se não tiver, ignorar o brand do contexto e usar o role:
+
+```ts
+const currentBrandId = useMemo(() => {
+  if (brand) {
+    if (isRootAdmin) return brand.id;
+    // Não-root: brand do contexto SÓ vale se o usuário tem role naquela brand
+    const hasRoleInBrand = roles.some(r => r.brand_id === brand.id);
+    if (hasRoleInBrand) return brand.id;
   }
-}}
+  // Fallback: usar brand_id do role do usuário
+  const brandRole = roles.find(r => r.brand_id);
+  return brandRole?.brand_id || null;
+}, [brand, roles, isRootAdmin]);
 ```
+
+Aplicar a mesma lógica para `currentBranchId`.
+
+### 3. Carregar `branches` no `BrandContext` quando brand vier de role (não só de domain)
+
+Hoje o `useEffect` que carrega branches depende de `brand` estar setado pelo `BrandContext`. Quando o brand sai do role (portal universal), precisamos buscar as branches da brand correta. Adicionar fallback:
+
+```ts
+useEffect(() => {
+  if (brand) { /* já carrega */ return; }
+  // Sem brand resolvido → tenta carregar via role do usuário (portal universal)
+  if (!user) return;
+  // buscar role do usuário e carregar a brand + branches correspondentes
+}, [user, brand]);
+```
+
+Estender `BrandProvider` para resolver brand a partir do role do usuário quando estiver em portal universal e autenticado.
+
+### 4. Corrigir provisionamento da brand "Drive Clientes" (data fix)
+
+Migration que:
+- Insere os 24 `brand_modules` baseados em `plan_module_templates` para `plan_key='clienteresgata'`
+- Insere os 4 `brand_business_models` baseados em `plan_business_models` para `plan_key='clienteresgata'`
+- Define `branches.scoring_model = 'PASSENGER_ONLY'` para a branch Ourinhos-SP da Drive Clientes (porque o produto é só de cliente)
+
+### 5. `provision-trial` — definir `scoring_model` da branch baseado nos business_models do produto
+
+Quando criar a branch (passo 4 da função), inferir o `scoring_model` a partir das `audience` dos business_models do produto:
+- Só `motorista` → `DRIVER_ONLY`
+- Só `cliente` → `PASSENGER_ONLY`
+- Mistos ou nenhum → `BOTH`
+
+Garante que produtos novos vendidos já criem a cidade com a configuração correta.
 
 ## Arquivos modificados
 
-1. `src/features/produtos_comerciais/components/passo_identificacao.tsx` — sincronização robusta dos dois campos de preço (mensal + anual) com proteção de foco
-2. `src/features/produtos_comerciais/components/wizard_produto.tsx` — mensagem de erro mais clara
+1. `src/contexts/BrandContext.tsx` — pular resolução de domínio para portal universal + carregar brand via role quando aplicável
+2. `src/hooks/useBrandGuard.ts` — validar brand contra roles do usuário
+3. `supabase/functions/provision-trial/index.ts` — setar `scoring_model` da branch baseado nas audiences dos business_models
+4. **Nova migration** — corrigir dados da brand "Drive Clientes" (ativar módulos + business_models + scoring_model da branch Ourinhos)
+5. **Migration de cleanup** — desvincular `app.valeresgate.com.br` da brand "Ubiz Resgata" em `brand_domains` (ou marcar como `is_primary=false`), porque o portal universal não deve apontar para nenhuma brand
 
 ## O que NÃO vou mexer
 
-- ❌ Banco / RLS / edge functions
-- ❌ Outros passos do wizard
-- ❌ Tipos / `EMPTY_DRAFT`
-- ❌ Hook de salvamento
+- ❌ Outras brands existentes (Drivetu, Meu Mototaxi, Ubiz Car, Drive engajamento) — funcionam com seus subdomínios próprios
+- ❌ Lógica de white-label em domínios próprios (ex: `drive-clientes.valeresgate.com`) — continua resolvendo brand pelo domínio
+- ❌ RLS policies — o problema não é falta de RLS, é o cliente passando `brand_id` errado nas queries (RLS confiou no `auth.uid()` mas o admin tem permissão em ambas se for cross-tenant — não é o caso aqui, mas vale revisar depois)
+- ❌ Tela de listagem de produtos / wizard de criação
 
 ## Resultado esperado
 
-- Digitar "497,00" → `draft.price_cents = 49700` sempre (nunca dessincroniza)
-- Sair do campo (blur) commita o valor explicitamente
-- Voltar de outros passos não dessincroniza o input
-- Se ainda houver erro de validação, mensagem aponta exatamente o campo
+- Owner da Drive Clientes loga em `app.valeresgate.com.br` → vê SÓ as suas próprias cidades, dashboard e dados (não da Ubiz Resgata)
+- Brand "Drive Clientes" passa a ter os 24 módulos e 4 business_models de cliente ativos
+- Branch de Ourinhos-SP fica como `PASSENGER_ONLY` → UI esconde elementos de motorista (regras já existentes em `business-model-dynamic-visibility`)
+- Próximas brands criadas via produtos comerciais já nascem com `scoring_model` correto baseado na audiência do produto
+- Defesa em profundidade no `useBrandGuard`: mesmo se algum bug futuro tentar inserir brand errada no contexto, queries só usam brand onde o usuário tem role
 
 ## Risco
 
-Baixo. Mudanças confinadas em 2 arquivos, sem alterar contrato externo. Build esperado limpo.
+**Médio.** Mudança no `BrandContext` afeta a resolução de brand em produção:
+- ✅ Domínios próprios (drive-clientes.valeresgate.com etc) continuam resolvendo igual
+- ⚠️ Portal `app.valeresgate.com.br` muda comportamento: brand sai do domain, vira role-based
+- ⚠️ A migration de data fix toca a brand do usuário (Drive Clientes) — vou revisar antes de aplicar
+
+Mitigação: testar fluxo após deploy logando como admin da Drive Clientes e admin da Ubiz Resgata para confirmar que cada um vê só os seus dados.
 
 ## Estimativa
 
-~3 min.
+~12 min (3 arquivos de código + 2 migrations + verificação).
 
