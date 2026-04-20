@@ -292,19 +292,34 @@ export default function ProdutosResgatePage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Produtos de Resgate</h2>
-          <p className="text-sm text-muted-foreground">Gerencie achadinhos disponíveis para resgate com pontos</p>
+          <p className="text-sm text-muted-foreground">
+            {achadinhosAtivo
+              ? "Gerencie achadinhos disponíveis para resgate com pontos"
+              : "Crie e gerencie produtos da sua vitrine de resgate"}
+          </p>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <BotaoRecalcularPontos />
-          <Button onClick={() => setModalAberto(true)} className="flex-1 sm:flex-initial">
+          <Button
+            onClick={() => (achadinhosAtivo ? setModalAberto(true) : setModalManualAberto(true))}
+            className="flex-1 sm:flex-initial"
+          >
             <Plus className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">Adicionar Produtos</span>
-            <span className="sm:hidden">Adicionar</span>
+            <span className="hidden sm:inline">
+              {achadinhosAtivo ? "Adicionar Produtos" : "Criar Produto"}
+            </span>
+            <span className="sm:hidden">{achadinhosAtivo ? "Adicionar" : "Criar"}</span>
           </Button>
         </div>
       </div>
 
-      <ModalAdicionarResgatavel aberto={modalAberto} onFechar={() => setModalAberto(false)} />
+      {achadinhosAtivo && (
+        <ModalAdicionarResgatavel aberto={modalAberto} onFechar={() => setModalAberto(false)} />
+      )}
+      <ModalCriarProdutoManual
+        aberto={modalManualAberto}
+        onFechar={() => setModalManualAberto(false)}
+      />
       <ModalEditarResgatavel
         produto={produtoEditando}
         aberto={!!produtoEditando}
@@ -319,17 +334,30 @@ export default function ProdutosResgatePage() {
               <Package className="h-8 w-8 text-muted-foreground" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-lg font-semibold">Nenhum produto resgatável</h3>
+              <h3 className="text-lg font-semibold">
+                {achadinhosAtivo
+                  ? "Nenhum produto resgatável"
+                  : "Crie produtos para sua vitrine de resgate"}
+              </h3>
               <p className="text-sm text-muted-foreground max-w-sm">
-                Ative produtos para resgate na página de Achadinhos usando o filtro "Não resgatáveis".
+                {achadinhosAtivo
+                  ? 'Ative produtos para resgate na página de Achadinhos usando o filtro "Não resgatáveis".'
+                  : "Cadastre manualmente os produtos que seus motoristas e clientes poderão resgatar com pontos."}
               </p>
             </div>
-            <Button asChild>
-              <Link to="/affiliate-deals">
-                Ir para Achadinhos
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </Link>
-            </Button>
+            {achadinhosAtivo ? (
+              <Button asChild>
+                <Link to="/affiliate-deals">
+                  Ir para Achadinhos
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Link>
+              </Button>
+            ) : (
+              <Button onClick={() => setModalManualAberto(true)}>
+                <Plus className="h-4 w-4 mr-1" />
+                Criar Primeiro Produto
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}
