@@ -1433,6 +1433,7 @@ export const gruposManuais: GrupoManual[] = [
           "Para cobrança automática via Stripe, aguarde sub-fases futuras — hoje a concessão é manual."
         ],
         rota: "/admin/central-modulos"
+      },
       {
         id: "produtos-comerciais-bundles-vendaveis",
         titulo: "Produtos Comerciais — Montar Bundle Vendável com Landing Page",
