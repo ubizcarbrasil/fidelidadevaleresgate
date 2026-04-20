@@ -1,92 +1,78 @@
 
 
-# Status Mobile/PWA — O que falta antes de publicar
+# Diagnóstico — Erro "removeChild" ao abrir Motorista no celular
 
-## ✅ Já está pronto (passe anterior)
-- Shell global (`AppLayout.tsx`) com topbar mobile, safe-areas e título dinâmico
-- Tela `/install` com instruções iOS/Android
-- Banners de instalar/atualizar PWA
-- `index.css` com utilitários `pwa-safe-*`, touch targets e `tabs-scroll-mobile`
-- Ficha do motorista (`DriverDetailSheet`) com abas roláveis
-- Modal de importação de motoristas 100% navegável no celular
-- Página de Gestão de Motoristas
-- Aba de Configurações do Duelo (5 sub-abas) — já foi feita pensando em mobile
+## O que está acontecendo
 
-## ⚠️ O que ainda NÃO está adaptado (verificado agora no código)
+A tela de erro que você fotografou **é o `ErrorBoundary`** do app sendo acionado pelo erro:
 
-Pesquisei o repositório e encontrei **43 páginas administrativas com grids densos** (`grid-cols-3/4/5/6` sem breakpoint mobile) e **13 páginas com tabelas largas** que vão estourar no celular. As mais críticas:
+```
+Failed to execute 'removeChild' on 'Node':
+The node to be removed is not a child of this node.
+```
 
-| Página | Problema |
+Esse erro NÃO é do seu código diretamente — é o React tentando desmontar um nó do DOM que **outro código já removeu/moveu**. As 3 causas mais prováveis no seu cenário são:
+
+### 1. PWA com bundle antigo em cache (causa mais provável)
+Você fez muitas publicações seguidas (mobile pass 1, duelo, mobile pass 2). O **service worker** instalado no celular do usuário está servindo uma mistura de:
+- HTML/JS novo (recém-publicado)
+- chunks antigos em cache
+
+Quando o React tenta hidratar uma árvore montada por um chunk e desmontada por outro, dá exatamente esse erro.
+
+### 2. Conflito de Portal do Radix Sheet/Dialog
+Em `DriverDetailSheet.tsx`, o `<Sheet>` fica **sempre montado** (`open={!!driver}`), e o conteúdo só renderiza quando `driver` existe. Combinado com a nova classe `tabs-scroll-mobile -mx-1 px-1` (que altera o layout dentro de um portal animado), o Radix Portal pode tentar remover um filho que a animação já desmontou.
+
+### 3. Classe Tailwind inexistente (`xs:`)
+Em `DriverManagementPage.tsx` linha 132 tem `hidden xs:inline sm:inline` — `xs` não existe no Tailwind por padrão, vira ruído (não trava sozinho).
+
+## O que vou corrigir
+
+### Correção 1 — Forçar reset agressivo do PWA (resolve 90% do caso)
+- Em `pwaRecovery.ts`: adicionar `bumpedVersion` checagem por hash de build
+- Em `App.tsx`: detectar erro `removeChild` globalmente e auto-disparar `recoverFromChunkError()` (limpa SW + cache + reload), sem o usuário precisar clicar em nada
+- Em `ErrorBoundary.tsx`: tratar erros `removeChild`/`insertBefore`/`Node` como erro de cache (mesma tela amigável do `isChunkError`, com botão "Recarregar app")
+- Atualizar a versão do service worker em `vite.config.ts` para invalidar todos os caches existentes nos celulares
+
+### Correção 2 — Hardening do `DriverDetailSheet`
+- Mudar de `<Sheet open={!!driver}>` sempre montado para **renderização condicional** (`{driver && <Sheet open ...>}`), evitando que o Radix mantenha um portal vazio que conflita com animação mobile
+- Garantir `key={driver.id}` no `Sheet` para o React tratar trocas de motorista como remontagem limpa
+- Mover o `tabs-scroll-mobile` para um `div` interno fora do `TabsList` para não competir com o Radix
+
+### Correção 3 — Limpeza
+- Remover `xs:inline` (classe inexistente) → trocar por `sm:inline`
+- Aplicar o mesmo padrão de Sheet defensivo no `ManualDriverScoringDialog` quando aberto via mobile
+
+### Correção 4 — Diagnóstico permanente
+- Adicionar `reportError` no listener global de `window.error` para capturar `removeChild` futuros e enviar pro Sentry com a versão do bundle, pra você ver no painel se voltar a acontecer
+
+## Arquivos editados
+
+| Arquivo | Mudança |
 |---|---|
-| `Dashboard.tsx` | KPIs e gráficos podem cortar no mobile |
-| `OffersPage.tsx` | Formulário com `grid-cols-3` sem fallback |
-| `ReportsPage.tsx` | 4 tabelas largas com `overflow-x-auto` mas controles apertados |
-| `CrmDashboardPage.tsx` | `grid-cols-5` em "ações críticas" |
-| `CrmCampaignsPage.tsx` / `CrmAudiencesPage.tsx` | Formulários `grid-cols-3` fixos |
-| `Branches.tsx` / `BrandBranchesPage.tsx` | Listagens de cidades com tabelas |
-| `Customers.tsx` / `Stores.tsx` / `Vouchers.tsx` | Listagens densas |
-| `RedemptionsPage.tsx` / `ProductRedemptionOrdersPage.tsx` | Tabelas de resgates |
-| `MachineIntegrationPage.tsx` | TabsList `grid-cols-4` apertada |
-| `IconLibraryPage.tsx`, `BannerManagerPage.tsx`, `WelcomeTourConfigPage.tsx` | Grids visuais densos |
-| `BrandModulesPage.tsx`, `BrandSettingsPage.tsx` | Configurações com cards lado a lado |
-| `GanhaGanha*` (5 páginas) | Dashboards e relatórios |
-| `Crm*` (10+ páginas) | Listagens e formulários |
-| `Driver*Config / Subscription / Plans / Users / AccessHub` | Configurações administrativas |
+| `src/lib/pwaRecovery.ts` | versionamento por build hash + auto-recover hook |
+| `src/App.tsx` | listener global pra erros DOM + dispara recover |
+| `src/components/ErrorBoundary.tsx` | tratar `removeChild` como chunk error |
+| `src/components/driver-management/DriverDetailSheet.tsx` | render condicional + key estável + reorganizar abas |
+| `src/pages/DriverManagementPage.tsx` | remover `xs:inline` |
+| `vite.config.ts` | bump da versão do SW pra invalidar caches mobile existentes |
 
-## 🎯 O que vou fazer na próxima execução
+## Como testar depois (no celular onde deu erro)
 
-**Passe 2 — Adequação mobile das páginas administrativas (sem refazer o shell)**
+1. Publicar
+2. **Fechar completamente o PWA** (não só minimizar — fechar pela lista de apps recentes)
+3. Reabrir o PWA — vai forçar o novo SW a assumir
+4. Acessar Motoristas → tocar no olho de um motorista → ficha deve abrir normal
+5. Trocar de aba (Dados → Pontos → Extrato) sem travar
+6. Fechar a ficha → reabrir outra → sem erro
 
-### Estratégia
-Aplicar 4 padrões repetíveis para não tocar individualmente em cada página:
+## Risco e rollback
 
-1. **Grids densos** → trocar `grid-cols-N` por `grid-cols-1 sm:grid-cols-2 lg:grid-cols-N` em formulários e cards
-2. **Tabelas largas** → garantir wrapper `overflow-x-auto` + reduzir colunas não-essenciais no mobile (`hidden sm:table-cell`)
-3. **TabsList apertadas** → trocar `grid grid-cols-N` por `flex overflow-x-auto` no mobile (padrão já criado)
-4. **Barras de filtros** → empilhar verticalmente no mobile com `flex-col sm:flex-row`
+- **Risco baixo**: nenhuma mudança funcional, só hardening de DOM e cache
+- **Rollback**: reverter os 6 arquivos via histórico
+- **Sem migração SQL, sem edge function nova**
 
-### Páginas que serão tratadas (em ordem de uso real)
-**Prioridade 1 — operação diária**
-- Dashboard
-- OffersPage
-- RedemptionsPage
-- ProductRedemptionOrdersPage
-- CustomersPage
-- Branches / BrandBranchesPage
-- ReportsPage / BranchReportsPage
-- StoresPage
+## Estimativa
 
-**Prioridade 2 — configurações**
-- BrandModulesPage / BrandSettingsPage
-- MachineIntegrationPage
-- PointsRulesPage / DriverPointsRulesPage
-- GamificacaoAdminPage (header e abas externas)
-- VouchersPage / VoucherWizardPage
-
-**Prioridade 3 — CRM e gestão**
-- CrmDashboardPage, CrmCampaignsPage, CrmAudiencesPage, CrmCustomersPage
-- GanhaGanha (5 telas)
-- UsersPage / AccessHubPage / SubscriptionPage
-
-**Prioridade 4 — admin avançado (Root)**
-- IconLibraryPage / BannerManagerPage / WelcomeTourConfigPage
-- PlanModuleTemplatesPage / FeatureFlagsPage / ReleasesPage
-
-### O que NÃO entra
-- Refatoração funcional (apenas responsividade)
-- Páginas públicas/cliente (`/loja/:slug`, `/p/:slug`, `/driver`) — já são mobile-first
-- Tela do parceiro (`/store-panel`) — escopo separado
-
-## 📤 Posso publicar agora?
-
-**Tecnicamente sim, mas não recomendo ainda**:
-
-✅ **Funciona no celular**: login, navegação, ficha de motorista, importação, configuração de duelo, instalação PWA — tudo testado e adaptado.
-
-⚠️ **Mas vai ficar feio em várias páginas**: Dashboard, Ofertas, Relatórios, CRM e Configurações ainda têm grids e tabelas que estouram horizontalmente no celular. Se você abrir essas telas no PWA instalado, vai precisar de scroll lateral e os formulários ficam apertados.
-
-**Recomendação**: rodar o **Passe 2** primeiro (estimativa ~40 min, sem mudança funcional, só CSS responsivo) e **publicar tudo de uma vez**. Assim você instala o PWA e usa qualquer tela com conforto.
-
-## ⏱️ Estimativa
-~40 min para tratar as ~30 páginas prioritárias aplicando os 4 padrões. Sem migração, sem mudança de lógica, sem risco de regressão funcional. `npx tsc --noEmit` esperado limpo.
+~10 min. `npx tsc --noEmit` esperado limpo.
 
