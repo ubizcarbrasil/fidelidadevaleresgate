@@ -31,8 +31,8 @@ const CONSOLE_ICON: Record<ConsoleSidebar, typeof Globe2> = {
 export default function PaginaAuditoriaDuplicacoes() {
   const { relatorios, ocorrencias } = useDuplicacoesMenu();
 
-  const totalRotaExata = relatorios.filter((r) => r.severidade === "rota_exata").length;
-  const totalFuncaoSimilar = relatorios.filter((r) => r.severidade === "funcao_similar").length;
+  const intraConsole = relatorios.filter((r) => r.escopo === "intra_console");
+  const entreConsoles = relatorios.filter((r) => r.escopo === "entre_consoles");
 
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-6xl">
@@ -58,8 +58,9 @@ export default function PaginaAuditoriaDuplicacoes() {
           <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
           <p className="text-xs text-muted-foreground">
             Esta tela é <strong>somente leitura</strong>. Nada é removido automaticamente.
-            Itens duplicados também recebem um selo <Badge variant="outline" className="mx-1 border-warning/40 text-warning text-[10px] py-0">⚠ DUP</Badge>
-            no sidebar para você visualizar in-loco.
+            O selo <Badge variant="outline" className="mx-1 border-warning/40 text-warning text-[10px] py-0">⚠ DUP</Badge>
+            só aparece no sidebar quando o item está duplicado <strong>dentro do mesmo painel</strong>.
+            Itens compartilhados entre painéis diferentes (Root, Empreendedor, Cidade) são esperados pela arquitetura SaaS.
           </p>
         </CardContent>
       </Card>
@@ -71,12 +72,18 @@ export default function PaginaAuditoriaDuplicacoes() {
           <CardContent><p className="text-3xl font-bold">{ocorrencias.length}</p></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground uppercase">Rotas Duplicadas</CardTitle></CardHeader>
-          <CardContent><p className="text-3xl font-bold text-destructive">{totalRotaExata}</p></CardContent>
+          <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground uppercase">No Mesmo Painel</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-destructive">{intraConsole.length}</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Requer revisão</p>
+          </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground uppercase">Funções Similares</CardTitle></CardHeader>
-          <CardContent><p className="text-3xl font-bold text-warning">{totalFuncaoSimilar}</p></CardContent>
+          <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground uppercase">Entre Painéis</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-muted-foreground">{entreConsoles.length}</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Geralmente esperado</p>
+          </CardContent>
         </Card>
       </div>
 
@@ -88,8 +95,47 @@ export default function PaginaAuditoriaDuplicacoes() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {relatorios.map((rel) => (
+        <div className="space-y-8">
+          {/* ─── INTRA CONSOLE ─── */}
+          <section className="space-y-3">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold">🔴 Duplicações no mesmo painel</h2>
+              <Badge variant="destructive" className="text-[10px]">{intraConsole.length}</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              O mesmo item aparece em mais de um lugar dentro do mesmo console — alta prioridade para revisão.
+            </p>
+            {intraConsole.length === 0 ? (
+              <Card><CardContent className="pt-6 text-center text-sm text-muted-foreground">Nenhuma duplicação interna detectada.</CardContent></Card>
+            ) : (
+              <div className="space-y-4">{intraConsole.map((rel) => <CardRelatorio key={rel.id} rel={rel} />)}</div>
+            )}
+          </section>
+
+          {/* ─── ENTRE CONSOLES ─── */}
+          <section className="space-y-3">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold">ℹ️ Mesma rota em painéis diferentes</h2>
+              <Badge variant="outline" className="text-[10px]">{entreConsoles.length}</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Itens compartilhados entre Root, Empreendedor e Cidade — geralmente esperado pela arquitetura SaaS hierárquica.
+              Não são marcados no sidebar.
+            </p>
+            {entreConsoles.length === 0 ? (
+              <Card><CardContent className="pt-6 text-center text-sm text-muted-foreground">Nenhum compartilhamento entre painéis detectado.</CardContent></Card>
+            ) : (
+              <div className="space-y-4">{entreConsoles.map((rel) => <CardRelatorio key={rel.id} rel={rel} />)}</div>
+            )}
+          </section>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CardRelatorio({ rel }: { rel: ReturnType<typeof useDuplicacoesMenu>["relatorios"][number] }) {
+  return (
             <Card key={rel.id}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2 flex-wrap">
@@ -141,9 +187,5 @@ export default function PaginaAuditoriaDuplicacoes() {
                 </Table>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      )}
-    </div>
   );
 }

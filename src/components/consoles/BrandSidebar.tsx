@@ -228,7 +228,8 @@ export function BrandSidebar() {
   const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
   const badges = useSidebarBadges();
   const [openGroupLabel, setOpenGroupLabel] = useState<string | null>(null);
-  const { chavesDuplicadas } = useDuplicacoesMenu();
+  const { chavesDuplicadasPorConsole } = useDuplicacoesMenu();
+  const chavesDuplicadas = chavesDuplicadasPorConsole.BRAND;
   const { isRootAdmin } = useAuth();
 
   const effectiveBrandId = currentBrandId || infoBrandId;

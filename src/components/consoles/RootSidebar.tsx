@@ -196,7 +196,8 @@ export function RootSidebar() {
   const { user, signOut, isRootAdmin } = useAuth();
   const { getLabel } = useMenuLabels("admin");
   const badges = useSidebarBadges();
-  const { chavesDuplicadas } = useDuplicacoesMenu();
+  const { chavesDuplicadasPorConsole } = useDuplicacoesMenu();
+  const chavesDuplicadas = chavesDuplicadasPorConsole.ROOT;
 
   const { data: brands } = useQuery({
     queryKey: ["brands-for-sidebar"],

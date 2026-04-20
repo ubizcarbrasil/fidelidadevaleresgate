@@ -170,7 +170,8 @@ export function BranchSidebar() {
   const { name: brandName, logoUrl } = useBrandInfo();
   const cityName = useBranchCityName();
   const { data: businessModelsUiEnabled } = useBusinessModelsUiEnabled(currentBrandId);
-  const { chavesDuplicadas } = useDuplicacoesMenu();
+  const { chavesDuplicadasPorConsole } = useDuplicacoesMenu();
+  const chavesDuplicadas = chavesDuplicadasPorConsole.BRANCH;
   const { isRootAdmin } = useAuth();
 
   const visibleGroups = groups
