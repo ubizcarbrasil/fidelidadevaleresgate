@@ -75,7 +75,8 @@ export default function WizardProduto({ open, onOpenChange, planKey, initialDraf
       if (!draft.label.trim()) return "Informe o nome interno do plano.";
       if (!draft.plan_key.trim()) return "Informe a chave técnica.";
       if (!draft.slug.trim()) return "Informe o slug da landing.";
-      if (draft.price_cents <= 0) return "Informe um preço válido.";
+      if (draft.price_cents <= 0)
+        return "O preço mensal precisa ser maior que zero. Verifique o campo no passo de Identificação.";
     }
     if (stepIdx === 1 && draft.business_model_ids.length === 0) {
       return "Selecione ao menos 1 modelo de negócio antes de avançar para Funcionalidades.";
