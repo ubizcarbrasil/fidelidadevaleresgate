@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, ChevronLeft, ChevronRight, Save } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight, Save, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
   EMPTY_DRAFT,
@@ -61,9 +61,24 @@ export default function WizardProduto({ open, onOpenChange, planKey, initialDraf
       if (draft.price_cents <= 0) return "Informe um preço válido.";
     }
     if (stepIdx === 1 && draft.business_model_ids.length === 0) {
-      return "Selecione ao menos 1 modelo de negócio.";
+      return "Selecione ao menos 1 modelo de negócio antes de avançar para Funcionalidades.";
     }
     return null;
+  };
+
+  // Sinaliza pendências por passo (para badge de alerta no stepper)
+  const stepHasPending = (idx: number): boolean => {
+    if (idx === 0) {
+      return (
+        !draft.product_name.trim() ||
+        !draft.label.trim() ||
+        !draft.plan_key.trim() ||
+        !draft.slug.trim() ||
+        draft.price_cents <= 0
+      );
+    }
+    if (idx === 1) return draft.business_model_ids.length === 0;
+    return false;
   };
 
   const next = () => {
@@ -124,13 +139,16 @@ export default function WizardProduto({ open, onOpenChange, planKey, initialDraf
           {STEPS.map((s, i) => {
             const active = i === stepIdx;
             const done = i < stepIdx;
+            const pending = stepHasPending(i) && i !== stepIdx;
             return (
               <button
                 key={s.key}
                 onClick={() => setStepIdx(i)}
-                className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap ${
+                className={`relative flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap ${
                   active
                     ? "bg-primary text-primary-foreground"
+                    : pending
+                    ? "bg-destructive/10 text-destructive ring-1 ring-destructive/40"
                     : done
                     ? "bg-primary/15 text-primary"
                     : "bg-muted text-muted-foreground"
@@ -140,12 +158,14 @@ export default function WizardProduto({ open, onOpenChange, planKey, initialDraf
                   className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
                     active
                       ? "bg-primary-foreground text-primary"
+                      : pending
+                      ? "bg-destructive text-destructive-foreground"
                       : done
                       ? "bg-primary text-primary-foreground"
                       : "bg-background"
                   }`}
                 >
-                  {i + 1}
+                  {pending ? <AlertCircle className="h-3 w-3" /> : i + 1}
                 </span>
                 {s.label}
               </button>
@@ -161,8 +181,16 @@ export default function WizardProduto({ open, onOpenChange, planKey, initialDraf
           ) : (
             <>
               {stepIdx === 0 && <PassoIdentificacao draft={draft} onChange={update} />}
-              {stepIdx === 1 && <PassoModelos draft={draft} onChange={update} />}
-              {stepIdx === 2 && <PassoModulos draft={draft} onChange={update} />}
+              {stepIdx === 1 && (
+                <PassoModelos
+                  draft={draft}
+                  onChange={update}
+                  templateName={!isEdit && initialDraft ? initialDraft.product_name : undefined}
+                />
+              )}
+              {stepIdx === 2 && (
+                <PassoModulos draft={draft} onChange={update} onVoltarPasso={() => setStepIdx(1)} />
+              )}
               {stepIdx === 3 && <PassoLanding draft={draft} onChange={update} />}
               {stepIdx === 4 && <PassoRevisao draft={draft} saved={savedOnce} />}
             </>
