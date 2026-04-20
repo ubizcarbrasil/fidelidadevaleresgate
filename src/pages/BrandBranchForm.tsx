@@ -542,31 +542,6 @@ export default function BrandBranchForm() {
         </Card>
       )}
 
-      {/* Aviso de inconsistência: scoring_model atual fora do permitido pelo plano */}
-      {isEdit && !escopo.isLoading && !escopo.isPermissive &&
-        !escopo.allowedScoringModels.includes(scoringModel as any) && (
-        <Card className="rounded-xl border-destructive/40 bg-destructive/5">
-          <CardContent className="p-3 flex items-center gap-3 flex-wrap">
-            <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium">Modelo de pontuação incompatível</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                Esta cidade está como <span className="font-mono">{scoringModel}</span>, mas seu plano só
-                permite: <span className="font-mono">{escopo.allowedScoringModels.join(", ")}</span>.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => setScoringModel(escopo.allowedScoringModels[0])}
-            >
-              Ajustar
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
       <Card className="rounded-xl">
         <CardContent className="p-5 space-y-5">
           <div className="space-y-2">
