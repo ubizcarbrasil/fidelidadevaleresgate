@@ -576,7 +576,8 @@ function RootUsersView() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader><CardTitle className="text-base">Usuários Cadastrados</CardTitle></CardHeader>
-          <CardContent>
+          <CardContent className="px-0 sm:px-6">
+            <div className="table-wrap-mobile">
             <Table>
               <TableHeader><TableRow><TableHead>E-mail</TableHead><TableHead>Nome</TableHead></TableRow></TableHeader>
               <TableBody>
@@ -591,12 +592,14 @@ function RootUsersView() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader><CardTitle className="text-base">Papéis Atribuídos</CardTitle></CardHeader>
-          <CardContent>
+          <CardContent className="px-0 sm:px-6">
+            <div className="table-wrap-mobile">
             <Table>
               <TableHeader><TableRow><TableHead>Papel</TableHead><TableHead>Escopo</TableHead><TableHead className="text-right">Ação</TableHead></TableRow></TableHeader>
               <TableBody>
@@ -618,6 +621,7 @@ function RootUsersView() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
       </div>

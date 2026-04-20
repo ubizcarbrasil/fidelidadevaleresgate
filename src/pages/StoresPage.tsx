@@ -263,10 +263,10 @@ export default function StoresPage() {
                       {s.name}
                     </div>
                   </TableCell>
-                  <TableCell>{(s.brands as any)?.name}</TableCell>
-                  <TableCell>{(s.branches as any)?.name}</TableCell>
-                  <TableCell>{s.category || "—"}</TableCell>
-                  <TableCell>{statusBadge(s.approval_status)}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{(s.brands as any)?.name}</TableCell>
+                  <TableCell className="hidden md:table-cell">{(s.branches as any)?.name}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{s.category || "—"}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{statusBadge(s.approval_status)}</TableCell>
                   <TableCell><Badge variant={s.is_active ? "default" : "secondary"}>{s.is_active ? "Ativo" : "Inativo"}</Badge></TableCell>
                   <TableCell className="text-right space-x-1">
                     {s.approval_status === "PENDING_APPROVAL" && (
