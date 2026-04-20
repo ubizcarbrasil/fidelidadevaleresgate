@@ -5,6 +5,8 @@ import { Truck } from "lucide-react";
 import type { DriverRow } from "@/types/driver";
 import ManualDriverScoringDialog from "@/components/machine-integration/ManualDriverScoringDialog";
 import AbaDadosMotorista from "./tabs/AbaDadosMotorista";
+import AbaVeiculosMotorista from "./tabs/AbaVeiculosMotorista";
+import AbaDocumentacaoMotorista from "./tabs/AbaDocumentacaoMotorista";
 import AbaPontuacaoMotorista from "./tabs/AbaPontuacaoMotorista";
 import AbaRegrasMotorista from "./tabs/AbaRegrasMotorista";
 import AbaExtratoMotorista from "./tabs/AbaExtratoMotorista";
@@ -34,15 +36,25 @@ export default function DriverDetailSheet({ driver, brandId, onClose }: Props) {
 
           {driver && (
             <Tabs defaultValue="dados" className="mt-4">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="dados">Dados</TabsTrigger>
-                <TabsTrigger value="pontuacao">Pontos</TabsTrigger>
-                <TabsTrigger value="regras">Regras</TabsTrigger>
-                <TabsTrigger value="extrato">Extrato</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-6 h-auto">
+                <TabsTrigger value="dados" className="text-xs px-2">Dados</TabsTrigger>
+                <TabsTrigger value="veiculos" className="text-xs px-2">Veículos</TabsTrigger>
+                <TabsTrigger value="documentacao" className="text-xs px-2">Docs</TabsTrigger>
+                <TabsTrigger value="pontuacao" className="text-xs px-2">Pontos</TabsTrigger>
+                <TabsTrigger value="regras" className="text-xs px-2">Regras</TabsTrigger>
+                <TabsTrigger value="extrato" className="text-xs px-2">Extrato</TabsTrigger>
               </TabsList>
 
               <TabsContent value="dados">
                 <AbaDadosMotorista driver={driver} brandId={brandId} />
+              </TabsContent>
+
+              <TabsContent value="veiculos">
+                <AbaVeiculosMotorista driverId={driver.id} />
+              </TabsContent>
+
+              <TabsContent value="documentacao">
+                <AbaDocumentacaoMotorista driverId={driver.id} />
               </TabsContent>
 
               <TabsContent value="pontuacao">
