@@ -55,15 +55,16 @@ export default function PaginaProdutosComerciais() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Produtos Comerciais"
-        description="Monte produtos de prateleira com modelos, funcionalidades, preço e landing page para divulgação."
-      >
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <PageHeader
+          title="Produtos Comerciais"
+          description="Monte produtos de prateleira com modelos, funcionalidades, preço e landing page para divulgação."
+        />
         <Button onClick={openCreate} className="gap-2">
           <Plus className="h-4 w-4" />
           Criar produto
         </Button>
-      </PageHeader>
+      </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center min-h-[300px]">

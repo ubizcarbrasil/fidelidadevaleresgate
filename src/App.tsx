@@ -107,6 +107,9 @@ const MachineWebhookTestPage = lazyWithRetry(() => import("@/pages/MachineWebhoo
 const OfferCardConfigPage = lazyWithRetry(() => import("@/pages/OfferCardConfigPage"));
 const PlanModuleTemplatesPage = lazyWithRetry(() => import("@/pages/PlanModuleTemplatesPage"));
 const SubscriptionPlansAdminPage = lazyWithRetry(() => import("@/pages/SubscriptionPlansAdminPage"));
+const PaginaProdutosComerciais = lazyWithRetry(() => import("@/features/produtos_comerciais/pagina_produtos_comerciais"));
+const PaginaLandingProduto = lazyWithRetry(() => import("@/features/landing_produto/pagina_landing_produto"));
+const PaginaCatalogoProdutos = lazyWithRetry(() => import("@/features/catalogo_produtos/pagina_catalogo_produtos"));
 const TierPointsRulesPage = lazyWithRetry(() => import("@/pages/TierPointsRulesPage"));
 const DriverPointsRulesPage = lazyWithRetry(() => import("@/pages/DriverPointsRulesPage"));
 const DriverManagementPage = lazyWithRetry(() => import("@/pages/DriverManagementPage"));
@@ -173,6 +176,8 @@ function AnimatedRoutes() {
             <Route path="/webview" element={<WebviewPage />} />
             <Route path="/p/:slug" element={<CustomPage />} />
             <Route path="/trial" element={<TrialSignupPage />} />
+            <Route path="/p/produto/:slug" element={<PaginaLandingProduto />} />
+            <Route path="/produtos" element={<PaginaCatalogoProdutos />} />
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/links" element={<PaginaLinks />} />
             <Route path="/driver" element={<DriverPanelPage />} />
@@ -285,6 +290,7 @@ function AnimatedRoutes() {
               <Route path="offer-card-config" element={<ModuleGuard moduleKey="offer_card_config"><OfferCardConfigPage /></ModuleGuard>} />
               <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
               <Route path="plan-pricing" element={<RootGuard><SubscriptionPlansAdminPage /></RootGuard>} />
+              <Route path="admin/produtos-comerciais" element={<RootGuard><PaginaProdutosComerciais /></RootGuard>} />
               <Route path="driver-config" element={<ErrorBoundary><DriverPanelConfigPage /></ErrorBoundary>} />
               <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
               <Route path="manuais" element={<ManuaisPage />} />
