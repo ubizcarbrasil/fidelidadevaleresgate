@@ -660,6 +660,55 @@ async function processFinalized(
       if (driverCustomer) {
         driverCustomerId = driverCustomer.id;
 
+        // Idempotente: garantir driver_profiles para QUALQUER motorista (novo ou já existente sem perfil).
+        // Usa onConflict=customer_id e NÃO sobrescreve campos importados do CSV (só preenche se NULL).
+        // Falha silenciosa: nunca quebra a corrida.
+        try {
+          const nowIso = new Date().toISOString();
+          const profileBranchId = driverCustomer.branch_id || branchId || null;
+
+          // Verifica se já existe perfil para decidir se inserimos data de registro
+          const { data: existingProfile } = await sb
+            .from("driver_profiles")
+            .select("customer_id, registered_at, imported_at")
+            .eq("customer_id", driverCustomer.id)
+            .maybeSingle();
+
+          if (!existingProfile) {
+            // Primeiro contato: cria perfil mínimo com o que a TaxiMachine retornar
+            const insertPayload: Record<string, unknown> = {
+              customer_id: driverCustomer.id,
+              brand_id: brandId,
+              branch_id: profileBranchId,
+              external_id: driverId || null,
+              registration_status: "Ativo",
+              registration_status_at: nowIso,
+              registered_at: nowIso,
+              imported_at: nowIso,
+              last_activity_at: nowIso,
+            };
+            const { error: insProfErr } = await sb.from("driver_profiles").insert(insertPayload);
+            if (insProfErr) {
+              logger.warn("driver_profiles insert (auto-cadastro) falhou", {
+                customerId: driverCustomer.id,
+                error: insProfErr.message,
+              });
+            }
+          } else {
+            // Perfil já existe (importado por CSV ou anterior): só atualiza atividade e ext_id se vazio
+            const patch: Record<string, unknown> = { last_activity_at: nowIso };
+            if (driverId) patch.external_id = driverId;
+            await sb.from("driver_profiles")
+              .update(patch)
+              .eq("customer_id", driverCustomer.id);
+          }
+        } catch (e) {
+          logger.warn("driver_profiles upsert exception (auto-cadastro)", {
+            customerId: driverCustomer.id,
+            error: String(e),
+          });
+        }
+
         // Handle volume cycle reset
         const cycleStart = driverCustomer.driver_cycle_start ? new Date(driverCustomer.driver_cycle_start) : new Date();
         const now = new Date();

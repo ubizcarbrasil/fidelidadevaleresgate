@@ -348,6 +348,9 @@ Deno.serve(async (req) => {
         if (r.phone) patch.phone = r.phone.trim();
         if (r.email) patch.email = r.email.trim();
         if (r.name) patch.name = `[MOTORISTA] ${r.name.trim()}`;
+        // Reforço: sempre que CSV trouxer external_id, sobrescreve no customer.
+        // Costura registros criados pela primeira corrida (que podem ter ext_id diferente/nulo)
+        // com a fonte de verdade do CSV — evita duplicatas.
         if (r.external_id) patch.external_driver_id = r.external_id;
 
         if (Object.keys(patch).length === 0) {
