@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -18,6 +19,29 @@ function slugify(s: string) {
 }
 
 export default function PassoIdentificacao({ draft, onChange }: Props) {
+  // Estado local em string para os campos de preço — evita o input "saltar"
+  // ao reformatar a cada tecla (que travava a edição do valor).
+  const centsToStr = (c: number | null | undefined) =>
+    c == null ? "" : (c / 100).toFixed(2).replace(".", ",");
+
+  const [precoMensalStr, setPrecoMensalStr] = useState(() =>
+    draft.price_cents > 0 ? centsToStr(draft.price_cents) : "",
+  );
+  const [precoAnualStr, setPrecoAnualStr] = useState(() => centsToStr(draft.price_yearly_cents));
+
+  // Ressincroniza quando o draft muda de fora (ex: trocar de produto, template)
+  useEffect(() => {
+    setPrecoMensalStr(draft.price_cents > 0 ? centsToStr(draft.price_cents) : "");
+    setPrecoAnualStr(centsToStr(draft.price_yearly_cents));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft.id]);
+
+  const parseToCents = (raw: string): number => {
+    const normalized = raw.replace(/\./g, "").replace(",", ".");
+    const n = parseFloat(normalized);
+    return Number.isFinite(n) ? Math.round(n * 100) : 0;
+  };
+
   return (
     <div className="space-y-5">
       <div className="grid sm:grid-cols-2 gap-4">
@@ -100,27 +124,38 @@ export default function PassoIdentificacao({ draft, onChange }: Props) {
           <div className="space-y-2">
             <Label>Preço mensal (R$) *</Label>
             <Input
-              type="number"
-              step="0.01"
-              value={(draft.price_cents / 100).toFixed(2)}
-              onChange={(e) =>
-                onChange({ price_cents: Math.round(parseFloat(e.target.value || "0") * 100) })
-              }
+              inputMode="decimal"
+              value={precoMensalStr}
+              placeholder="0,00"
+              onChange={(e) => {
+                const v = e.target.value.replace(/[^0-9.,]/g, "");
+                setPrecoMensalStr(v);
+                onChange({ price_cents: parseToCents(v) });
+              }}
+              onBlur={() => {
+                if (precoMensalStr.trim() === "") return;
+                setPrecoMensalStr(centsToStr(parseToCents(precoMensalStr)));
+              }}
             />
           </div>
           <div className="space-y-2">
             <Label>Preço anual (R$)</Label>
             <Input
-              type="number"
-              step="0.01"
-              value={draft.price_yearly_cents != null ? (draft.price_yearly_cents / 100).toFixed(2) : ""}
-              onChange={(e) => {
-                const raw = e.target.value;
-                onChange({
-                  price_yearly_cents: raw === "" ? null : Math.round(parseFloat(raw) * 100),
-                });
-              }}
+              inputMode="decimal"
+              value={precoAnualStr}
               placeholder="opcional"
+              onChange={(e) => {
+                const v = e.target.value.replace(/[^0-9.,]/g, "");
+                setPrecoAnualStr(v);
+                onChange({ price_yearly_cents: v === "" ? null : parseToCents(v) });
+              }}
+              onBlur={() => {
+                if (precoAnualStr.trim() === "") {
+                  onChange({ price_yearly_cents: null });
+                  return;
+                }
+                setPrecoAnualStr(centsToStr(parseToCents(precoAnualStr)));
+              }}
             />
           </div>
           <div className="space-y-2">
