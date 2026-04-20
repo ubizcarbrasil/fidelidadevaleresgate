@@ -1,54 +1,65 @@
 
 
-# Remover o aviso desnecessário e auto-corrigir silenciosamente
+# Ocultar UUID no cabeçalho mobile (mostrar nome amigável)
 
-## Você tem razão
+## Diagnóstico
 
-Faz sentido: quem contratou o **Engajamento Motorista Premium** sabe que é só motorista. Mostrar um alerta vermelho dizendo "ó, sua cidade está incompatível, clique para ajustar" é:
+No topo da tela mobile aparece `4d87e2e5-a1b4-40f7-b686-738adf5ca981` — esse é o `id` da cidade (branch) que está na URL `/brand-branches/4d87e2e5-...`.
 
-1. **Burocrático** — obriga o usuário a clicar em algo que ele nem precisava saber que existia
-2. **Assustador** — cor vermelha + palavra "incompatível" passa sensação de erro/problema, quando na verdade é só um resíduo de configuração antiga
-3. **Redundante** — o `handleSave` já normaliza automaticamente no momento de salvar, então o sistema já se auto-corrige sozinho
+O cabeçalho mobile (`src/components/AppLayout.tsx`, linhas 209-213) mostra o **último item do breadcrumb**. A função `useBreadcrumbs` (linhas 61-74) tem um fallback genérico que, quando não encontra o segmento no `routeLabels`, simplesmente capitaliza o texto da URL — e como o último segmento é um UUID, ele aparece cru.
 
-O aviso só fazia sentido enquanto eu não confiava na normalização automática. Mas ela já existe e funciona. Então o aviso é ruído.
+A página em si já tem o próprio título grande **"Editar Cidade"**, então o UUID no topo é puro ruído visual.
 
-## O que vou fazer
+## Ajuste
 
-### 1. Remover o bloco de alerta vermelho
-Arquivo: `src/pages/BrandBranchForm.tsx` (linhas ~545–568, o bloco `<Alert variant="destructive">` com "Modelo de pontuação incompatível")
+Arquivo: `src/components/AppLayout.tsx`
 
-Remover por completo. Sem substituto, sem aviso amarelo, sem nada.
+### 1. Detectar UUID/IDs no helper `useBreadcrumbs` (linhas 61-74)
 
-### 2. Normalizar silenciosamente no carregamento
-No `useEffect` que popula o form a partir dos dados da branch, aplicar `normalizarScoringModel(...)` antes de setar o estado local `scoringModel`. Assim, ao abrir a cidade Olímpia:
-- Se ela está como `BOTH` mas o plano só permite `DRIVER_ONLY`, o select já abre mostrando "Pontuar apenas Motorista"
-- O usuário nem percebe que existia uma configuração legada
-- Quando ele salvar (por qualquer motivo), o valor correto já vai pro banco
+Adicionar:
+- Regex para detectar UUID v4 (`/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i`)
+- Detecção de `new` como segmento (já é caso de "criar novo")
 
-### 3. Manter a defesa no `handleSave`
-A normalização no save continua existindo como rede de segurança. Não mexo nela.
+Quando o último segmento da URL for:
+- **UUID** → substituir o label por **"Editar"** (ex: `/brand-branches/UUID` → breadcrumb final = "Editar")
+- **`new`** → substituir por **"Novo"**
 
-### 4. Manter o banner do topo
-O chip discreto "🎯 Plano: Engajamento Motorista Premium — apenas funcionalidades incluídas estão visíveis" continua, porque ele é informativo (não é alerta de erro) e ajuda o usuário a entender por que algumas opções não aparecem.
+E manter o segmento anterior (ex: "Cidades") como contexto, então o breadcrumb fica: `Início › Cidades › Editar`.
+
+### 2. Adicionar rótulos faltantes em `routeLabels` (linhas 39-59)
+
+Incluir as rotas de cidades que não estão mapeadas:
+- `/brand-branches`: "Cidades"
+- `/brand-branches/new`: "Nova Cidade"
+
+(Já existem `/branches` mas não `/brand-branches`, que é a rota que o usuário está usando.)
+
+### 3. Resultado no header mobile
+
+Antes (atual):
+```
+4d87e2e5-a1b4-40f7-b686-738adf5ca981
+```
+
+Depois:
+```
+Editar
+```
+
+E no breadcrumb desktop (md+):
+```
+Início › Cidades › Editar
+```
 
 ## O que NÃO vou mexer
 
-- ❌ Lógica de `useProductScope`
-- ❌ Filtros de UI por audiência (continuam escondendo o que não está no plano)
-- ❌ Normalização defensiva no save
-- ❌ Banco, RLS, edge functions
-- ❌ Outras telas
-
-## Resultado esperado
-
-Ao abrir a cidade Olímpia (ou qualquer outra com configuração legada):
-- Sem alerta vermelho
-- Select de Modelo de Pontuação já mostra "Pontuar apenas Motorista" (ou a única opção compatível)
-- Experiência limpa, como se a cidade sempre tivesse sido configurada corretamente
+- ❌ A URL em si (continua com o UUID, é necessária pro roteamento)
+- ❌ O título grande da página ("Editar Cidade") — já está correto
+- ❌ Outras telas, banco, edge functions
 
 ## Risco
 
-Zero. Estou removendo ruído visual e movendo a correção para um momento mais discreto (carregamento). `npx tsc --noEmit` esperado limpo.
+Zero. É só ajustar o helper `useBreadcrumbs` e adicionar 2 entradas no `routeLabels`. Aplica-se automaticamente a qualquer rota com UUID/`new` no final (cidades, marcas, ofertas, parceiros, etc.) — bonus de consistência geral.
 
 ## Estimativa
 
