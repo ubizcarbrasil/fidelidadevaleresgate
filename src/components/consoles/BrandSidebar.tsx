@@ -228,6 +228,8 @@ export function BrandSidebar() {
   const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
   const badges = useSidebarBadges();
   const [openGroupLabel, setOpenGroupLabel] = useState<string | null>(null);
+  const { chavesDuplicadas } = useDuplicacoesMenu();
+  const { isRootAdmin } = useAuth();
 
   const effectiveBrandId = currentBrandId || infoBrandId;
   const resolvedModules = useResolvedModules(effectiveBrandId);
@@ -346,6 +348,8 @@ export function BrandSidebar() {
               brandId={currentBrandId ?? undefined}
               isOpen={alwaysOpen || effectiveOpenGroup === group.label}
               onToggle={alwaysOpen ? () => {} : () => setOpenGroupLabel((prev: string | null) => prev === group.label ? null : group.label)}
+              chavesDuplicadas={chavesDuplicadas}
+              mostrarDup={isRootAdmin}
             />
           );
         })}

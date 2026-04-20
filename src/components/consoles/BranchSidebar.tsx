@@ -170,6 +170,8 @@ export function BranchSidebar() {
   const { name: brandName, logoUrl } = useBrandInfo();
   const cityName = useBranchCityName();
   const { data: businessModelsUiEnabled } = useBusinessModelsUiEnabled(currentBrandId);
+  const { chavesDuplicadas } = useDuplicacoesMenu();
+  const { isRootAdmin } = useAuth();
 
   const visibleGroups = groups
     .filter((group) => {
@@ -252,6 +254,8 @@ export function BranchSidebar() {
               location={location}
               getLabel={getLabel}
               badges={badges}
+              chavesDuplicadas={chavesDuplicadas}
+              mostrarDup={isRootAdmin}
             />
           );
         })}
