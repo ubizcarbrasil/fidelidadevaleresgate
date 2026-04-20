@@ -3,16 +3,18 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Loader2, Lock } from "lucide-react";
+import { Loader2, Lock, AlertTriangle, ChevronLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { ProdutoComercialDraft } from "../types/tipos_produto";
 
 interface Props {
   draft: ProdutoComercialDraft;
   onChange: (patch: Partial<ProdutoComercialDraft>) => void;
+  onVoltarPasso?: () => void;
 }
 
-export default function PassoModulos({ draft, onChange }: Props) {
+export default function PassoModulos({ draft, onChange, onVoltarPasso }: Props) {
   const { data, isLoading } = useQuery({
     queryKey: ["modules-and-bm-modules", draft.business_model_ids],
     queryFn: async () => {
@@ -65,6 +67,32 @@ export default function PassoModulos({ draft, onChange }: Props) {
     );
   }
 
+  // Estado vazio: nenhum modelo selecionado no passo 2
+  if (draft.business_model_ids.length === 0) {
+    return (
+      <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-6 text-center space-y-3">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+          <AlertTriangle className="h-6 w-6 text-destructive" />
+        </div>
+        <div className="space-y-1">
+          <p className="font-semibold text-foreground">
+            Volte ao passo 2 e selecione ao menos um Modelo de Negócio
+          </p>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            As funcionalidades obrigatórias e opcionais aparecem aqui assim que
+            você escolher os modelos de negócio que este produto vai liberar.
+          </p>
+        </div>
+        {onVoltarPasso && (
+          <Button variant="outline" size="sm" onClick={onVoltarPasso} className="gap-1">
+            <ChevronLeft className="h-4 w-4" />
+            Voltar ao passo 2
+          </Button>
+        )}
+      </div>
+    );
+  }
+
   const toggle = (id: string, checked: boolean) => {
     if (requiredIds.has(id)) return; // não permite desmarcar obrigatórios
     const set = new Set(draft.module_definition_ids);
@@ -76,11 +104,26 @@ export default function PassoModulos({ draft, onChange }: Props) {
   const required = (data?.modules ?? []).filter((m: any) => requiredIds.has(m.id));
   const optional = (data?.modules ?? []).filter((m: any) => !requiredIds.has(m.id));
 
+  // Caso raro: modelos selecionados mas sem nenhum módulo vinculado
+  const semModulos = required.length === 0 && optional.length === 0;
+
   return (
     <div className="space-y-5">
       <p className="text-sm text-muted-foreground">
         Funcionalidades obrigatórias dos modelos selecionados são pré-marcadas. Você pode adicionar opcionais.
       </p>
+
+      {semModulos && (
+        <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-4 text-sm">
+          <p className="font-medium text-foreground flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            Nenhum módulo vinculado a esses modelos
+          </p>
+          <p className="text-muted-foreground mt-1">
+            Verifique a configuração dos modelos selecionados ou volte ao passo 2 para escolher outros.
+          </p>
+        </div>
+      )}
 
       {required.length > 0 && (
         <div className="space-y-2">
