@@ -158,6 +158,7 @@ export function DialogConcederAddon({ open, onOpenChange, prefill }: Props) {
     if (Number.isNaN(cents) || cents < 0) return;
     const input: GrantAddonInput = {
       brand_id: brandId,
+      branch_id: scope === "branch" ? branchId : null,
       business_model_id: modelId,
       billing_cycle: cycle,
       price_cents: cents,
