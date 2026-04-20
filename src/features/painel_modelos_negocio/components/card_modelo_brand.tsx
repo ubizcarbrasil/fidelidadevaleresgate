@@ -86,10 +86,7 @@ export default function CardModeloBrand({ brandId, resolved }: Props) {
         {/* Metadata por estado */}
         <div className="flex flex-wrap items-center gap-1.5 min-h-[22px]">
           {resolved.source === "addon" && !isLocked && (
-            <Badge
-              variant="outline"
-              className="text-[10px] border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10"
-            >
+            <Badge variant="secondary" className="text-[10px]">
               Add-on
             </Badge>
           )}

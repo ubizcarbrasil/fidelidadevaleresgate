@@ -208,6 +208,49 @@ export function DialogEditarModelo({ open, onOpenChange, modelo }: DialogEditarM
 
           <Separator />
 
+          {/* Seção 1.5: Vendável como Add-on */}
+          <section className="space-y-3">
+            <h3 className="text-sm font-semibold">Comercialização Avulsa</h3>
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div>
+                <Label className="text-sm">Vendável como add-on</Label>
+                <p className="text-xs text-muted-foreground">
+                  Permite que o Raiz conceda este modelo a qualquer marca, fora do plano dela.
+                </p>
+              </div>
+              <Switch checked={isSellable} onCheckedChange={setIsSellable} />
+            </div>
+            {isSellable && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="bm-price-monthly">Preço mensal (R$)</Label>
+                  <Input
+                    id="bm-price-monthly"
+                    inputMode="decimal"
+                    value={priceMonthly}
+                    onChange={(e) => setPriceMonthly(e.target.value)}
+                    placeholder="0,00"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="bm-price-yearly">Preço anual (R$)</Label>
+                  <Input
+                    id="bm-price-yearly"
+                    inputMode="decimal"
+                    value={priceYearly}
+                    onChange={(e) => setPriceYearly(e.target.value)}
+                    placeholder="0,00"
+                  />
+                </div>
+                <p className="sm:col-span-2 text-[11px] text-muted-foreground">
+                  Sugestão exibida no modal de concessão. O Raiz pode sobrescrever caso a caso.
+                </p>
+              </div>
+            )}
+          </section>
+
+          <Separator />
+
           {/* Seção 2: Imutáveis */}
           <section className="space-y-3">
             <h3 className="text-sm font-semibold">Imutáveis</h3>
