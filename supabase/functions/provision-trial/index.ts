@@ -231,7 +231,23 @@ Deno.serve(async (req) => {
       logo_url,
       primary_color,
       secondary_color,
+      plan_slug, // Sub-fase 6.3 — produto comercial selecionado (default: "free")
     } = body;
+
+    // ─── Resolve produto comercial pelo slug (default: free) ───
+    let resolvedPlanKey = "free";
+    let resolvedTrialDays = 30;
+    if (plan_slug && typeof plan_slug === "string" && plan_slug.trim()) {
+      const { data: planRow } = await supabaseAdmin
+        .from("subscription_plans")
+        .select("plan_key, trial_days, is_active")
+        .eq("slug", plan_slug.trim())
+        .maybeSingle();
+      if (planRow && planRow.is_active) {
+        resolvedPlanKey = planRow.plan_key;
+        resolvedTrialDays = planRow.trial_days ?? 30;
+      }
+    }
 
     if (!company_name || !owner_name || !owner_email || !owner_password || !city_name || !state) {
       return new Response(JSON.stringify({ error: "Preencha todos os campos obrigatórios." }), {
