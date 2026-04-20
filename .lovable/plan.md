@@ -1,71 +1,56 @@
 
 
-# Não é duplicação — são funções diferentes com nomes confusos
+# Remover o aviso desnecessário e auto-corrigir silenciosamente
 
-## Diagnóstico
+## Você tem razão
 
-Os dois toggles que você circulou **fazem coisas opostas**, mas os nomes são quase idênticos:
+Faz sentido: quem contratou o **Engajamento Motorista Premium** sabe que é só motorista. Mostrar um alerta vermelho dizendo "ó, sua cidade está incompatível, clique para ajustar" é:
 
-| Toggle | Flag no banco | O que faz | Onde aparece |
-|---|---|---|---|
-| 💳 **Motorista compra pontos** | `enable_driver_points_purchase` | O motorista **compra pontos com dinheiro** (R$) — abre o overlay de compra de saldo | Botão "Comprar Pontos" no painel do motorista |
-| 🛒 **Motorista compra com pontos** | `enable_points_purchase` | O motorista **gasta pontos** comprando produtos/ofertas — exibe a seção "Compre com Pontos" | Vitrine "Compre com Pontos" no marketplace |
+1. **Burocrático** — obriga o usuário a clicar em algo que ele nem precisava saber que existia
+2. **Assustador** — cor vermelha + palavra "incompatível" passa sensação de erro/problema, quando na verdade é só um resíduo de configuração antiga
+3. **Redundante** — o `handleSave` já normaliza automaticamente no momento de salvar, então o sistema já se auto-corrige sozinho
 
-Ou seja:
-- **"compra pontos"** → entrada de saldo (input de R$)
-- **"compra com pontos"** → saída de saldo (gasta pontos)
+O aviso só fazia sentido enquanto eu não confiava na normalização automática. Mas ela já existe e funciona. Então o aviso é ruído.
 
-A diferença está em uma única letrinha (`com`), o que é horrível de ler num app mobile e gera exatamente a sensação de duplicação que você teve.
+## O que vou fazer
 
-## O que vou ajustar
+### 1. Remover o bloco de alerta vermelho
+Arquivo: `src/pages/BrandBranchForm.tsx` (linhas ~545–568, o bloco `<Alert variant="destructive">` com "Modelo de pontuação incompatível")
 
-Arquivo: `src/pages/BrandBranchForm.tsx` (seção "App do Motorista", linhas ~759-797)
+Remover por completo. Sem substituto, sem aviso amarelo, sem nada.
 
-### 1. Renomear para deixar inequívoco
+### 2. Normalizar silenciosamente no carregamento
+No `useEffect` que popula o form a partir dos dados da branch, aplicar `normalizarScoringModel(...)` antes de setar o estado local `scoringModel`. Assim, ao abrir a cidade Olímpia:
+- Se ela está como `BOTH` mas o plano só permite `DRIVER_ONLY`, o select já abre mostrando "Pontuar apenas Motorista"
+- O usuário nem percebe que existia uma configuração legada
+- Quando ele salvar (por qualquer motivo), o valor correto já vai pro banco
 
-| Antes | Depois |
-|---|---|
-| 💳 Motorista compra pontos | 💳 **Comprar pontos com dinheiro** |
-| Permite que motoristas comprem pontos diretamente pelo app. | Motorista compra saldo de pontos pagando em R$ (entrada de pontos). |
-| 🛒 Motorista compra com pontos | 🛒 **Resgatar produtos com pontos** |
-| Exibe a seção "Compre com Pontos" no painel do motorista. | Motorista usa pontos acumulados para resgatar produtos da vitrine. |
+### 3. Manter a defesa no `handleSave`
+A normalização no save continua existindo como rede de segurança. Não mexo nela.
 
-### 2. Agrupar visualmente
-Colocar os dois toggles dentro de um mini-bloco com título sutil **"Carteira de Pontos"** para deixar claro que são as duas pontas (entrada e saída) da mesma carteira:
-
-```
-┌─ Carteira de Pontos ────────────────────────┐
-│  💳 Comprar pontos com dinheiro      [⚪]  │
-│     Entrada: paga R$ e recebe pontos        │
-│                                              │
-│  🛒 Resgatar produtos com pontos     [⚪]  │
-│     Saída: gasta pontos em produtos         │
-└─────────────────────────────────────────────┘
-```
-
-### 3. Atualizar também o catálogo de toggles
-Arquivo: `src/features/configuracao_cidade/constants/constantes_toggles.ts` (linhas 50-67)
-
-Mesma renomeação aplicada nos labels e descrições para manter consistência onde quer que esses toggles apareçam.
+### 4. Manter o banner do topo
+O chip discreto "🎯 Plano: Engajamento Motorista Premium — apenas funcionalidades incluídas estão visíveis" continua, porque ele é informativo (não é alerta de erro) e ajuda o usuário a entender por que algumas opções não aparecem.
 
 ## O que NÃO vou mexer
 
-- ❌ Nomes das flags no banco (`enable_driver_points_purchase`, `enable_points_purchase`) — quebraria o consumo em `DriverPanelPage`, `DriverMarketplace`, `CustomerHomePage`
-- ❌ Comportamento funcional — só rótulos e agrupamento visual
+- ❌ Lógica de `useProductScope`
+- ❌ Filtros de UI por audiência (continuam escondendo o que não está no plano)
+- ❌ Normalização defensiva no save
 - ❌ Banco, RLS, edge functions
-- ❌ Outros cards da tela
+- ❌ Outras telas
 
 ## Resultado esperado
 
-- Fica visualmente óbvio que **não é duplicação**: um é entrada de pontos (compra com R$), o outro é saída (gasta pontos em produtos)
-- Agrupamento "Carteira de Pontos" ancora os dois conceitos como faces opostas da mesma moeda
-- Mantém compatibilidade total com o resto do sistema
+Ao abrir a cidade Olímpia (ou qualquer outra com configuração legada):
+- Sem alerta vermelho
+- Select de Modelo de Pontuação já mostra "Pontuar apenas Motorista" (ou a única opção compatível)
+- Experiência limpa, como se a cidade sempre tivesse sido configurada corretamente
 
 ## Risco
 
-Zero. É só renomear textos e envolver em um bloco visual. `npx tsc --noEmit` esperado limpo.
+Zero. Estou removendo ruído visual e movendo a correção para um momento mais discreto (carregamento). `npx tsc --noEmit` esperado limpo.
 
 ## Estimativa
 
-~3 min.
+~2 min.
 
