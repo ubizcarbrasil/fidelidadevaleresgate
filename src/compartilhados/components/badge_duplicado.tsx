@@ -22,7 +22,7 @@ export function BadgeDuplicado({
     <span
       title={title}
       className={cn(
-        "ml-auto inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400",
+        "ml-auto inline-flex items-center gap-1 rounded-md border border-warning/40 bg-warning/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-warning",
         className,
       )}
     >
