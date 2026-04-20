@@ -3297,6 +3297,82 @@ export type Database = {
           },
         ]
       }
+      driver_import_jobs: {
+        Row: {
+          branch_id: string | null
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          created_count: number
+          error_count: number
+          errors_json: Json
+          finished_at: string | null
+          id: string
+          processed_rows: number
+          skipped_count: number
+          started_at: string | null
+          status: string
+          total_rows: number
+          updated_count: number
+        }
+        Insert: {
+          branch_id?: string | null
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          created_count?: number
+          error_count?: number
+          errors_json?: Json
+          finished_at?: string | null
+          id?: string
+          processed_rows?: number
+          skipped_count?: number
+          started_at?: string | null
+          status?: string
+          total_rows?: number
+          updated_count?: number
+        }
+        Update: {
+          branch_id?: string | null
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          created_count?: number
+          error_count?: number
+          errors_json?: Json
+          finished_at?: string | null
+          id?: string
+          processed_rows?: number
+          skipped_count?: number
+          started_at?: string | null
+          status?: string
+          total_rows?: number
+          updated_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_import_jobs_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_import_jobs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_import_jobs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_message_flows: {
         Row: {
           audience: string
@@ -3700,6 +3776,255 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_profiles: {
+        Row: {
+          acceptance_rate: number | null
+          acceptance_rate_updated_at: string | null
+          accepted_payments: Json | null
+          address_city: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
+          address_zipcode: string | null
+          app_version: string | null
+          bank_account: string | null
+          bank_agency: string | null
+          bank_code: string | null
+          bank_holder_cpf: string | null
+          bank_holder_name: string | null
+          birth_date: string | null
+          block_reason: string | null
+          blocked_until: string | null
+          branch_id: string | null
+          brand_id: string
+          cnh_expiration: string | null
+          cnh_number: string | null
+          customer_id: string
+          external_id: string | null
+          extra_data: string | null
+          fees_json: Json | null
+          gender: string | null
+          has_ear: boolean | null
+          imei_1: string | null
+          imei_2: string | null
+          imported_at: string
+          internal_note_1: string | null
+          internal_note_2: string | null
+          internal_note_3: string | null
+          last_activity_at: string | null
+          last_os_at: string | null
+          link_type: string | null
+          mother_name: string | null
+          pix_key: string | null
+          rating: number | null
+          raw_import_json: Json | null
+          referred_by: string | null
+          registered_at: string | null
+          registration_status: string | null
+          registration_status_at: string | null
+          relationship: string | null
+          services_offered: Json | null
+          updated_at: string
+          vehicle1_city: string | null
+          vehicle1_color: string | null
+          vehicle1_exercise_year: number | null
+          vehicle1_model: string | null
+          vehicle1_own: boolean | null
+          vehicle1_plate: string | null
+          vehicle1_renavam: string | null
+          vehicle1_state: string | null
+          vehicle1_year: number | null
+          vehicle2_city: string | null
+          vehicle2_color: string | null
+          vehicle2_exercise_year: number | null
+          vehicle2_model: string | null
+          vehicle2_own: boolean | null
+          vehicle2_plate: string | null
+          vehicle2_renavam: string | null
+          vehicle2_state: string | null
+          vehicle2_year: number | null
+          vtr: string | null
+        }
+        Insert: {
+          acceptance_rate?: number | null
+          acceptance_rate_updated_at?: string | null
+          accepted_payments?: Json | null
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zipcode?: string | null
+          app_version?: string | null
+          bank_account?: string | null
+          bank_agency?: string | null
+          bank_code?: string | null
+          bank_holder_cpf?: string | null
+          bank_holder_name?: string | null
+          birth_date?: string | null
+          block_reason?: string | null
+          blocked_until?: string | null
+          branch_id?: string | null
+          brand_id: string
+          cnh_expiration?: string | null
+          cnh_number?: string | null
+          customer_id: string
+          external_id?: string | null
+          extra_data?: string | null
+          fees_json?: Json | null
+          gender?: string | null
+          has_ear?: boolean | null
+          imei_1?: string | null
+          imei_2?: string | null
+          imported_at?: string
+          internal_note_1?: string | null
+          internal_note_2?: string | null
+          internal_note_3?: string | null
+          last_activity_at?: string | null
+          last_os_at?: string | null
+          link_type?: string | null
+          mother_name?: string | null
+          pix_key?: string | null
+          rating?: number | null
+          raw_import_json?: Json | null
+          referred_by?: string | null
+          registered_at?: string | null
+          registration_status?: string | null
+          registration_status_at?: string | null
+          relationship?: string | null
+          services_offered?: Json | null
+          updated_at?: string
+          vehicle1_city?: string | null
+          vehicle1_color?: string | null
+          vehicle1_exercise_year?: number | null
+          vehicle1_model?: string | null
+          vehicle1_own?: boolean | null
+          vehicle1_plate?: string | null
+          vehicle1_renavam?: string | null
+          vehicle1_state?: string | null
+          vehicle1_year?: number | null
+          vehicle2_city?: string | null
+          vehicle2_color?: string | null
+          vehicle2_exercise_year?: number | null
+          vehicle2_model?: string | null
+          vehicle2_own?: boolean | null
+          vehicle2_plate?: string | null
+          vehicle2_renavam?: string | null
+          vehicle2_state?: string | null
+          vehicle2_year?: number | null
+          vtr?: string | null
+        }
+        Update: {
+          acceptance_rate?: number | null
+          acceptance_rate_updated_at?: string | null
+          accepted_payments?: Json | null
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zipcode?: string | null
+          app_version?: string | null
+          bank_account?: string | null
+          bank_agency?: string | null
+          bank_code?: string | null
+          bank_holder_cpf?: string | null
+          bank_holder_name?: string | null
+          birth_date?: string | null
+          block_reason?: string | null
+          blocked_until?: string | null
+          branch_id?: string | null
+          brand_id?: string
+          cnh_expiration?: string | null
+          cnh_number?: string | null
+          customer_id?: string
+          external_id?: string | null
+          extra_data?: string | null
+          fees_json?: Json | null
+          gender?: string | null
+          has_ear?: boolean | null
+          imei_1?: string | null
+          imei_2?: string | null
+          imported_at?: string
+          internal_note_1?: string | null
+          internal_note_2?: string | null
+          internal_note_3?: string | null
+          last_activity_at?: string | null
+          last_os_at?: string | null
+          link_type?: string | null
+          mother_name?: string | null
+          pix_key?: string | null
+          rating?: number | null
+          raw_import_json?: Json | null
+          referred_by?: string | null
+          registered_at?: string | null
+          registration_status?: string | null
+          registration_status_at?: string | null
+          relationship?: string | null
+          services_offered?: Json | null
+          updated_at?: string
+          vehicle1_city?: string | null
+          vehicle1_color?: string | null
+          vehicle1_exercise_year?: number | null
+          vehicle1_model?: string | null
+          vehicle1_own?: boolean | null
+          vehicle1_plate?: string | null
+          vehicle1_renavam?: string | null
+          vehicle1_state?: string | null
+          vehicle1_year?: number | null
+          vehicle2_city?: string | null
+          vehicle2_color?: string | null
+          vehicle2_exercise_year?: number | null
+          vehicle2_model?: string | null
+          vehicle2_own?: boolean | null
+          vehicle2_plate?: string | null
+          vehicle2_renavam?: string | null
+          vehicle2_state?: string | null
+          vehicle2_year?: number | null
+          vtr?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_profiles_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_profiles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_profiles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_profiles_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_profiles_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
         ]

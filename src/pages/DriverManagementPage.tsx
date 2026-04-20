@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Truck, Eye, Gift, Download, Users } from "lucide-react";
 import DriverDetailSheet from "@/components/driver-management/DriverDetailSheet";
 import ManualDriverScoringDialog from "@/components/machine-integration/ManualDriverScoringDialog";
-import ImportarCsvMotoristas from "@/components/driver-management/ImportarCsvMotoristas";
+import ModalImportarMotoristas from "@/features/importacao_motoristas/components/modal_importar_motoristas";
 import DriverNotificationConfig from "@/components/driver-management/DriverNotificationConfig";
 import { formatPoints } from "@/lib/formatPoints";
 
@@ -184,7 +184,7 @@ export default function DriverManagementPage() {
             <Download className="h-4 w-4 mr-1" />
             Exportar CSV
           </Button>
-          {currentBrandId && <ImportarCsvMotoristas brandId={currentBrandId} />}
+          {currentBrandId && <ModalImportarMotoristas brandId={currentBrandId} branchId={isBranchScope ? currentBranchId : null} />}
         </div>
       </div>
 
