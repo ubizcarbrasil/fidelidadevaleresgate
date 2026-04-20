@@ -62,23 +62,24 @@ export default function Vouchers() {
       <DataTableControls search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} searchPlaceholder="Buscar por código..." page={page} pageSize={PAGE_SIZE} totalCount={data?.count ?? 0} onPageChange={setPage} />
       <Card>
         <CardHeader><CardTitle className="text-base">Lista de Cupons</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent className="px-0 sm:px-6">
           {isLoading ? <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div> : (
+          <div className="table-wrap-mobile">
           <Table>
-            <TableHeader><TableRow><TableHead>Código</TableHead><TableHead>Tipo</TableHead><TableHead>Valor</TableHead><TableHead>Branch</TableHead><TableHead>Validade</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>Código</TableHead><TableHead className="hidden sm:table-cell">Tipo</TableHead><TableHead>Valor</TableHead><TableHead className="hidden md:table-cell">Branch</TableHead><TableHead className="hidden md:table-cell">Validade</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
             <TableBody>
               {data?.rows?.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Nenhum cupom cadastrado</TableCell></TableRow>}
               {data?.rows?.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-mono font-medium">{c.code}</TableCell>
-                  <TableCell>{c.type === "FIXED" ? "Fixo" : "Percentual"}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{c.type === "FIXED" ? "Fixo" : "Percentual"}</TableCell>
                   <TableCell>
                     {c.type === "FIXED"
                       ? `R$ ${Number(c.value).toFixed(2)}`
                       : `${Number(c.value)}%`}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{(c.branches as any)?.name || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{c.expires_at ? new Date(c.expires_at).toLocaleDateString("pt-BR") : "—"}</TableCell>
+                  <TableCell className="text-muted-foreground hidden md:table-cell">{(c.branches as any)?.name || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground hidden md:table-cell">{c.expires_at ? new Date(c.expires_at).toLocaleDateString("pt-BR") : "—"}</TableCell>
                   <TableCell><Badge variant={statusVariant[c.status] || "secondary"}>{statusLabels[c.status] || c.status}</Badge></TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="ghost" size="icon" asChild><Link to={`/vouchers/${c.id}`}><Pencil className="h-4 w-4" /></Link></Button>
@@ -87,7 +88,9 @@ export default function Vouchers() {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>)}
+          </Table>
+          </div>
+          )}
         </CardContent>
       </Card>
     </div>
