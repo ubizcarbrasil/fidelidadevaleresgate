@@ -1,19 +1,22 @@
 import { useMemo, useState } from "react";
-import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useProdutoPorSlug } from "@/features/produtos_comerciais/hooks/hook_produtos_comerciais";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Check, Rocket, Clock, Shield, ArrowRight, Star } from "lucide-react";
-import PlatformLogo from "@/components/PlatformLogo";
-import ToggleCiclo, { type CicloCobranca } from "./components/toggle_ciclo";
-import BlocoScreenshots from "./components/bloco_screenshots";
+import { Loader2 } from "lucide-react";
+import BlocoTopbar from "./components/bloco_topbar";
+import BlocoHero from "./components/bloco_hero";
+import BlocoMetricasDestaque from "./components/bloco_metricas_destaque";
+import BlocoDoresSolucoes from "./components/bloco_dores_solucoes";
+import BlocoFuncionalidadesGrid from "./components/bloco_funcionalidades_grid";
+import BlocoPricingDestaque from "./components/bloco_pricing_destaque";
+import BlocoPreviewApp from "./components/bloco_preview_app";
 import BlocoDepoimentos from "./components/bloco_depoimentos";
-import BlocoFaq from "./components/bloco_faq";
-
-function formatarBRL(cents: number) {
-  return `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
-}
+import BlocoPerguntasObjecoes from "./components/bloco_perguntas_objecoes";
+import BlocoCtaFinal from "./components/bloco_cta_final";
+import BlocoCtaStickyMobile from "./components/bloco_cta_sticky_mobile";
+import BlocoFooter from "./components/bloco_footer";
+import type { CicloCobranca } from "./components/toggle_ciclo";
 
 export default function PaginaLandingProduto() {
   const { slug } = useParams<{ slug: string }>();
@@ -62,201 +65,93 @@ export default function PaginaLandingProduto() {
   }
 
   const lc = produto.landing_config_json;
-  const color = lc.primary_color || "hsl(var(--primary))";
+  const color = lc.primary_color || "#6366f1";
   const trialUrl = `/trial?plan=${produto.slug}&cycle=${ciclo}`;
 
   const precoExibido =
     ciclo === "yearly" && hasYearly ? produto.price_yearly_cents! : produto.price_cents;
-  const sufixo = ciclo === "yearly" ? "/ano" : "/mês";
+
+  const irParaTrial = () => navigate(trialUrl);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top bar */}
-      <header className="border-b bg-card">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <PlatformLogo className="h-8 w-8 rounded-lg" />
-            <span className="text-sm font-bold">Vale Resgate</span>
-          </Link>
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/auth">Já tenho conta</Link>
-          </Button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
+      <BlocoTopbar
+        trialUrl={trialUrl}
+        primaryColor={color}
+        ctaLabel="Trial grátis"
+      />
 
-      {/* Hero */}
-      <section
-        className="px-4 py-16 sm:py-24"
-        style={{ background: `linear-gradient(135deg, ${color}1f, transparent 70%)` }}
-      >
-        <div className="max-w-4xl mx-auto text-center space-y-5">
-          {produto.is_popular && (
-            <Badge className="mx-auto" style={{ backgroundColor: color, color: "#fff" }}>
-              <Rocket className="h-3 w-3 mr-1" /> Mais popular
-            </Badge>
-          )}
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">
-            {lc.headline || produto.product_name}
-          </h1>
-          {lc.subheadline && (
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-              {lc.subheadline}
-            </p>
-          )}
-          {lc.hero_image_url && (
-            <img
-              src={lc.hero_image_url}
-              alt={produto.product_name}
-              className="mx-auto max-h-72 object-contain rounded-xl shadow-lg"
-            />
-          )}
-          {/* Provas sociais inline */}
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-              <span className="font-semibold text-foreground">4.9</span> · avaliação média
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Clock className="h-4 w-4" />
-              {produto.trial_days} dias grátis · sem cartão
-            </span>
-          </div>
-          <div>
-            <Button
-              size="lg"
-              className="gap-2 text-base px-8 py-6"
-              style={{ backgroundColor: color, color: "#fff" }}
-              onClick={() => navigate(trialUrl)}
-            >
-              <Rocket className="h-5 w-5" />
-              {lc.cta_label || `Começar trial ${produto.trial_days} dias grátis`}
-              <ArrowRight className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      </section>
+      <BlocoHero
+        eyebrow={lc.eyebrow}
+        headline={lc.headline || produto.product_name}
+        subheadline={lc.subheadline}
+        heroImageUrl={lc.hero_image_url}
+        ctaLabel={lc.cta_label || `Começar trial ${produto.trial_days} dias grátis`}
+        trialUrl={trialUrl}
+        trialDays={produto.trial_days}
+        primaryColor={color}
+        isPopular={produto.is_popular}
+        onPrimaryClick={irParaTrial}
+      />
 
-      {/* Pricing & Benefits */}
-      <section className="max-w-5xl mx-auto px-4 py-12 grid lg:grid-cols-2 gap-8">
-        {/* Pricing */}
-        <Card>
-          <CardContent className="pt-8 space-y-5 text-center">
-            <h3 className="text-sm uppercase tracking-wide text-muted-foreground">
-              Investimento
-            </h3>
+      <BlocoMetricasDestaque metrics={lc.metrics ?? []} primaryColor={color} />
 
-            {/* Toggle ciclo */}
-            {hasYearly && (
-              <div className="flex justify-center">
-                <ToggleCiclo
-                  value={ciclo}
-                  onChange={setCiclo}
-                  hasYearly={hasYearly}
-                  discountPct={economia?.pct ?? null}
-                  primaryColor={color}
-                />
-              </div>
-            )}
+      <BlocoDoresSolucoes
+        problems={lc.problems ?? []}
+        solutions={lc.solutions ?? []}
+        productName={produto.product_name}
+        primaryColor={color}
+      />
 
-            <div>
-              <div className="text-5xl font-extrabold" style={{ color }}>
-                {formatarBRL(precoExibido)}
-                <span className="text-base font-normal text-muted-foreground">
-                  {sufixo}
-                </span>
-              </div>
-              {ciclo === "yearly" && economia && economia.valor > 0 && (
-                <p className="text-sm text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
-                  Economize {formatarBRL(economia.valor)} no ano
-                </p>
-              )}
-              {ciclo === "monthly" && hasYearly && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  ou {formatarBRL(produto.price_yearly_cents!)} no plano anual
-                </p>
-              )}
-            </div>
-            <Button
-              size="lg"
-              className="w-full gap-2"
-              style={{ backgroundColor: color, color: "#fff" }}
-              onClick={() => navigate(trialUrl)}
-            >
-              <Rocket className="h-4 w-4" />
-              Iniciar trial
-            </Button>
-            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-              <Shield className="h-3 w-3" />
-              Cancele a qualquer momento
-            </div>
-          </CardContent>
-        </Card>
+      <BlocoFuncionalidadesGrid
+        benefits={(lc.benefits ?? []).length > 0 ? lc.benefits! : produto.features}
+        primaryColor={color}
+      />
 
-        {/* Benefits */}
-        <Card>
-          <CardContent className="pt-8 space-y-4">
-            <h3 className="text-sm uppercase tracking-wide text-muted-foreground">
-              O que está incluso
-            </h3>
-            <ul className="space-y-3">
-              {((lc.benefits ?? []).length > 0
-                ? lc.benefits!
-                : produto.features
-              ).map((b, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <div
-                    className="flex h-5 w-5 items-center justify-center rounded-full flex-shrink-0 mt-0.5"
-                    style={{ backgroundColor: `${color}22` }}
-                  >
-                    <Check className="h-3 w-3" style={{ color }} />
-                  </div>
-                  <span className="text-sm">{b}</span>
-                </li>
-              ))}
-              {(lc.benefits ?? []).length === 0 && produto.features.length === 0 && (
-                <li className="text-sm text-muted-foreground italic">
-                  Configuração de benefícios pendente.
-                </li>
-              )}
-            </ul>
-          </CardContent>
-        </Card>
-      </section>
+      <BlocoPreviewApp
+        screenshots={lc.screenshots ?? []}
+        heroImageUrl={lc.hero_image_url}
+        productName={produto.product_name}
+        primaryColor={color}
+      />
 
-      {/* Screenshots */}
-      <BlocoScreenshots screenshots={lc.screenshots ?? []} primaryColor={color} />
+      <BlocoPricingDestaque
+        ciclo={ciclo}
+        setCiclo={setCiclo}
+        hasYearly={hasYearly}
+        precoExibido={precoExibido}
+        precoYearly={produto.price_yearly_cents}
+        economia={economia}
+        benefits={lc.benefits ?? []}
+        features={produto.features}
+        trialDays={produto.trial_days}
+        isPopular={produto.is_popular}
+        primaryColor={color}
+        onCta={irParaTrial}
+      />
 
-      {/* Depoimentos */}
       <BlocoDepoimentos testimonials={lc.testimonials ?? []} primaryColor={color} />
 
-      {/* FAQ */}
-      <BlocoFaq faq={lc.faq ?? []} primaryColor={color} />
+      <BlocoPerguntasObjecoes
+        faq={lc.faq ?? []}
+        trialDays={produto.trial_days}
+        primaryColor={color}
+      />
 
-      {/* CTA bottom */}
-      <section className="px-4 py-12 text-center">
-        <Button
-          size="lg"
-          className="gap-2 text-base px-8 py-6"
-          style={{ backgroundColor: color, color: "#fff" }}
-          onClick={() => navigate(trialUrl)}
-        >
-          <Rocket className="h-5 w-5" />
-          {lc.cta_label || `Começar trial ${produto.trial_days} dias grátis`}
-        </Button>
-      </section>
+      <BlocoCtaFinal
+        trialDays={produto.trial_days}
+        ctaLabel={lc.cta_label}
+        primaryColor={color}
+        onCta={irParaTrial}
+      />
 
-      {/* Footer */}
-      <footer className="border-t bg-card mt-8">
-        <div className="max-w-6xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-muted-foreground">
-          <span>© {new Date().getFullYear()} Vale Resgate</span>
-          <Link
-            to="/produtos"
-            className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
-          >
-            Ver outros produtos <ArrowRight className="h-3 w-3" />
-          </Link>
-        </div>
-      </footer>
+      <BlocoFooter />
+
+      <BlocoCtaStickyMobile
+        trialDays={produto.trial_days}
+        primaryColor={color}
+        onCta={irParaTrial}
+      />
     </div>
   );
 }

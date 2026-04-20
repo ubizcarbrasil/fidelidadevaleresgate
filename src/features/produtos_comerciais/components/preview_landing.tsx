@@ -64,12 +64,15 @@ export default function PreviewLanding({ draft }: Props) {
         <div className="p-6 border-t space-y-2">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">O que está incluso</p>
           <ul className="space-y-1.5">
-            {(lc.benefits ?? []).map((b, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm">
-                <Check className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color }} />
-                <span>{b}</span>
-              </li>
-            ))}
+            {(lc.benefits ?? []).map((b, i) => {
+              const txt = typeof b === "string" ? b : b.title;
+              return (
+                <li key={i} className="flex items-start gap-2 text-sm">
+                  <Check className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color }} />
+                  <span>{txt}</span>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
