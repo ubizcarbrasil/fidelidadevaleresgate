@@ -2,7 +2,13 @@ import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Settings2 } from "lucide-react";
+import { Settings2, HelpCircle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { ProdutoComercialDraft } from "../types/tipos_produto";
 
 interface Props {
@@ -106,33 +112,72 @@ export default function PassoIdentificacao({ draft, onChange }: Props) {
           </span>
         </button>
         {modoAvancado && (
-          <div className="grid sm:grid-cols-2 gap-4 border-t p-3">
-            <div className="space-y-2">
-              <Label className="text-xs">ID interno (plan_key)</Label>
-              <Input
-                value={draft.plan_key}
-                onChange={(e) => onChange({ plan_key: slugify(e.target.value) })}
-                placeholder="motorista-premium"
-                disabled={!!draft.id}
-              />
-              <p className="text-xs text-muted-foreground">
-                {draft.id
-                  ? "Não editável após criação — usado em integrações."
-                  : "Gerado a partir do nome. Edite só se precisar."}
-              </p>
+          <TooltipProvider delayDuration={150}>
+            <div className="grid sm:grid-cols-2 gap-4 border-t p-3">
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Label className="text-xs">ID interno (não muda)</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label="O que é o ID interno"
+                      >
+                        <HelpCircle className="h-3.5 w-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs text-xs">
+                      Identificador fixo usado pelo sistema em integrações,
+                      webhooks, contratos e relatórios. Definido na criação e
+                      <strong> nunca pode ser alterado</strong> — mudá-lo
+                      quebraria pedidos antigos e integrações.
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Input
+                  value={draft.plan_key}
+                  onChange={(e) => onChange({ plan_key: slugify(e.target.value) })}
+                  placeholder="motorista-premium"
+                  disabled={!!draft.id}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {draft.id
+                    ? "Bloqueado após criação — usado em integrações."
+                    : "Gerado automaticamente do nome. Edite só se precisar."}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Label className="text-xs">Endereço público da página</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label="O que é o endereço público"
+                      >
+                        <HelpCircle className="h-3.5 w-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs text-xs">
+                      Pedaço final da URL que o cliente vê na barra de
+                      endereços. <strong>Pode ser alterado a qualquer momento</strong> —
+                      útil para SEO ou rebrand sem afetar integrações.
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Input
+                  value={draft.slug}
+                  onChange={(e) => onChange({ slug: slugify(e.target.value) })}
+                  placeholder="motorista-premium"
+                />
+                <p className="text-xs text-muted-foreground">
+                  URL: /p/produto/{draft.slug || "..."}
+                </p>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs">Endereço público (slug)</Label>
-              <Input
-                value={draft.slug}
-                onChange={(e) => onChange({ slug: slugify(e.target.value) })}
-                placeholder="motorista-premium"
-              />
-              <p className="text-xs text-muted-foreground">
-                URL: /p/produto/{draft.slug || "..."}
-              </p>
-            </div>
-          </div>
+          </TooltipProvider>
         )}
         {!modoAvancado && (draft.plan_key || draft.slug) && (
           <div className="border-t px-3 py-2 text-xs text-muted-foreground">
