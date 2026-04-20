@@ -17,6 +17,9 @@ export type ConsoleSidebar = "ROOT" | "BRAND" | "BRANCH";
 
 export type SeveridadeDuplicacao = "rota_exata" | "funcao_similar";
 
+/** Escopo da duplicação: dentro do mesmo painel ou apenas entre painéis diferentes. */
+export type EscopoDuplicacao = "intra_console" | "entre_consoles";
+
 export interface OcorrenciaItemMenu {
   console: ConsoleSidebar;
   grupo: string;
@@ -32,6 +35,8 @@ export interface RelatorioDuplicacao {
   /** Identificador único do agrupamento (rota base ou moduleKey) */
   id: string;
   severidade: SeveridadeDuplicacao;
+  /** intra_console = duplicado no mesmo painel; entre_consoles = compartilhado entre painéis (esperado) */
+  escopo: EscopoDuplicacao;
   /** Critério humano: "Mesma rota /xyz" ou "Mesmo módulo abc" */
   criterio: string;
   ocorrencias: OcorrenciaItemMenu[];
