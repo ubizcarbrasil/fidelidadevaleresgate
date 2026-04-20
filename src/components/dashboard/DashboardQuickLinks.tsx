@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import DemoStoresToggle from "@/components/DemoStoresToggle";
 import DemoAccessCard from "@/components/dashboard/DemoAccessCard";
+import { CACHE } from "@/config/constants";
 
 /* ── Brand Quick Links ── */
 function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: { isDriverEnabled?: boolean; isPassengerEnabled?: boolean }) {
@@ -29,6 +30,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
       return data;
     },
     enabled: !!currentBrandId,
+    staleTime: CACHE.STALE_TIME_MEDIUM,
   });
 
   // Check if affiliate_deals module is enabled at brand level
@@ -46,6 +48,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
       return map;
     },
     enabled: !!currentBrandId,
+    staleTime: CACHE.STALE_TIME_MEDIUM,
   });
 
   const achadinhosModuleEnabled = brandModulesFlags?.affiliate_deals ?? true;
@@ -64,6 +67,7 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
       return data || [];
     },
     enabled: !!currentBrandId,
+    staleTime: CACHE.STALE_TIME_MEDIUM,
   });
 
   const PORTAL_DOMAIN = "app.valeresgate.com.br";

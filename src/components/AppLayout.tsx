@@ -89,39 +89,41 @@ export default function AppLayout() {
     return isRootAdmin && !!params.get("brandId");
   }, [isRootAdmin]);
 
+  // Boot Supabase fetches em paralelo (platform_theme + brand_settings quando aplicável)
   useEffect(() => {
-    supabase
+    let cancelled = false;
+    const platformPromise = supabase
       .from("platform_config")
       .select("value_json")
       .eq("key", "platform_theme")
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.value_json) setPlatformTheme(data.value_json);
-      });
-  }, []);
+      .maybeSingle();
 
-  useEffect(() => {
-    if (consoleScope !== "BRAND" || !brandId) return;
-    supabase
-      .from("brands")
-      .select("brand_settings_json")
-      .eq("id", brandId)
-      .single()
-      .then(({ data }) => {
-        const settings = data?.brand_settings_json as Record<string, any> | null;
-        if (settings && !settings.api_key_onboarding_seen) {
-          setShowApiKeyOnboarding(true);
-        }
-      });
-  }, [consoleScope, brandId]);
+    const brandPromise = (consoleScope === "BRAND" && brandId)
+      ? supabase.from("brands").select("brand_settings_json").eq("id", brandId).single()
+      : Promise.resolve({ data: null });
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
+    Promise.all([platformPromise, brandPromise]).then(([platformRes, brandRes]) => {
+      if (cancelled) return;
+      if (platformRes.data?.value_json) setPlatformTheme(platformRes.data.value_json);
+      const settings = (brandRes as any)?.data?.brand_settings_json as Record<string, any> | null;
+      if (settings && !settings.api_key_onboarding_seen) {
+        setShowApiKeyOnboarding(true);
+      }
+    });
+
+    // Bell-ring adiado para idle — não compete com boot inicial
+    const ric = (window as any).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 2000));
+    const cancelRic = (window as any).cancelIdleCallback ?? clearTimeout;
+    const idleId = ric(() => {
       bellRef.current?.classList.add("bell-ring");
       setTimeout(() => bellRef.current?.classList.remove("bell-ring"), 900);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, []);
+    });
+
+    return () => {
+      cancelled = true;
+      try { cancelRic(idleId); } catch { /* noop */ }
+    };
+  }, [consoleScope, brandId]);
 
   useBrandTheme(platformTheme);
 

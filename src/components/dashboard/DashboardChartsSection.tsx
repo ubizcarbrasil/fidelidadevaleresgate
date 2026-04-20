@@ -1,6 +1,7 @@
 import { Suspense, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { CACHE } from "@/config/constants";
 
 interface IntegratedBranch {
   branch_id: string;
@@ -21,6 +22,7 @@ function useIntegratedBranches(brandId?: string) {
         .map((d: any) => ({ branch_id: d.branch_id, branch_name: d.branches.name })) as IntegratedBranch[];
     },
     enabled: !!brandId,
+    staleTime: CACHE.STALE_TIME_MEDIUM,
   });
 }
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +47,7 @@ function RankingSection({ brandFilter }: { brandFilter?: string }) {
       const { data } = await q.limit(6).order("created_at", { ascending: false });
       return data || [];
     },
+    staleTime: CACHE.STALE_TIME_MEDIUM,
   });
 
   if (!topStores || topStores.length === 0) return null;

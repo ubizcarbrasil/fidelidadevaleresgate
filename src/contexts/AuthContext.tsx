@@ -60,7 +60,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (currentSession?.user) {
           const reqId = ++fetchIdRef.current;
-          await fetchRoles(currentSession.user.id, reqId);
+          // Fire-and-forget: libera o loading sem esperar roles
+          // (UI já consegue decidir rota com user; roles chegam logo em seguida)
+          void fetchRoles(currentSession.user.id, reqId);
         }
       } catch (err) {
         console.warn("[AuthContext] Falha no bootstrap:", err);

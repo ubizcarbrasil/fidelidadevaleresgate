@@ -100,6 +100,7 @@ return ({
           'vendor-supabase': ['@supabase/supabase-js'],
           'vendor-query': ['@tanstack/react-query'],
           'vendor-motion': ['framer-motion'],
+          'vendor-charts': ['recharts'],
         },
       },
     },
