@@ -129,7 +129,7 @@ export default function DriverManagementPage() {
             className="flex-1 sm:flex-none"
           >
             <Download className="h-4 w-4 mr-1" />
-            <span className="hidden xs:inline sm:inline">Exportar </span>CSV
+            <span className="hidden sm:inline">Exportar </span>CSV
           </Button>
           {currentBrandId && (
             <ModalImportarMotoristas

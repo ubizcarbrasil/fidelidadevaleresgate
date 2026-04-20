@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/react";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/lib/errorTracker";
 import { setBootPhase, dismissBootstrap } from "@/lib/bootState";
-import { recoverFromChunkError } from "@/lib/pwaRecovery";
+import { recoverFromChunkError, isRecoverableDomError } from "@/lib/pwaRecovery";
 
 interface Props {
   children: React.ReactNode;
@@ -17,14 +17,7 @@ interface State {
 
 function isChunkLoadError(error: Error | null): boolean {
   if (!error) return false;
-  const msg = error.message || "";
-  return (
-    msg.includes("Failed to fetch dynamically imported module") ||
-    msg.includes("Importing a module script failed") ||
-    msg.includes("error loading dynamically imported module") ||
-    msg.includes("Loading chunk") ||
-    msg.includes("Loading CSS chunk")
-  );
+  return isRecoverableDomError(error.message);
 }
 
 export class ErrorBoundary extends React.Component<Props, State> {
