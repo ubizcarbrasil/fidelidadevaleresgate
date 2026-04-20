@@ -19,6 +19,8 @@ import { Link } from "react-router-dom";
 import ModalAdicionarResgatavel from "./produtos_resgate/components/ModalAdicionarResgatavel";
 import BotaoRecalcularPontos from "./produtos_resgate/components/BotaoRecalcularPontos";
 import ModalEditarResgatavel from "./produtos_resgate/components/ModalEditarResgatavel";
+import ModalCriarProdutoManual from "./produtos_resgate/components/ModalCriarProdutoManual";
+import { useProductScope } from "@/features/city_onboarding/hooks/hook_escopo_produto";
 import { formatPoints } from "@/lib/formatPoints";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -30,6 +32,8 @@ export default function ProdutosResgatePage() {
   const { brand } = useBrand();
   const { search, debouncedSearch, page, setPage, onSearchChange } = useDebouncedSearch();
   const isMobile = useIsMobile();
+  const escopo = useProductScope();
+  const achadinhosAtivo = escopo.hasModuleKey("affiliate_deals");
 
   const isBranchScope = consoleScope === "BRANCH" && !!currentBranchId;
 
@@ -39,6 +43,7 @@ export default function ProdutosResgatePage() {
   const [batchRedeemableBy, setBatchRedeemableBy] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [modalAberto, setModalAberto] = useState(false);
+  const [modalManualAberto, setModalManualAberto] = useState(false);
   const [produtoEditando, setProdutoEditando] = useState<any>(null);
 
   // Query dedicada para brand_settings_json (brand pode ser null no admin)
