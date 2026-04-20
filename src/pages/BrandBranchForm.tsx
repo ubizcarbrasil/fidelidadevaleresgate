@@ -660,6 +660,7 @@ export default function BrandBranchForm() {
       )}
 
       {/* Módulos de Negócio */}
+      {algumModuloVisivel && (
       <Card className="rounded-xl">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -671,7 +672,7 @@ export default function BrandBranchForm() {
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          {podeDuelos && (<div className="flex items-center justify-between">
             <div>
               <Label className="flex items-center gap-2">
                 <Swords className="h-4 w-4 text-orange-500" />
@@ -682,9 +683,9 @@ export default function BrandBranchForm() {
               </p>
             </div>
             <Switch checked={enableDuelsModule} onCheckedChange={setEnableDuelsModule} />
-          </div>
+          </div>)}
 
-          <div className="flex items-center justify-between">
+          {podeAchadinhos && (<div className="flex items-center justify-between">
             <div>
               <Label className="flex items-center gap-2">
                 <ShoppingCart className="h-4 w-4 text-pink-500" />
@@ -695,9 +696,9 @@ export default function BrandBranchForm() {
               </p>
             </div>
             <Switch checked={enableAchadinhosModule} onCheckedChange={setEnableAchadinhosModule} />
-          </div>
+          </div>)}
 
-          <div className="flex items-center justify-between">
+          {podeMarketplace && (<div className="flex items-center justify-between">
             <div>
               <Label className="flex items-center gap-2">
                 <Store className="h-4 w-4 text-blue-500" />
@@ -708,9 +709,9 @@ export default function BrandBranchForm() {
               </p>
             </div>
             <Switch checked={enableMarketplaceModule} onCheckedChange={setEnableMarketplaceModule} />
-          </div>
+          </div>)}
 
-          <div className="flex items-center justify-between">
+          {podeRaceEarn && (<div className="flex items-center justify-between">
             <div>
               <Label className="flex items-center gap-2">
                 <Zap className="h-4 w-4 text-yellow-500" />
@@ -721,9 +722,9 @@ export default function BrandBranchForm() {
               </p>
             </div>
             <Switch checked={enableRaceEarnModule} onCheckedChange={setEnableRaceEarnModule} />
-          </div>
+          </div>)}
 
-          <div className="flex items-center justify-between">
+          {podeClientePontua && (<div className="flex items-center justify-between">
             <div>
               <Label className="flex items-center gap-2">
                 <Coins className="h-4 w-4 text-green-500" />
@@ -734,9 +735,10 @@ export default function BrandBranchForm() {
               </p>
             </div>
             <Switch checked={enableCustomerScoringModule} onCheckedChange={setEnableCustomerScoringModule} />
-          </div>
+          </div>)}
 
           {/* Flags do App do Motorista */}
+          {audienciaMotorista && (<>
           <div className="border-t pt-4 mt-2">
             <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">App do Motorista</p>
           </div>
@@ -779,8 +781,10 @@ export default function BrandBranchForm() {
             </div>
             <Switch checked={enablePointsPurchase} onCheckedChange={setEnablePointsPurchase} />
           </div>
+          </>)}
         </CardContent>
       </Card>
+      )}
 
       {/* Card 1 — Regra de Resgate (por cidade) */}
       <Card className="rounded-xl">
