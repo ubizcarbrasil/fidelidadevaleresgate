@@ -37,6 +37,9 @@ export interface BusinessModelRow {
   pricing_model: string;
   sort_order: number;
   is_active: boolean;
+  is_sellable_addon: boolean;
+  addon_price_monthly_cents: number | null;
+  addon_price_yearly_cents: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -65,6 +68,9 @@ export interface AtualizarBusinessModelInput {
   color?: string | null;
   sort_order?: number;
   is_active?: boolean;
+  is_sellable_addon?: boolean;
+  addon_price_monthly_cents?: number | null;
+  addon_price_yearly_cents?: number | null;
 }
 
 // ============================================================================

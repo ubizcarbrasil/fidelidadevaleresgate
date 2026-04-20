@@ -85,6 +85,11 @@ export default function CardModeloBrand({ brandId, resolved }: Props) {
 
         {/* Metadata por estado */}
         <div className="flex flex-wrap items-center gap-1.5 min-h-[22px]">
+          {resolved.source === "addon" && !isLocked && (
+            <Badge variant="secondary" className="text-[10px]">
+              Add-on
+            </Badge>
+          )}
           {isActive && isGG && row?.ganha_ganha_margin_pct != null && (
             <Badge variant="secondary" className="text-[10px]">
               Margem {row.ganha_ganha_margin_pct}%

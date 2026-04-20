@@ -38,6 +38,9 @@ export function DialogEditarModelo({ open, onOpenChange, modelo }: DialogEditarM
   const [color, setColor] = useState("#6366F1");
   const [sortOrder, setSortOrder] = useState<number>(0);
   const [isActive, setIsActive] = useState(true);
+  const [isSellable, setIsSellable] = useState(false);
+  const [priceMonthly, setPriceMonthly] = useState<string>("");
+  const [priceYearly, setPriceYearly] = useState<string>("");
   const [busca, setBusca] = useState("");
 
   const { data: modulos, isLoading: loadModulos } = useCatalogoModulos();
@@ -54,6 +57,17 @@ export function DialogEditarModelo({ open, onOpenChange, modelo }: DialogEditarM
       setColor(modelo.color ?? "#6366F1");
       setSortOrder(modelo.sort_order);
       setIsActive(modelo.is_active);
+      setIsSellable(modelo.is_sellable_addon);
+      setPriceMonthly(
+        modelo.addon_price_monthly_cents != null
+          ? (modelo.addon_price_monthly_cents / 100).toFixed(2).replace(".", ",")
+          : ""
+      );
+      setPriceYearly(
+        modelo.addon_price_yearly_cents != null
+          ? (modelo.addon_price_yearly_cents / 100).toFixed(2).replace(".", ",")
+          : ""
+      );
       setBusca("");
     }
   }, [open, modelo]);
@@ -75,6 +89,12 @@ export function DialogEditarModelo({ open, onOpenChange, modelo }: DialogEditarM
 
   if (!modelo) return null;
 
+  const parseReais = (v: string): number | null => {
+    if (!v) return null;
+    const n = parseFloat(v.replace(/\./g, "").replace(",", "."));
+    return Number.isNaN(n) ? null : Math.round(n * 100);
+  };
+
   const handleSalvar = async () => {
     await update.mutateAsync({
       id: modelo.id,
@@ -85,6 +105,9 @@ export function DialogEditarModelo({ open, onOpenChange, modelo }: DialogEditarM
         color: color || null,
         sort_order: sortOrder,
         is_active: isActive,
+        is_sellable_addon: isSellable,
+        addon_price_monthly_cents: isSellable ? parseReais(priceMonthly) : null,
+        addon_price_yearly_cents: isSellable ? parseReais(priceYearly) : null,
       },
     });
     onOpenChange(false);
@@ -181,6 +204,49 @@ export function DialogEditarModelo({ open, onOpenChange, modelo }: DialogEditarM
                 <Switch checked={isActive} onCheckedChange={setIsActive} />
               </div>
             </div>
+          </section>
+
+          <Separator />
+
+          {/* Seção 1.5: Vendável como Add-on */}
+          <section className="space-y-3">
+            <h3 className="text-sm font-semibold">Comercialização Avulsa</h3>
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div>
+                <Label className="text-sm">Vendável como add-on</Label>
+                <p className="text-xs text-muted-foreground">
+                  Permite que o Raiz conceda este modelo a qualquer marca, fora do plano dela.
+                </p>
+              </div>
+              <Switch checked={isSellable} onCheckedChange={setIsSellable} />
+            </div>
+            {isSellable && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="bm-price-monthly">Preço mensal (R$)</Label>
+                  <Input
+                    id="bm-price-monthly"
+                    inputMode="decimal"
+                    value={priceMonthly}
+                    onChange={(e) => setPriceMonthly(e.target.value)}
+                    placeholder="0,00"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="bm-price-yearly">Preço anual (R$)</Label>
+                  <Input
+                    id="bm-price-yearly"
+                    inputMode="decimal"
+                    value={priceYearly}
+                    onChange={(e) => setPriceYearly(e.target.value)}
+                    placeholder="0,00"
+                  />
+                </div>
+                <p className="sm:col-span-2 text-[11px] text-muted-foreground">
+                  Sugestão exibida no modal de concessão. O Raiz pode sobrescrever caso a caso.
+                </p>
+              </div>
+            )}
           </section>
 
           <Separator />
