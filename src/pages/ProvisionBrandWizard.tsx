@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Building2, MapPin, Palette, Rocket, CheckCircle2, Loader2, Copy, ExternalLink, LayoutGrid } from "lucide-react";
 import { Badge } from "@/components/ui/badge";

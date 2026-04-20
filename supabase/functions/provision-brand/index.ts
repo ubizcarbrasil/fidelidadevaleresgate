@@ -581,37 +581,49 @@ Deno.serve(async (req) => {
       { onConflict: "user_id,role", ignoreDuplicates: true },
     );
 
-    // ─── 8. Enable modules based on plan ──────────────────────
-    const { data: brandRow } = await supabaseAdmin
-      .from("brands").select("subscription_plan").eq("id", brand.id).single();
-    const subscription_plan = brandRow?.subscription_plan || "free";
-    const BASIC_PLAN_ENABLED_KEYS = new Set([
-      // Baseado no template UBIZ Resgata (24 módulos padrão)
-      "affiliate_deals", "api_keys", "approvals", "banners", "brand_theme",
-      "categories", "coupons", "crm", "custom_pages", "customers",
-      "earn_points_store", "home_sections", "machine_integration", "offers",
-      "page_builder", "partner_landing", "profile_links", "redemption_qr",
-      "reports", "stores", "taxonomy", "theme_images", "theme_integrations", "theme_texts",
-      "users_management", "wallet",
-    ]);
-    const isBasicPlan = !subscription_plan || subscription_plan === "free" || subscription_plan === "basic";
-    const { data: allMods } = await supabaseAdmin
-      .from("module_definitions").select("id, key").eq("is_active", true);
-    if (allMods && allMods.length > 0) {
-      // Check existing to avoid duplicates
-      const { data: existingMods } = await supabaseAdmin
-        .from("brand_modules").select("module_definition_id").eq("brand_id", brand.id);
-      const existingIds = new Set((existingMods || []).map((m: any) => m.module_definition_id));
-      const newMods = allMods.filter((m: any) => !existingIds.has(m.id));
-      if (newMods.length > 0) {
-        await supabaseAdmin.from("brand_modules").insert(
-          newMods.map((m: any, i: number) => ({
-            brand_id: brand.id, module_definition_id: m.id,
-            is_enabled: isBasicPlan ? BASIC_PLAN_ENABLED_KEYS.has(m.key) : true,
-            order_index: i,
-          })),
-        );
-      }
+    // ─── 8. Enable modules based on plan_module_templates ─────
+    // Fonte única de verdade: tabela plan_module_templates (mesmo padrão usado em
+    // stripe-webhook e apply-plan-template). Aceita plano vindo do body.
+    const requestedPlan = (body as any).subscription_plan;
+    const validPlans = ["free", "starter", "profissional", "enterprise"];
+    let plan_key: string;
+    if (typeof requestedPlan === "string" && validPlans.includes(requestedPlan)) {
+      plan_key = requestedPlan;
+      // Persiste o plano escolhido na brand
+      await supabaseAdmin.from("brands")
+        .update({ subscription_plan: plan_key })
+        .eq("id", brand.id);
+    } else {
+      const { data: brandRow } = await supabaseAdmin
+        .from("brands").select("subscription_plan").eq("id", brand.id).single();
+      plan_key = brandRow?.subscription_plan && validPlans.includes(brandRow.subscription_plan)
+        ? brandRow.subscription_plan
+        : "free";
+    }
+
+    // Lê o template do plano
+    const { data: planTemplates } = await supabaseAdmin
+      .from("plan_module_templates")
+      .select("module_definition_id, is_enabled")
+      .eq("plan_key", plan_key);
+
+    // Garante módulos core sempre ON
+    const { data: coreMods } = await supabaseAdmin
+      .from("module_definitions").select("id")
+      .eq("is_active", true).eq("is_core", true);
+    const coreIds = new Set((coreMods || []).map((m: any) => m.id));
+
+    // Substitui brand_modules pelo template (idempotente para brand recém-criada)
+    await supabaseAdmin.from("brand_modules").delete().eq("brand_id", brand.id);
+    if (planTemplates && planTemplates.length > 0) {
+      await supabaseAdmin.from("brand_modules").insert(
+        planTemplates.map((t: any, i: number) => ({
+          brand_id: brand.id,
+          module_definition_id: t.module_definition_id,
+          is_enabled: coreIds.has(t.module_definition_id) ? true : t.is_enabled,
+          order_index: i,
+        })),
+      );
     }
 
     // ─── 8b. Seed default tier points rules (1pt per R$1) ──────
