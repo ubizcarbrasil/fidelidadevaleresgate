@@ -141,9 +141,14 @@ export default function PassoIdentificacao({ draft, onChange }: Props) {
                 setPrecoMensalStr(v);
                 onChange({ price_cents: parseToCents(v) });
               }}
+              onFocus={() => setMensalFocado(true)}
               onBlur={() => {
-                if (precoMensalStr.trim() === "") return;
-                setPrecoMensalStr(centsToStr(parseToCents(precoMensalStr)));
+                setMensalFocado(false);
+                const cents = parseToCents(precoMensalStr);
+                onChange({ price_cents: cents });
+                if (precoMensalStr.trim() !== "") {
+                  setPrecoMensalStr(centsToStr(cents));
+                }
               }}
             />
           </div>
@@ -158,12 +163,16 @@ export default function PassoIdentificacao({ draft, onChange }: Props) {
                 setPrecoAnualStr(v);
                 onChange({ price_yearly_cents: v === "" ? null : parseToCents(v) });
               }}
+              onFocus={() => setAnualFocado(true)}
               onBlur={() => {
+                setAnualFocado(false);
                 if (precoAnualStr.trim() === "") {
                   onChange({ price_yearly_cents: null });
                   return;
                 }
-                setPrecoAnualStr(centsToStr(parseToCents(precoAnualStr)));
+                const cents = parseToCents(precoAnualStr);
+                onChange({ price_yearly_cents: cents });
+                setPrecoAnualStr(centsToStr(cents));
               }}
             />
           </div>
