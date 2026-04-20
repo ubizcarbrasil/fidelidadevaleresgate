@@ -688,7 +688,11 @@ export default function BrandBranchForm() {
                 Módulo Achadinho
               </Label>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Vitrine de ofertas afiliadas para clientes e motoristas.
+                {audienciaMotorista && audienciaCliente
+                  ? "Vitrine de ofertas afiliadas para clientes e motoristas."
+                  : audienciaCliente
+                    ? "Vitrine de ofertas afiliadas para clientes."
+                    : "Vitrine de ofertas afiliadas para motoristas."}
               </p>
             </div>
             <Switch checked={enableAchadinhosModule} onCheckedChange={setEnableAchadinhosModule} />
