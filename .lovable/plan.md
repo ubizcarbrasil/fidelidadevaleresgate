@@ -1,93 +1,75 @@
 
 
-# Modo Vitrine Manual quando Achadinhos está OFF
+# Esconder UI de Cliente quando o plano não inclui essa audiência
 
 ## Diagnóstico
 
-Hoje a página **Produtos de Resgate** assume que existe Achadinhos ativo:
-- O modal "Adicionar Produtos ao Resgate" lista produtos já existentes em `affiliate_deals` (vindos de scraping de marketplaces como Mercado Livre)
-- O empty state empurra o usuário para `/affiliate-deals` (que pode estar bloqueado pelo `ModuleGuard moduleKey="affiliate_deals"`)
-- O botão "Ir para Achadinhos" e o título "Adicionar Produtos ao Resgate" mencionam funcionalidade que o cliente não contratou
+No plano **Engajamento Motorista Premium** (Drive Engajamento) a audiência `cliente` **não está contratada**, mas a UI ainda mostra elementos de cliente:
 
-Para marcas como **Drive Engajamento** (Premium Motorista, sem `affiliate_deals`), o resultado é confuso: aparecem produtos de marketplace que não fazem sentido, e o caminho de adicionar é truncado.
+1. **Sidebar → Gestão Comercial → "Clientes"** (e Ofertas, Resgates, Cupons, Parceiros, Pontuar, Regras de Pontos, Extrato, etc.) aparecem porque o filtro do sidebar (`scoringFilter: "PASSENGER"`) usa `useBrandScoringModels`, que olha o **`scoring_model` das branches**. Se uma cidade legada está como `BOTH`, todos esses itens reaparecem — mesmo que o plano não cubra clientes.
 
-A página existe (e deve continuar existindo) porque o módulo `product_redemptions` está incluído em planos motorista. O que falta é um **modo manual** para criar produtos próprios da vitrine sem depender de scraping de marketplace.
+2. **Página de Ofertas → filtro "Apenas Clientes"** está sempre visível no select de público, sem checar o plano.
 
-## O que vou fazer
+A regra correta é: **o plano (produto contratado) define quais audiências existem**. As flags da branch só refinam dentro do que o plano permite.
 
-### 1. Detectar se Achadinhos está ativo (`ProdutosResgatePage.tsx`)
-Usar `useProductScope` para checar `escopo.hasModuleKey("affiliate_deals")`. Resultado: `achadinhosAtivo: boolean`.
+## Ajuste
 
-### 2. Empty state contextual
-- **Se Achadinhos ATIVO:** mantém o estado atual ("Ir para Achadinhos")
-- **Se Achadinhos OFF:** muda mensagem para "Crie produtos para sua vitrine de resgate" e o CTA principal vira **"+ Criar Produto"**, abrindo o novo modal manual (não o atual)
+### 1. Sidebar do empreendedor (`src/components/consoles/BrandSidebar.tsx`)
 
-### 3. Botão "Adicionar" do header se adapta
-- **Se Achadinhos ATIVO:** texto continua "Adicionar Produtos" → abre modal atual (escolher de achadinhos importados)
-- **Se Achadinhos OFF:** texto vira "Criar Produto" → abre o **novo modal manual**
+Trocar `useBrandScoringModels` por `useProductScope` no filtro do sidebar:
 
-### 4. Novo componente: `ModalCriarProdutoManual.tsx`
-Arquivo novo em `src/pages/produtos_resgate/components/`. Formulário fluído com:
-- **Imagem do produto** — upload via `StorageImageUpload` para bucket `brand-assets/produtos-resgate/`
-- **Título** (obrigatório)
-- **Descrição** (opcional, textarea)
-- **Preço em R$** (opcional — se preenchido, habilita cálculo automático)
-- **Público-alvo** — Motorista / Cliente / Ambos (já filtrado pelo `useProductScope` para mostrar só audiências do plano)
-- **Toggle "Calcular pontos automaticamente"** — usa preço × taxa da cidade (`useRegrasResgateCidade`)
-- **Custo em pontos** — campo manual; auto-preenchido quando toggle ON e preço informado; editável quando toggle OFF
-- Insere em `affiliate_deals` com:
-  - `brand_id`, `branch_id` (do `useBrandGuard`)
-  - `is_active: true`, `is_redeemable: true`
-  - `affiliate_url: null` (produto manual, sem link externo)
-  - `store_name: null` (não é de marketplace)
-  - `redeem_points_cost`, `redeemable_by`
-  - `image_url`, `title`, `description`, `price`
+```ts
+const escopo = useProductScope();
+const audienciaMotorista = escopo.hasAudience("motorista");
+const audienciaCliente = escopo.hasAudience("cliente");
 
-### 5. Modal atual (`ModalAdicionarResgatavel.tsx`) só aparece quando Achadinhos ATIVO
-Não mexo na lógica interna. Apenas o botão que abre ele só existe quando `achadinhosAtivo === true`.
+// no .filter():
+if (item.scoringFilter === "DRIVER") return audienciaMotorista;
+if (item.scoringFilter === "PASSENGER") return audienciaCliente;
+```
 
-### 6. Listagem de produtos (tabela) funciona igual nos dois modos
-A tabela já mostra `affiliate_deals.is_redeemable = true` filtrado por brand — produtos manuais aparecem na mesma lista, com a mesma UI de edição (toggle ativo, editar custo, editar público).
+Resultado para Drive Engajamento: somem do menu **Clientes, Ofertas, Resgates, Cupons, Parceiros, Operador PDV, Pontuar, Regras de Pontos, Extrato de Pontos** (todos marcados com `scoringFilter: "PASSENGER"`).
 
-### 7. Botão "Editar" do produto (modal `ModalEditarResgatavel.tsx`)
-Já funciona pra qualquer produto — não precisa mexer. Continua editando custo, público e taxa personalizada.
+### 2. Página de Ofertas (`src/pages/OffersPage.tsx`)
 
-## Resultado esperado
+Esconder o item **"👤 Apenas Clientes"** do select de filtro quando `escopo.hasAudience("cliente") === false`. Quando cliente OFF, o select pode até virar redundante (só sobra "Todas" e "Exclusivo Motorista"), então:
 
-**Plano sem Achadinhos (ex: Engajamento Motorista Premium):**
-- Header: botão **"+ Criar Produto"**
-- Empty state: "Crie produtos para sua vitrine de resgate" + CTA "Criar Primeiro Produto"
-- Modal aberto: formulário de criação manual (imagem + título + preço + cálculo automático ou manual de pontos)
-- Sem menção a "Achadinhos", sem listagem de produtos de marketplace
+- Se **só motorista**: esconde o select inteiro (todas as ofertas serão de motorista de qualquer forma)
+- Se **só cliente**: esconde o select inteiro
+- Se **ambos**: mantém os 3 itens
 
-**Plano com Achadinhos:**
-- Header: botão **"+ Adicionar Produtos"** (igual hoje)
-- Empty state: "Ir para Achadinhos" (igual hoje)
-- Modal aberto: lista de produtos importados (igual hoje)
-- Bonus: Pode adicionar um botão secundário "Criar Manual" pra também usar o modo manual quando quiser, mas esse é opcional — confirmo abaixo.
+### 3. Página de Cidades (`src/pages/BrandBranchesPage.tsx`)
 
-## Pergunta opcional (não bloqueia o plano)
+Já usa `useProductScope` corretamente — não precisa mexer. Apenas um ajuste defensivo: no badge de cidade legada `scoring_model === "BOTH"` quando o plano só tem motorista, já mostra só o badge "Motorista" (linhas 138-145). OK.
 
-Quando Achadinhos **estiver ativo**, você quer:
-- (a) **Só** o botão "Adicionar Produtos" (importar de achadinhos), como hoje
-- (b) **Dois** botões: "Adicionar de Achadinhos" + "Criar Manual" (mais opções)
+### 4. Reset de pontos (`src/components/branch/DialogResetPontos.tsx`)
 
-Por padrão vou fazer (a) pra não poluir, mas se preferir (b) é só dizer.
+O radio "Apenas clientes" só faz sentido se a marca tem audiência cliente. Esconder quando `!audienciaCliente`. Quando a marca é só motorista, restam: "Todos os usuários", "Apenas motoristas", "Usuário específico".
 
 ## O que NÃO vou mexer
 
-- ❌ Banco / RLS / edge functions (a tabela `affiliate_deals` já aceita produtos sem `affiliate_url`)
-- ❌ Lógica de scraping (`scrape-product`)
-- ❌ Página de Achadinhos (`/affiliate-deals`)
-- ❌ Modal de edição (`ModalEditarResgatavel`)
-- ❌ Tabela e KPIs da página
-- ❌ App do motorista/cliente — produtos manuais aparecem no resgate normalmente porque `is_redeemable = true`
+- ❌ Banco / RLS / edge functions
+- ❌ Hook `useBrandScoringModels` (continua útil pra outros lugares que precisam saber o que a cidade faz, dentro do que o plano permite)
+- ❌ Page Builder, dados_manuais, helpContent (são conteúdos genéricos da plataforma)
+- ❌ Sidebar do Branch Admin (`BranchSidebar.tsx`) e Root (`RootSidebar.tsx`) — esses não filtram por plano por design (root vê tudo, branch admin já é restrito por outras regras)
+
+## Resultado esperado
+
+Para a marca **Drive Engajamento** (plano só motorista):
+
+| Antes | Depois |
+|---|---|
+| Sidebar mostra: Ofertas, Clientes, Resgates, Cupons, Parceiros, Pontuar, Regras de Pontos, Extrato | Esses itens **somem** — só aparece o que é de motorista |
+| Filtro de público em Ofertas mostra "Apenas Clientes" | Select inteiro fica oculto (só motorista) |
+| Reset de pontos oferece "Apenas clientes" | Opção fica oculta |
+
+Para marcas com **plano completo**: nada muda — tudo aparece como hoje.
 
 ## Risco
 
-Baixo. Adiciono um componente novo, condiciono UI por flag de plano, e reuso `StorageImageUpload`/`useRegrasResgateCidade` que já existem. Build esperado limpo.
+Baixo. É troca de hook de filtro + 2 condicionais de UI. Build esperado limpo.
 
 ## Estimativa
 
-~10 min.
+~3 min.
 
