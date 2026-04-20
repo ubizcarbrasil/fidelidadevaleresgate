@@ -604,6 +604,7 @@ export default function BrandBranchForm() {
       </Card>
 
       {/* Gamificação de Motoristas */}
+      {audienciaMotorista && (
       <Card className="rounded-xl">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -656,6 +657,7 @@ export default function BrandBranchForm() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Módulos de Negócio */}
       <Card className="rounded-xl">
