@@ -108,6 +108,7 @@ const OfferCardConfigPage = lazyWithRetry(() => import("@/pages/OfferCardConfigP
 const PlanModuleTemplatesPage = lazyWithRetry(() => import("@/pages/PlanModuleTemplatesPage"));
 
 const PaginaProdutosComerciais = lazyWithRetry(() => import("@/features/produtos_comerciais/pagina_produtos_comerciais"));
+const PaginaAuditoriaDuplicacoes = lazyWithRetry(() => import("@/features/auditoria_duplicacoes/pagina_auditoria_duplicacoes"));
 const PaginaLandingProduto = lazyWithRetry(() => import("@/features/landing_produto/pagina_landing_produto"));
 const PaginaCatalogoProdutos = lazyWithRetry(() => import("@/features/catalogo_produtos/pagina_catalogo_produtos"));
 const TierPointsRulesPage = lazyWithRetry(() => import("@/pages/TierPointsRulesPage"));
@@ -293,6 +294,7 @@ function AnimatedRoutes() {
               <Route path="plan-templates" element={<RootGuard><PlanModuleTemplatesPage /></RootGuard>} />
               
               <Route path="admin/produtos-comerciais" element={<RootGuard><PaginaProdutosComerciais /></RootGuard>} />
+              <Route path="admin/auditoria-duplicacoes" element={<RootGuard><PaginaAuditoriaDuplicacoes /></RootGuard>} />
               <Route path="driver-config" element={<ErrorBoundary><DriverPanelConfigPage /></ErrorBoundary>} />
               <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
               <Route path="manuais" element={<ManuaisPage />} />
