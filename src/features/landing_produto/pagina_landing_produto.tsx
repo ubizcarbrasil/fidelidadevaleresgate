@@ -19,6 +19,7 @@ import BlocoCtaFinal from "./components/bloco_cta_final";
 import BlocoCtaStickyMobile from "./components/bloco_cta_sticky_mobile";
 import BlocoFooter from "./components/bloco_footer";
 import type { CicloCobranca } from "./components/toggle_ciclo";
+import BotaoAtualizarApp from "@/compartilhados/components/botao_atualizar_app";
 
 export default function PaginaLandingProduto() {
   const { slug } = useParams<{ slug: string }>();
@@ -160,6 +161,11 @@ export default function PaginaLandingProduto() {
         primaryColor={color}
         onCta={() => irParaDemo("sticky_mobile")}
       />
+
+      {/* Atalho mobile para limpar cache do Service Worker e recarregar. */}
+      <div className="md:hidden fixed bottom-20 right-3 z-30">
+        <BotaoAtualizarApp variant="secondary" size="sm" label="Atualizar" />
+      </div>
     </div>
   );
 }

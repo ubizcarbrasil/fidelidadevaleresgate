@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import PlatformLogo from "@/components/PlatformLogo";
 import { Rocket } from "lucide-react";
+import BotaoAtualizarApp from "@/compartilhados/components/botao_atualizar_app";
 
 interface Props {
   trialUrl: string;
@@ -24,6 +25,12 @@ export default function BlocoTopbar({ trialUrl, primaryColor, ctaLabel }: Props)
           <a href="#pricing" className="hover:text-foreground transition-colors">Investimento</a>
         </nav>
         <div className="flex items-center gap-1 sm:gap-2">
+          <BotaoAtualizarApp
+            variant="ghost"
+            size="sm"
+            label="Atualizar"
+            className="hidden sm:inline-flex text-muted-foreground hover:text-foreground"
+          />
           <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
             <Link to="/auth">Já tenho conta</Link>
           </Button>
