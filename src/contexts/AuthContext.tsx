@@ -25,8 +25,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef(true);
   const fetchIdRef = useRef(0);
+  // Deduplica fetchRoles em curso para o mesmo userId.
+  // Quando bootstrap e onAuthStateChange disparam para o mesmo
+  // usuário (caso comum no SIGNED_IN logo após login), a segunda
+  // chamada reaproveita a Promise da primeira em vez de abrir
+  // outra conexão HTTP que concorreria pela mesma resposta.
+  const inFlightUserIdRef = useRef<string | null>(null);
+  const inFlightPromiseRef = useRef<Promise<void> | null>(null);
 
   const fetchRoles = async (userId: string, requestId: number) => {
+    // Se já existe uma busca em curso para o mesmo user, aguarda ela
+    if (inFlightUserIdRef.current === userId && inFlightPromiseRef.current) {
+      return inFlightPromiseRef.current;
+    }
+
+    inFlightUserIdRef.current = userId;
+    const promise = (async () => {
     try {
       const { data } = await supabase
         .from("user_roles")
@@ -51,6 +65,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.warn("[AuthContext] Falha ao buscar roles:", err);
       if (mountedRef.current && fetchIdRef.current === requestId) {
         setRoles([]);
+      }
+    }
+    })();
+    inFlightPromiseRef.current = promise;
+    try {
+      await promise;
+    } finally {
+      if (inFlightUserIdRef.current === userId) {
+        inFlightUserIdRef.current = null;
+        inFlightPromiseRef.current = null;
       }
     }
   };
@@ -111,13 +135,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           initialLoadDone = true;
         }
 
-        // Audit fire-and-forget
+        // Audit adiado para idle — não compete pela conexão HTTP no
+        // caminho crítico do login/redirect.
+        const deferAudit = (cb: () => void) => {
+          const ric = (window as any).requestIdleCallback;
+          if (typeof ric === "function") ric(cb, { timeout: 2000 });
+          else setTimeout(cb, 800);
+        };
         if (event === "SIGNED_IN" && newSession?.user) {
-          void logAudit(newSession.user.id, { action: "LOGIN", entity_type: "auth" });
+          const uid = newSession.user.id;
+          deferAudit(() => logAudit(uid, { action: "LOGIN", entity_type: "auth" }));
         } else if (event === "SIGNED_OUT") {
-          void logAudit(null, { action: "LOGOUT", entity_type: "auth" });
+          deferAudit(() => logAudit(null, { action: "LOGOUT", entity_type: "auth" }));
         } else if (event === "PASSWORD_RECOVERY") {
-          void logAudit(newSession?.user?.id ?? null, { action: "PASSWORD_RESET", entity_type: "auth" });
+          const uid = newSession?.user?.id ?? null;
+          deferAudit(() => logAudit(uid, { action: "PASSWORD_RESET", entity_type: "auth" }));
         }
       }
     );

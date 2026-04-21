@@ -62,39 +62,19 @@ export default function Auth() {
     }
 
     if (isLogin) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         toast.error(error.message);
+        setLoading(false);
       } else {
-        const userId = data.user?.id;
-        if (userId) {
-          const { data: roles } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", userId);
-          const hasAdminRole = roles?.some(r =>
-            ["root_admin", "tenant_admin", "brand_admin", "branch_admin", "branch_operator", "operator_pdv"].includes(r.role)
-          );
-          const isStoreAdmin = roles?.some(r => r.role === "store_admin");
-
-          if (isPortalDomain) {
-            if (hasAdminRole) {
-              navigate("/");
-            } else if (isStoreAdmin) {
-              navigate("/store-panel");
-            } else {
-              navigate("/");
-            }
-          } else {
-            if (isStoreAdmin && !hasAdminRole) {
-              navigate("/store-panel");
-            } else {
-              navigate("/");
-            }
-          }
-        } else {
-          navigate("/");
-        }
+        // Navega imediatamente. AppLayout/useEffect com authRoles
+        // redirecionam store_admin para /store-panel quando os roles
+        // chegarem, sem precisar bloquear o login com SELECT extra.
+        navigate("/", { replace: true });
+        // Mantém botão desabilitado por um curto período enquanto
+        // o AppLayout monta os chunks lazy, evitando duplo clique.
+        setTimeout(() => setLoading(false), 1500);
+        return;
       }
     } else {
       const { error } = await supabase.auth.signUp({
@@ -110,8 +90,9 @@ export default function Auth() {
         toast.success("Conta criada com sucesso!");
         navigate("/");
       }
+      setLoading(false);
+      return;
     }
-    setLoading(false);
   };
 
   return (
