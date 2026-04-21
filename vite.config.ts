@@ -54,12 +54,26 @@ return ({
         // Bump cacheId quando precisar invalidar SW + caches antigos no cliente.
         // v2 (Fase 4.1b) — força recarga do bundle com Empreendedores e Cidades.
         // v3 (Mobile Hardening) — invalida caches antigos após correção de removeChild/Sheet portal.
-        cacheId: "vale-resgate-v3",
+        // v4 (Public routes hardening) — exclui rotas públicas (/p/*, /loja/*, /landing, /produtos)
+        // do navigateFallback para evitar HTML cacheado servindo chunks antigos.
+        cacheId: "vale-resgate-v4",
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,jpg,jpeg,webp}"],
         navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/~oauth/],
+        navigateFallbackDenylist: [
+          /^\/~oauth/,
+          // Rotas públicas — sempre buscar da rede para evitar cache antigo
+          // quebrando navegação direta vindo de QR code, link compartilhado ou e-mail.
+          /^\/p\//,
+          /^\/loja\//,
+          /^\/produtos/,
+          /^\/landing/,
+          /^\/trial/,
+          /^\/install/,
+          /^\/auth/,
+          /^\/reset-password/,
+        ],
         skipWaiting: true,
         clientsClaim: true,
         runtimeCaching: [
