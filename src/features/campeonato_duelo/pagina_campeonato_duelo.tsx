@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trophy, ListOrdered, Swords as SwordsIcon, ShieldAlert } from "lucide-react";
+import { Plus, Trophy, ListOrdered, Swords as SwordsIcon, ShieldAlert, Activity } from "lucide-react";
 import { useTemporadasCidade } from "./hooks/hook_campeonato";
 import { useRealtimeCampeonato } from "./hooks/hook_realtime_campeonato";
 import ModalCriarTemporada from "./components/modal_criar_temporada";
@@ -11,6 +11,7 @@ import CabecalhoTemporada from "./components/cabecalho_temporada";
 import TabelaClassificacao from "./components/tabela_classificacao";
 import QuadroChaveamento from "./components/quadro_chaveamento";
 import IndicadorTempoReal from "./components/indicador_tempo_real";
+import PainelLogEventos from "./components/painel_log_eventos";
 import PaginaAuditoriaCampeonato from "./pagina_auditoria_campeonato";
 
 interface Props {
@@ -90,6 +91,9 @@ export default function PaginaCampeonatoDuelo({ brandId, branchId }: Props) {
               <TabsTrigger value="chaveamento" className="flex items-center gap-1.5">
                 <SwordsIcon className="h-3.5 w-3.5" /> Mata-mata
               </TabsTrigger>
+              <TabsTrigger value="eventos" className="flex items-center gap-1.5">
+                <Activity className="h-3.5 w-3.5" /> Eventos
+              </TabsTrigger>
               <TabsTrigger value="auditoria" className="flex items-center gap-1.5">
                 <ShieldAlert className="h-3.5 w-3.5" /> Auditoria
               </TabsTrigger>
@@ -103,6 +107,9 @@ export default function PaginaCampeonatoDuelo({ brandId, branchId }: Props) {
                 seasonId={temporadaSelecionada.id}
                 temporada={temporadaSelecionada}
               />
+            </TabsContent>
+            <TabsContent value="eventos" className="mt-4">
+              <PainelLogEventos seasonId={temporadaSelecionada.id} />
             </TabsContent>
             <TabsContent value="auditoria" className="mt-4">
               <PaginaAuditoriaCampeonato branchId={branchId} />
