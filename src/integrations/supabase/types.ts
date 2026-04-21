@@ -3303,6 +3303,7 @@ export type Database = {
           created_at: string
           declined_at: string | null
           duel_mode: string
+          duel_origin: string
           end_at: string
           finished_at: string | null
           id: string
@@ -3334,6 +3335,7 @@ export type Database = {
           created_at?: string
           declined_at?: string | null
           duel_mode?: string
+          duel_origin?: string
           end_at: string
           finished_at?: string | null
           id?: string
@@ -3365,6 +3367,7 @@ export type Database = {
           created_at?: string
           declined_at?: string | null
           duel_mode?: string
+          duel_origin?: string
           end_at?: string
           finished_at?: string | null
           id?: string

@@ -103,6 +103,9 @@ export default function ModalCriarDuelosLote({
               value={prizePerPair}
               onChange={(e) => setPrizePerPair(e.target.value)}
             />
+            <p className="text-xs text-muted-foreground italic">
+              Pago pela carteira da cidade. Motoristas não apostam pontos — o vencedor de cada duelo leva o prêmio integral.
+            </p>
           </div>
 
           <div className="flex items-center justify-between rounded-lg border p-3">

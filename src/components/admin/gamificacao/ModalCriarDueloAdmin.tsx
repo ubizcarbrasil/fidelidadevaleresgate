@@ -141,7 +141,7 @@ export default function ModalCriarDueloAdmin({ branchId, brandId, open, onClose,
 
           {/* Prize */}
           <div className="space-y-2">
-            <Label>Prêmio da plataforma (pontos)</Label>
+            <Label>Prêmio do empreendedor (pontos)</Label>
             <Input
               type="number"
               placeholder="0 = sem prêmio extra"
@@ -151,6 +151,9 @@ export default function ModalCriarDueloAdmin({ branchId, brandId, open, onClose,
             />
             <p className="text-xs text-muted-foreground">
               Saldo da carteira: {formatPoints(walletQuery.data ?? 0)} pts
+            </p>
+            <p className="text-xs text-muted-foreground italic">
+              Pago pela carteira da cidade. Motoristas não apostam pontos — o vencedor leva o prêmio integral.
             </p>
           </div>
         </div>
