@@ -102,27 +102,18 @@ export default function AppLayout() {
     return isRootAdmin && !!params.get("brandId");
   }, [isRootAdmin]);
 
-  // Boot Supabase fetches em paralelo (platform_theme + brand_settings quando aplicável)
+  // Boot: apenas platform_theme. brand_settings_json já vem cacheado via useBrandInfo.
   useEffect(() => {
     let cancelled = false;
-    const platformPromise = supabase
+    supabase
       .from("platform_config")
       .select("value_json")
       .eq("key", "platform_theme")
-      .maybeSingle();
-
-    const brandPromise = (consoleScope === "BRAND" && brandId)
-      ? supabase.from("brands").select("brand_settings_json").eq("id", brandId).single()
-      : Promise.resolve({ data: null });
-
-    Promise.all([platformPromise, brandPromise]).then(([platformRes, brandRes]) => {
-      if (cancelled) return;
-      if (platformRes.data?.value_json) setPlatformTheme(platformRes.data.value_json);
-      const settings = (brandRes as any)?.data?.brand_settings_json as Record<string, any> | null;
-      if (settings && !settings.api_key_onboarding_seen) {
-        setShowApiKeyOnboarding(true);
-      }
-    });
+      .maybeSingle()
+      .then((platformRes) => {
+        if (cancelled) return;
+        if (platformRes.data?.value_json) setPlatformTheme(platformRes.data.value_json);
+      });
 
     // Bell-ring adiado para idle — não compete com boot inicial
     const ric = (window as any).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 2000));
