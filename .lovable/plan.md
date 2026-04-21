@@ -1,206 +1,195 @@
 
+# Corrigir tela vazia após otimização + remover o delay restante
 
-# Eliminar delay em cliques e navegação no admin (queries duplicadas + cache faltando)
+## Diagnóstico confirmado
 
-## Diagnóstico (com evidências do network log)
+Há **dois problemas diferentes** acontecendo agora:
 
-Em **um único segundo** após login, o portal `app.valeresgate.com.br` dispara **723 linhas de network log** com queries massivamente duplicadas. Exemplo real do log:
+### 1. Bug crítico que fez “sumir tudo”
+A regressão está em `src/contexts/AuthContext.tsx`.
 
-| Query | Vezes no mesmo segundo |
-|---|---|
-| `brands?select=name,brand_settings_json,subscription_plan&id=eq.{id}` | 2x+ |
-| `brands?select=brand_settings_json&id=eq.{id}` | 3x+ |
-| `brands?select=subscription_plan&id=eq.{id}` | 1x |
-| `brand_modules` (com join) | repetido em cada navegação |
-| `branches?select=...&brand_id=eq.{id}` | 2x |
-| `admin_notifications` | 1x (mas roda em loop) |
+Hoje o `fetchRoles` tem:
+- `fetchIdRef` para descartar respostas antigas
+- um throttle de 2s (`lastFetchedUserIdRef` / `lastFetchedAtRef`) para evitar duplicação
 
-### Causas raiz
+Esses dois mecanismos entraram em conflito:
 
-**🔴 Causa #1 — `useBrandName.ts` não usa React Query**
 ```ts
-// src/hooks/useBrandName.ts (linha 18-33)
-useEffect(() => {
-  supabase.from("brands").select("name, brand_settings_json, subscription_plan")...
-}, [brandId]);
+const reqId = ++fetchIdRef.current;
+void fetchRoles(newSession.user.id, reqId);
 ```
-- Sem cache, sem deduplicação
-- Chamado por **6 componentes simultaneamente** (`AppLayout`, `BrandSidebar`, `BranchSidebar`, `Dashboard`, `DashboardHeader`, `BrandSettingsPage`, `GanhaGanhaReportsPage`)
-- Cada um dispara seu próprio `fetch` → 6 queries idênticas em paralelo
-- A cada navegação, o componente desmonta/remonta → refaz tudo
 
-**🔴 Causa #2 — `BrandContext.brand` fica `null` no portal universal**
+e dentro de `fetchRoles`:
 
-Após o fix anterior, `app.valeresgate.com.br` foi adicionado a `PORTAL_HOSTNAMES`, então o `BrandContext` retorna sem nunca setar `brand`. Isso é correto pra evitar vazamento, MAS:
-- 60+ arquivos no app fazem `supabase.from("brands").select("brand_settings_json").eq("id", currentBrandId)` separadamente, esperando ler do contexto
-- Como contexto está vazio, **cada um vai ao banco** sem cache compartilhado
-- Exemplos: `BrandBranchForm.tsx` (2x), `ProdutosResgatePage.tsx` (3x), `useAutoSeedDemo.ts`, `DashboardQuickLinks.tsx`, `DemoAccessCard.tsx`, etc.
+```ts
+if (lastFetchedUserIdRef.current === userId && now - lastFetchedAtRef.current < 2000) {
+  return;
+}
+```
 
-**🟡 Causa #3 — `currentBrandId` instável**
+Cenário real:
+1. bootstrap chama `fetchRoles(user, reqId=1)`
+2. `onAuthStateChange` dispara logo depois e incrementa para `reqId=2`
+3. o segundo fetch é abortado pelo throttle de 2s
+4. quando o primeiro termina, ele é ignorado porque `fetchIdRef.current !== 1`
+5. `roles` fica `[]`
 
-`useBrandGuard.currentBrandId` depende de `[brand, roles, isRootAdmin]`. O array `roles` muda de referência a cada `setRoles()` no AuthContext (até em StrictMode duplo), invalidando todas as `queryKey: [..., currentBrandId]` e disparando refetches em cascata.
+Com `roles` vazio:
+- `useBrandGuard()` cai no fallback final e retorna `consoleScope = "BRANCH"`
+- `currentBrandId = null`
+- `currentBranchId = null`
 
-**🟡 Causa #4 — `admin_notifications` provavelmente em polling/realtime sem throttle**
+Resultado visível nas imagens:
+- sidebar de **franqueado/cidade** aparece indevidamente
+- dashboard principal fica quase vazio
+- vários blocos não renderizam porque dependem de `currentBrandId` ou `currentBranchId`
 
-Aparece no log inicial e pode estar refazendo a cada interação. Vou confirmar e otimizar se necessário.
+Isso explica exatamente o “agora sumiu tudo”.
+
+### 2. O delay restante ainda existe
+Mesmo após o cache anterior, ainda há consultas pesadas/repetidas no boot:
+
+- `useSidebarBadges.ts` faz **4 HEADs** e ainda com `refetchInterval: 30_000`
+- `DashboardQuickLinks.tsx` faz queries extras para:
+  - `brands`
+  - `brand_domains`
+  - `public_brand_modules_safe`
+- `useBrandScoringModels.ts` ainda busca `branches.scoring_model`
+- `useProductScope()` ainda busca plano + `plan_business_models` + `plan_module_templates`
+- `useResolvedModules()` continua acoplando carga inicial de módulos/realtime
+
+Pelos network logs, o gargalo atual não é mais só `brands`; agora é o conjunto:
+- badges
+- quick links
+- escopo de produto
+- scoring models
+- módulos
 
 ## Correção
 
-### 1. Reescrever `useBrandName.ts` com React Query (impacto altíssimo)
+### Etapa 1 — corrigir a regressão de auth imediatamente
+Arquivo: `src/contexts/AuthContext.tsx`
 
-Trocar `useState + useEffect + supabase` por `useQuery` com `staleTime: 5 min`:
+Remover o throttle temporal de 2s e substituir por uma deduplicação segura, sem invalidar o request válido.
 
-```ts
-// src/hooks/useBrandName.ts
-import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { useBrand } from "@/contexts/BrandContext";
+Implementação:
+- manter `fetchIdRef` para evitar race conditions
+- remover:
+  - `lastFetchedUserIdRef`
+  - `lastFetchedAtRef`
+  - early return de 2s
+- opcionalmente deduplicar apenas quando o mesmo `requestId` já estiver em andamento, sem cancelar o request mais novo
 
-export function useBrandInfo() {
-  const { roles } = useAuth();
-  const { brand: ctxBrand } = useBrand();
+Resultado esperado:
+- `roles` volta a popular corretamente
+- `consoleScope` deixa de cair em `"BRANCH"` por engano
+- o painel volta a mostrar o console correto da marca
+- a tela deixa de “sumir”
 
-  const brandId = ctxBrand?.id ?? roles.find((r) => r.brand_id)?.brand_id ?? null;
+### Etapa 2 — blindar `useBrandGuard` contra fallback visual incorreto
+Arquivo: `src/hooks/useBrandGuard.ts`
 
-  const { data } = useQuery({
-    queryKey: ["brand-info", brandId],
-    enabled: !!brandId,
-    staleTime: 5 * 60 * 1000,  // 5 min — name/logo raramente muda
-    gcTime: 10 * 60 * 1000,
-    queryFn: async () => {
-      // Se já temos do contexto, evita ida ao banco
-      if (ctxBrand && ctxBrand.id === brandId) return ctxBrand;
-      const { data } = await supabase
-        .from("brands")
-        .select("name, brand_settings_json, subscription_plan")
-        .eq("id", brandId!)
-        .single();
-      return data;
-    },
-  });
-
-  const settings = (data?.brand_settings_json as Record<string, any>) ?? {};
-  return {
-    name: data?.name ?? "",
-    logoUrl: settings.logo_url ?? null,
-    brandId,
-    subscriptionPlan: data?.subscription_plan ?? null,
-  };
-}
-
-export function useBrandName(): string {
-  return useBrandInfo().name;
-}
-```
-
-**Impacto:** dos 6+ componentes que chamavam `useBrandInfo`, todos passam a compartilhar **1 única query cacheada por 5 minutos**.
-
-### 2. Estender `BrandContext` para resolver `brand` via roles no portal universal
-
-No portal `app.valeresgate.com.br`, em vez de deixar `brand = null`, carregar o `brand` correspondente ao role do usuário:
+Hoje, sem roles, o fallback final é:
 
 ```ts
-// src/contexts/BrandContext.tsx — adicionar useEffect
-useEffect(() => {
-  // Se brand já foi resolvido (por domain ou ?brandId=), nada a fazer
-  if (brand || loading) return;
-  if (!user) return;
-  
-  // Portal universal: resolve brand via role do usuário
-  const loadFromRole = async () => {
-    const { data: roleRow } = await supabase
-      .from("user_roles")
-      .select("brand_id")
-      .eq("user_id", user.id)
-      .not("brand_id", "is", null)
-      .limit(1)
-      .maybeSingle();
-    
-    if (roleRow?.brand_id) {
-      const brandData = await fetchBrandById(roleRow.brand_id);
-      if (brandData) setBrand(brandData);
-    }
-  };
-  loadFromRole();
-}, [brand, loading, user]);
+return "BRANCH";
 ```
 
-**Impacto:** com `brand` populado no contexto, todos os 60 arquivos que fazem queries diretas a `brands` poderão ler do contexto (passo 3) — eliminando 80%+ das queries duplicadas.
+Vou endurecer isso para evitar UI errada quando auth ainda não carregou ou falhou:
+- se não houver nenhum role conhecido, retornar um estado seguro temporário no guard
+- manter a UI esperando em vez de assumir console de cidade por padrão
 
-### 3. Memoizar `roles` no AuthContext (estabilidade de referência)
+Abordagem:
+- adicionar um estado de guarda mais seguro no cálculo do scope, ou
+- ajustar `ProtectedRoute` / `AppLayout` para não renderizar layout administrativo enquanto `roles` ainda não estiverem consistentes
 
-`roles` é setado a partir de `data || []` — cada chamada cria novo array. Adicionar comparação estrutural:
+Objetivo:
+- nunca mais mostrar sidebar/painel errado por ausência temporária de roles
 
-```ts
-// src/contexts/AuthContext.tsx — em fetchRoles
-const newRoles = data || [];
-setRoles((prev) => {
-  if (prev.length === newRoles.length && 
-      prev.every((r, i) => r.id === newRoles[i]?.id)) {
-    return prev;  // mesma referência → não re-renderiza consumidores
-  }
-  return newRoles;
-});
-```
+### Etapa 3 — reduzir o delay restante no boot do dashboard
+Foco nos arquivos que ainda fazem carga paralela demais.
 
-**Impacto:** `currentBrandId` para de invalidar queryKeys quando o conteúdo de roles não mudou. Reduz refetches em cascata.
+#### 3.1 `src/hooks/useSidebarBadges.ts`
+Otimizar:
+- aumentar `staleTime`
+- desligar `refetchInterval: 30_000` no boot administrativo
+- manter atualização sob demanda ou por realtime quando existir
+- revisar filtros sem `brand_id` em queries globais (`store_points_rules`, `store_type_requests`) para não contar mais do que precisa
 
-### 4. Centralizar `subscription_plan` no contexto/cache global
+Impacto:
+- reduz 4 requests recorrentes a cada abertura/navegação
 
-O `subscription_plan` é lido em 3 lugares diferentes:
-- `useBrandInfo` (passo 1, agora cacheado)
-- `useProductScope` (já cacheado)
-- `BrandSidebar` direto
+#### 3.2 `src/components/dashboard/DashboardQuickLinks.tsx`
+Reduzir consultas:
+- reaproveitar `brandSettings` e `brandId` do `useBrandInfo()`
+- evitar query duplicada de `brands`
+- deixar `brandDomains` com cache mais longo
+- carregar links secundários de forma preguiçosa se necessário
 
-`useProductScope` já busca `subscription_plan`. Vou fazê-lo reaproveitar do React Query cache do `useBrandInfo` quando possível, evitando uma query extra:
+Impacto:
+- corta queries logo após abrir a home
 
-```ts
-// hook_escopo_produto.ts — usar queryClient.getQueryData
-const cachedBrand = queryClient.getQueryData<any>(["brand-info", brandId]);
-const planKey = cachedBrand?.subscription_plan ?? (await queryFn());
-```
+#### 3.3 `src/hooks/useBrandScoringModels.ts`
+Otimizar:
+- aumentar `staleTime`
+- reutilizar contexto/cache quando possível
+- evitar refetch imediato em toda navegação
 
-### 5. (Se confirmado no log) — desligar realtime/polling de `admin_notifications`
+#### 3.4 `src/features/city_onboarding/hooks/hook_escopo_produto.ts`
+Manter o cache já criado, mas:
+- aumentar `staleTime`
+- evitar reconsulta desnecessária de `plan_business_models` e `plan_module_templates` no boot
+- considerar cache por plano, não só por brand
 
-Investigar `useAdminNotifications` ou similar. Se houver `setInterval` ou subscribe sem cleanup, trocar por:
-- `staleTime: 30s` + manual refetch
-- ou realtime com filtro de brand_id (sem polling)
+#### 3.5 `src/compartilhados/hooks/hook_modulos_resolvidos.ts`
+Ajustar carga inicial:
+- preservar realtime
+- mas reduzir agressividade de `refetchOnWindowFocus`
+- evitar que o sidebar e os módulos disputem o boot inicial
 
-### 6. Lazy-load do `AppLayout` chunks ao clicar no menu
+## Arquivos a ajustar
 
-Verificar se há chunks pesados sendo carregados em cada clique. Se sim, adicionar prefetch nos `Link` do sidebar (`onMouseEnter` → `import()`).
+1. `src/contexts/AuthContext.tsx`
+2. `src/hooks/useBrandGuard.ts`
+3. `src/hooks/useSidebarBadges.ts`
+4. `src/components/dashboard/DashboardQuickLinks.tsx`
+5. `src/hooks/useBrandScoringModels.ts`
+6. `src/features/city_onboarding/hooks/hook_escopo_produto.ts`
+7. `src/compartilhados/hooks/hook_modulos_resolvidos.ts`
 
-## Arquivos a modificar
+## O que não vou mexer
 
-1. **`src/hooks/useBrandName.ts`** — reescrever com React Query (essencial)
-2. **`src/contexts/BrandContext.tsx`** — popular `brand` via role no portal universal
-3. **`src/contexts/AuthContext.tsx`** — estabilizar referência de `roles`
-4. **`src/features/city_onboarding/hooks/hook_escopo_produto.ts`** — reaproveitar cache
-5. **(condicional)** `src/hooks/useAdminNotifications.ts` (ou similar) — controlar polling
-6. **(condicional)** `src/components/consoles/BrandSidebar.tsx` — adicionar prefetch nos links
-
-## O que NÃO vou mexer
-
-- ❌ Lógica de RLS, segurança, isolamento de tenants — recém corrigido
-- ❌ `useBrandGuard.currentBrandId` — lógica está correta
-- ❌ Queries que filtram dados operacionais (offers, customers, branches) — já usam React Query
-- ❌ Refatorar os 60 arquivos que chamam `from("brands")` — passo 2 já resolve a maioria via contexto
+- Não vou desfazer o fix de isolamento entre empresas
+- Não vou recolocar resolução de brand por hostname no portal universal
+- Não vou alterar RLS nem estrutura de banco para este bug
+- Não vou mexer no `src/integrations/supabase/client.ts`
 
 ## Resultado esperado
 
-- Login no portal: queries a `brands` caem de **6+ duplicadas** para **1 única** (cache por 5 min)
-- Navegação entre páginas: chunks JS já carregados + queries cacheadas → navegação **instantânea** (<100ms percebido)
-- Cliques em botões com mutations: sem mudança (mutations não eram o gargalo)
-- Network log inicial: deve cair de ~700 linhas para ~150-200
+### Após a Etapa 1
+- o painel volta a carregar
+- a sidebar deixa de cair em “Gestão Regional” por engano
+- a visão da marca reaparece normalmente
+
+### Após a Etapa 3
+- clique e navegação ficam mais responsivos
+- menos requests no boot
+- menos polling desnecessário
+- dashboard abre sem sensação de travamento
 
 ## Risco
 
-**Baixo.** Mudanças focadas em cache e estabilidade de referência. Nenhuma alteração de lógica de negócio, RLS ou segurança. Cada mudança é isolada e reversível.
+Baixo a médio:
+- o fix de `AuthContext` é crítico, mas bem localizado
+- as otimizações seguintes são de cache/refetch e não mudam regra de negócio
 
-Único ponto de atenção: o passo 2 (popular `brand` via role no portal) precisa garantir que o usuário **só veja o brand do próprio role** — a defesa em profundidade do `useBrandGuard` (passo anterior) já protege contra leak.
+## Ordem de implementação
+
+1. Corrigir `AuthContext` para restaurar o painel
+2. Blindar `useBrandGuard` contra fallback visual incorreto
+3. Reduzir requests restantes no dashboard/sidebar
+4. Verificar novamente o fluxo no mobile e no portal universal
 
 ## Estimativa
 
-~10 min (4 arquivos principais + verificação de polling).
-
+~12 min
