@@ -15,7 +15,7 @@ function useImpersonatingBrand(): boolean {
  * Root admins can optionally override via ?brandId= URL param.
  */
 export function useBrandGuard() {
-  const { isRootAdmin, roles } = useAuth();
+  const { isRootAdmin, roles, loading: authLoading, user } = useAuth();
   const { brand } = useBrand();
   const isImpersonating = useImpersonatingBrand();
 
@@ -84,7 +84,11 @@ export function useBrandGuard() {
   }, [isRootAdmin, currentBranchId]);
 
   /** Determine user console scope */
-  const consoleScope = useMemo((): "ROOT" | "TENANT" | "BRAND" | "BRANCH" | "OPERATOR" | "STORE_ADMIN" => {
+  const consoleScope = useMemo((): "ROOT" | "TENANT" | "BRAND" | "BRANCH" | "OPERATOR" | "STORE_ADMIN" | "LOADING" => {
+    // Defesa: enquanto auth não terminou ou usuário existe mas roles ainda não chegaram,
+    // NÃO assumir BRANCH por engano (evita sidebar de cidade aparecer indevidamente).
+    if (authLoading) return "LOADING";
+    if (user && roles.length === 0) return "LOADING";
     // Root admin impersonating a brand via ?brandId= should see BRAND console
     if (isRootAdmin && isImpersonating && brand) return "BRAND";
     if (isRootAdmin) return "ROOT";
@@ -94,7 +98,7 @@ export function useBrandGuard() {
     if (roles.some(r => r.role === "branch_operator" || r.role === "operator_pdv")) return "OPERATOR";
     if (roles.some(r => r.role === "store_admin")) return "STORE_ADMIN";
     return "BRANCH";
-  }, [isRootAdmin, isImpersonating, brand, roles]);
+  }, [isRootAdmin, isImpersonating, brand, roles, authLoading, user]);
 
   return {
     isRootAdmin,
