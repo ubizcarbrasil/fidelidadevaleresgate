@@ -25,22 +25,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef(true);
   const fetchIdRef = useRef(0);
-  const lastFetchedUserIdRef = useRef<string | null>(null);
-  const lastFetchedAtRef = useRef<number>(0);
 
   const fetchRoles = async (userId: string, requestId: number) => {
-    // Dedup: se já buscamos roles desse usuário nos últimos 2s, ignora.
-    // Evita duplicação entre bootstrap e o evento SIGNED_IN do listener.
-    const now = Date.now();
-    if (
-      lastFetchedUserIdRef.current === userId &&
-      now - lastFetchedAtRef.current < 2000
-    ) {
-      return;
-    }
-    lastFetchedUserIdRef.current = userId;
-    lastFetchedAtRef.current = now;
-
     try {
       const { data } = await supabase
         .from("user_roles")

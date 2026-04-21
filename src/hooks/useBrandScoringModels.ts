@@ -38,6 +38,9 @@ export function useBrandScoringModels() {
       return { isDriverEnabled, isPassengerEnabled };
     },
     enabled: !!currentBrandId,
+    staleTime: 5 * 60_000, // 5 min — scoring_model raramente muda
+    gcTime: 10 * 60_000,
+    refetchOnWindowFocus: false,
   });
 
   return {

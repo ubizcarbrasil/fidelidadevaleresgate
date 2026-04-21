@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useBrandInfo } from "@/hooks/useBrandName";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,17 +22,11 @@ import { CACHE } from "@/config/constants";
 function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: { isDriverEnabled?: boolean; isPassengerEnabled?: boolean }) {
   const navigate = useNavigate();
   const { currentBrandId } = useBrandGuard();
-
-  const { data: brand } = useQuery({
-    queryKey: ["brand-quick-links", currentBrandId],
-    queryFn: async () => {
-      if (!currentBrandId) return null;
-      const { data } = await supabase.from("brands").select("brand_settings_json, slug").eq("id", currentBrandId).single();
-      return data;
-    },
-    enabled: !!currentBrandId,
-    staleTime: CACHE.STALE_TIME_MEDIUM,
-  });
+  // Reaproveita o cache do useBrandInfo (já carregado no AppLayout) — evita query duplicada
+  const brandInfo = useBrandInfo();
+  const brand = brandInfo.brandId
+    ? { brand_settings_json: brandInfo.brandSettings, slug: null as string | null }
+    : null;
 
   // Check if affiliate_deals module is enabled at brand level
   const { data: brandModulesFlags } = useQuery({
@@ -67,7 +62,9 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
       return data || [];
     },
     enabled: !!currentBrandId,
-    staleTime: CACHE.STALE_TIME_MEDIUM,
+    staleTime: 10 * 60_000, // 10 min — domínios raramente mudam
+    gcTime: 15 * 60_000,
+    refetchOnWindowFocus: false,
   });
 
   const PORTAL_DOMAIN = "app.valeresgate.com.br";
