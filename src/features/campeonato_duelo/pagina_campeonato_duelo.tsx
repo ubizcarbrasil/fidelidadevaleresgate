@@ -89,7 +89,10 @@ export default function PaginaCampeonatoDuelo({ brandId, branchId }: Props) {
               <TabelaClassificacao seasonId={temporadaSelecionada.id} />
             </TabsContent>
             <TabsContent value="chaveamento" className="mt-4">
-              <QuadroChaveamento seasonId={temporadaSelecionada.id} />
+              <QuadroChaveamento
+                seasonId={temporadaSelecionada.id}
+                temporada={temporadaSelecionada}
+              />
             </TabsContent>
           </Tabs>
         </>
