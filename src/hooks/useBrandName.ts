@@ -12,6 +12,7 @@ export function useBrandInfo(): {
   logoUrl: string | null;
   brandId: string | null;
   subscriptionPlan: string | null;
+  brandSettings: Record<string, any>;
 } {
   const { roles } = useAuth();
   const { brand: ctxBrand } = useBrand();
@@ -52,5 +53,6 @@ export function useBrandInfo(): {
     logoUrl: settings.logo_url ?? null,
     brandId,
     subscriptionPlan: data?.subscription_plan ?? null,
+    brandSettings: settings,
   };
 }

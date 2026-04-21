@@ -89,7 +89,7 @@ function useBreadcrumbs() {
 export default function AppLayout() {
   const { consoleScope, isRootAdmin } = useBrandGuard();
   const { isWhiteLabel } = useBrand();
-  const { name: brandName, logoUrl: brandLogoUrl, brandId } = useBrandInfo();
+  const { name: brandName, logoUrl: brandLogoUrl, brandId, brandSettings } = useBrandInfo();
   const { user, signOut } = useAuth();
   const [platformTheme, setPlatformTheme] = useState<Json | null>(null);
   const [showApiKeyOnboarding, setShowApiKeyOnboarding] = useState(false);
@@ -101,6 +101,14 @@ export default function AppLayout() {
     const params = new URLSearchParams(window.location.search);
     return isRootAdmin && !!params.get("brandId");
   }, [isRootAdmin]);
+
+  // Trigger API key onboarding once brand_settings is loaded (sem query extra)
+  useEffect(() => {
+    if (consoleScope !== "BRAND" || !brandId) return;
+    if (brandSettings && !brandSettings.api_key_onboarding_seen) {
+      setShowApiKeyOnboarding(true);
+    }
+  }, [consoleScope, brandId, brandSettings]);
 
   // Boot: apenas platform_theme. brand_settings_json já vem cacheado via useBrandInfo.
   useEffect(() => {
