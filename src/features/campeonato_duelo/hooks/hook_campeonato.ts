@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   criarTemporada,
+  gerarChaveamento,
   listarClassificacao,
   listarConfrontos,
   listarTemporadasPorCidade,
@@ -49,6 +50,29 @@ export function useCriarTemporada() {
     },
     onError: (err: any) => {
       toast.error(err?.message ?? "Erro ao criar temporada");
+    },
+  });
+}
+
+interface VarsGerarChaveamento {
+  seasonId: string;
+  branchId: string;
+}
+
+export function useGerarChaveamento() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: VarsGerarChaveamento) => gerarChaveamento(vars.seasonId),
+    onSuccess: (data, vars) => {
+      toast.success(
+        `Chaveamento gerado: ${data.brackets_created} confrontos a partir de ${data.qualified_count} qualificados`,
+      );
+      qc.invalidateQueries({ queryKey: [CHAVE_TEMPORADAS, vars.branchId] });
+      qc.invalidateQueries({ queryKey: [CHAVE_CLASSIFICACAO, vars.seasonId] });
+      qc.invalidateQueries({ queryKey: [CHAVE_CONFRONTOS, vars.seasonId] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message ?? "Erro ao gerar chaveamento");
     },
   });
 }
