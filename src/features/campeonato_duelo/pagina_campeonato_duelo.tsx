@@ -4,11 +4,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trophy, ListOrdered, Swords as SwordsIcon, ShieldAlert } from "lucide-react";
 import { useTemporadasCidade } from "./hooks/hook_campeonato";
+import { useRealtimeCampeonato } from "./hooks/hook_realtime_campeonato";
 import ModalCriarTemporada from "./components/modal_criar_temporada";
 import SeletorTemporada from "./components/seletor_temporada";
 import CabecalhoTemporada from "./components/cabecalho_temporada";
 import TabelaClassificacao from "./components/tabela_classificacao";
 import QuadroChaveamento from "./components/quadro_chaveamento";
+import IndicadorTempoReal from "./components/indicador_tempo_real";
 import PaginaAuditoriaCampeonato from "./pagina_auditoria_campeonato";
 
 interface Props {
@@ -20,6 +22,7 @@ export default function PaginaCampeonatoDuelo({ brandId, branchId }: Props) {
   const { data: temporadas, isLoading } = useTemporadasCidade(branchId);
   const [seasonId, setSeasonId] = useState<string | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
+  const { connected, ultimaAtualizacao } = useRealtimeCampeonato(seasonId);
 
   useEffect(() => {
     if (!seasonId && temporadas && temporadas.length > 0) {
@@ -67,9 +70,12 @@ export default function PaginaCampeonatoDuelo({ brandId, branchId }: Props) {
           valor={seasonId}
           aoMudar={setSeasonId}
         />
-        <Button onClick={() => setModalAberto(true)} variant="outline" size="sm">
-          <Plus className="mr-2 h-4 w-4" /> Nova temporada
-        </Button>
+        <div className="flex items-center gap-3">
+          <IndicadorTempoReal connected={connected} ultimaAtualizacao={ultimaAtualizacao} />
+          <Button onClick={() => setModalAberto(true)} variant="outline" size="sm">
+            <Plus className="mr-2 h-4 w-4" /> Nova temporada
+          </Button>
+        </div>
       </div>
 
       {temporadaSelecionada && (
