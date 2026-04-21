@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { TelaCarregamentoInline } from "@/compartilhados/components/tela_carregamento";
 
 const PAGE_SIZE = 20;
 
@@ -63,7 +64,7 @@ export default function Vouchers() {
       <Card>
         <CardHeader><CardTitle className="text-base">Lista de Cupons</CardTitle></CardHeader>
         <CardContent className="px-0 sm:px-6">
-          {isLoading ? <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div> : (
+          {isLoading ? <TelaCarregamentoInline /> : (
           <div className="table-wrap-mobile">
           <Table>
             <TableHeader><TableRow><TableHead>Código</TableHead><TableHead className="hidden sm:table-cell">Tipo</TableHead><TableHead>Valor</TableHead><TableHead className="hidden md:table-cell">Branch</TableHead><TableHead className="hidden md:table-cell">Validade</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>

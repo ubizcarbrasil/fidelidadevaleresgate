@@ -9,6 +9,7 @@ import { ptBR } from "date-fns/locale";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { TelaCarregamentoInline } from "@/compartilhados/components/tela_carregamento";
 
 const PAGE_SIZE = 30;
 
@@ -45,7 +46,7 @@ export default function AuditLogsPage() {
       <DataTableControls search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} searchPlaceholder="Buscar por ação ou entidade..." page={page} pageSize={PAGE_SIZE} totalCount={data?.count ?? 0} onPageChange={setPage} />
       <Card>
         <CardContent className="p-0">
-          {isLoading ? <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div> : (
+          {isLoading ? <TelaCarregamentoInline /> : (
           <Table>
             <TableHeader><TableRow><TableHead>Data/Hora</TableHead><TableHead>Ação</TableHead><TableHead>Entidade</TableHead><TableHead>Detalhes</TableHead></TableRow></TableHeader>
             <TableBody>
