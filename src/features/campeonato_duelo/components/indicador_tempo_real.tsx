@@ -21,15 +21,15 @@ export default function IndicadorTempoReal({ connected, ultimaAtualizacao }: Pro
         variant="outline"
         className={`gap-1.5 px-2 py-0.5 text-[10px] font-medium ${
           connected
-            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+            ? "border-primary/40 bg-primary/10 text-primary"
             : "border-muted-foreground/30 text-muted-foreground"
         }`}
       >
         {connected ? (
           <>
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
             </span>
             Ao vivo
           </>
