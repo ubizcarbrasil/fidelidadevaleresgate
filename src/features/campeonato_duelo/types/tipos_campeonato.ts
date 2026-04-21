@@ -39,7 +39,7 @@ export interface ClassificacaoMotorista {
   season_id: string;
   driver_id: string;
   points: number;
-  five_star_count: number;
+  weekend_rides_count: number;
   last_ride_at: string | null;
   position: number | null;
   qualified: boolean;

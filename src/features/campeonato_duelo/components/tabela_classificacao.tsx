@@ -33,7 +33,9 @@ export default function TabelaClassificacao({ seasonId }: Props) {
             <TableHead className="w-12">#</TableHead>
             <TableHead>Motorista</TableHead>
             <TableHead className="text-right">Corridas</TableHead>
-            <TableHead className="text-right">5★</TableHead>
+            <TableHead className="text-right" title="Corridas em Fim de Semana (sex/sáb/dom)">
+              FDS
+            </TableHead>
             <TableHead className="text-right">Status</TableHead>
           </TableRow>
         </TableHeader>
@@ -54,7 +56,7 @@ export default function TabelaClassificacao({ seasonId }: Props) {
                 </TableCell>
                 <TableCell className="text-right tabular-nums">{row.points}</TableCell>
                 <TableCell className="text-right tabular-nums text-muted-foreground">
-                  {row.five_star_count}
+                  {row.weekend_rides_count}
                 </TableCell>
                 <TableCell className="text-right">
                   {row.qualified ? (
