@@ -75,7 +75,6 @@ export default function PaginaLandingProduto() {
   const precoExibido =
     ciclo === "yearly" && hasYearly ? produto.price_yearly_cents! : produto.price_cents;
 
-  const irParaTrial = () => navigate(trialUrl);
   const irParaDemo = (source: string) => navigate(`${demoUrl}?source=${source}`);
   const irParaTrialComOrigem = (source: string) => navigate(`${trialUrl}&source=${source}`);
 
