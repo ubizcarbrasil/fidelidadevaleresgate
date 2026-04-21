@@ -37,30 +37,114 @@ export default function BotaoAtualizarApp({
   const [loading, setLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  /**
+   * Executa uma promise com timeout — se demorar mais que `ms`, rejeita
+   * para evitar que o botão fique preso esperando rede instável.
+   */
+  const comTimeout = <T,>(p: Promise<T>, ms: number, label: string): Promise<T> => {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error(`Timeout em ${label}`)), ms);
+      p.then(
+        (v) => {
+          clearTimeout(timer);
+          resolve(v);
+        },
+        (e) => {
+          clearTimeout(timer);
+          reject(e);
+        },
+      );
+    });
+  };
+
   const executarLimpeza = async () => {
     setConfirmOpen(false);
     setLoading(true);
-    try {
-      // 1. Desregistra todos os Service Workers ativos.
-      if ("serviceWorker" in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map((r) => r.unregister()));
+
+    const target = reloadTo ?? window.location.pathname + window.location.search;
+    const erros: string[] = [];
+
+    // 1. Desregistra Service Workers — tolerante a falha individual.
+    if ("serviceWorker" in navigator) {
+      try {
+        const regs = await comTimeout(
+          navigator.serviceWorker.getRegistrations(),
+          4000,
+          "Service Worker",
+        );
+        await Promise.all(
+          regs.map((r) =>
+            r.unregister().catch((e) => {
+              erros.push(`SW: ${e?.message ?? e}`);
+              return false;
+            }),
+          ),
+        );
+      } catch (e: any) {
+        erros.push(`SW: ${e?.message ?? e}`);
       }
-      // 2. Apaga todos os caches (CacheStorage).
-      if ("caches" in window) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((k) => caches.delete(k)));
-      }
-      toast.success("Caches limpos. Recarregando...");
-      // 3. Pequeno delay para o toast aparecer e força reload sem cache.
-      setTimeout(() => {
-        const target = reloadTo ?? window.location.pathname + window.location.search;
-        window.location.replace(target);
-      }, 400);
-    } catch (err: any) {
-      toast.error(err?.message ?? "Não foi possível limpar o cache.");
-      setLoading(false);
     }
+
+    // 2. Apaga CacheStorage — também tolerante.
+    if ("caches" in window) {
+      try {
+        const keys = await comTimeout(caches.keys(), 4000, "CacheStorage");
+        await Promise.all(
+          keys.map((k) =>
+            caches.delete(k).catch((e) => {
+              erros.push(`Cache ${k}: ${e?.message ?? e}`);
+              return false;
+            }),
+          ),
+        );
+      } catch (e: any) {
+        erros.push(`CacheStorage: ${e?.message ?? e}`);
+      }
+    }
+
+    // 3. Mensagem clara se algo falhou — mas SEMPRE tenta recarregar.
+    if (erros.length > 0) {
+      toast.warning(
+        "Conexão instável: nem tudo foi limpo. Tentando recarregar mesmo assim...",
+        { duration: 3500 },
+      );
+      console.warn("[BotaoAtualizarApp] falhas durante limpeza:", erros);
+    } else {
+      toast.success("Caches limpos. Recarregando...");
+    }
+
+    // 4. Reload com fallback: tenta replace; se não voltar em 5s, faz reload duro;
+    //    se nem isso responder em mais 4s, exibe mensagem para o usuário recarregar manualmente.
+    const tentarReload = () => {
+      try {
+        window.location.replace(target);
+      } catch {
+        try {
+          window.location.href = target;
+        } catch {
+          /* ignore */
+        }
+      }
+    };
+
+    setTimeout(tentarReload, 500);
+
+    setTimeout(() => {
+      try {
+        window.location.reload();
+      } catch {
+        /* ignore */
+      }
+    }, 5500);
+
+    setTimeout(() => {
+      // Se ainda estamos aqui, o navegador não conseguiu sair da página.
+      setLoading(false);
+      toast.error(
+        "Não foi possível recarregar automaticamente. Verifique sua conexão e puxe a tela para baixo (ou feche e abra o app) para atualizar.",
+        { duration: 8000 },
+      );
+    }, 9500);
   };
 
   return (
