@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   atualizarStatusLead,
+  atualizarCamposLead,
+  type AtualizacaoCamposLead,
   buscarLeadPorId,
   criarNotaLead,
   listarNotasLead,
@@ -52,6 +54,22 @@ export function useCriarNotaLead(leadId: string | undefined) {
     },
     onError: (error: Error) => {
       toast.error("Erro ao salvar nota", { description: error.message });
+    },
+  });
+}
+
+export function useAtualizarCamposLead(leadId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (campos: AtualizacaoCamposLead) =>
+      atualizarCamposLead(leadId as string, campos),
+    onSuccess: () => {
+      toast.success("Lead atualizado com sucesso");
+      queryClient.invalidateQueries({ queryKey: ["lead_comercial_detalhe", leadId] });
+      queryClient.invalidateQueries({ queryKey: ["leads_comerciais"] });
+    },
+    onError: (error: Error) => {
+      toast.error("Erro ao atualizar lead", { description: error.message });
     },
   });
 }
