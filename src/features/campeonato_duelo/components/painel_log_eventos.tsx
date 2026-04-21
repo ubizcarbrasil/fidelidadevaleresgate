@@ -7,6 +7,9 @@ import { useLogEventosTemporada } from "../hooks/hook_log_eventos";
 import FiltrosLogEventos from "./filtros_log_eventos";
 import LinhaLogEvento from "./linha_log_evento";
 import type { RodadaMataMata } from "../types/tipos_campeonato";
+import { ROTULOS_RODADA } from "../constants/constantes_campeonato";
+import BotaoExportarLog from "./botao_exportar_log";
+import type { ResumoFiltrosExport } from "../utils/utilitarios_exportacao_log";
 
 interface Props {
   seasonId: string;
@@ -16,6 +19,8 @@ export default function PainelLogEventos({ seasonId }: Props) {
   const { data, isLoading } = useLogEventosTemporada(seasonId, 200);
   const [rodada, setRodada] = useState<RodadaMataMata | "todas">("todas");
   const [driverId, setDriverId] = useState<string | "todos">("todos");
+  const [dataInicio, setDataInicio] = useState<string>("");
+  const [dataFim, setDataFim] = useState<string>("");
 
   const motoristas = useMemo(() => {
     if (!data) return [];
@@ -30,12 +35,19 @@ export default function PainelLogEventos({ seasonId }: Props) {
 
   const filtrados = useMemo(() => {
     if (!data) return [];
+    const inicioMs = dataInicio ? new Date(dataInicio).getTime() : null;
+    const fimMs = dataFim ? new Date(dataFim).getTime() : null;
     return data.filter((ev) => {
       if (rodada !== "todas" && ev.bracket_round !== rodada) return false;
       if (driverId !== "todos" && ev.driver_id !== driverId) return false;
+      if (inicioMs != null || fimMs != null) {
+        const tsEv = new Date(ev.occurred_at).getTime();
+        if (inicioMs != null && tsEv < inicioMs) return false;
+        if (fimMs != null && tsEv > fimMs) return false;
+      }
       return true;
     });
-  }, [data, rodada, driverId]);
+  }, [data, rodada, driverId, dataInicio, dataFim]);
 
   // Marcação de "novo" para o item recém-chegado destacar com ring por 3s
   const idsAnteriores = useRef<Set<string>>(new Set());
@@ -64,6 +76,17 @@ export default function PainelLogEventos({ seasonId }: Props) {
   const total = data?.length ?? 0;
   const totalFiltrado = filtrados.length;
 
+  const motoristaSelecionado = motoristas.find((m) => m.id === driverId);
+  const resumoExport: ResumoFiltrosExport = {
+    rodadaLabel: rodada === "todas" ? "Todas as rodadas" : ROTULOS_RODADA[rodada],
+    motoristaLabel:
+      driverId === "todos" ? "Todos os motoristas" : motoristaSelecionado?.nome ?? driverId,
+    dataInicio: dataInicio ? new Date(dataInicio).toISOString() : null,
+    dataFim: dataFim ? new Date(dataFim).toISOString() : null,
+    total: totalFiltrado,
+    totalGeral: total,
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3 md:flex-row md:items-center md:justify-between">
@@ -75,13 +98,20 @@ export default function PainelLogEventos({ seasonId }: Props) {
             {totalFiltrado !== total ? ` de ${total}` : ""}
           </Badge>
         </div>
-        <FiltrosLogEventos
-          rodada={rodada}
-          aoMudarRodada={setRodada}
-          driverId={driverId}
-          aoMudarDriver={setDriverId}
-          motoristas={motoristas}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <FiltrosLogEventos
+            rodada={rodada}
+            aoMudarRodada={setRodada}
+            driverId={driverId}
+            aoMudarDriver={setDriverId}
+            motoristas={motoristas}
+            dataInicio={dataInicio}
+            aoMudarDataInicio={setDataInicio}
+            dataFim={dataFim}
+            aoMudarDataFim={setDataFim}
+          />
+          <BotaoExportarLog eventos={filtrados} resumo={resumoExport} />
+        </div>
       </div>
 
       {filtrados.length === 0 ? (
