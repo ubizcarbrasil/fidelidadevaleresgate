@@ -20,10 +20,12 @@ function isChunkLoadError(error: Error | null): boolean {
   return isRecoverableDomError(error.message);
 }
 
-/** Detecta rotas comerciais públicas que merecem fallback amigável (sem texto técnico). */
-function isRotaComercialPublica(): boolean {
-  if (typeof window === "undefined") return false;
+/** Detecta rotas públicas (institucional, comercial e landing) que merecem
+ *  fallback amigável em PT-BR — nunca expor mensagem técnica do React. */
+function isRotaPublica(): boolean {
+  if (typeof window === "undefined") return true;
   const path = window.location.pathname;
+  if (path === "/" || path === "/index") return true;
   return (
     path.startsWith("/trial") ||
     path.startsWith("/p/") ||
@@ -31,6 +33,9 @@ function isRotaComercialPublica(): boolean {
     path.startsWith("/register-store")
   );
 }
+
+/** Em produção nunca exibimos a mensagem crua do React (vem minificada e assusta). */
+const IS_PROD = import.meta.env.MODE === "production";
 
 export class ErrorBoundary extends React.Component<Props, State> {
   constructor(props: Props) {
@@ -87,32 +92,31 @@ export class ErrorBoundary extends React.Component<Props, State> {
       );
     }
 
-    // Rotas comerciais públicas: nunca mostrar texto técnico do React minificado.
-    if (isRotaComercialPublica()) {
-      const reset = () => this.setState({ hasError: false, error: null, isChunkError: false });
+    const reset = () =>
+      this.setState({ hasError: false, error: null, isChunkError: false });
+
+    // Rotas públicas: fallback amigável em PT-BR, sem texto técnico.
+    if (isRotaPublica()) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
           <div className="text-center space-y-4 max-w-md">
-            <h2 className="text-xl font-bold text-foreground">Não conseguimos carregar essa página</h2>
+            <h2 className="text-xl font-bold text-foreground">
+              Não conseguimos carregar essa página
+            </h2>
             <p className="text-muted-foreground text-sm">
-              Tivemos um problema temporário. Você pode tentar novamente ou começar seu teste grátis agora.
+              Tivemos um problema temporário ao abrir esta página. Você pode voltar
+              ao início ou tentar novamente em instantes.
             </p>
             <div className="flex gap-2 justify-center flex-wrap">
               <Button
                 onClick={() => {
                   reset();
-                  window.location.href = "/trial";
+                  window.location.href = "/";
                 }}
               >
-                Começar trial grátis
+                Voltar ao início
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  reset();
-                  window.location.reload();
-                }}
-              >
+              <Button variant="outline" onClick={reset}>
                 Tentar novamente
               </Button>
             </div>
@@ -121,14 +125,22 @@ export class ErrorBoundary extends React.Component<Props, State> {
       );
     }
 
+    // Rotas internas (logado): pode mostrar mensagem em dev, nunca em prod.
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-4 max-w-md">
           <h2 className="text-xl font-bold text-foreground">Algo deu errado</h2>
-          <p className="text-muted-foreground text-sm max-w-md">
-            {this.state.error?.message || "Erro inesperado"}
+          <p className="text-muted-foreground text-sm">
+            {IS_PROD
+              ? "Tivemos um problema inesperado. Volte ao início e tente novamente."
+              : this.state.error?.message || "Erro inesperado"}
           </p>
-          <Button onClick={() => { this.setState({ hasError: false, error: null, isChunkError: false }); window.location.href = "/"; }}>
+          <Button
+            onClick={() => {
+              reset();
+              window.location.href = "/";
+            }}
+          >
             Voltar ao início
           </Button>
         </div>
