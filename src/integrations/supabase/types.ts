@@ -9736,6 +9736,7 @@ export type Database = {
         Args: { p_amount: number; p_branch_id: string; p_description?: string }
         Returns: Json
       }
+      duelo_gerar_chaveamento: { Args: { p_season_id: string }; Returns: Json }
       finalize_duel: { Args: { p_duel_id: string }; Returns: Json }
       get_branch_dashboard_stats: {
         Args: { p_branch_id: string }
