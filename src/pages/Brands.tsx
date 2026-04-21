@@ -439,6 +439,38 @@ export default function Brands() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Plan change confirmation dialog */}
+      <AlertDialog
+        open={!!planChangeTarget}
+        onOpenChange={(open) => {
+          if (!open) setPlanChangeTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Atribuir produto à marca</AlertDialogTitle>
+            <AlertDialogDescription>
+              Atribuir o produto <strong>{planChangeTarget?.planLabel}</strong> à marca{" "}
+              <strong>{planChangeTarget?.brandName}</strong>? Isso substitui o plano atual e altera os
+              módulos e audiências disponíveis.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={actionLoading}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={actionLoading}
+              onClick={async () => {
+                if (!planChangeTarget) return;
+                await handleChangePlan(planChangeTarget.brandId, planChangeTarget.planKey);
+                setPlanChangeTarget(null);
+              }}
+            >
+              {actionLoading ? "Aplicando..." : "Confirmar troca"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
