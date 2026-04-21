@@ -34,7 +34,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq("user_id", userId);
       // Só aplica se ainda for o request mais recente e componente montado
       if (mountedRef.current && fetchIdRef.current === requestId) {
-        setRoles(data || []);
+        const newRoles = (data || []) as UserRole[];
+        setRoles((prev) => {
+          // Comparação estrutural: evita nova referência quando conteúdo é igual,
+          // prevenindo refetches em cascata em queries que dependem de roles.
+          if (
+            prev.length === newRoles.length &&
+            prev.every((r, i) => r.id === newRoles[i]?.id)
+          ) {
+            return prev;
+          }
+          return newRoles;
+        });
       }
     } catch (err) {
       console.warn("[AuthContext] Falha ao buscar roles:", err);

@@ -12,7 +12,7 @@
  * Expõe helpers para filtrar a UI de configuração da cidade conforme o produto.
  */
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 
@@ -38,19 +38,24 @@ const PERMISSIVE_FALLBACK_PLANS = new Set(["enterprise", "free"]);
 export function useProductScope(brandIdOverride?: string): EscopoProduto {
   const { currentBrandId } = useBrandGuard();
   const brandId = brandIdOverride || currentBrandId;
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ["product-scope", brandId],
     enabled: !!brandId,
     staleTime: 60_000,
     queryFn: async () => {
-      const { data: brand } = await supabase
-        .from("brands")
-        .select("subscription_plan")
-        .eq("id", brandId!)
-        .maybeSingle();
-
-      const planKey = brand?.subscription_plan ?? null;
+      // Reaproveita o cache de useBrandInfo quando disponível (evita query extra)
+      const cached = queryClient.getQueryData<any>(["brand-info", brandId]);
+      let planKey: string | null = cached?.subscription_plan ?? null;
+      if (!planKey) {
+        const { data: brand } = await supabase
+          .from("brands")
+          .select("subscription_plan")
+          .eq("id", brandId!)
+          .maybeSingle();
+        planKey = brand?.subscription_plan ?? null;
+      }
       if (!planKey) {
         return { planKey: null, audiences: [] as Audiencia[], moduleKeys: [] as string[] };
       }
