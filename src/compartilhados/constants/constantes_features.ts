@@ -27,3 +27,13 @@ export const USE_BUSINESS_MODELS = false;
  * Independente de `USE_BUSINESS_MODELS`.
  */
 export const USE_DUELO_CAMPEONATO = false;
+
+/**
+ * Liga a camada de Séries Hierárquicas (A, B, C, ...) do Campeonato Duelo
+ * Motorista (Sub-fase C.1+). Quando `false`, o sistema continua tratando cada
+ * temporada como série única ("Única", criada pelo backfill).
+ *
+ * Esta flag é independente de `USE_DUELO_CAMPEONATO` para permitir liberar
+ * primeiro o campeonato simples e depois ativar séries hierárquicas.
+ */
+export const USE_DUELO_SERIES_HIERARQUICAS = false;
