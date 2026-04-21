@@ -7,6 +7,7 @@ import { useReproducaoCampeonato } from "../hooks/hook_reproducao";
 import { ORDEM_RODADAS, ROTULOS_RODADA } from "../constants/constantes_campeonato";
 import ControlesReproducao from "./controles_reproducao";
 import CardConfrontoReproducao from "./card_confronto_reproducao";
+import PainelDetalhesEvento from "./painel_detalhes_evento";
 import type { RodadaMataMata } from "../types/tipos_campeonato";
 import type { SnapshotConfronto } from "../types/tipos_reproducao";
 
@@ -81,55 +82,56 @@ export default function PainelReproducaoTemporal({ seasonId }: Props) {
         aoMudarVelocidade={player.setVelocidade}
       />
 
-      {eventoAtual && (
-        <div className="rounded-md border border-primary/30 bg-primary/5 p-2 text-xs">
-          <span className="font-medium text-foreground">
-            {eventoAtual.driver_name ?? "Motorista"}
-          </span>{" "}
-          pontuou em {ROTULOS_RODADA[eventoAtual.bracket_round]} · Slot {eventoAtual.bracket_slot}
-        </div>
-      )}
-
-      <div className="overflow-x-auto">
-        <div className="flex min-w-max gap-4 pb-2">
-          {ORDEM_RODADAS.map((r) => {
-            const itens = confrontosPorRodada[r];
-            return (
-              <div key={r} className="flex min-w-[210px] flex-col gap-3">
-                <div className="flex items-center justify-between rounded-md border border-border px-2 py-1.5">
-                  <h4 className="flex items-center gap-1.5 text-sm font-semibold">
-                    {r === "final" ? (
-                      <Trophy className="h-3.5 w-3.5 text-amber-500" />
-                    ) : (
-                      <Swords className="h-3.5 w-3.5 text-muted-foreground" />
-                    )}
-                    {ROTULOS_RODADA[r]}
-                  </h4>
-                  <Badge variant="outline" className="text-[10px]">
-                    {itens.length}
-                  </Badge>
-                </div>
-                {itens.length === 0 ? (
-                  <div className="rounded-md border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
-                    Sem confrontos
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_300px]">
+        <div className="overflow-x-auto">
+          <div className="flex min-w-max gap-4 pb-2">
+            {ORDEM_RODADAS.map((r) => {
+              const itens = confrontosPorRodada[r];
+              return (
+                <div key={r} className="flex min-w-[210px] flex-col gap-3">
+                  <div className="flex items-center justify-between rounded-md border border-border px-2 py-1.5">
+                    <h4 className="flex items-center gap-1.5 text-sm font-semibold">
+                      {r === "final" ? (
+                        <Trophy className="h-3.5 w-3.5 text-amber-500" />
+                      ) : (
+                        <Swords className="h-3.5 w-3.5 text-muted-foreground" />
+                      )}
+                      {ROTULOS_RODADA[r]}
+                    </h4>
+                    <Badge variant="outline" className="text-[10px]">
+                      {itens.length}
+                    </Badge>
                   </div>
-                ) : (
-                  itens.map((snap) => (
-                    <CardConfrontoReproducao
-                      key={snap.bracket_id}
-                      snapshot={snap}
-                      destacado={player.snapshot.bracketAfetado === snap.bracket_id}
-                      ladoAfetado={
-                        player.snapshot.bracketAfetado === snap.bracket_id
-                          ? player.snapshot.ladoAfetado
-                          : null
-                      }
-                    />
-                  ))
-                )}
-              </div>
-            );
-          })}
+                  {itens.length === 0 ? (
+                    <div className="rounded-md border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+                      Sem confrontos
+                    </div>
+                  ) : (
+                    itens.map((snap) => (
+                      <CardConfrontoReproducao
+                        key={snap.bracket_id}
+                        snapshot={snap}
+                        destacado={player.snapshot.bracketAfetado === snap.bracket_id}
+                        ladoAfetado={
+                          player.snapshot.bracketAfetado === snap.bracket_id
+                            ? player.snapshot.ladoAfetado
+                            : null
+                        }
+                      />
+                    ))
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="lg:sticky lg:top-4 lg:self-start">
+          <PainelDetalhesEvento
+            evento={eventoAtual}
+            posicao={player.indice + 1}
+            total={player.total}
+          />
         </div>
       </div>
     </div>
