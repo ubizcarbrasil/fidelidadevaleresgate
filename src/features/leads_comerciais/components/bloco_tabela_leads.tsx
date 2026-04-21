@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Loader2, ExternalLink, MessageSquare } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { STATUS_LABELS } from "@/features/agendar_demonstracao/constants/constantes_demo";
 import type {
   LeadComercialRow,
@@ -38,6 +39,8 @@ function abrirWhatsapp(telefone: string, nome: string) {
 }
 
 export default function BlocoTabelaLeads({ leads, isLoading }: BlocoTabelaLeadsProps) {
+  const navigate = useNavigate();
+
   if (isLoading) {
     return (
       <Card>
@@ -81,7 +84,11 @@ export default function BlocoTabelaLeads({ leads, isLoading }: BlocoTabelaLeadsP
             {leads.map((lead) => {
               const statusInfo = STATUS_LABELS[lead.status as StatusLead] ?? STATUS_LABELS.novo;
               return (
-                <TableRow key={lead.id}>
+                <TableRow
+                  key={lead.id}
+                  className="cursor-pointer hover:bg-muted/40"
+                  onClick={() => navigate(`/leads-comerciais/${lead.id}`)}
+                >
                   <TableCell>
                     <div className="space-y-0.5 min-w-0">
                       <p className="font-medium truncate">{lead.full_name}</p>
@@ -119,7 +126,7 @@ export default function BlocoTabelaLeads({ leads, isLoading }: BlocoTabelaLeadsP
                       {formatarData(lead.created_at)}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1">
                       <Button
                         size="icon"

@@ -1804,6 +1804,44 @@ export type Database = {
           },
         ]
       }
+      commercial_lead_notes: {
+        Row: {
+          author_name: string | null
+          author_user_id: string | null
+          content: string
+          created_at: string
+          id: string
+          lead_id: string
+          note_type: string
+        }
+        Insert: {
+          author_name?: string | null
+          author_user_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          lead_id: string
+          note_type?: string
+        }
+        Update: {
+          author_name?: string | null
+          author_user_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+          note_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_lead_notes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commercial_leads: {
         Row: {
           assigned_to: string | null
