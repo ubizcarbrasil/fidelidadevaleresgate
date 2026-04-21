@@ -20,6 +20,41 @@ import BlocoCtaStickyMobile from "./components/bloco_cta_sticky_mobile";
 import BlocoFooter from "./components/bloco_footer";
 import type { CicloCobranca } from "./components/toggle_ciclo";
 import BotaoAtualizarApp from "@/compartilhados/components/botao_atualizar_app";
+import type { LandingBenefit } from "@/features/produtos_comerciais/types/tipos_produto";
+
+/**
+ * Sanitiza benefits no ponto de consumo. Aceita apenas string não-vazia
+ * ou objeto com `title` string. Descarta o resto silenciosamente.
+ * Defesa em profundidade — o hook já sanitiza, mas garantimos shape aqui também.
+ */
+function sanitizarBenefits(input: unknown): LandingBenefit[] {
+  if (!Array.isArray(input)) return [];
+  const out: LandingBenefit[] = [];
+  for (const item of input) {
+    if (typeof item === "string" && item.trim().length > 0) {
+      out.push(item);
+    } else if (item && typeof item === "object") {
+      const o = item as Record<string, unknown>;
+      if (typeof o.title === "string" && o.title.trim().length > 0) {
+        const safe: { title: string; description?: string; icon?: string } = {
+          title: o.title,
+        };
+        if (typeof o.description === "string") safe.description = o.description;
+        if (typeof o.icon === "string") safe.icon = o.icon;
+        out.push(safe);
+      }
+    }
+  }
+  return out;
+}
+
+/** Sanitiza features (sempre array de strings não-vazias). */
+function sanitizarFeatures(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  return input.filter(
+    (v): v is string => typeof v === "string" && v.trim().length > 0,
+  );
+}
 
 export default function PaginaLandingProduto() {
   const { slug } = useParams<{ slug: string }>();
@@ -75,6 +110,15 @@ export default function PaginaLandingProduto() {
   const precoExibido =
     ciclo === "yearly" && hasYearly ? produto.price_yearly_cents! : produto.price_cents;
 
+  // Sanitização defensiva no ponto de consumo (defesa em profundidade
+  // sobre a já feita em sanitizeLanding/sanitizeFeatures do hook).
+  const benefitsSanitizados = sanitizarBenefits(lc.benefits);
+  const featuresSanitizadas = sanitizarFeatures(produto.features);
+  const benefitsParaGrid =
+    benefitsSanitizados.length > 0
+      ? benefitsSanitizados
+      : featuresSanitizadas;
+
   const irParaDemo = (source: string) => navigate(`${demoUrl}?source=${source}`);
   const irParaTrialComOrigem = (source: string) => navigate(`${trialUrl}&source=${source}`);
 
@@ -119,7 +163,7 @@ export default function PaginaLandingProduto() {
       <BlocoParaQuem primaryColor={color} />
 
       <BlocoFuncionalidadesGrid
-        benefits={(lc.benefits ?? []).length > 0 ? lc.benefits! : produto.features}
+        benefits={benefitsParaGrid}
         primaryColor={color}
       />
 
@@ -139,8 +183,8 @@ export default function PaginaLandingProduto() {
         precoExibido={precoExibido}
         precoYearly={produto.price_yearly_cents}
         economia={economia}
-        benefits={lc.benefits ?? []}
-        features={produto.features}
+        benefits={benefitsSanitizados}
+        features={featuresSanitizadas}
         trialDays={produto.trial_days}
         isPopular={produto.is_popular}
         primaryColor={color}
