@@ -406,11 +406,7 @@ function AppContent() {
   }
 
   if ((loading || authLoading) && !isPublicPath) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <TelaCarregamento />;
   }
 
   // Portal mode: app.valeresgate.com.br
