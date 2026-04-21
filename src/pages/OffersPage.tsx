@@ -112,9 +112,11 @@ export default function OffersPage() {
         </div>
         <Dialog open={open} onOpenChange={v => { if (!v) closeDialog(); else setOpen(true); }}>
           <DialogTrigger asChild><Button className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-2" />Nova Oferta</Button></DialogTrigger>
-          <DialogContent className="max-w-lg w-[calc(100vw-2rem)]">
-            <DialogHeader><DialogTitle>{editId ? "Editar Oferta" : "Nova Oferta"}</DialogTitle></DialogHeader>
-            <div className="space-y-4 pt-2">
+          <DialogContent className="max-w-lg w-[calc(100vw-2rem)] max-h-[90vh] p-0 gap-0 flex flex-col">
+            <DialogHeader className="px-6 pt-6 pb-3 border-b shrink-0">
+              <DialogTitle>{editId ? "Editar Oferta" : "Nova Oferta"}</DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
               <div className="space-y-2"><Label>Título</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} /></div>
               <div className="space-y-2"><Label>Descrição</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -154,7 +156,16 @@ export default function OffersPage() {
                   <SelectContent>{STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <Button onClick={() => save.mutate()} disabled={!form.title || !form.brand_id || !form.branch_id || !form.store_id || save.isPending} className="w-full">
+            </div>
+            <div className="px-6 py-4 border-t shrink-0 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+              <Button variant="outline" onClick={closeDialog} className="w-full sm:w-auto">
+                Voltar
+              </Button>
+              <Button
+                onClick={() => save.mutate()}
+                disabled={!form.title || !form.brand_id || !form.branch_id || !form.store_id || save.isPending}
+                className="w-full sm:w-auto"
+              >
                 {save.isPending ? "Salvando..." : "Salvar"}
               </Button>
             </div>
