@@ -2,6 +2,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Props {
   variant?: "default" | "ghost" | "outline" | "secondary";
@@ -25,8 +35,10 @@ export default function BotaoAtualizarApp({
   reloadTo,
 }: Props) {
   const [loading, setLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const handleClick = async () => {
+  const executarLimpeza = async () => {
+    setConfirmOpen(false);
     setLoading(true);
     try {
       // 1. Desregistra todos os Service Workers ativos.
@@ -52,20 +64,42 @@ export default function BotaoAtualizarApp({
   };
 
   return (
-    <Button
-      type="button"
-      variant={variant}
-      size={size}
-      className={className}
-      onClick={handleClick}
-      disabled={loading}
-    >
-      {loading ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-      ) : (
-        <RefreshCw className="h-3.5 w-3.5" />
-      )}
-      <span className="ml-1.5">{loading ? "Atualizando..." : label}</span>
-    </Button>
+    <>
+      <Button
+        type="button"
+        variant={variant}
+        size={size}
+        className={className}
+        onClick={() => setConfirmOpen(true)}
+        disabled={loading}
+      >
+        {loading ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <RefreshCw className="h-3.5 w-3.5" />
+        )}
+        <span className="ml-1.5">{loading ? "Atualizando..." : label}</span>
+      </Button>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Atualizar o aplicativo agora?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação vai desregistrar o Service Worker, apagar os caches
+              salvos no navegador e recarregar a página para baixar a versão
+              mais recente. Você não perde dados da sua conta — apenas o
+              cache local é limpo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={executarLimpeza}>
+              Sim, atualizar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
