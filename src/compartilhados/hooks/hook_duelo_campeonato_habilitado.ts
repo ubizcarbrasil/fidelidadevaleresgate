@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   USE_DUELO_CAMPEONATO,
-  USE_DUELO_SERIES_HIERARQUICAS,
+  USE_DUELO_CAMPEONATO_SERIES,
 } from "@/compartilhados/constants/constantes_features";
 
 /**
@@ -13,7 +13,7 @@ import {
  * - `brand_settings_json.duelo_campeonato_enabled` precisa ser estritamente `true`.
  *
  * Também expõe se as Séries Hierárquicas estão ativas, combinando
- * `USE_DUELO_SERIES_HIERARQUICAS` com `brand_settings_json.duelo_series_enabled === true`.
+  * `USE_DUELO_CAMPEONATO_SERIES` com `brand_settings_json.duelo_series_enabled === true`.
  */
 export function useDueloCampeonatoHabilitado(brandId?: string | null) {
   const { data, isLoading } = useQuery({
@@ -33,7 +33,7 @@ export function useDueloCampeonatoHabilitado(brandId?: string | null) {
         (data?.brand_settings_json as Record<string, unknown> | null) ?? null;
       const campeonato = settings?.duelo_campeonato_enabled === true;
       const series =
-        USE_DUELO_SERIES_HIERARQUICAS &&
+        USE_DUELO_CAMPEONATO_SERIES &&
         campeonato &&
         settings?.duelo_series_enabled === true;
 

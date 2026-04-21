@@ -918,48 +918,6 @@ export type Database = {
       }
       brand_duelo_prizes: {
         Row: {
-          brand_id: string
-          id: string
-          points_reward: number
-          position: string
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          brand_id: string
-          id?: string
-          points_reward: number
-          position: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          brand_id?: string
-          id?: string
-          points_reward?: number
-          position?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "brand_duelo_prizes_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "brand_duelo_prizes_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "public_brands_safe"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      brand_duelo_prizes_v2: {
-        Row: {
           branch_id: string | null
           brand_id: string
           created_at: string
