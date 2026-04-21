@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Rocket, Shield, Check, Star } from "lucide-react";
+import { Rocket, Shield, Check, Star, MessageSquare, Headphones } from "lucide-react";
 import ToggleCiclo, { type CicloCobranca } from "./toggle_ciclo";
 import type { LandingBenefit } from "@/features/produtos_comerciais/types/tipos_produto";
 
@@ -49,31 +49,39 @@ export default function BlocoPricingDestaque({
     .slice(0, 6);
 
   return (
-    <section className="px-4 py-12 sm:py-16">
+    <section id="pricing" className="px-4 py-16 sm:py-24 scroll-mt-20">
       <div className="max-w-2xl mx-auto">
-        <div className="text-center space-y-2 mb-8">
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Investimento simples
+        <div className="text-center space-y-3 mb-10">
+          <p className="text-xs font-bold uppercase tracking-wider" style={{ color: primaryColor }}>
+            Investimento
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+            Previsível. Implementação rápida.
           </h2>
           <p className="text-sm text-muted-foreground">
-            Comece grátis. Decida depois.
+            Mensalidade fixa por cidade ativa. Sem custo por motorista. Onboarding assistido incluso.
           </p>
         </div>
 
         <Card
-          className="relative border-2 shadow-2xl"
+          className="relative border-2 shadow-2xl overflow-hidden"
           style={{ borderColor: `${primaryColor}66` }}
         >
+          <div
+            aria-hidden
+            className="absolute top-0 left-0 right-0 h-1"
+            style={{ background: `linear-gradient(90deg, ${primaryColor}, ${primaryColor}66)` }}
+          />
           {isPopular && (
             <div
               className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider shadow"
               style={{ backgroundColor: primaryColor, color: "#fff" }}
             >
-              <Star className="h-3 w-3 fill-current" /> Mais popular
+              <Star className="h-3 w-3 fill-current" /> Mais contratado
             </div>
           )}
 
-          <CardContent className="pt-8 pb-7 space-y-6">
+          <CardContent className="pt-10 pb-8 space-y-6">
             {hasYearly && (
               <div className="flex justify-center">
                 <ToggleCiclo
@@ -87,6 +95,9 @@ export default function BlocoPricingDestaque({
             )}
 
             <div className="text-center">
+              <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground mb-1">
+                A partir de
+              </p>
               <div
                 className="text-5xl sm:text-6xl font-extrabold tracking-tight"
                 style={{ color: primaryColor }}
@@ -96,6 +107,7 @@ export default function BlocoPricingDestaque({
                   {sufixo}
                 </span>
               </div>
+              <p className="text-xs text-muted-foreground mt-2">por cidade ativa</p>
               {ciclo === "yearly" && economia && economia.valor > 0 && (
                 <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 px-3 py-1 text-xs font-bold">
                   Você economiza {formatarBRL(economia.valor)} no ano
@@ -124,19 +136,42 @@ export default function BlocoPricingDestaque({
               </ul>
             )}
 
-            <Button
-              size="lg"
-              className="w-full gap-2 font-semibold text-base py-6 shadow-md"
-              style={{ backgroundColor: primaryColor, color: "#fff" }}
-              onClick={onCta}
-            >
-              <Rocket className="h-5 w-5" />
-              Começar trial de {trialDays} dias
-            </Button>
+            <div className="space-y-3 pt-1">
+              <Button
+                size="lg"
+                className="w-full gap-2 font-semibold text-base py-6 shadow-lg"
+                style={{ backgroundColor: primaryColor, color: "#fff" }}
+                onClick={onCta}
+              >
+                <Rocket className="h-5 w-5" />
+                Agendar demonstração comercial
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="w-full gap-2 font-semibold text-base py-6"
+              >
+                <a href="#preview">
+                  <MessageSquare className="h-5 w-5" />
+                  Quero ver funcionando
+                </a>
+              </Button>
+            </div>
 
-            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-              <Shield className="h-3.5 w-3.5" />
-              Sem cartão de crédito · cancele em 1 clique
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t text-[11px] text-muted-foreground">
+              <div className="inline-flex items-center justify-center gap-1.5">
+                <Shield className="h-3.5 w-3.5" style={{ color: primaryColor }} />
+                <span>Implementação assistida</span>
+              </div>
+              <div className="inline-flex items-center justify-center gap-1.5">
+                <Rocket className="h-3.5 w-3.5" style={{ color: primaryColor }} />
+                <span>Onboarding em 7 dias</span>
+              </div>
+              <div className="inline-flex items-center justify-center gap-1.5">
+                <Headphones className="h-3.5 w-3.5" style={{ color: primaryColor }} />
+                <span>Suporte dedicado</span>
+              </div>
             </div>
           </CardContent>
         </Card>
