@@ -77,3 +77,9 @@ verify_jwt = false
 
 [functions.finalize-duels-cron]
 verify_jwt = false
+
+[functions.duelo-cron-reconcile]
+verify_jwt = false
+
+[functions.duelo-cron-advance]
+verify_jwt = false
