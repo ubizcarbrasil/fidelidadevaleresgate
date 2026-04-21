@@ -17,6 +17,12 @@ export default function BlocoTopbar({ trialUrl, primaryColor, ctaLabel }: Props)
           <PlatformLogo className="h-8 w-8 rounded-lg flex-shrink-0" />
           <span className="text-sm font-bold truncate">Vale Resgate</span>
         </Link>
+        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
+          <a href="#como-funciona" className="hover:text-foreground transition-colors">Como funciona</a>
+          <a href="#para-quem" className="hover:text-foreground transition-colors">Para quem</a>
+          <a href="#preview" className="hover:text-foreground transition-colors">Demonstração</a>
+          <a href="#pricing" className="hover:text-foreground transition-colors">Investimento</a>
+        </nav>
         <div className="flex items-center gap-1 sm:gap-2">
           <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
             <Link to="/auth">Já tenho conta</Link>
@@ -29,8 +35,8 @@ export default function BlocoTopbar({ trialUrl, primaryColor, ctaLabel }: Props)
           >
             <Link to={trialUrl}>
               <Rocket className="h-3.5 w-3.5" />
-              <span className="hidden xs:inline">{ctaLabel || "Trial grátis"}</span>
-              <span className="xs:hidden">Trial</span>
+              <span className="hidden xs:inline">{ctaLabel || "Agendar demo"}</span>
+              <span className="xs:hidden">Demo</span>
             </Link>
           </Button>
         </div>
