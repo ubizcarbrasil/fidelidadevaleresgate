@@ -193,6 +193,30 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     load();
   }, [brand, user]);
 
+  // Portal universal (app.valeresgate.com.br): sem domain match, resolve o brand
+  // a partir do role do usuário autenticado para popular o contexto e permitir
+  // que hooks/queries reaproveitem cache em vez de cada um buscar `brands` direto.
+  useEffect(() => {
+    if (brand || loading) return;
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data: roleRow } = await supabase
+        .from("user_roles")
+        .select("brand_id")
+        .eq("user_id", user.id)
+        .not("brand_id", "is", null)
+        .limit(1)
+        .maybeSingle();
+      if (cancelled || !roleRow?.brand_id) return;
+      const brandData = await fetchBrandById(roleRow.brand_id);
+      if (!cancelled && brandData) setBrand(brandData);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [brand, loading, user]);
+
   // Auto-detect branch by geolocation — deferred to avoid blocking initial render
   useEffect(() => {
     if (!brand || branches.length <= 1 || selectedBranch) return;
