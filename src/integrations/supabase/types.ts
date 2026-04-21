@@ -4948,7 +4948,6 @@ export type Database = {
       duelo_season_standings: {
         Row: {
           driver_id: string
-          five_star_count: number
           id: string
           last_ride_at: string | null
           points: number
@@ -4958,10 +4957,10 @@ export type Database = {
           relegated_auto: boolean
           season_id: string
           tier_id: string | null
+          weekend_rides_count: number
         }
         Insert: {
           driver_id: string
-          five_star_count?: number
           id?: string
           last_ride_at?: string | null
           points?: number
@@ -4971,10 +4970,10 @@ export type Database = {
           relegated_auto?: boolean
           season_id: string
           tier_id?: string | null
+          weekend_rides_count?: number
         }
         Update: {
           driver_id?: string
-          five_star_count?: number
           id?: string
           last_ride_at?: string | null
           points?: number
@@ -4984,6 +4983,7 @@ export type Database = {
           relegated_auto?: boolean
           season_id?: string
           tier_id?: string | null
+          weekend_rides_count?: number
         }
         Relationships: [
           {
@@ -10078,6 +10078,10 @@ export type Database = {
         Returns: number
       }
       duelo_gerar_chaveamento: { Args: { p_season_id: string }; Returns: Json }
+      duelo_is_weekend_at: {
+        Args: { p_branch_id: string; p_finalized_at: string }
+        Returns: boolean
+      }
       duelo_reconcile_standings: { Args: { p_hours?: number }; Returns: Json }
       duelo_seed_initial_tier_memberships: {
         Args: { p_season_id: string }
