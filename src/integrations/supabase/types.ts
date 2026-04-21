@@ -1804,6 +1804,108 @@ export type Database = {
           },
         ]
       }
+      commercial_leads: {
+        Row: {
+          assigned_to: string | null
+          city: string | null
+          company_name: string
+          company_role: string | null
+          company_size: string | null
+          contacted_at: string | null
+          converted_at: string | null
+          created_at: string
+          current_solution: string | null
+          full_name: string
+          id: string
+          interest_message: string | null
+          ip_address: string | null
+          notes: string | null
+          phone: string
+          preferred_contact: string | null
+          preferred_window: string | null
+          product_id: string | null
+          product_name: string | null
+          product_slug: string | null
+          qualified_at: string | null
+          source: string | null
+          status: string
+          updated_at: string
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+          work_email: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          city?: string | null
+          company_name: string
+          company_role?: string | null
+          company_size?: string | null
+          contacted_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          current_solution?: string | null
+          full_name: string
+          id?: string
+          interest_message?: string | null
+          ip_address?: string | null
+          notes?: string | null
+          phone: string
+          preferred_contact?: string | null
+          preferred_window?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          product_slug?: string | null
+          qualified_at?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          work_email: string
+        }
+        Update: {
+          assigned_to?: string | null
+          city?: string | null
+          company_name?: string
+          company_role?: string | null
+          company_size?: string | null
+          contacted_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          current_solution?: string | null
+          full_name?: string
+          id?: string
+          interest_message?: string | null
+          ip_address?: string | null
+          notes?: string | null
+          phone?: string
+          preferred_contact?: string | null
+          preferred_window?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          product_slug?: string | null
+          qualified_at?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          work_email?: string
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           branch_id: string
