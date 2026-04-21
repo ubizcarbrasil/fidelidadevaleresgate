@@ -116,6 +116,10 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
       // Safety timeout: force loading = false after 5 seconds
       const safetyTimeout = setTimeout(() => {
         setLoading(false);
+        // CRÍTICO: também precisa marcar BRAND_READY no boot machine,
+        // senão `useBootReady()` (em ProtectedRoute/Guards) nunca libera
+        // e o usuário fica preso na tela de carregamento.
+        setBootPhase("BRAND_READY", "timeout");
       }, 2000);
 
       setBootPhase("BRAND_LOADING");
