@@ -22,4 +22,6 @@ export interface FiltroLogEventos {
   rodada?: RodadaMataMata | "todas";
   bracketId?: string | "todos";
   driverId?: string | "todos";
+  dataInicio?: string | null;
+  dataFim?: string | null;
 }
