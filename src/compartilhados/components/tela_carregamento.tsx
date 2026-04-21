@@ -1,4 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from "react";
+import { onBootPhase, getBootPhase, type BootPhase } from "@/lib/bootStateCore";
 
 /**
  * TelaCarregamento — loader premium unificado da plataforma.
@@ -16,11 +17,32 @@ const DEFAULT_ETAPAS = [
   "Quase lá…",
 ];
 
+/**
+ * Mapeia cada fase do boot machine para uma mensagem amigável,
+ * exibida em tempo real conforme a inicialização avança.
+ */
+const MENSAGENS_POR_FASE: Record<BootPhase, string> = {
+  BOOTSTRAP: "Iniciando aplicativo…",
+  AUTH_LOADING: "Validando sua sessão…",
+  AUTH_READY: "Sessão validada. Carregando configurações…",
+  BRAND_LOADING: "Carregando configurações da marca…",
+  BRAND_READY: "Aplicando tema e preparando dados…",
+  APP_MOUNTED: "Pronto!",
+  FAILED: "Não foi possível iniciar.",
+};
+
 interface PropsTelaCarregamento {
   mensagem?: string;
   etapas?: string[];
   logoUrl?: string;
   mostrarBotaoEmergencia?: boolean;
+  /**
+   * Quando true (padrão), conecta-se ao boot state machine e exibe
+   * a etapa atual em tempo real (validação de sessão, carregando brand…).
+   * Use false em loaders de Suspense de páginas internas, onde o boot
+   * já terminou e a fase fica "APP_MOUNTED" travada.
+   */
+  acompanharBoot?: boolean;
 }
 
 // Lazy: só carrega o botão/dialog se o fallback aparecer após 8s.
@@ -31,18 +53,35 @@ export default function TelaCarregamento({
   etapas = DEFAULT_ETAPAS,
   logoUrl,
   mostrarBotaoEmergencia = true,
+  acompanharBoot = true,
 }: PropsTelaCarregamento) {
   const [indiceEtapa, setIndiceEtapa] = useState(0);
   const [travado, setTravado] = useState(false);
+  const [faseBoot, setFaseBoot] = useState<BootPhase>(() => getBootPhase());
 
-  // Rotaciona a mensagem de etapa (apenas quando não há mensagem fixa).
+  // Inscreve no boot state machine para atualizar a etapa em tempo real.
   useEffect(() => {
-    if (mensagem || etapas.length <= 1) return;
+    if (!acompanharBoot) return;
+    setFaseBoot(getBootPhase());
+    const unsubscribe = onBootPhase((fase) => setFaseBoot(fase));
+    return unsubscribe;
+  }, [acompanharBoot]);
+
+  // Considera "boot ativo" enquanto não chegou a APP_MOUNTED nem FAILED.
+  // Nessas fases finais, voltamos ao ciclo genérico (caso o loader continue
+  // visível por algum motivo de Suspense/route).
+  const bootAtivo =
+    acompanharBoot && faseBoot !== "APP_MOUNTED" && faseBoot !== "FAILED";
+
+  // Rotaciona a mensagem de etapa (apenas quando não há mensagem fixa
+  // e o boot machine não está controlando a etapa).
+  useEffect(() => {
+    if (mensagem || bootAtivo || etapas.length <= 1) return;
     const id = setInterval(() => {
       setIndiceEtapa((i) => (i + 1) % etapas.length);
     }, 2500);
     return () => clearInterval(id);
-  }, [mensagem, etapas]);
+  }, [mensagem, etapas, bootAtivo]);
 
   // Após 8s sem destravar, oferece botão de emergência.
   useEffect(() => {
@@ -51,7 +90,9 @@ export default function TelaCarregamento({
     return () => clearTimeout(id);
   }, [mostrarBotaoEmergencia]);
 
-  const textoEtapa = mensagem ?? etapas[indiceEtapa];
+  const textoEtapa =
+    mensagem ??
+    (bootAtivo ? MENSAGENS_POR_FASE[faseBoot] : etapas[indiceEtapa]);
 
   return (
     <div
