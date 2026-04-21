@@ -1,4 +1,4 @@
-export type TipoNotaLead = "manual" | "status_change" | "system";
+export type TipoNotaLead = "manual" | "status_change" | "field_change" | "system";
 
 export interface NotaLeadRow {
   id: string;

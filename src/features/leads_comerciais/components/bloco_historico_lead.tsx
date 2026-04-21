@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, MessageCircle, RefreshCw } from "lucide-react";
+import { Loader2, MessageCircle, RefreshCw, Pencil } from "lucide-react";
 import { useCriarNotaLead, useNotasLead } from "../hooks/hook_detalhes_lead";
 import type { NotaLeadRow } from "../types/tipos_nota_lead";
 
@@ -21,8 +21,12 @@ function formatarData(iso: string) {
 }
 
 function ItemHistorico({ nota }: { nota: NotaLeadRow }) {
-  const isStatus = nota.note_type === "status_change";
-  const Icon = isStatus ? RefreshCw : MessageCircle;
+  const Icon =
+    nota.note_type === "status_change"
+      ? RefreshCw
+      : nota.note_type === "field_change"
+        ? Pencil
+        : MessageCircle;
 
   return (
     <div className="flex gap-3 py-3 border-b border-border/50 last:border-0">
