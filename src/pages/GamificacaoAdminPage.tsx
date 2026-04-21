@@ -8,6 +8,7 @@ import { Loader2, Swords, MapPin } from "lucide-react";
 import EstatisticasGamificacao from "@/components/admin/gamificacao/EstatisticasGamificacao";
 import PaginaConfiguracoesDuelo from "@/features/duelo_configuracoes/pagina_configuracoes_duelo";
 import ListaDuelosAdmin from "@/components/admin/gamificacao/ListaDuelosAdmin";
+import PaginaDuelosMatching from "@/features/duelos_matching/pagina_duelos_matching";
 import RankingAdminView from "@/components/admin/gamificacao/RankingAdminView";
 import CinturaoAdminView from "@/components/admin/gamificacao/CinturaoAdminView";
 import ModeracaoApelidos from "@/components/admin/gamificacao/ModeracaoApelidos";
@@ -149,7 +150,10 @@ export default function GamificacaoAdminPage() {
           <PaginaConfiguracoesDuelo branchId={branch.id} brandId={branch.brand_id} settings={settings} />
         </TabsContent>
         <TabsContent value="duelos">
-          <ListaDuelosAdmin branchId={branch.id} onCriarDuelo={() => setCriarDueloOpen(true)} />
+          <div className="space-y-4">
+            <PaginaDuelosMatching branchId={branch.id} brandId={branch.brand_id} />
+            <ListaDuelosAdmin branchId={branch.id} onCriarDuelo={() => setCriarDueloOpen(true)} />
+          </div>
         </TabsContent>
         <TabsContent value="apostas">
           <ApostasAdminView branchId={branch.id} brandId={branch.brand_id} />

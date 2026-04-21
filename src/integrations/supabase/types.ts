@@ -3313,6 +3313,7 @@ export type Database = {
           prize_points: number
           rematch_of: string | null
           season_id: string | null
+          sponsored_by_brand: boolean
           start_at: string
           status: string
           updated_at: string
@@ -3343,6 +3344,7 @@ export type Database = {
           prize_points?: number
           rematch_of?: string | null
           season_id?: string | null
+          sponsored_by_brand?: boolean
           start_at: string
           status?: string
           updated_at?: string
@@ -3373,6 +3375,7 @@ export type Database = {
           prize_points?: number
           rematch_of?: string | null
           season_id?: string | null
+          sponsored_by_brand?: boolean
           start_at?: string
           status?: string
           updated_at?: string
@@ -9192,6 +9195,18 @@ export type Database = {
         Args: { p_amount: number; p_branch_id: string; p_duel_id: string }
         Returns: Json
       }
+      admin_create_bulk_duels: {
+        Args: {
+          p_branch_id: string
+          p_brand_id: string
+          p_end_at: string
+          p_pairs: Json
+          p_prize_points_per_pair?: number
+          p_sponsored?: boolean
+          p_start_at: string
+        }
+        Returns: Json
+      }
       admin_create_duel: {
         Args: {
           p_branch_id: string
@@ -9408,6 +9423,14 @@ export type Database = {
           guess_count: number
           participant_id: string
         }[]
+      }
+      get_duel_match_suggestions: {
+        Args: {
+          p_branch_id: string
+          p_limit?: number
+          p_volume_tolerance?: number
+        }
+        Returns: Json
       }
       get_own_customer_ids: { Args: { _user_id: string }; Returns: string[] }
       get_points_ranking: {

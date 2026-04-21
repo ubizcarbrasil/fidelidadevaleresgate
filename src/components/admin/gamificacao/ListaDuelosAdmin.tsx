@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Plus, Trophy } from "lucide-react";
 import { format } from "date-fns";
 import { formatPoints } from "@/lib/formatPoints";
+import BadgePatrocinado from "@/features/duelos_matching/components/badge_patrocinado";
 
 interface Props {
   branchId: string;
@@ -35,7 +36,7 @@ export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
         .from("driver_duels")
         .select(`
           id, status, start_at, end_at, challenger_rides_count, challenged_rides_count,
-          winner_id, created_at, prize_points, challenger_points_bet, challenged_points_bet,
+          winner_id, created_at, prize_points, challenger_points_bet, challenged_points_bet, sponsored_by_brand,
           challenger:driver_duel_participants!driver_duels_challenger_id_fkey(public_nickname, customer:customers!driver_duel_participants_customer_id_fkey(name)),
           challenged:driver_duel_participants!driver_duels_challenged_id_fkey(public_nickname, customer:customers!driver_duel_participants_customer_id_fkey(name))
         `)
@@ -102,6 +103,7 @@ export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
                         {format(new Date(d.start_at), "dd/MM")} — {format(new Date(d.end_at), "dd/MM")}
                       </span>
                     </div>
+                    {d.sponsored_by_brand && <BadgePatrocinado variant="compact" />}
                     <div className="flex items-center justify-between">
                       <div className="text-sm">
                         <span className="font-medium truncate max-w-[120px] inline-block align-bottom">{getNome(d.challenger)}</span>
@@ -142,7 +144,12 @@ export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
                     const totalPrize = (d.prize_points ?? 0) + (d.challenger_points_bet ?? 0) + (d.challenged_points_bet ?? 0);
                     return (
                       <TableRow key={d.id}>
-                        <TableCell className="text-sm">{getNome(d.challenger)}</TableCell>
+                        <TableCell className="text-sm">
+                          <div className="flex flex-col gap-1">
+                            <span>{getNome(d.challenger)}</span>
+                            {d.sponsored_by_brand && <BadgePatrocinado variant="compact" />}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-sm">{getNome(d.challenged)}</TableCell>
                         <TableCell><Badge variant={s.variant}>{s.label}</Badge></TableCell>
                         <TableCell className="text-xs text-muted-foreground">
