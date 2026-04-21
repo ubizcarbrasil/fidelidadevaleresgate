@@ -138,11 +138,7 @@ export default function CustomerPreviewPage() {
   }, [user, roles, authLoading, forcedBrandId]);
 
   if (loading || authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <TelaCarregamento />;
   }
 
   // Not authenticated: show brand-themed login if we have a brandId from URL
