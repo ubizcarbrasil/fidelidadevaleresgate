@@ -75,13 +75,19 @@ export default function PaginaLandingProduto() {
   const precoExibido =
     ciclo === "yearly" && hasYearly ? produto.price_yearly_cents! : produto.price_cents;
 
-  const irParaTrial = () => navigate(trialUrl);
   const irParaDemo = (source: string) => navigate(`${demoUrl}?source=${source}`);
+  const irParaTrialComOrigem = (source: string) => navigate(`${trialUrl}&source=${source}`);
+
+  // Detecta se o CTA configurado promete trial — nesse caso o destino correto é /trial.
+  const ctaLabelLower = (lc.cta_label || "").toLowerCase();
+  const ctaPrometeTrial = /trial|grátis|gratis|teste|começar|comecar/.test(ctaLabelLower);
+  const ctaHandler = (source: string) =>
+    ctaPrometeTrial ? irParaTrialComOrigem(source) : irParaDemo(source);
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <BlocoTopbar
-        trialUrl={`${demoUrl}?source=topbar`}
+        trialUrl={ctaPrometeTrial ? `${trialUrl}&source=topbar` : `${demoUrl}?source=topbar`}
         primaryColor={color}
         ctaLabel={lc.cta_label || "Agendar demo"}
       />
@@ -92,11 +98,11 @@ export default function PaginaLandingProduto() {
         subheadline={lc.subheadline}
         heroImageUrl={lc.hero_image_url}
         ctaLabel={lc.cta_label || "Agendar demonstração"}
-        trialUrl={`${demoUrl}?source=hero`}
+        trialUrl={ctaPrometeTrial ? `${trialUrl}&source=hero` : `${demoUrl}?source=hero`}
         trialDays={produto.trial_days}
         primaryColor={color}
         isPopular={produto.is_popular}
-        onPrimaryClick={() => irParaDemo("hero")}
+        onPrimaryClick={() => ctaHandler("hero")}
       />
 
       <BlocoMetricasDestaque metrics={lc.metrics ?? []} primaryColor={color} />
@@ -138,7 +144,7 @@ export default function PaginaLandingProduto() {
         trialDays={produto.trial_days}
         isPopular={produto.is_popular}
         primaryColor={color}
-        onCta={() => irParaDemo("pricing")}
+        onCta={() => ctaHandler("pricing")}
       />
 
       <BlocoPerguntasObjecoes
@@ -151,7 +157,7 @@ export default function PaginaLandingProduto() {
         trialDays={produto.trial_days}
         ctaLabel={lc.cta_label}
         primaryColor={color}
-        onCta={() => irParaDemo("cta_final")}
+        onCta={() => ctaHandler("cta_final")}
       />
 
       <BlocoFooter />
@@ -159,7 +165,7 @@ export default function PaginaLandingProduto() {
       <BlocoCtaStickyMobile
         trialDays={produto.trial_days}
         primaryColor={color}
-        onCta={() => irParaDemo("sticky_mobile")}
+        onCta={() => ctaHandler("sticky_mobile")}
       />
 
       {/* Atalho mobile para limpar cache do Service Worker e recarregar. */}

@@ -17,6 +17,10 @@ import ImageUploadField from "@/components/ImageUploadField";
 import { motion } from "framer-motion";
 import PlatformLogo from "@/components/PlatformLogo";
 import DemoStoresToggle from "@/components/DemoStoresToggle";
+import {
+  buscarPlanoTrialPorSlug,
+  type PlanoTrialNormalizado,
+} from "@/features/trial_signup/services/servico_trial_signup";
 
 type Step = "guide" | "info" | "location" | "branding" | "creating" | "done";
 const STEPS: Step[] = ["guide", "info", "location", "branding", "creating", "done"];
@@ -57,32 +61,22 @@ export default function TrialSignupPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TrialResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [productInfo, setProductInfo] = useState<{
-    product_name: string;
-    trial_days: number;
-    price_cents: number;
-    price_yearly_cents: number | null;
-  } | null>(null);
+  const [productInfo, setProductInfo] = useState<PlanoTrialNormalizado | null>(null);
 
-  // Carrega dados do produto quando ?plan=slug está na URL
+  // Carrega dados do produto quando ?plan=slug está na URL.
+  // Usa serviço dedicado de normalização para evitar React error #31:
+  // o payload de `subscription_plans` pode conter objetos ricos em
+  // landing_config_json/benefits que NUNCA devem chegar ao JSX.
   useEffect(() => {
     if (!planSlug) return;
+    let cancelado = false;
     (async () => {
-      const { data } = await supabase
-        .from("subscription_plans")
-        .select("product_name, label, trial_days, price_cents, price_yearly_cents")
-        .eq("slug", planSlug)
-        .eq("is_active", true)
-        .maybeSingle();
-      if (data) {
-        setProductInfo({
-          product_name: (data as any).product_name || (data as any).label,
-          trial_days: (data as any).trial_days ?? 30,
-          price_cents: (data as any).price_cents ?? 0,
-          price_yearly_cents: (data as any).price_yearly_cents ?? null,
-        });
-      }
+      const plano = await buscarPlanoTrialPorSlug(planSlug);
+      if (!cancelado && plano) setProductInfo(plano);
     })();
+    return () => {
+      cancelado = true;
+    };
   }, [planSlug]);
 
   const [form, setForm] = useState<FormData>({
