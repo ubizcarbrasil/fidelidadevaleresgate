@@ -129,11 +129,11 @@ export default function PaginaLandingProduto() {
         onPrimaryClick={() => ctaHandler("hero")}
       />
 
-      <BlocoMetricasDestaque metrics={lc.metrics ?? []} primaryColor={color} />
+      <BlocoMetricasDestaque metrics={metricsSanitizadas} primaryColor={color} />
 
       <BlocoDoresSolucoes
-        problems={lc.problems ?? []}
-        solutions={lc.solutions ?? []}
+        problems={problemsSanitizados}
+        solutions={solutionsSanitizadas}
         productName={produto.product_name}
         primaryColor={color}
       />
@@ -148,13 +148,13 @@ export default function PaginaLandingProduto() {
       />
 
       <BlocoPreviewApp
-        screenshots={lc.screenshots ?? []}
+        screenshots={screenshotsSanitizados}
         heroImageUrl={lc.hero_image_url}
         productName={produto.product_name}
         primaryColor={color}
       />
 
-      <BlocoDepoimentos testimonials={lc.testimonials ?? []} primaryColor={color} />
+      <BlocoDepoimentos testimonials={testimonialsSanitizados} primaryColor={color} />
 
       <BlocoPricingDestaque
         ciclo={ciclo}
@@ -172,7 +172,7 @@ export default function PaginaLandingProduto() {
       />
 
       <BlocoPerguntasObjecoes
-        faq={lc.faq ?? []}
+        faq={faqSanitizado}
         trialDays={produto.trial_days}
         primaryColor={color}
       />
