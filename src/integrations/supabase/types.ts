@@ -6972,25 +6972,34 @@ export type Database = {
       }
       plan_duelo_prize_ranges: {
         Row: {
+          created_at: string
           id: string
           max_points: number
           min_points: number
           plan_key: string
           position: string
+          tier_name: string
+          updated_at: string
         }
         Insert: {
+          created_at?: string
           id?: string
           max_points: number
           min_points: number
           plan_key: string
           position: string
+          tier_name?: string
+          updated_at?: string
         }
         Update: {
+          created_at?: string
           id?: string
           max_points?: number
           min_points?: number
           plan_key?: string
           position?: string
+          tier_name?: string
+          updated_at?: string
         }
         Relationships: []
       }
