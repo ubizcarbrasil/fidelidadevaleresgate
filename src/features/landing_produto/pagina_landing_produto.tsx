@@ -69,16 +69,18 @@ export default function PaginaLandingProduto() {
   const lc = produto.landing_config_json;
   const color = lc.primary_color || "#6366f1";
   const trialUrl = `/trial?plan=${produto.slug}&cycle=${ciclo}`;
+  const demoUrl = `/p/produto/${produto.slug}/demo`;
 
   const precoExibido =
     ciclo === "yearly" && hasYearly ? produto.price_yearly_cents! : produto.price_cents;
 
   const irParaTrial = () => navigate(trialUrl);
+  const irParaDemo = (source: string) => navigate(`${demoUrl}?source=${source}`);
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <BlocoTopbar
-        trialUrl={trialUrl}
+        trialUrl={`${demoUrl}?source=topbar`}
         primaryColor={color}
         ctaLabel={lc.cta_label || "Agendar demo"}
       />
@@ -89,11 +91,11 @@ export default function PaginaLandingProduto() {
         subheadline={lc.subheadline}
         heroImageUrl={lc.hero_image_url}
         ctaLabel={lc.cta_label || "Agendar demonstração"}
-        trialUrl={trialUrl}
+        trialUrl={`${demoUrl}?source=hero`}
         trialDays={produto.trial_days}
         primaryColor={color}
         isPopular={produto.is_popular}
-        onPrimaryClick={irParaTrial}
+        onPrimaryClick={() => irParaDemo("hero")}
       />
 
       <BlocoMetricasDestaque metrics={lc.metrics ?? []} primaryColor={color} />
@@ -135,7 +137,7 @@ export default function PaginaLandingProduto() {
         trialDays={produto.trial_days}
         isPopular={produto.is_popular}
         primaryColor={color}
-        onCta={irParaTrial}
+        onCta={() => irParaDemo("pricing")}
       />
 
       <BlocoPerguntasObjecoes
@@ -148,7 +150,7 @@ export default function PaginaLandingProduto() {
         trialDays={produto.trial_days}
         ctaLabel={lc.cta_label}
         primaryColor={color}
-        onCta={irParaTrial}
+        onCta={() => irParaDemo("cta_final")}
       />
 
       <BlocoFooter />
@@ -156,7 +158,7 @@ export default function PaginaLandingProduto() {
       <BlocoCtaStickyMobile
         trialDays={produto.trial_days}
         primaryColor={color}
-        onCta={irParaTrial}
+        onCta={() => irParaDemo("sticky_mobile")}
       />
     </div>
   );
