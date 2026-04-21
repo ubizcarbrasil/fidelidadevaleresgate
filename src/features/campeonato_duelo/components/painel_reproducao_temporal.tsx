@@ -1,11 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { History, Inbox, Swords, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLogEventosTemporada } from "../hooks/hook_log_eventos";
 import { useReproducaoCampeonato } from "../hooks/hook_reproducao";
 import { ORDEM_RODADAS, ROTULOS_RODADA } from "../constants/constantes_campeonato";
-import ControlesReproducao from "./controles_reproducao";
+import ControlesReproducao, {
+  type TipoEventoReproducao,
+} from "./controles_reproducao";
 import CardConfrontoReproducao from "./card_confronto_reproducao";
 import PainelDetalhesEvento from "./painel_detalhes_evento";
 import type { RodadaMataMata } from "../types/tipos_campeonato";
@@ -19,7 +21,20 @@ export default function PainelReproducaoTemporal({ seasonId }: Props) {
   // Trazemos um histórico generoso para a reprodução (até 1000 eventos).
   const { data, isLoading } = useLogEventosTemporada(seasonId, 1000);
 
-  const player = useReproducaoCampeonato({ eventos: data ?? [] });
+  const [tiposSelecionados, setTiposSelecionados] = useState<TipoEventoReproducao[]>([
+    "ride_completed",
+    "ride_reverted",
+  ]);
+
+  const eventosFiltrados = useMemo(() => {
+    if (!data) return [];
+    if (tiposSelecionados.length === 0) return [];
+    const set = new Set<string>(tiposSelecionados);
+    return data.filter((ev) => set.has(ev.event_type));
+  }, [data, tiposSelecionados]);
+
+  const player = useReproducaoCampeonato({ eventos: eventosFiltrados });
+  const totalGeral = data?.length ?? 0;
 
   const confrontosPorRodada = useMemo(() => {
     const por: Record<RodadaMataMata, SnapshotConfronto[]> = {
@@ -80,6 +95,9 @@ export default function PainelReproducaoTemporal({ seasonId }: Props) {
         aoPassoFrente={player.passoFrente}
         aoMudarIndice={player.ir}
         aoMudarVelocidade={player.setVelocidade}
+        tiposSelecionados={tiposSelecionados}
+        aoMudarTipos={setTiposSelecionados}
+        totalGeral={totalGeral}
       />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_300px]">
