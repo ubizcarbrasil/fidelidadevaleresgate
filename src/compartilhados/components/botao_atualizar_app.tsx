@@ -316,7 +316,7 @@ function DialogProgressoAtualizacao({
 function IconeStatus({ status }: { status: StatusEtapa }) {
   if (status === "ok") {
     return (
-      <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+      <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-primary">
         <Check className="h-3 w-3" />
       </span>
     );
