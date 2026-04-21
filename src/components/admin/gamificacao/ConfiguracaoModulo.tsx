@@ -25,7 +25,20 @@ const DEFAULT_PHRASES = [
 export default function ConfiguracaoModulo({ branchId, settings }: Props) {
   const qc = useQueryClient();
 
-  const [enableDuels, setEnableDuels] = useState(settings.enable_driver_duels !== false);
+  // Compat: se a flag legada existir e nenhuma das novas, usa o valor antigo como base
+  const legacyDuelsOn = settings.enable_driver_duels !== false;
+  const [enableDuelDvD, setEnableDuelDvD] = useState(
+    settings.enable_duel_driver_vs_driver === true ||
+      (settings.enable_duel_driver_vs_driver === undefined && legacyDuelsOn),
+  );
+  const [enableDuelSponsored, setEnableDuelSponsored] = useState(
+    settings.enable_duel_sponsored_by_brand === true ||
+      (settings.enable_duel_sponsored_by_brand === undefined && legacyDuelsOn),
+  );
+  const [enableDuelSideBets, setEnableDuelSideBets] = useState(
+    settings.enable_duel_side_bets === true ||
+      (settings.enable_duel_side_bets === undefined && legacyDuelsOn),
+  );
   const [enableRanking, setEnableRanking] = useState(settings.enable_city_ranking !== false);
   const [enableBelt, setEnableBelt] = useState(settings.enable_city_belt !== false);
   const [publicViewing, setPublicViewing] = useState(settings.allow_public_duel_viewing !== false);
