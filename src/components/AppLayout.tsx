@@ -143,13 +143,22 @@ export default function AppLayout() {
     return <Navigate to="/store-panel" replace />;
   }
 
+  // Estado de carregamento: roles ainda não chegaram. Não renderizar sidebar errada.
+  if (consoleScope === "LOADING") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   const SidebarComponent = {
     ROOT: RootSidebar,
     TENANT: TenantSidebar,
     BRAND: BrandSidebar,
     BRANCH: BranchSidebar,
     OPERATOR: OperatorSidebar,
-  }[consoleScope];
+  }[consoleScope as "ROOT" | "TENANT" | "BRAND" | "BRANCH" | "OPERATOR"];
 
   const initials = user?.email
     ? user.email.substring(0, 2).toUpperCase()
