@@ -12,6 +12,7 @@ import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { TelaCarregamentoInline } from "@/compartilhados/components/tela_carregamento";
 
 const PAGE_SIZE = 20;
 
@@ -80,7 +81,7 @@ export default function Tenants() {
       <Card>
         <CardHeader><CardTitle className="text-base">Lista de Organizações</CardTitle></CardHeader>
         <CardContent>
-          {isLoading ? <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div> : (
+          {isLoading ? <TelaCarregamentoInline /> : (
           <Table>
             <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Identificador</TableHead><TableHead>Marcas</TableHead><TableHead>Plano</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
             <TableBody>

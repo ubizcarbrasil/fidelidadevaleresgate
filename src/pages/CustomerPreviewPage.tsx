@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandProviderOverride } from "@/contexts/BrandContext";
 import WhiteLabelLayout from "@/components/WhiteLabelLayout";
-import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Tables } from "@/integrations/supabase/types";
 import CustomerAuthPage from "@/pages/customer/CustomerAuthPage";
 import { ContextBadge } from "@/components/ContextBadge";
+import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
 
 type Brand = Tables<"brands">;
 type Branch = Tables<"branches">;
@@ -34,11 +34,7 @@ function BrandThemedAuth({ brandId }: { brandId: string }) {
   }, [brandId]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <TelaCarregamento />;
   }
 
   if (!brand) {
@@ -142,11 +138,7 @@ export default function CustomerPreviewPage() {
   }, [user, roles, authLoading, forcedBrandId]);
 
   if (loading || authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <TelaCarregamento />;
   }
 
   // Not authenticated: show brand-themed login if we have a brandId from URL

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import BlocoResumoProduto from "./components/bloco_resumo_produto";
 import BlocoSucessoDemo from "./components/bloco_sucesso_demo";
 import { useSubmeterLead } from "./hooks/hook_submeter_lead";
 import type { FormularioAgendarDemo as FormData } from "./schemas/schema_agendar_demo";
+import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
 
 export default function PaginaAgendarDemonstracao() {
   const { slug } = useParams<{ slug: string }>();
@@ -24,11 +24,7 @@ export default function PaginaAgendarDemonstracao() {
   const submeter = useSubmeterLead();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <TelaCarregamento />;
   }
 
   if (!produto || !produto.is_active) {

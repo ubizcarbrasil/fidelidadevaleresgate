@@ -12,6 +12,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useMutationWithFeedback } from "@/hooks/useMutationWithFeedback";
 import { queryKeys } from "@/lib/queryKeys";
+import { TelaCarregamentoInline } from "@/compartilhados/components/tela_carregamento";
 
 const PAGE_SIZE = 20;
 
@@ -60,7 +61,7 @@ export default function Branches() {
       <Card>
         <CardHeader><CardTitle className="text-base">Lista de Cidades</CardTitle></CardHeader>
         <CardContent className="px-0 sm:px-6">
-          {isLoading ? <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div> : (
+          {isLoading ? <TelaCarregamentoInline /> : (
           <div className="table-wrap-mobile">
           <Table>
             <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead className="hidden sm:table-cell">Marca</TableHead><TableHead className="hidden md:table-cell">Cidade/UF</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>

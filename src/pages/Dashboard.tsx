@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import BranchDashboardSection from "@/components/dashboard/BranchDashboardSection";
 import PlatformLogo from "@/components/PlatformLogo";
+import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
 
 import DashboardKpiSection from "@/components/dashboard/DashboardKpiSection";
 import DashboardChartsSection from "@/components/dashboard/DashboardChartsSection";
@@ -311,9 +312,7 @@ export default function Dashboard() {
 
   if (isRedirecting) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
+      <TelaCarregamento />
     );
   }
 

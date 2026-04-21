@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, Globe, CheckCircle2, XCircle, AlertTriangle, Search } from "lucide-react";
 import { toast } from "sonner";
+import { TelaCarregamentoInline } from "@/compartilhados/components/tela_carregamento";
 
 interface DomainRow {
   id: string;
@@ -221,11 +222,7 @@ export default function BrandDomains() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <TelaCarregamentoInline />;
   }
 
   return (

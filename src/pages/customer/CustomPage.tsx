@@ -3,18 +3,14 @@ import { useBrand } from "@/contexts/BrandContext";
 import { CustomerProvider } from "@/contexts/CustomerContext";
 import CustomerLayout from "@/components/customer/CustomerLayout";
 import PageRenderer from "@/components/page-builder-v2/PageRenderer";
-import { Loader2 } from "lucide-react";
+import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
 
 export default function CustomPage() {
   const { slug } = useParams<{ slug: string }>();
   const { brand, loading } = useBrand();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <TelaCarregamento />;
   }
 
   if (!slug) {

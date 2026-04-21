@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, useInView } from "framer-motion";
 import { Eye, Heart, Zap, BarChart3, Star, ChevronDown, ArrowRight, Users, Store, Gift, Shield, TrendingUp, Sparkles, CheckCircle2, Loader2, Menu, X, Rocket, Target, Award, Smartphone, PieChart, MessageSquare, Clock, DollarSign, Check, ShoppingCart, Repeat, QrCode, BarChart, Settings, BadgeCheck, Crown, Quote, Instagram, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
 
 const ICON_MAP: Record<string, any> = {
   Eye, Heart, Zap, BarChart3, Star, Users, Store, Gift, Shield,
@@ -402,11 +403,7 @@ export default function PartnerLandingPage() {
   }, [slug]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "hsl(220, 20%, 4%)" }}>
-        <Loader2 className="h-8 w-8 animate-spin text-white/40" />
-      </div>
-    );
+    return <TelaCarregamento />;
   }
 
   if (!brand || !config) {

@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBootReady } from "@/lib/bootState";
+import { TelaCarregamentoInline } from "@/compartilhados/components/tela_carregamento";
 
 interface RootGuardProps {
   children: React.ReactNode;
@@ -15,11 +16,7 @@ export default function RootGuard({ children }: RootGuardProps) {
   const bootReady = useBootReady();
 
   if (!bootReady || loading) {
-    return (
-      <div className="min-h-[200px] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-      </div>
-    );
+    return <TelaCarregamentoInline />;
   }
 
   if (!isRootAdmin) {
