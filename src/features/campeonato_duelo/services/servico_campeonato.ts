@@ -101,3 +101,26 @@ export async function listarConfrontos(
     driver_b_name: row.driver_b?.name ?? null,
   })) as ConfrontoMataMata[];
 }
+
+/**
+ * Encerra a fase de classificação, ranqueia os motoristas, marca os
+ * top 16 como qualificados e gera automaticamente os 8 confrontos
+ * das oitavas com seed clássico (1x16, 2x15, ...).
+ */
+export async function gerarChaveamento(seasonId: string): Promise<{
+  qualified_count: number;
+  brackets_created: number;
+}> {
+  const { data, error } = await supabase.rpc("duelo_gerar_chaveamento", {
+    p_season_id: seasonId,
+  });
+  if (error) throw error;
+  const payload = (data ?? {}) as {
+    qualified_count?: number;
+    brackets_created?: number;
+  };
+  return {
+    qualified_count: payload.qualified_count ?? 0,
+    brackets_created: payload.brackets_created ?? 0,
+  };
+}

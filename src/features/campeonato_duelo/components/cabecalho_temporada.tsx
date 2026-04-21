@@ -1,5 +1,6 @@
 import { Calendar } from "lucide-react";
 import BadgeFaseTemporada from "./badge_fase_temporada";
+import BotaoEncerrarClassificacao from "./botao_encerrar_classificacao";
 import { formatarPeriodo } from "../utils/utilitarios_campeonato";
 import type { TemporadaCampeonato } from "../types/tipos_campeonato";
 
@@ -8,6 +9,8 @@ interface Props {
 }
 
 export default function CabecalhoTemporada({ temporada }: Props) {
+  const podeEncerrarClassificacao = temporada.phase === "classification";
+
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 md:flex-row md:items-center md:justify-between">
       <div className="flex flex-col gap-1">
@@ -26,6 +29,12 @@ export default function CabecalhoTemporada({ temporada }: Props) {
           </span>
         </div>
       </div>
+      {podeEncerrarClassificacao && (
+        <BotaoEncerrarClassificacao
+          seasonId={temporada.id}
+          branchId={temporada.branch_id}
+        />
+      )}
     </div>
   );
 }
