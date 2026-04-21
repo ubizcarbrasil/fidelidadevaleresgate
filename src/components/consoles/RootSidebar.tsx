@@ -118,7 +118,7 @@ const rootGroupDefs: DefinicaoGrupoSidebar[] = [
       "sidebar.configuracoes",
       { key: "sidebar.subscription", overrides: { defaultTitle: "Assinatura" } },
       "sidebar.plan_templates", "sidebar.produtos_comerciais", "sidebar.plan_pricing",
-      "sidebar.auditoria_duplicacoes",
+      "sidebar.leads_comerciais", "sidebar.auditoria_duplicacoes",
     ],
   },
 ];
