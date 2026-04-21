@@ -56,7 +56,9 @@ return ({
         // v3 (Mobile Hardening) — invalida caches antigos após correção de removeChild/Sheet portal.
         // v4 (Public routes hardening) — exclui rotas públicas (/p/*, /loja/*, /landing, /produtos)
         // do navigateFallback para evitar HTML cacheado servindo chunks antigos.
-        cacheId: "vale-resgate-v4",
+        // v5 (Landing Produto fix) — invalida cache para corrigir React #31 ({icon,title,description})
+        // em landings com benefícios estruturados (motorista-premium / engajamento-motorista).
+        cacheId: "vale-resgate-v5",
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,jpg,jpeg,webp}"],
