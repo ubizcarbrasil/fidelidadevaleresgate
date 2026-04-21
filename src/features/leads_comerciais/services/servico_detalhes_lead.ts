@@ -32,6 +32,37 @@ export async function atualizarStatusLead(
   if (error) throw error;
 }
 
+export interface AtualizacaoCamposLead {
+  full_name?: string;
+  work_email?: string;
+  phone?: string;
+  company_name?: string;
+  company_role?: string | null;
+  company_size?: string | null;
+  city?: string | null;
+  current_solution?: string | null;
+  interest_message?: string | null;
+  preferred_contact?: string | null;
+  preferred_window?: string | null;
+  product_name?: string | null;
+  product_slug?: string | null;
+  source?: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+}
+
+export async function atualizarCamposLead(
+  leadId: string,
+  campos: AtualizacaoCamposLead
+): Promise<void> {
+  const { error } = await supabase
+    .from("commercial_leads")
+    .update(campos)
+    .eq("id", leadId);
+  if (error) throw error;
+}
+
 export async function listarNotasLead(leadId: string): Promise<NotaLeadRow[]> {
   const { data, error } = await supabase
     .from("commercial_lead_notes")
