@@ -21,6 +21,11 @@ const App = lazyWithRetry(() => {
   return import("./App").then((m) => {
     console.info("[boot] App dynamic import succeeded");
     (window as any).__BOOT_PHASE__ = "APP_IMPORT_OK";
+    // Warm-up dos chunks críticos da rota inicial em paralelo,
+    // assim AppLayout e Dashboard já estão prontos quando o
+    // ProtectedRoute liberar — evita "carregar em série".
+    void import("@/components/AppLayout").catch(() => {});
+    void import("@/pages/Dashboard").catch(() => {});
     return m;
   });
 });
