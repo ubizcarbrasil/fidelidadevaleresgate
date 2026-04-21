@@ -281,15 +281,49 @@ export default function Brands() {
                               <ArrowUpDown className="h-4 w-4 mr-2" />Mudar Plano
                             </DropdownMenuSubTrigger>
                             <DropdownMenuSubContent>
-                              {PLAN_OPTIONS.map(p => (
+                              <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                                Planos Padrão
+                              </div>
+                              {LEGACY_PLAN_OPTIONS.map((p) => (
                                 <DropdownMenuItem
                                   key={p.key}
                                   disabled={b.subscription_plan === p.key}
-                                  onClick={() => handleChangePlan(b.id, p.key)}
+                                  onClick={() =>
+                                    setPlanChangeTarget({
+                                      brandId: b.id,
+                                      brandName: b.name,
+                                      planKey: p.key,
+                                      planLabel: p.label,
+                                    })
+                                  }
                                 >
                                   {p.label} {b.subscription_plan === p.key && "✓"}
                                 </DropdownMenuItem>
                               ))}
+                              {commercialProductOptions.length > 0 && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                                    Produtos Comerciais
+                                  </div>
+                                  {commercialProductOptions.map((p) => (
+                                    <DropdownMenuItem
+                                      key={p.key}
+                                      disabled={b.subscription_plan === p.key}
+                                      onClick={() =>
+                                        setPlanChangeTarget({
+                                          brandId: b.id,
+                                          brandName: b.name,
+                                          planKey: p.key,
+                                          planLabel: p.label,
+                                        })
+                                      }
+                                    >
+                                      {p.label} {b.subscription_plan === p.key && "✓"}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </>
+                              )}
                             </DropdownMenuSubContent>
                           </DropdownMenuSub>
                           <DropdownMenuItem onClick={() => toggleActive.mutate({ id: b.id, is_active: !b.is_active })}>
