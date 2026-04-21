@@ -57,7 +57,7 @@ export async function listarClassificacao(
     .select("*, customers!duelo_season_standings_driver_id_fkey(name)")
     .eq("season_id", seasonId)
     .order("points", { ascending: false })
-    .order("five_star_count", { ascending: false })
+    .order("weekend_rides_count", { ascending: false })
     .order("last_ride_at", { ascending: true });
   if (error) throw error;
   return ((data ?? []) as any[]).map((row) => ({
@@ -65,7 +65,7 @@ export async function listarClassificacao(
     season_id: row.season_id,
     driver_id: row.driver_id,
     points: row.points,
-    five_star_count: row.five_star_count,
+    weekend_rides_count: row.weekend_rides_count,
     last_ride_at: row.last_ride_at,
     position: row.position,
     qualified: row.qualified,
