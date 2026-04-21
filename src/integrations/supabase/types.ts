@@ -5125,6 +5125,7 @@ export type Database = {
           month: number
           name: string
           phase: string
+          promotion_applied_at: string | null
           relegation_policy: string
           tier_seeding_completed_at: string | null
           tiers_config_json: Json
@@ -5145,6 +5146,7 @@ export type Database = {
           month: number
           name: string
           phase?: string
+          promotion_applied_at?: string | null
           relegation_policy?: string
           tier_seeding_completed_at?: string | null
           tiers_config_json?: Json
@@ -5165,6 +5167,7 @@ export type Database = {
           month?: number
           name?: string
           phase?: string
+          promotion_applied_at?: string | null
           relegation_policy?: string
           tier_seeding_completed_at?: string | null
           tiers_config_json?: Json
@@ -10100,6 +10103,10 @@ export type Database = {
         Returns: Json
       }
       duelo_advance_phases: { Args: never; Returns: Json }
+      duelo_apply_promotion_relegation: {
+        Args: { p_season_id: string }
+        Returns: Json
+      }
       duelo_backfill_standings: { Args: { p_season_id: string }; Returns: Json }
       duelo_create_brackets_within_tier: {
         Args: {
