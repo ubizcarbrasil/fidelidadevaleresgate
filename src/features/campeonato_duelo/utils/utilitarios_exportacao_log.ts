@@ -13,6 +13,51 @@ export interface ResumoFiltrosExport {
   totalGeral: number;
 }
 
+export interface ValidacaoIntervalo {
+  valido: boolean;
+  motivo: string | null;
+}
+
+/**
+ * Valida o intervalo De/Até informado pelo usuário.
+ * - Aceita ambos vazios (sem filtro de período).
+ * - Exige preenchimento dos dois quando um é informado.
+ * - Verifica datas válidas e ordem cronológica correta.
+ */
+export function validarIntervaloDatas(
+  dataInicio: string,
+  dataFim: string,
+): ValidacaoIntervalo {
+  const temInicio = dataInicio.trim().length > 0;
+  const temFim = dataFim.trim().length > 0;
+
+  if (!temInicio && !temFim) {
+    return { valido: true, motivo: null };
+  }
+  if (temInicio && !temFim) {
+    return { valido: false, motivo: "Informe a data final do intervalo." };
+  }
+  if (!temInicio && temFim) {
+    return { valido: false, motivo: "Informe a data inicial do intervalo." };
+  }
+
+  const inicio = new Date(dataInicio);
+  const fim = new Date(dataFim);
+  if (Number.isNaN(inicio.getTime())) {
+    return { valido: false, motivo: "Data inicial inválida." };
+  }
+  if (Number.isNaN(fim.getTime())) {
+    return { valido: false, motivo: "Data final inválida." };
+  }
+  if (inicio.getTime() > fim.getTime()) {
+    return {
+      valido: false,
+      motivo: "A data inicial não pode ser maior que a data final.",
+    };
+  }
+  return { valido: true, motivo: null };
+}
+
 function nomeArquivo(extensao: string) {
   const agora = new Date();
   const yyyy = agora.getFullYear();

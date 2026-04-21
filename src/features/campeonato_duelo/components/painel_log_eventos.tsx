@@ -9,7 +9,10 @@ import LinhaLogEvento from "./linha_log_evento";
 import type { RodadaMataMata } from "../types/tipos_campeonato";
 import { ROTULOS_RODADA } from "../constants/constantes_campeonato";
 import BotaoExportarLog from "./botao_exportar_log";
-import type { ResumoFiltrosExport } from "../utils/utilitarios_exportacao_log";
+import {
+  validarIntervaloDatas,
+  type ResumoFiltrosExport,
+} from "../utils/utilitarios_exportacao_log";
 
 interface Props {
   seasonId: string;
@@ -77,6 +80,7 @@ export default function PainelLogEventos({ seasonId }: Props) {
   const totalFiltrado = filtrados.length;
 
   const motoristaSelecionado = motoristas.find((m) => m.id === driverId);
+  const validacaoIntervalo = validarIntervaloDatas(dataInicio, dataFim);
   const resumoExport: ResumoFiltrosExport = {
     rodadaLabel: rodada === "todas" ? "Todas as rodadas" : ROTULOS_RODADA[rodada],
     motoristaLabel:
@@ -110,7 +114,12 @@ export default function PainelLogEventos({ seasonId }: Props) {
             dataFim={dataFim}
             aoMudarDataFim={setDataFim}
           />
-          <BotaoExportarLog eventos={filtrados} resumo={resumoExport} />
+          <BotaoExportarLog
+            eventos={filtrados}
+            resumo={resumoExport}
+            desabilitado={!validacaoIntervalo.valido}
+            motivoBloqueio={validacaoIntervalo.motivo}
+          />
         </div>
       </div>
 
