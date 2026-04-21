@@ -19,11 +19,12 @@ import { useBrandGuard } from "@/hooks/useBrandGuard";
 
 const PAGE_SIZE = 20;
 
-const PLAN_OPTIONS = [
+const LEGACY_PLAN_OPTIONS = [
   { key: "free", label: "Free" },
   { key: "starter", label: "Starter" },
   { key: "profissional", label: "Profissional" },
 ];
+const LEGACY_PLAN_KEYS = new Set(LEGACY_PLAN_OPTIONS.map((p) => p.key));
 
 const STATUS_OPTIONS = [
   { key: "ACTIVE", label: "Ativo" },
@@ -56,6 +57,34 @@ export default function Brands() {
   const [renewStatus, setRenewStatus] = useState("ACTIVE");
   const [renewTrialDays, setRenewTrialDays] = useState("14");
   const [actionLoading, setActionLoading] = useState(false);
+  const [planChangeTarget, setPlanChangeTarget] = useState<{
+    brandId: string;
+    brandName: string;
+    planKey: string;
+    planLabel: string;
+  } | null>(null);
+
+  // Produtos comerciais ativos (subscription_plans)
+  const { data: commercialProducts } = useQuery({
+    queryKey: ["commercial-products-for-assignment"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("subscription_plans")
+        .select("plan_key, product_name, label, is_active")
+        .eq("is_active", true)
+        .order("product_name");
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const commercialProductOptions = (commercialProducts ?? [])
+    .filter((p: any) => !LEGACY_PLAN_KEYS.has(p.plan_key))
+    .map((p: any) => ({
+      key: p.plan_key as string,
+      label: (p.product_name || p.label || p.plan_key) as string,
+    }));
 
   const { data, isLoading } = useQuery({
     queryKey: ["brands", debouncedSearch, page],
