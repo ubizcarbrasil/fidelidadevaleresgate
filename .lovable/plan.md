@@ -1,100 +1,178 @@
 
 
-# Sub-fase C.2 — Motor do Campeonato Duelo (Séries Hierárquicas)
+# Esclarecimentos antes da execução — Tarefa B
 
-## Confirmações de schema (antes do plano)
+## 1. Rollback completo
 
-| Item | Resposta |
-|---|---|
-| Coluna status em `machine_rides` | `ride_status text`, default `'PENDING'` |
-| Valor de finalização | `'FINALIZED'` (one-way confirmado) |
-| Timestamp de finalização | `finalized_at timestamptz` (nullable) |
-| Coluna driver | `driver_customer_id uuid` (FK lógica para `customers.id`) |
-| **Rating em `machine_rides`** | **Não existe.** Não há coluna de avaliação por corrida. Único rating é `driver_duel_ratings.rating smallint` (rating motorista→motorista, fora de C.2) |
-| `pg_cron` instalado | **Sim**, v1.6.4 (`pg_net` v0.19.5) |
-| `branches.timezone` | Existe (text) — usaremos para reconciliação local |
+Bloco de rollback completo, executável em ordem, dentro de uma única transação:
 
-**Implicação crítica**: `five_star_count` **não pode ser alimentado** pelo motor de corridas. Proposta abaixo (Q1).
+```sql
+BEGIN;
 
-## Decisões adicionais que precisam ser confirmadas
+-- 1) Recriar coluna antiga
+ALTER TABLE public.duelo_season_standings
+  ADD COLUMN IF NOT EXISTS five_star_count int NOT NULL DEFAULT 0;
 
-### Q1 — `five_star_count` na C.2
+-- 2) Recriar índice antigo
+DROP INDEX IF EXISTS idx_duelo_standings_ranking;
+CREATE INDEX idx_duelo_standings_ranking
+  ON public.duelo_season_standings
+     (season_id, points DESC, five_star_count DESC, last_ride_at ASC);
 
-`duelo_season_standings.five_star_count` foi pensado como tiebreaker. Como não existe rating em `machine_rides`, **proponho congelar o campo em 0 nesta sub-fase** e remover o critério de desempate dele em C.2, usando apenas `points DESC, last_ride_at ASC` (mais antigo desempata melhor — recompensa quem chegou no mesmo placar primeiro). Em C.5 (futura integração com avaliação do passageiro) reativamos. **Confirme antes de eu codar.**
+-- 3) Reverter trigger duelo_update_standings_from_ride
+--    Restaurar versão da migration 20260421230612 (sem weekend_rides_count)
+CREATE OR REPLACE FUNCTION public.duelo_update_standings_from_ride()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_season_id uuid;
+  v_tier_id uuid;
+  v_finalized_at timestamptz;
+BEGIN
+  IF NEW.ride_status <> 'FINALIZED' THEN RETURN NEW; END IF;
+  IF TG_OP = 'UPDATE' AND OLD.ride_status = 'FINALIZED' THEN RETURN NEW; END IF;
+  IF NEW.driver_customer_id IS NULL OR NEW.branch_id IS NULL THEN RETURN NEW; END IF;
 
-### Q2 — Race condition (2 corridas simultâneas)
+  v_finalized_at := COALESCE(NEW.finalized_at, now());
 
-Trigger usará `UPDATE ... WHERE season_id=X AND driver_id=Y RETURNING id` com `points = points + 1` atômico no Postgres. Não precisa de lock explícito — `UPDATE` no mesmo row é serializado por MVCC. O caso "standing não existe" usa `INSERT ... ON CONFLICT (season_id, driver_id) DO UPDATE SET points = standings.points + 1, last_ride_at = EXCLUDED.last_ride_at` para tornar a operação idempotente sob concorrência.
+  SELECT s.id INTO v_season_id
+    FROM public.duelo_seasons s
+   WHERE s.branch_id = NEW.branch_id
+     AND s.phase = 'classification'
+     AND v_finalized_at >= s.classification_starts_at
+     AND v_finalized_at <  s.classification_ends_at
+   ORDER BY s.created_at DESC LIMIT 1;
+  IF v_season_id IS NULL THEN RETURN NEW; END IF;
 
-### Q3 — Timezone do cron (00:00 local)
+  SELECT tm.tier_id INTO v_tier_id
+    FROM public.duelo_tier_memberships tm
+   WHERE tm.season_id = v_season_id AND tm.driver_id = NEW.driver_customer_id
+   LIMIT 1;
+  IF v_tier_id IS NULL THEN
+    INSERT INTO public.duelo_attempts_log(code, season_id, driver_id, payload)
+      VALUES ('no_membership', v_season_id, NEW.driver_customer_id, jsonb_build_object('ride_id', NEW.id));
+    RETURN NEW;
+  END IF;
 
-`pg_cron` opera em **UTC** no Supabase. Proposta: cron único **a cada 1 hora** (`0 * * * *`) que chama `duelo_advance_phases()`. A função interna itera por temporada e usa `branches.timezone` para decidir se `now() AT TIME ZONE tz` cruzou `00:00` local **e** se `classification_ends_at` já passou. Idempotência via `phase` atual + flags. Vantagem: fuso correto por cidade, sem cron por branch. **Confirme.**
+  INSERT INTO public.duelo_season_standings(
+    season_id, driver_id, tier_id, points, last_ride_at, qualified, relegated_auto)
+  VALUES (v_season_id, NEW.driver_customer_id, v_tier_id, 1, v_finalized_at, false, false)
+  ON CONFLICT (season_id, driver_id) DO UPDATE
+     SET points = public.duelo_season_standings.points + 1,
+         last_ride_at = GREATEST(
+           COALESCE(public.duelo_season_standings.last_ride_at, EXCLUDED.last_ride_at),
+           EXCLUDED.last_ride_at),
+         tier_id = COALESCE(public.duelo_season_standings.tier_id, EXCLUDED.tier_id);
+  RETURN NEW;
+END;
+$$;
 
-### Q4 — Motorista muda de `branch_id` no meio da temporada
+-- 4) Reverter duelo_reconcile_standings (sem weekend_rides_count)
+--    Reaplicar versão da migration 20260421230612
+CREATE OR REPLACE FUNCTION public.duelo_reconcile_standings(p_hours int DEFAULT 48)
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_rec record; v_expected int; v_expected_last timestamptz;
+  v_checked int := 0; v_fixed int := 0;
+BEGIN
+  FOR v_rec IN
+    SELECT DISTINCT st.season_id, st.driver_id
+      FROM public.duelo_season_standings st
+      JOIN public.duelo_seasons s ON s.id = st.season_id
+     WHERE s.phase IN ('classification','knockout_r16','knockout_qf','knockout_sf','knockout_final')
+       AND EXISTS (SELECT 1 FROM public.machine_rides mr
+                    WHERE mr.driver_customer_id = st.driver_id
+                      AND mr.branch_id = s.branch_id
+                      AND mr.ride_status = 'FINALIZED'
+                      AND mr.finalized_at >= now() - (p_hours||' hours')::interval)
+  LOOP
+    v_checked := v_checked + 1;
+    SELECT COUNT(*)::int, MAX(mr.finalized_at)
+      INTO v_expected, v_expected_last
+      FROM public.machine_rides mr
+      JOIN public.duelo_seasons s ON s.id = v_rec.season_id
+     WHERE mr.driver_customer_id = v_rec.driver_id
+       AND mr.branch_id = s.branch_id
+       AND mr.ride_status = 'FINALIZED'
+       AND mr.finalized_at >= s.classification_starts_at
+       AND mr.finalized_at <  s.classification_ends_at;
+    UPDATE public.duelo_season_standings st
+       SET points = v_expected, last_ride_at = v_expected_last
+     WHERE st.season_id = v_rec.season_id AND st.driver_id = v_rec.driver_id
+       AND (st.points <> v_expected OR st.last_ride_at IS DISTINCT FROM v_expected_last);
+    IF FOUND THEN v_fixed := v_fixed + 1; END IF;
+  END LOOP;
+  RETURN jsonb_build_object('checked', v_checked, 'fixed', v_fixed, 'window_hours', p_hours);
+END; $$;
 
-Política proposta: **temporada é branch-bound, motorista permanece na temporada onde foi seedado**. Se o `customers.branch_id` muda, novas corridas em outra branch **não contam** para a temporada antiga (trigger filtra por `branch_id` da corrida = `branch_id` da temporada). Para entrar na temporada da nova branch precisa aguardar a próxima (com seed inicial). **Confirme.**
+-- 5) Reverter duelo_backfill_standings (versão sem weekend_rides_count) → restaurar da migration 20260421230612
+-- 6) Reverter duelo_create_brackets_within_tier (ORDER BY sem weekend_rides_count) → restaurar da migration 20260421230750
+-- 7) Reverter duelo_apply_promotion_relegation (ORDER BY sem weekend_rides_count) → restaurar da migration 20260421230850
+-- (corpos completos copiados das migrations originais — incluídos no arquivo final de rollback)
 
-### Q5 — Temporada criada DEPOIS de já haver corridas no período
+-- 8) Dropar helper
+DROP FUNCTION IF EXISTS public.duelo_is_weekend_at(timestamptz, uuid);
 
-Proposta: a RPC `duelo_seed_initial_tier_memberships` (já existente) faz o seed dos motoristas, e a **nova RPC `duelo_backfill_standings(p_season_id)`** varre `machine_rides FINALIZED` entre `classification_starts_at` e `min(now(), classification_ends_at)` e popula standings. Idempotente (TRUNCATE+INSERT em transação se `phase='classification'`). Disparada manualmente pelo empreendedor após criar a temporada (UI virá em C.4).
+-- 9) Dropar coluna nova
+ALTER TABLE public.duelo_season_standings DROP COLUMN IF EXISTS weekend_rides_count;
 
-## Entregáveis da C.2
+COMMIT;
 
-### Migrations (3 arquivos)
+-- Reverter código TS: git revert do commit (volta tipos_campeonato.ts, servico_campeonato.ts, tabela_classificacao.tsx)
+```
 
-#### `<ts>_duelo_motor_pontuacao.sql` — P1 + P2
-- `duelo_update_standings_from_ride()` — `SECURITY DEFINER`, `search_path=public`
-  - Trigger `AFTER INSERT OR UPDATE ON machine_rides`
-  - Guarda: `NEW.ride_status='FINALIZED' AND (TG_OP='INSERT' OR OLD.ride_status<>'FINALIZED')`
-  - Resolve temporada ativa por `branch_id` + `phase='classification'` + `classification_ends_at > NEW.finalized_at`
-  - Resolve `tier_id` via `duelo_tier_memberships`
-  - **Se membership não existe**: log em `duelo_attempts_log` (`code='no_membership'`) e `RETURN NEW` (motorista não foi seedado, não conta)
-  - `INSERT INTO duelo_season_standings (season_id, driver_id, brand_id, branch_id, tier_id, points, last_ride_at) VALUES (..., 1, NEW.finalized_at) ON CONFLICT (season_id, driver_id) DO UPDATE SET points=standings.points+1, last_ride_at=GREATEST(standings.last_ride_at, EXCLUDED.last_ride_at), updated_at=now()`
-  - Garantir UNIQUE `(season_id, driver_id)` em `duelo_season_standings` (verificar se já existe; criar se faltar)
-- `duelo_reconcile_standings(p_hours int default 48)` — `SECURITY DEFINER`
-  - Reagrega `count(*) FROM machine_rides WHERE finalized_at >= now() - p_hours*interval '1 hour' AND ride_status='FINALIZED'`
-  - Para cada `(season_id, driver_id)` com divergência: `UPDATE` + log em `duelo_attempts_log` (`code='reconcile_diff'`)
-- `duelo_backfill_standings(p_season_id uuid)` — para Q5
-- Cron: `duelo-reconcile-daily` rodando `04:00 UTC` (`0 4 * * *`) chamando edge function `duelo-reconcile` (que invoca a RPC com service role)
+O bloco de rollback completo (com corpos integrais das funções 5/6/7) será embutido como comentário no final do arquivo de migration para referência rápida em produção.
 
-#### `<ts>_duelo_advance_phases.sql` — P3
-- `duelo_advance_phases()` — `SECURITY DEFINER`, idempotente
-  - Loop por temporada com `phase NOT IN ('finished')`
-  - Resolve `tz = COALESCE(branches.timezone, 'America/Sao_Paulo')`
-  - **Classification → Knockout**: se `now() >= classification_ends_at`:
-    - Para cada tier: `ROW_NUMBER() OVER (PARTITION BY tier_id ORDER BY points DESC, last_ride_at ASC NULLS LAST) AS position_in_tier`
-    - Adaptação por tamanho do tier:
-      - ≥16 standings com `points>=1`: top 16 → `phase='knockout_r16'`, 8 brackets seed 1×16, 2×15...
-      - 8–15: top 8 → `phase='knockout_qf'`, 4 brackets
-      - 4–7: top 4 → `phase='knockout_sf'`, 2 brackets
-      - 2–3: top 2 → `phase='knockout_final'`, 1 bracket
-      - <2: tier "abortado" → standings ficam, mas sem mata-mata; tier marcado com flag `aborted` em `duelo_season_tiers` (nova coluna `aborted_at timestamptz`)
-    - `bracket_scope` (nova coluna em `duelo_brackets`): `'within_tier'`
-    - `starts_at = now()`, `ends_at = now() + interval` calculado para distribuir uniformemente até `knockout_ends_at`
-  - **Round → próximo round**: se todos brackets do round atual têm `winner_id` OU `ends_at <= now()`:
-    - Apurar vencedor por `driver_X_rides` (incrementado por trigger separado — ver abaixo) com tiebreaker `last_ride_at ASC`
-    - Empate sem corrida: vencedor por melhor `position_in_tier` na classificação
-    - Promover vencedores para próximo round mantendo seed
-    - Se era `knockout_final`: `INSERT INTO duelo_champions` + `phase='finished'`
-  - Após `phase='finished'`: chamar `duelo_apply_promotion_relegation(season_id)`
-- **Trigger auxiliar** `duelo_increment_bracket_rides`: `AFTER INSERT OR UPDATE ON machine_rides` (separada da pontuação) — quando `ride_status='FINALIZED'` e existe `bracket` ativo no tier do motorista no período, incrementa `driver_a_rides` ou `driver_b_rides`
-- Cron: `duelo-advance-phases-hourly` (`0 * * * *`) chamando edge function `duelo-cron-advance`
+## 2. Estimativa
 
-#### `<ts>_duelo_promocao_rebaixamento.sql` — P4 + P5
-- `duelo_apply_promotion_relegation(p_season_id uuid)` — `SECURITY DEFINER`, idempotente via flag `promotion_applied_at` (nova coluna em `duelo_seasons`)
-- Algoritmo em transação única:
-  1. **P5 — Zero pontos cai 1 série**: `UPDATE duelo_tier_memberships SET tier_id = (próximo tier_order)` para drivers com `points=0` (exceto último tier). Marca `relegated_auto=true` no standings. Outcome `'relegated_zero'` no history
-  2. **Rebaixamento normal**: para cada tier exceto último, pegar bottom `relegation_count` (excluindo já rebaixados por zero) por `position_in_tier DESC`. Outcome `'relegated'`
-  3. **Promoção**: para cada tier exceto primeiro, pegar top `promotion_count` do tier abaixo (excluindo rebaixados por zero) por `position_in_tier ASC`. Outcome `'promoted'`
-  4. Demais: outcome `'stayed'`. Campeão do tier 1 (primeira posição final): outcome `'champion'`
-  5. Persistir tudo em `duelo_driver_tier_history` com `starting_tier_id`, `ending_tier_id`, `ending_position`
-  6. **Não atualiza** `duelo_tier_memberships` da temporada finalizada (histórica). Próxima temporada da branch lerá de `duelo_driver_tier_history` (não mais do seed inicial)
-- Audit em `duelo_attempts_log` com summary JSON
+- **SQL**: ~280 linhas (1 ALTER+ADD, 1 ALTER+DROP, 1 DROP/CREATE INDEX, 1 helper, 5 funções `CREATE OR REPLACE`, 1 bloco de backfill, comentário de rollback)
+- **TypeScript**: ~12 linhas alteradas em 3 arquivos (`tipos_campeonato.ts`, `servico_campeonato.ts`, `tabela_classificacao.tsx`)
+- **Tempo de execução em produção**: ~3–7 segundos (volumetria atual de `duelo_season_standings` e `machine_rides` em beta é mínima)
+- **Tempo total da entrega** (codificação + verificação): **~5 minutos**
 
-### Edge functions (3 novas)
-- `supabase/functions/duelo-cron-reconcile/index.ts` — chama `duelo_reconcile_standings(48)`
-- `supabase/functions/duelo-cron-advance/index.ts` — chama `duelo_advance_phases()`
-- Ambas: `verify_jwt = false` em `supabase/config.toml`, usam `SUPABASE_ANON_KEY` (padrão Cron Auth Pattern do memory)
+## 3. Impacto em ranking atual
 
-### Tipos TypeScript
-- `src/features/campeonato_duelo/types/tipos_motor.ts`: `ResultadoReconciliacao`, `ResultadoAvanco
+**Cenário**: 2 motoristas empatados em `points` no mesmo tier de uma temporada em `phase='classification'`.
+
+**Após execução**:
+1. `weekend_rides_count` é populado pelo backfill com base no histórico real de `machine_rides`.
+2. `position_in_tier` **não é gravado durante classification** — só é cristalizado no momento em que `duelo_advance_phases` transiciona para mata-mata.
+3. Listagens via `servico_campeonato.listarClassificacao` passam imediatamente a ordenar por `points DESC, weekend_rides_count DESC, last_ride_at ASC`. Os 2 motoristas trocam de posição se um tiver mais corridas em sex/sáb/dom.
+4. Próxima execução do `duelo_advance_phases` (no fim do período de classificação) usará a nova ordem para criar brackets — quem tiver mais corridas de fim de semana vira seed melhor.
+
+**Mata-mata em andamento**: brackets já criados ficam intactos. A mudança só afeta temporadas que ainda não saíram de `classification`.
+
+**Temporadas finalizadas**: backfill exclui via `WHERE s.phase IN ('classification','knockout_*')`, preservando o histórico em `duelo_driver_tier_history`.
+
+## 4. `SECURITY DEFINER` no helper — concordo, não precisa
+
+Análise correta. `branches` tem RLS pública (todo authenticated lê), e o helper é chamado:
+- de dentro de funções `SECURITY DEFINER` (trigger, reconcile, backfill, advance) — herdam contexto suficiente
+- potencialmente em queries ad-hoc — qualquer authenticated já lê `branches.timezone`
+
+**Decisão**: criar como `STABLE LANGUAGE sql` simples, sem `SECURITY DEFINER`:
+
+```sql
+CREATE OR REPLACE FUNCTION public.duelo_is_weekend_at(
+  p_finalized_at timestamptz, p_branch_id uuid
+) RETURNS boolean
+LANGUAGE sql STABLE SET search_path = public AS $$
+  SELECT EXTRACT(DOW FROM p_finalized_at AT TIME ZONE
+           COALESCE((SELECT timezone FROM public.branches WHERE id = p_branch_id),
+                    'America/Sao_Paulo'))::int IN (5, 6, 0);
+$$;
+```
+
+Vantagens: menor superfície de risco, menos ruído no linter de segurança, e o `STABLE` permite que o planner reuse o resultado dentro da mesma query (importante no backfill agregado).
+
+Caso o linter futuro reclame de `search_path mutable` em função não-`SECURITY DEFINER`, removemos o `SET search_path` (qualificação `public.branches` já está explícita).
+
+## Confirmação
+
+Mantém o rótulo da coluna na UI como **"Fim de Semana"** (versão completa) ou prefere **"FDS"** (compacto, melhor em mobile 430px)? Se não responder, executo com **"Fim de Semana"** abreviando para **"FDS"** apenas em viewports `< sm`.
+
+Aguardando aprovação final para executar.
+
