@@ -113,14 +113,13 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const resolve = async () => {
-      // Safety timeout: force loading = false after 5 seconds
+      // Safety timeout curto: portal universal não tem domain match, então
+      // se a query de brand_domains demorar (ou falhar silenciosamente),
+      // liberamos o boot rapidamente. Caminho feliz nem chega a disparar.
       const safetyTimeout = setTimeout(() => {
         setLoading(false);
-        // CRÍTICO: também precisa marcar BRAND_READY no boot machine,
-        // senão `useBootReady()` (em ProtectedRoute/Guards) nunca libera
-        // e o usuário fica preso na tela de carregamento.
         setBootPhase("BRAND_READY", "timeout");
-      }, 2000);
+      }, 1500);
 
       setBootPhase("BRAND_LOADING");
       try {
