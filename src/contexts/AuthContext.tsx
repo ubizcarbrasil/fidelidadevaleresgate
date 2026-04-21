@@ -11,6 +11,13 @@ interface AuthContextType {
   user: User | null;
   roles: UserRole[];
   loading: boolean;
+  /**
+   * True quando a busca em user_roles terminou (mesmo que tenha vindo
+   * vazia). Usado por guards para distinguir "ainda carregando" de
+   * "usuário sem roles" — antes a UI assumia LOADING quando roles
+   * estava vazio, o que prendia o app na TelaCarregamento.
+   */
+  rolesCarregados: boolean;
   hasRole: (role: AppRole) => boolean;
   isRootAdmin: boolean;
   signOut: () => Promise<void>;
@@ -23,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rolesCarregados, setRolesCarregados] = useState(false);
   const mountedRef = useRef(true);
   const fetchIdRef = useRef(0);
   // Deduplica fetchRoles em curso para o mesmo userId.
@@ -60,11 +68,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           return newRoles;
         });
+        setRolesCarregados(true);
       }
     } catch (err) {
       console.warn("[AuthContext] Falha ao buscar roles:", err);
       if (mountedRef.current && fetchIdRef.current === requestId) {
         setRoles([]);
+        // Em erro, também marcamos como "carregado" para não prender
+        // a UI no loader. O guard cuida do fallback de permissões.
+        setRolesCarregados(true);
       }
     }
     })();
@@ -98,9 +110,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Fire-and-forget: libera o loading sem esperar roles
           // (UI já consegue decidir rota com user; roles chegam logo em seguida)
           void fetchRoles(currentSession.user.id, reqId);
+        } else {
+          // Sem sessão: já podemos considerar permissões "carregadas"
+          // (vazias) — guards públicos liberam imediatamente.
+          setRolesCarregados(true);
         }
       } catch (err) {
         console.warn("[AuthContext] Falha no bootstrap:", err);
+        setRolesCarregados(true);
       } finally {
         if (mountedRef.current) {
           setLoading(false);
@@ -126,6 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           Sentry.setUser({ id: newSession.user.id, email: newSession.user.email });
         } else {
           setRoles([]);
+          setRolesCarregados(true);
           Sentry.setUser(null);
         }
 
@@ -160,6 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn("[AuthContext] Bootstrap timeout — liberando loading");
         setBootPhase("AUTH_READY", "timeout");
         setLoading(false);
+        setRolesCarregados(true);
         initialLoadDone = true;
       }
     }, 5000);
@@ -177,10 +196,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setRoles([]);
+    setRolesCarregados(true);
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, roles, loading, hasRole, isRootAdmin, signOut }}>
+    <AuthContext.Provider value={{ session, user, roles, loading, rolesCarregados, hasRole, isRootAdmin, signOut }}>
       {children}
     </AuthContext.Provider>
   );

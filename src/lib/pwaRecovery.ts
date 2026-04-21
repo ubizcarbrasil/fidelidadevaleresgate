@@ -25,7 +25,11 @@ export async function recoverFromChunkError() {
 }
 
 export function disableRuntimeCachesOnBoot() {
-  void clearRuntimeCaches();
+  // No-op intencional. Antes este método limpava SW + caches em toda
+  // abertura do app, o que provocava reloads invisíveis e degradava o
+  // boot. A limpeza agora é REATIVA: só ocorre em erro real de chunk
+  // (lazyWithRetry / installGlobalDomErrorRecovery) ou ação manual do
+  // usuário ("Atualizar agora").
 }
 
 /**
@@ -51,6 +55,23 @@ const RECOVERY_FLAG = "__pwa_auto_recovered_at__";
 const RECOVERY_COOLDOWN_MS = 60_000;
 
 /**
+ * Fonte única de verdade para decidir se podemos disparar uma recuperação
+ * agora. Compartilhada por lazyWithRetry, installGlobalDomErrorRecovery e
+ * qualquer outro ponto que precise recuperar de chunk stale — evita que
+ * o HTML bootstrap, o lazy import e o hook PWA disparem reloads em cadeia.
+ */
+export function canAttemptRecovery(): boolean {
+  try {
+    const last = Number(sessionStorage.getItem(RECOVERY_FLAG) || "0");
+    if (Date.now() - last < RECOVERY_COOLDOWN_MS) return false;
+    sessionStorage.setItem(RECOVERY_FLAG, String(Date.now()));
+    return true;
+  } catch {
+    return true;
+  }
+}
+
+/**
  * Auto-recover global: ao detectar erro de DOM/cache, limpa SW + caches e recarrega.
  * Usa cooldown via sessionStorage para não entrar em loop de reload.
  */
@@ -59,13 +80,7 @@ export function installGlobalDomErrorRecovery() {
 
   const tryRecover = (message: string | undefined) => {
     if (!isRecoverableDomError(message)) return;
-    try {
-      const last = Number(sessionStorage.getItem(RECOVERY_FLAG) || "0");
-      if (Date.now() - last < RECOVERY_COOLDOWN_MS) return;
-      sessionStorage.setItem(RECOVERY_FLAG, String(Date.now()));
-    } catch {
-      // ignore storage failures
-    }
+    if (!canAttemptRecovery()) return;
     void recoverFromChunkError();
   };
 

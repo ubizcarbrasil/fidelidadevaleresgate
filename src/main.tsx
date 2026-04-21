@@ -9,10 +9,11 @@ import "./index.css";
 import { createRoot } from "react-dom/client";
 import { Suspense, useEffect, Component, type ReactNode } from "react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
-import { disableRuntimeCachesOnBoot, installGlobalDomErrorRecovery } from "@/lib/pwaRecovery";
+import { installGlobalDomErrorRecovery } from "@/lib/pwaRecovery";
 import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
 
-disableRuntimeCachesOnBoot();
+// Recuperação reativa apenas em erro real de chunk/import dinâmico.
+// Não limpamos mais SW/caches em toda abertura — isso degradava o boot.
 installGlobalDomErrorRecovery();
 
 const App = lazyWithRetry(() => {

@@ -43,10 +43,6 @@ export function usePWA() {
   }, []);
 
   useEffect(() => {
-    void clearRuntimeCaches();
-  }, []);
-
-  useEffect(() => {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);

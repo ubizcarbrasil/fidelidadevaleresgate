@@ -1,5 +1,5 @@
 import { lazy, type ComponentType } from "react";
-import { recoverFromChunkError } from "@/lib/pwaRecovery";
+import { recoverFromChunkError, canAttemptRecovery } from "@/lib/pwaRecovery";
 
 /**
  * Wrapper around React.lazy that retries a failed dynamic import once.
@@ -23,17 +23,9 @@ export function lazyWithRetry<T extends ComponentType<any>>(
 
       if (!isChunkError) throw err;
 
-      // Prevent infinite reload loop: only retry once per session
-      const key = "chunk_reload_ts";
-      const lastReload = sessionStorage.getItem(key);
-      const now = Date.now();
-
-      if (lastReload && now - Number(lastReload) < 10_000) {
-        // Already reloaded recently — don't loop
-        throw err;
-      }
-
-      sessionStorage.setItem(key, String(now));
+      // Cooldown único compartilhado com installGlobalDomErrorRecovery.
+      // Se outro caminho já disparou recovery recentemente, não relançamos.
+      if (!canAttemptRecovery()) throw err;
       void recoverFromChunkError();
 
       // Return a never-resolving promise so React doesn't try to render
