@@ -9,6 +9,12 @@ export interface FiltrosLeadsComerciais {
   faixaMotoristas?: string | null;
   periodoDe?: string | null;
   periodoAte?: string | null;
+  empresa?: string | null;
+  produtoTexto?: string | null;
+  source?: string | null;
+  utmSource?: string | null;
+  utmMedium?: string | null;
+  utmCampaign?: string | null;
 }
 
 export async function listarLeadsComerciais(
@@ -37,6 +43,25 @@ export async function listarLeadsComerciais(
   }
   if (filtros.periodoAte) {
     query = query.lte("created_at", filtros.periodoAte);
+  }
+  if (filtros.empresa && filtros.empresa.trim().length >= 2) {
+    query = query.ilike("company_name", `%${filtros.empresa.trim()}%`);
+  }
+  if (filtros.produtoTexto && filtros.produtoTexto.trim().length >= 2) {
+    const termo = filtros.produtoTexto.trim();
+    query = query.or(`product_name.ilike.%${termo}%,product_slug.ilike.%${termo}%`);
+  }
+  if (filtros.source && filtros.source.trim().length >= 1) {
+    query = query.ilike("source", `%${filtros.source.trim()}%`);
+  }
+  if (filtros.utmSource && filtros.utmSource.trim().length >= 1) {
+    query = query.ilike("utm_source", `%${filtros.utmSource.trim()}%`);
+  }
+  if (filtros.utmMedium && filtros.utmMedium.trim().length >= 1) {
+    query = query.ilike("utm_medium", `%${filtros.utmMedium.trim()}%`);
+  }
+  if (filtros.utmCampaign && filtros.utmCampaign.trim().length >= 1) {
+    query = query.ilike("utm_campaign", `%${filtros.utmCampaign.trim()}%`);
   }
   if (filtros.busca && filtros.busca.trim().length >= 2) {
     const termo = filtros.busca.trim();
