@@ -101,7 +101,7 @@ async function resolveBrandByDomain(hostname: string): Promise<Brand | null> {
 }
 
 export function BrandProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const [brand, setBrand] = useState<Brand | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [selectedBranch, setSelectedBranchState] = useState<Branch | null>(null);
@@ -194,28 +194,22 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
   }, [brand, user]);
 
   // Portal universal (app.valeresgate.com.br): sem domain match, resolve o brand
-  // a partir do role do usuário autenticado para popular o contexto e permitir
-  // que hooks/queries reaproveitem cache em vez de cada um buscar `brands` direto.
+  // a partir dos roles que o AuthContext já carregou — evita um SELECT extra
+  // em user_roles no caminho crítico do login.
   useEffect(() => {
     if (brand || loading) return;
     if (!user) return;
+    const roleWithBrand = roles.find((r) => r.brand_id);
+    if (!roleWithBrand?.brand_id) return;
     let cancelled = false;
     (async () => {
-      const { data: roleRow } = await supabase
-        .from("user_roles")
-        .select("brand_id")
-        .eq("user_id", user.id)
-        .not("brand_id", "is", null)
-        .limit(1)
-        .maybeSingle();
-      if (cancelled || !roleRow?.brand_id) return;
-      const brandData = await fetchBrandById(roleRow.brand_id);
+      const brandData = await fetchBrandById(roleWithBrand.brand_id!);
       if (!cancelled && brandData) setBrand(brandData);
     })();
     return () => {
       cancelled = true;
     };
-  }, [brand, loading, user]);
+  }, [brand, loading, user, roles]);
 
   // Auto-detect branch by geolocation — deferred to avoid blocking initial render
   useEffect(() => {
