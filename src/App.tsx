@@ -112,6 +112,7 @@ const PaginaAuditoriaDuplicacoes = lazyWithRetry(() => import("@/features/audito
 const PaginaLandingProduto = lazyWithRetry(() => import("@/features/landing_produto/pagina_landing_produto"));
 const PaginaCatalogoProdutos = lazyWithRetry(() => import("@/features/catalogo_produtos/pagina_catalogo_produtos"));
 const PaginaAgendarDemonstracao = lazyWithRetry(() => import("@/features/agendar_demonstracao/pagina_agendar_demonstracao"));
+const PaginaLeadsComerciais = lazyWithRetry(() => import("@/features/leads_comerciais/pagina_leads_comerciais"));
 const TierPointsRulesPage = lazyWithRetry(() => import("@/pages/TierPointsRulesPage"));
 const DriverPointsRulesPage = lazyWithRetry(() => import("@/pages/DriverPointsRulesPage"));
 const DriverManagementPage = lazyWithRetry(() => import("@/pages/DriverManagementPage"));
@@ -297,6 +298,7 @@ function AnimatedRoutes() {
               
               <Route path="admin/produtos-comerciais" element={<RootGuard><PaginaProdutosComerciais /></RootGuard>} />
               <Route path="admin/auditoria-duplicacoes" element={<RootGuard><PaginaAuditoriaDuplicacoes /></RootGuard>} />
+              <Route path="leads-comerciais" element={<RootGuard><PaginaLeadsComerciais /></RootGuard>} />
               <Route path="driver-config" element={<ErrorBoundary><DriverPanelConfigPage /></ErrorBoundary>} />
               <Route path="crm/*" element={<ModuleGuard moduleKey="crm"><CrmEmbedPage /></ModuleGuard>} />
               <Route path="manuais" element={<ManuaisPage />} />
