@@ -17,6 +17,7 @@ import { ContextBadge } from "@/components/ContextBadge";
 import BranchSelector from "@/components/BranchSelector";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import { ScopeSwitcher } from "@/components/ScopeSwitcher";
+import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -145,11 +146,7 @@ export default function AppLayout() {
 
   // Estado de carregamento: roles ainda não chegaram. Não renderizar sidebar errada.
   if (consoleScope === "LOADING") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <TelaCarregamento />;
   }
 
   const SidebarComponent = {

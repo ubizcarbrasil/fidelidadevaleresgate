@@ -18,8 +18,8 @@ import RootGuard from "@/components/RootGuard";
 const AppLayout = lazyWithRetry(() => import("@/components/AppLayout"));
 const WhiteLabelLayout = lazyWithRetry(() => import("@/components/WhiteLabelLayout"));
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
-import { Loader2 } from "lucide-react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
+import TelaCarregamento, { TelaCarregamentoInline } from "@/compartilhados/components/tela_carregamento";
 // MountSignal moved to BootShell in main.tsx for instant bootstrap dismissal
 const RootJourneyGuidePage = lazyWithRetry(() => import("@/pages/RootJourneyGuidePage"));
 import { queryClient } from "@/lib/queryClient";
@@ -163,8 +163,8 @@ initEventBusQueryBridge(queryClient);
 
 const PageLoader = forwardRef<HTMLDivElement>(function PageLoader(_props, ref) {
   return (
-    <div ref={ref} className="min-h-[200px] flex items-center justify-center">
-      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    <div ref={ref}>
+      <TelaCarregamentoInline />
     </div>
   );
 });

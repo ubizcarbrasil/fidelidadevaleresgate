@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useBrandModules } from "@/hooks/useBrandModules";
 import { useBootReady } from "@/lib/bootState";
+import { TelaCarregamentoInline } from "@/compartilhados/components/tela_carregamento";
 
 interface ModuleGuardProps {
   moduleKey: string;
@@ -16,11 +17,7 @@ export default function ModuleGuard({ moduleKey, children }: ModuleGuardProps) {
   const bootReady = useBootReady();
 
   if (!bootReady || isLoading) {
-    return (
-      <div className="min-h-[200px] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-      </div>
-    );
+    return <TelaCarregamentoInline />;
   }
 
   // Suporte a múltiplos módulos com "|" (OR): qualquer um habilitado libera

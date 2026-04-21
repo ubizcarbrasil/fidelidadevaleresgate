@@ -3,8 +3,8 @@ import { useBrand } from "@/contexts/BrandContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { CustomerProvider } from "@/contexts/CustomerContext";
 import BranchSelector from "@/components/BranchSelector";
-import { Loader2 } from "lucide-react";
 import { Navigate } from "react-router-dom";
+import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
 
 const PORTAL_HOSTNAME = "app.valeresgate.com.br";
 
@@ -28,11 +28,7 @@ export default function WhiteLabelLayout() {
 
   return (
     <>
-      {isLoading && (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      )}
+      {isLoading && <TelaCarregamento />}
 
       {!isLoading && !brand && (
         <div className="min-h-screen flex items-center justify-center bg-background">
@@ -44,13 +40,7 @@ export default function WhiteLabelLayout() {
 
       {showContent && (
         <CustomerProvider>
-          <Suspense
-            fallback={
-              <div className="min-h-screen flex items-center justify-center bg-background">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            }
-          >
+          <Suspense fallback={<TelaCarregamento />}>
             <CustomerLayout />
           </Suspense>
         </CustomerProvider>

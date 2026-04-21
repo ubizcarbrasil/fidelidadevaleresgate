@@ -8,9 +8,9 @@ console.info("[boot] main.tsx executing");
 import "./index.css";
 import { createRoot } from "react-dom/client";
 import { Suspense, useEffect, Component, type ReactNode } from "react";
-import { Loader2 } from "lucide-react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import { disableRuntimeCachesOnBoot, installGlobalDomErrorRecovery } from "@/lib/pwaRecovery";
+import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
 
 disableRuntimeCachesOnBoot();
 installGlobalDomErrorRecovery();
@@ -82,13 +82,7 @@ function BootShell() {
 
   return (
     <BootErrorBoundary>
-      <Suspense
-        fallback={
-          <div className="min-h-screen flex items-center justify-center bg-background">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        }
-      >
+      <Suspense fallback={<TelaCarregamento />}>
         <App />
       </Suspense>
     </BootErrorBoundary>
