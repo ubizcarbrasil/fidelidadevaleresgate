@@ -4596,8 +4596,45 @@ export type Database = {
           },
         ]
       }
+      duelo_attempts_log: {
+        Row: {
+          branch_id: string | null
+          brand_id: string | null
+          code: string
+          created_at: string
+          details_json: Json
+          driver_id: string | null
+          id: string
+          ride_id: string | null
+          season_id: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          brand_id?: string | null
+          code: string
+          created_at?: string
+          details_json?: Json
+          driver_id?: string | null
+          id?: string
+          ride_id?: string | null
+          season_id?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          brand_id?: string | null
+          code?: string
+          created_at?: string
+          details_json?: Json
+          driver_id?: string | null
+          id?: string
+          ride_id?: string | null
+          season_id?: string | null
+        }
+        Relationships: []
+      }
       duelo_brackets: {
         Row: {
+          bracket_scope: string
           driver_a_id: string | null
           driver_a_rides: number
           driver_b_id: string | null
@@ -4612,6 +4649,7 @@ export type Database = {
           winner_id: string | null
         }
         Insert: {
+          bracket_scope?: string
           driver_a_id?: string | null
           driver_a_rides?: number
           driver_b_id?: string | null
@@ -4626,6 +4664,7 @@ export type Database = {
           winner_id?: string | null
         }
         Update: {
+          bracket_scope?: string
           driver_a_id?: string | null
           driver_a_rides?: number
           driver_b_id?: string | null
@@ -5021,6 +5060,7 @@ export type Database = {
       }
       duelo_season_tiers: {
         Row: {
+          aborted_at: string | null
           branch_id: string
           brand_id: string
           created_at: string
@@ -5034,6 +5074,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          aborted_at?: string | null
           branch_id: string
           brand_id: string
           created_at?: string
@@ -5047,6 +5088,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          aborted_at?: string | null
           branch_id?: string
           brand_id?: string
           created_at?: string
@@ -5083,6 +5125,7 @@ export type Database = {
           month: number
           name: string
           phase: string
+          promotion_applied_at: string | null
           relegation_policy: string
           tier_seeding_completed_at: string | null
           tiers_config_json: Json
@@ -5103,6 +5146,7 @@ export type Database = {
           month: number
           name: string
           phase?: string
+          promotion_applied_at?: string | null
           relegation_policy?: string
           tier_seeding_completed_at?: string | null
           tiers_config_json?: Json
@@ -5123,6 +5167,7 @@ export type Database = {
           month?: number
           name?: string
           phase?: string
+          promotion_applied_at?: string | null
           relegation_policy?: string
           tier_seeding_completed_at?: string | null
           tiers_config_json?: Json
@@ -10057,7 +10102,25 @@ export type Database = {
         Args: { p_amount: number; p_branch_id: string; p_description?: string }
         Returns: Json
       }
+      duelo_advance_phases: { Args: never; Returns: Json }
+      duelo_apply_promotion_relegation: {
+        Args: { p_season_id: string }
+        Returns: Json
+      }
+      duelo_backfill_standings: { Args: { p_season_id: string }; Returns: Json }
+      duelo_create_brackets_within_tier: {
+        Args: {
+          p_ends_at: string
+          p_round: string
+          p_season_id: string
+          p_starts_at: string
+          p_tier_id: string
+          p_top_n: number
+        }
+        Returns: number
+      }
       duelo_gerar_chaveamento: { Args: { p_season_id: string }; Returns: Json }
+      duelo_reconcile_standings: { Args: { p_hours?: number }; Returns: Json }
       duelo_seed_initial_tier_memberships: {
         Args: { p_season_id: string }
         Returns: Json
