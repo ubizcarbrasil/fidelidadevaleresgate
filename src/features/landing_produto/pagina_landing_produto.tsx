@@ -110,6 +110,15 @@ export default function PaginaLandingProduto() {
   const precoExibido =
     ciclo === "yearly" && hasYearly ? produto.price_yearly_cents! : produto.price_cents;
 
+  // Sanitização defensiva no ponto de consumo (defesa em profundidade
+  // sobre a já feita em sanitizeLanding/sanitizeFeatures do hook).
+  const benefitsSanitizados = sanitizarBenefits(lc.benefits);
+  const featuresSanitizadas = sanitizarFeatures(produto.features);
+  const benefitsParaGrid =
+    benefitsSanitizados.length > 0
+      ? benefitsSanitizados
+      : featuresSanitizadas;
+
   const irParaDemo = (source: string) => navigate(`${demoUrl}?source=${source}`);
   const irParaTrialComOrigem = (source: string) => navigate(`${trialUrl}&source=${source}`);
 
@@ -154,7 +163,7 @@ export default function PaginaLandingProduto() {
       <BlocoParaQuem primaryColor={color} />
 
       <BlocoFuncionalidadesGrid
-        benefits={(lc.benefits ?? []).length > 0 ? lc.benefits! : produto.features}
+        benefits={benefitsParaGrid}
         primaryColor={color}
       />
 
@@ -174,8 +183,8 @@ export default function PaginaLandingProduto() {
         precoExibido={precoExibido}
         precoYearly={produto.price_yearly_cents}
         economia={economia}
-        benefits={lc.benefits ?? []}
-        features={produto.features}
+        benefits={benefitsSanitizados}
+        features={featuresSanitizadas}
         trialDays={produto.trial_days}
         isPopular={produto.is_popular}
         primaryColor={color}
