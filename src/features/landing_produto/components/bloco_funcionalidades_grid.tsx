@@ -24,7 +24,20 @@ const ICON_MAP: Record<string, LucideIcon> = {
 const FALLBACK_ICONS: LucideIcon[] = [Swords, BarChart3, Trophy, Crown, Users, Gift];
 
 export default function BlocoFuncionalidadesGrid({ benefits, primaryColor }: Props) {
-  const items = (benefits ?? []).filter(Boolean);
+  // Normaliza qualquer payload (string, objeto válido ou inesperado) para um shape seguro,
+  // evitando React error #31 caso o JSON salvo no banco contenha estruturas legadas.
+  const items = (benefits ?? [])
+    .map((b) => {
+      if (typeof b === "string") return { title: b, description: undefined, icon: "" };
+      if (b && typeof b === "object") {
+        const title = typeof b.title === "string" ? b.title : "";
+        const description = typeof b.description === "string" ? b.description : undefined;
+        const icon = typeof b.icon === "string" ? b.icon : "";
+        return { title, description, icon };
+      }
+      return { title: "", description: undefined, icon: "" };
+    })
+    .filter((b) => b.title.length > 0);
   if (items.length === 0) return null;
 
   return (
@@ -44,10 +57,8 @@ export default function BlocoFuncionalidadesGrid({ benefits, primaryColor }: Pro
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {items.map((b, i) => {
-            const isObj = typeof b === "object";
-            const title = isObj ? b.title : b;
-            const description = isObj ? b.description : undefined;
-            const iconKey = isObj && b.icon ? b.icon.toLowerCase() : "";
+            const { title, description, icon } = b;
+            const iconKey = icon ? icon.toLowerCase() : "";
             const Icon = ICON_MAP[iconKey] || FALLBACK_ICONS[i % FALLBACK_ICONS.length];
             // Destaca o 4º card (Cinturão da Cidade) em col-span-2 no desktop
             const isFeatured = iconKey === "crown" || (i === 3 && !iconKey);

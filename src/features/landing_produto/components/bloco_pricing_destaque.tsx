@@ -23,8 +23,13 @@ function formatarBRL(cents: number) {
   return `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
 }
 
-function benefitTitle(b: LandingBenefit): string {
-  return typeof b === "string" ? b : b.title;
+function benefitTitle(b: LandingBenefit | unknown): string {
+  if (typeof b === "string") return b;
+  if (b && typeof b === "object" && "title" in b) {
+    const t = (b as { title?: unknown }).title;
+    return typeof t === "string" ? t : "";
+  }
+  return "";
 }
 
 export default function BlocoPricingDestaque({
