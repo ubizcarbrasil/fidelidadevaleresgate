@@ -60,8 +60,10 @@ export function useSidebarBadges() {
       return result;
     },
     enabled: !!currentBrandId,
-    refetchInterval: 30_000, // refresh every 30s
-    staleTime: 15_000,
+    // Sem polling agressivo: badges atualizadas sob demanda / na próxima navegação
+    staleTime: 2 * 60_000, // 2 min
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
   });
 
   return badges;
