@@ -36,7 +36,7 @@ export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
         .from("driver_duels")
         .select(`
           id, status, start_at, end_at, challenger_rides_count, challenged_rides_count,
-          winner_id, created_at, prize_points, challenger_points_bet, challenged_points_bet, sponsored_by_brand,
+          winner_id, created_at, prize_points, challenger_points_bet, challenged_points_bet, sponsored_by_brand, duel_origin,
           challenger:driver_duel_participants!driver_duels_challenger_id_fkey(public_nickname, customer:customers!driver_duel_participants_customer_id_fkey(name)),
           challenged:driver_duel_participants!driver_duels_challenged_id_fkey(public_nickname, customer:customers!driver_duel_participants_customer_id_fkey(name))
         `)
@@ -94,7 +94,11 @@ export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
             <div className="space-y-3 md:hidden">
               {duelos.map((d: any) => {
                 const s = STATUS_LABELS[d.status] || { label: d.status, variant: "outline" as const };
-                const totalPrize = (d.prize_points ?? 0) + (d.challenger_points_bet ?? 0) + (d.challenged_points_bet ?? 0);
+                const isSponsored = d.duel_origin === "SPONSORED" || d.sponsored_by_brand === true;
+                const totalPrize = isSponsored
+                  ? (d.prize_points ?? 0)
+                  : (d.challenger_points_bet ?? 0) + (d.challenged_points_bet ?? 0);
+                const labelPrize = isSponsored ? "Prêmio" : "Pote";
                 return (
                   <div key={d.id} className="rounded-lg border bg-card p-3 space-y-2">
                     <div className="flex items-center justify-between">
@@ -103,7 +107,10 @@ export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
                         {format(new Date(d.start_at), "dd/MM")} — {format(new Date(d.end_at), "dd/MM")}
                       </span>
                     </div>
-                    {d.sponsored_by_brand && <BadgePatrocinado variant="compact" />}
+                    <BadgePatrocinado
+                      variant="compact"
+                      origem={isSponsored ? "SPONSORED" : "DRIVER_VS_DRIVER"}
+                    />
                     <div className="flex items-center justify-between">
                       <div className="text-sm">
                         <span className="font-medium truncate max-w-[120px] inline-block align-bottom">{getNome(d.challenger)}</span>
@@ -117,7 +124,7 @@ export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
                     {totalPrize > 0 && (
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Trophy className="h-3.5 w-3.5 text-yellow-500" />
-                        {formatPoints(totalPrize)} pts
+                        {labelPrize}: {formatPoints(totalPrize)} pts
                       </div>
                     )}
                   </div>
@@ -141,13 +148,19 @@ export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
                 <TableBody>
                   {duelos.map((d: any) => {
                     const s = STATUS_LABELS[d.status] || { label: d.status, variant: "outline" as const };
-                    const totalPrize = (d.prize_points ?? 0) + (d.challenger_points_bet ?? 0) + (d.challenged_points_bet ?? 0);
+                    const isSponsored = d.duel_origin === "SPONSORED" || d.sponsored_by_brand === true;
+                    const totalPrize = isSponsored
+                      ? (d.prize_points ?? 0)
+                      : (d.challenger_points_bet ?? 0) + (d.challenged_points_bet ?? 0);
                     return (
                       <TableRow key={d.id}>
                         <TableCell className="text-sm">
                           <div className="flex flex-col gap-1">
                             <span>{getNome(d.challenger)}</span>
-                            {d.sponsored_by_brand && <BadgePatrocinado variant="compact" />}
+                            <BadgePatrocinado
+                              variant="compact"
+                              origem={isSponsored ? "SPONSORED" : "DRIVER_VS_DRIVER"}
+                            />
                           </div>
                         </TableCell>
                         <TableCell className="text-sm">{getNome(d.challenged)}</TableCell>
@@ -163,6 +176,9 @@ export default function ListaDuelosAdmin({ branchId, onCriarDuelo }: Props) {
                             <span className="flex items-center justify-end gap-1">
                               <Trophy className="h-3.5 w-3.5 text-yellow-500" />
                               {formatPoints(totalPrize)}
+                              <span className="text-[10px] text-muted-foreground ml-1">
+                                {isSponsored ? "(prêmio)" : "(pote)"}
+                              </span>
                             </span>
                           ) : "—"}
                         </TableCell>
