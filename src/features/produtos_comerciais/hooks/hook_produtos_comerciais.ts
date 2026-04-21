@@ -17,76 +17,139 @@ import type {
 const QK_LIST = ["produtos-comerciais"] as const;
 const QK_DETAIL = (planKey: string) => ["produtos-comerciais", "detail", planKey] as const;
 
+/**
+ * parseLanding — aceita apenas objetos planos. Rejeita arrays, null,
+ * primitivos e qualquer coisa fora do shape esperado.
+ */
 function parseLanding(value: unknown): LandingConfig {
-  if (!value || typeof value !== "object") return {};
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   return value as LandingConfig;
 }
 
-/** Normaliza um benefit (string ou objeto) sem nunca devolver objeto cru. */
-function normalizeBenefit(b: unknown) {
-  if (typeof b === "string") return b;
-  if (b && typeof b === "object") {
-    const obj = b as Record<string, unknown>;
-    const title = typeof obj.title === "string" ? obj.title : "";
-    const description = typeof obj.description === "string" ? obj.description : undefined;
-    const icon = typeof obj.icon === "string" ? obj.icon : undefined;
-    if (!title) return null;
-    return { title, description, icon };
+function safeWarn(campo: string, item: unknown) {
+  try {
+    if (typeof console !== "undefined" && typeof console.warn === "function") {
+      console.warn(`[produtos_comerciais] item inválido em ${campo}:`, item);
+    }
+  } catch {
+    /* noop */
   }
-  return null;
+}
+
+/** Type guards explícitos por campo rico. */
+function isStringNaoVazia(v: unknown): v is string {
+  return typeof v === "string" && v.trim().length > 0;
+}
+
+type BenefitObject = { title: string; description?: string; icon?: string };
+function isBenefitObject(v: unknown): v is BenefitObject {
+  if (!v || typeof v !== "object") return false;
+  const o = v as Record<string, unknown>;
+  if (!isStringNaoVazia(o.title)) return false;
+  if (o.description !== undefined && typeof o.description !== "string") return false;
+  if (o.icon !== undefined && typeof o.icon !== "string") return false;
+  return true;
+}
+
+type FaqItem = { question: string; answer: string };
+function isFaqItem(v: unknown): v is FaqItem {
+  if (!v || typeof v !== "object") return false;
+  const o = v as Record<string, unknown>;
+  return isStringNaoVazia(o.question) && isStringNaoVazia(o.answer);
+}
+
+type Metric = { value: string; label: string };
+function isMetric(v: unknown): v is Metric {
+  if (!v || typeof v !== "object") return false;
+  const o = v as Record<string, unknown>;
+  return isStringNaoVazia(o.value) && isStringNaoVazia(o.label);
+}
+
+type Testimonial = { name: string; quote: string; role?: string; avatar_url?: string };
+function isTestimonial(v: unknown): v is Testimonial {
+  if (!v || typeof v !== "object") return false;
+  const o = v as Record<string, unknown>;
+  if (!isStringNaoVazia(o.name) || !isStringNaoVazia(o.quote)) return false;
+  if (o.role !== undefined && typeof o.role !== "string") return false;
+  if (o.avatar_url !== undefined && typeof o.avatar_url !== "string") return false;
+  return true;
+}
+
+type Screenshot = { url: string; caption?: string };
+function isScreenshot(v: unknown): v is Screenshot {
+  if (!v || typeof v !== "object") return false;
+  const o = v as Record<string, unknown>;
+  if (!isStringNaoVazia(o.url)) return false;
+  if (o.caption !== undefined && typeof o.caption !== "string") return false;
+  return true;
+}
+
+/** Filtra um array com type guard, descartando itens inválidos com warn. */
+function filtrarComWarn<T>(
+  campo: string,
+  arr: unknown,
+  guard: (v: unknown) => v is T,
+): T[] {
+  if (!Array.isArray(arr)) return [];
+  const out: T[] = [];
+  for (const item of arr) {
+    if (guard(item)) {
+      out.push(item);
+    } else {
+      safeWarn(campo, item);
+    }
+  }
+  return out;
 }
 
 /**
- * Sanea o landing_config_json para que objetos ricos (benefits, faq, metrics, etc.)
- * sempre cheguem na UI no formato esperado, evitando React error #31.
+ * Sanea o landing_config_json garantindo que campos ricos sempre cheguem
+ * como arrays no shape esperado. Itens fora do contrato são descartados
+ * silenciosamente (com console.warn), evitando React error #31 na UI.
  */
 function sanitizeLanding(raw: LandingConfig): LandingConfig {
   const safe: LandingConfig = { ...raw };
 
-  if (Array.isArray(raw.benefits)) {
-    safe.benefits = raw.benefits
-      .map(normalizeBenefit)
-      .filter((b): b is NonNullable<ReturnType<typeof normalizeBenefit>> => b !== null);
+  // benefits — aceita string OU { title, description?, icon? }
+  const benefitsSrc = Array.isArray(raw.benefits) ? raw.benefits : [];
+  const benefitsOut: Array<string | BenefitObject> = [];
+  for (const item of benefitsSrc) {
+    if (isStringNaoVazia(item)) {
+      benefitsOut.push(item);
+    } else if (isBenefitObject(item)) {
+      const canonical: BenefitObject = { title: item.title };
+      if (typeof item.description === "string") canonical.description = item.description;
+      if (typeof item.icon === "string") canonical.icon = item.icon;
+      benefitsOut.push(canonical);
+    } else {
+      safeWarn("benefits", item);
+    }
   }
+  safe.benefits = benefitsOut as LandingConfig["benefits"];
 
-  if (Array.isArray(raw.faq)) {
-    safe.faq = raw.faq
-      .filter((f): f is { question: string; answer: string } =>
-        !!f && typeof f === "object" &&
-        typeof (f as any).question === "string" &&
-        typeof (f as any).answer === "string",
-      );
-  }
+  safe.faq = filtrarComWarn("faq", raw.faq, isFaqItem) as LandingConfig["faq"];
+  safe.metrics = filtrarComWarn("metrics", raw.metrics, isMetric) as LandingConfig["metrics"];
+  safe.testimonials = filtrarComWarn(
+    "testimonials",
+    raw.testimonials,
+    isTestimonial,
+  ) as LandingConfig["testimonials"];
+  safe.screenshots = filtrarComWarn(
+    "screenshots",
+    raw.screenshots,
+    isScreenshot,
+  ) as LandingConfig["screenshots"];
 
-  if (Array.isArray(raw.metrics)) {
-    safe.metrics = raw.metrics.filter(
-      (m): m is { value: string; label: string } =>
-        !!m && typeof m === "object" &&
-        typeof (m as any).value === "string" &&
-        typeof (m as any).label === "string",
-    );
-  }
+  safe.problems = filtrarComWarn("problems", raw.problems, isStringNaoVazia) as LandingConfig["problems"];
+  safe.solutions = filtrarComWarn("solutions", raw.solutions, isStringNaoVazia) as LandingConfig["solutions"];
 
-  if (Array.isArray(raw.testimonials)) {
-    safe.testimonials = raw.testimonials.filter(
-      (t) => !!t && typeof t === "object" &&
-        typeof (t as any).name === "string" &&
-        typeof (t as any).quote === "string",
-    );
-  }
-
-  if (Array.isArray(raw.screenshots)) {
-    safe.screenshots = raw.screenshots.filter(
-      (s) => !!s && typeof s === "object" && typeof (s as any).url === "string",
-    );
-  }
-
-  if (Array.isArray(raw.problems)) {
-    safe.problems = raw.problems.filter((p): p is string => typeof p === "string");
-  }
-  if (Array.isArray(raw.solutions)) {
-    safe.solutions = raw.solutions.filter((s): s is string => typeof s === "string");
-  }
+  // comparison_highlights — strings simples (se existir no payload)
+  const ch = (raw as Record<string, unknown>).comparison_highlights;
+  (safe as Record<string, unknown>).comparison_highlights = filtrarComWarn(
+    "comparison_highlights",
+    ch,
+    isStringNaoVazia,
+  );
 
   return safe;
 }
