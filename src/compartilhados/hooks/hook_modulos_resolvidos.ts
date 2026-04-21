@@ -69,8 +69,10 @@ export function useResolvedModules(
     queryKey,
     queryFn: () => fetchResolvedModules(brandId!, normalizedBranchId),
     enabled: !!brandId,
-    staleTime: CACHE.STALE_TIME_SHORT, // 30s — fallback caso Realtime caia
-    refetchOnWindowFocus: true,
+    // Realtime cobre invalidação; reduzimos refetches automáticos para aliviar boot.
+    staleTime: 5 * 60_000, // 5 min — fallback caso Realtime caia
+    gcTime: 10 * 60_000,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
 
