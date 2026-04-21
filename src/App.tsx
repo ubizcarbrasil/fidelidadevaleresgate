@@ -111,6 +111,7 @@ const PaginaProdutosComerciais = lazyWithRetry(() => import("@/features/produtos
 const PaginaAuditoriaDuplicacoes = lazyWithRetry(() => import("@/features/auditoria_duplicacoes/pagina_auditoria_duplicacoes"));
 const PaginaLandingProduto = lazyWithRetry(() => import("@/features/landing_produto/pagina_landing_produto"));
 const PaginaCatalogoProdutos = lazyWithRetry(() => import("@/features/catalogo_produtos/pagina_catalogo_produtos"));
+const PaginaAgendarDemonstracao = lazyWithRetry(() => import("@/features/agendar_demonstracao/pagina_agendar_demonstracao"));
 const TierPointsRulesPage = lazyWithRetry(() => import("@/pages/TierPointsRulesPage"));
 const DriverPointsRulesPage = lazyWithRetry(() => import("@/pages/DriverPointsRulesPage"));
 const DriverManagementPage = lazyWithRetry(() => import("@/pages/DriverManagementPage"));
@@ -178,6 +179,7 @@ function AnimatedRoutes() {
             <Route path="/webview" element={<WebviewPage />} />
             <Route path="/p/:slug" element={<CustomPage />} />
             <Route path="/trial" element={<TrialSignupPage />} />
+            <Route path="/p/produto/:slug/demo" element={<PaginaAgendarDemonstracao />} />
             <Route path="/p/produto/:slug" element={<PaginaLandingProduto />} />
             <Route path="/produtos" element={<PaginaCatalogoProdutos />} />
             <Route path="/landing" element={<LandingPage />} />
