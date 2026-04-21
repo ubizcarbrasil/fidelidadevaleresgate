@@ -20,41 +20,14 @@ import BlocoCtaStickyMobile from "./components/bloco_cta_sticky_mobile";
 import BlocoFooter from "./components/bloco_footer";
 import type { CicloCobranca } from "./components/toggle_ciclo";
 import BotaoAtualizarApp from "@/compartilhados/components/botao_atualizar_app";
-import type { LandingBenefit } from "@/features/produtos_comerciais/types/tipos_produto";
-
-/**
- * Sanitiza benefits no ponto de consumo. Aceita apenas string não-vazia
- * ou objeto com `title` string. Descarta o resto silenciosamente.
- * Defesa em profundidade — o hook já sanitiza, mas garantimos shape aqui também.
- */
-function sanitizarBenefits(input: unknown): LandingBenefit[] {
-  if (!Array.isArray(input)) return [];
-  const out: LandingBenefit[] = [];
-  for (const item of input) {
-    if (typeof item === "string" && item.trim().length > 0) {
-      out.push(item);
-    } else if (item && typeof item === "object") {
-      const o = item as Record<string, unknown>;
-      if (typeof o.title === "string" && o.title.trim().length > 0) {
-        const safe: { title: string; description?: string; icon?: string } = {
-          title: o.title,
-        };
-        if (typeof o.description === "string") safe.description = o.description;
-        if (typeof o.icon === "string") safe.icon = o.icon;
-        out.push(safe);
-      }
-    }
-  }
-  return out;
-}
-
-/** Sanitiza features (sempre array de strings não-vazias). */
-function sanitizarFeatures(input: unknown): string[] {
-  if (!Array.isArray(input)) return [];
-  return input.filter(
-    (v): v is string => typeof v === "string" && v.trim().length > 0,
-  );
-}
+import {
+  sanitizarBenefits,
+  sanitizarFaq,
+  sanitizarMetrics,
+  sanitizarScreenshots,
+  sanitizarStrings,
+  sanitizarTestimonials,
+} from "./utils/sanitizar_landing";
 
 export default function PaginaLandingProduto() {
   const { slug } = useParams<{ slug: string }>();
@@ -111,9 +84,16 @@ export default function PaginaLandingProduto() {
     ciclo === "yearly" && hasYearly ? produto.price_yearly_cents! : produto.price_cents;
 
   // Sanitização defensiva no ponto de consumo (defesa em profundidade
-  // sobre a já feita em sanitizeLanding/sanitizeFeatures do hook).
+  // sobre a já feita em sanitizeLanding do hook). Garante que TODO campo
+  // rico chegue aos blocos filhos como array canônico — nunca payload cru.
   const benefitsSanitizados = sanitizarBenefits(lc.benefits);
-  const featuresSanitizadas = sanitizarFeatures(produto.features);
+  const featuresSanitizadas = sanitizarStrings(produto.features);
+  const metricsSanitizadas = sanitizarMetrics(lc.metrics);
+  const problemsSanitizados = sanitizarStrings(lc.problems);
+  const solutionsSanitizadas = sanitizarStrings(lc.solutions);
+  const screenshotsSanitizados = sanitizarScreenshots(lc.screenshots);
+  const testimonialsSanitizados = sanitizarTestimonials(lc.testimonials);
+  const faqSanitizado = sanitizarFaq(lc.faq);
   const benefitsParaGrid =
     benefitsSanitizados.length > 0
       ? benefitsSanitizados
@@ -149,11 +129,11 @@ export default function PaginaLandingProduto() {
         onPrimaryClick={() => ctaHandler("hero")}
       />
 
-      <BlocoMetricasDestaque metrics={lc.metrics ?? []} primaryColor={color} />
+      <BlocoMetricasDestaque metrics={metricsSanitizadas} primaryColor={color} />
 
       <BlocoDoresSolucoes
-        problems={lc.problems ?? []}
-        solutions={lc.solutions ?? []}
+        problems={problemsSanitizados}
+        solutions={solutionsSanitizadas}
         productName={produto.product_name}
         primaryColor={color}
       />
@@ -168,13 +148,13 @@ export default function PaginaLandingProduto() {
       />
 
       <BlocoPreviewApp
-        screenshots={lc.screenshots ?? []}
+        screenshots={screenshotsSanitizados}
         heroImageUrl={lc.hero_image_url}
         productName={produto.product_name}
         primaryColor={color}
       />
 
-      <BlocoDepoimentos testimonials={lc.testimonials ?? []} primaryColor={color} />
+      <BlocoDepoimentos testimonials={testimonialsSanitizados} primaryColor={color} />
 
       <BlocoPricingDestaque
         ciclo={ciclo}
@@ -192,7 +172,7 @@ export default function PaginaLandingProduto() {
       />
 
       <BlocoPerguntasObjecoes
-        faq={lc.faq ?? []}
+        faq={faqSanitizado}
         trialDays={produto.trial_days}
         primaryColor={color}
       />

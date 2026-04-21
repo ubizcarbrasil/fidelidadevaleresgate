@@ -58,7 +58,9 @@ return ({
         // do navigateFallback para evitar HTML cacheado servindo chunks antigos.
         // v5 (Landing Produto fix) — invalida cache para corrigir React #31 ({icon,title,description})
         // em landings com benefícios estruturados (motorista-premium / engajamento-motorista).
-        cacheId: "vale-resgate-v5",
+        // v6 (Landing defesa total) — sanitização completa de metrics/faq/testimonials/screenshots/
+        // problems/solutions no ponto de consumo. Força bundle novo nas landings públicas.
+        cacheId: "vale-resgate-v6",
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,jpg,jpeg,webp}"],
