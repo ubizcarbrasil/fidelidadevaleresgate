@@ -8,6 +8,7 @@ import { ORDEM_RODADAS, ROTULOS_RODADA } from "../constants/constantes_campeonat
 import ControlesReproducao from "./controles_reproducao";
 import CardConfrontoReproducao from "./card_confronto_reproducao";
 import type { RodadaMataMata } from "../types/tipos_campeonato";
+import type { SnapshotConfronto } from "../types/tipos_reproducao";
 
 interface Props {
   seasonId: string;
@@ -20,7 +21,7 @@ export default function PainelReproducaoTemporal({ seasonId }: Props) {
   const player = useReproducaoCampeonato({ eventos: data ?? [] });
 
   const confrontosPorRodada = useMemo(() => {
-    const por: Record<RodadaMataMata, typeof Object.values(player.snapshot.porBracket)> = {
+    const por: Record<RodadaMataMata, SnapshotConfronto[]> = {
       r16: [],
       qf: [],
       sf: [],
