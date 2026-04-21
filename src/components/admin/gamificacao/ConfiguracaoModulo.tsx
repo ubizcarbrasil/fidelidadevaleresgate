@@ -62,7 +62,11 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
     mutationFn: async () => {
       const merged = {
         ...settings,
-        enable_driver_duels: enableDuels,
+        enable_duel_driver_vs_driver: enableDuelDvD,
+        enable_duel_sponsored_by_brand: enableDuelSponsored,
+        enable_duel_side_bets: enableDuelSideBets,
+        // Compat com telas antigas: enable_driver_duels = OR das três modalidades
+        enable_driver_duels: enableDuelDvD || enableDuelSponsored || enableDuelSideBets,
         enable_city_ranking: enableRanking,
         enable_city_belt: enableBelt,
         allow_public_duel_viewing: publicViewing,
@@ -150,7 +154,24 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
         <div className="space-y-2">
           <Label className="text-xs font-semibold uppercase text-muted-foreground">Módulos</Label>
           <div className="grid gap-3 sm:grid-cols-2">
-            <ToggleRow label="Duelos entre motoristas" checked={enableDuels} onChange={setEnableDuels} hint="Permite que motoristas se desafiem em competições de corridas." />
+            <ToggleRow
+              label="Duelos entre motoristas (com aposta)"
+              checked={enableDuelDvD}
+              onChange={setEnableDuelDvD}
+              hint="Motoristas se desafiam apostando pontos próprios. Vencedor leva o pote."
+            />
+            <ToggleRow
+              label="Duelos patrocinados pelo empreendedor"
+              checked={enableDuelSponsored}
+              onChange={setEnableDuelSponsored}
+              hint="A carteira da cidade banca o prêmio. Motoristas não apostam pontos."
+            />
+            <ToggleRow
+              label="Apostas paralelas em duelos"
+              checked={enableDuelSideBets}
+              onChange={setEnableDuelSideBets}
+              hint="Outros motoristas podem apostar pontos no resultado de um duelo."
+            />
             <ToggleRow label="Ranking da cidade" checked={enableRanking} onChange={setEnableRanking} hint="Exibe uma classificação mensal dos motoristas mais ativos." />
             <ToggleRow label="Cinturão da cidade" checked={enableBelt} onChange={setEnableBelt} hint="Concede o título de campeão ao motorista com melhor desempenho." />
             <ToggleRow label="Visualização pública de duelos" checked={publicViewing} onChange={setPublicViewing} hint="Permite que todos os motoristas vejam os duelos em andamento." />
