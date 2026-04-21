@@ -21,7 +21,7 @@ export async function buscarSugestoesDuelo(
   });
 
   if (error) throw error;
-  const resp = (data ?? {}) as Partial<RespostaSugestoes>;
+  const resp = (data ?? {}) as unknown as Partial<RespostaSugestoes>;
 
   return {
     success: !!resp.success,
@@ -46,7 +46,7 @@ export async function criarDuelosEmLote(params: CriarLoteParams): Promise<Respos
   const { data, error } = await supabase.rpc("admin_create_bulk_duels", {
     p_branch_id: params.branchId,
     p_brand_id: params.brandId,
-    p_pairs: params.pares as unknown as Record<string, unknown>[],
+    p_pairs: params.pares as unknown as never,
     p_start_at: params.startAt,
     p_end_at: params.endAt,
     p_prize_points_per_pair: params.prizePointsPerPair,
@@ -54,7 +54,7 @@ export async function criarDuelosEmLote(params: CriarLoteParams): Promise<Respos
   });
 
   if (error) throw error;
-  return (data ?? { success: false, error: "Resposta vazia" }) as RespostaCriacaoLote;
+  return (data ?? { success: false, error: "Resposta vazia" }) as unknown as RespostaCriacaoLote;
 }
 
 export async function buscarSaldoCarteira(branchId: string): Promise<number> {
