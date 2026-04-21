@@ -4596,6 +4596,42 @@ export type Database = {
           },
         ]
       }
+      duelo_attempts_log: {
+        Row: {
+          branch_id: string | null
+          brand_id: string | null
+          code: string
+          created_at: string
+          details_json: Json
+          driver_id: string | null
+          id: string
+          ride_id: string | null
+          season_id: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          brand_id?: string | null
+          code: string
+          created_at?: string
+          details_json?: Json
+          driver_id?: string | null
+          id?: string
+          ride_id?: string | null
+          season_id?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          brand_id?: string | null
+          code?: string
+          created_at?: string
+          details_json?: Json
+          driver_id?: string | null
+          id?: string
+          ride_id?: string | null
+          season_id?: string | null
+        }
+        Relationships: []
+      }
       duelo_brackets: {
         Row: {
           driver_a_id: string | null
@@ -10057,7 +10093,9 @@ export type Database = {
         Args: { p_amount: number; p_branch_id: string; p_description?: string }
         Returns: Json
       }
+      duelo_backfill_standings: { Args: { p_season_id: string }; Returns: Json }
       duelo_gerar_chaveamento: { Args: { p_season_id: string }; Returns: Json }
+      duelo_reconcile_standings: { Args: { p_hours?: number }; Returns: Json }
       duelo_seed_initial_tier_memberships: {
         Args: { p_season_id: string }
         Returns: Json
