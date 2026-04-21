@@ -7,6 +7,7 @@ import type {
   LeadComercialRow,
   StatusLead,
 } from "@/features/agendar_demonstracao/types/tipos_lead";
+import DialogoEditarLead from "./dialogo_editar_lead";
 
 interface BlocoCabecalhoLeadProps {
   lead: LeadComercialRow;
@@ -46,6 +47,7 @@ export default function BlocoCabecalhoLead({ lead }: BlocoCabecalhoLeadProps) {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <DialogoEditarLead lead={lead} />
           <Button size="sm" variant="outline" onClick={() => abrirWhatsapp(lead.phone, lead.full_name)}>
             <MessageSquare className="h-4 w-4 mr-1" />
             WhatsApp
