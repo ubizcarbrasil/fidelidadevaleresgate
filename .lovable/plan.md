@@ -1,84 +1,142 @@
 
+## Corrigir o travamento no boot e reduzir drasticamente o tempo de abertura
 
-## Padronizar tela de carregamento (loader único e moderno)
+Identifiquei dois problemas principais no fluxo atual de inicialização:
 
-Hoje o app mostra **4 visuais diferentes** durante o boot, conforme as suas screenshots:
+1. O app está **limpando Service Worker e CacheStorage cedo demais e vezes demais**:
+   - `index.html` faz recuperação agressiva com reload.
+   - `main.tsx` chama `disableRuntimeCachesOnBoot()` em toda abertura.
+   - `usePWA.ts` chama `clearRuntimeCaches()` de novo ao montar.
+   
+   Isso deixa o carregamento instável, pode provocar novo reload e piora exatamente o cenário de “demora e não abre”.
 
-1. Bootstrap roxo no `index.html` (antes do React montar).
-2. `Loader2` cinza (ícone Lucide) — em `main.tsx`, `App.tsx`, `WhiteLabelLayout.tsx`, `CustomerPreviewPage`, etc.
-3. Spinner azul de borda (`border-b-2 border-primary`) — em `ProtectedRoute`, `AppLayout`, `Dashboard`, vários `pages/*`.
-4. `Loader2` branco translúcido — em `PartnerLandingPage`.
+2. O fluxo de permissões/roles está ambíguo:
+   - `AuthContext` libera `loading=false` antes de ter uma flag clara de “roles concluídos”.
+   - `useBrandGuard` usa `user && roles.length === 0` como sinônimo de “ainda carregando”.
+   - Resultado: se a consulta de `user_roles` atrasar, falhar, ou vier vazia por algum motivo, o app pode ficar preso em `LOADING` mesmo com sessão válida.
 
-Resultado: a cada rota o usuário vê um spinner diferente, o que dá sensação de "telas que não conversam" e amplifica a percepção de travamento durante o boot do PWA.
+## O que vou implementar
 
-### O que vamos entregar
+### 1) Parar de limpar cache automaticamente em toda abertura
+Vou transformar a recuperação de cache em algo **reativo**, não mais parte do caminho crítico do boot.
 
-Um **único componente de carregamento premium** reutilizável, alinhado ao design system (dark, roxo da marca, suave), aplicado em **todas as telas de boot/loading global** — incluindo o overlay do `index.html` para a transição ser visualmente contínua até o React assumir.
+Arquivos:
+- `src/main.tsx`
+- `src/hooks/usePWA.ts`
+- `src/lib/pwaRecovery.ts`
+- `index.html`
 
-### Como vai ficar (visual)
+Mudanças:
+- remover `disableRuntimeCachesOnBoot()` do boot normal;
+- remover a limpeza automática de caches no `usePWA`;
+- manter limpeza/reload apenas em:
+  - erro real de chunk/import dinâmico;
+  - botão “Atualizar agora”;
+  - recuperação manual/explicitamente sinalizada;
+- simplificar o script de recovery do `index.html` para não forçar recarga extra em todo load.
 
-O loader moderno terá:
+Resultado esperado:
+- o app para de “se sabotar” no boot;
+- menos reload invisível;
+- menos chance de “Importing a module script failed” durante a abertura.
 
-- Fundo `bg-background` (mesmo dark do app, sem "flash" branco entre etapas).
-- **Logo da marca** centralizada (com fallback para o logo Vale Resgate) com leve respiração (pulse sutil).
-- **Anel rotativo fino** ao redor do logo, em gradiente `primary → primary/40` (roxo da marca), sem bordas grosseiras.
-- **Mensagem dinâmica de etapa** opcional (ex.: "Carregando seu painel…", "Conectando…", "Quase lá…") com fade-in/out, usada nos loaders longos.
-- **Barra de progresso indeterminada** fininha no topo, deslizando — dá sensação de "alguma coisa está acontecendo" mesmo em rede lenta (resolve o problema da sua tela parada).
-- Tudo respeitando `prefers-reduced-motion`.
+### 2) Separar “roles carregados” de “roles vazios”
+Vou criar um estado explícito para permissões concluídas no `AuthContext`.
 
-Versões do componente:
-- `TelaCarregamento` (full-screen, usado em boot, guards e Suspense).
-- `TelaCarregamentoInline` (versão compacta para dentro de cards/listas, substituindo os `border-b-2 border-primary` espalhados).
+Arquivos:
+- `src/contexts/AuthContext.tsx`
+- `src/hooks/useBrandGuard.ts`
+- `src/components/AppLayout.tsx`
+- `src/components/ProtectedRoute.tsx`
+- `src/components/RootGuard.tsx`
+- `src/components/ModuleGuard.tsx`
 
-### Arquivos novos
+Mudanças:
+- adicionar flag como `rolesCarregados` / `permissoesProntas`;
+- marcar essa flag quando a busca em `user_roles` terminar, mesmo que venha lista vazia;
+- fazer `useBrandGuard` depender dessa flag, e não de `roles.length === 0`;
+- garantir fallback seguro em erro/timeout para não deixar o app preso no loader.
 
-- `src/compartilhados/components/tela_carregamento.tsx` — componente principal (full-screen + inline).
-- `src/compartilhados/components/tela_carregamento.module.css` *(opcional, só se precisarmos de keyframes específicos além das do Tailwind)*.
+Resultado esperado:
+- o app deixa de ficar eternamente em “carregando” por causa de ambiguidade de roles;
+- guards decidem mais rápido e com previsibilidade;
+- o loader some quando o boot realmente terminou.
 
-### Arquivos a editar (substituir loaders antigos pelo novo)
+### 3) Tornar o boot determinístico e mais curto
+Vou alinhar as fases de boot com o que realmente bloqueia a abertura.
 
-Boot e guards globais:
-- `index.html` — substituir o SVG roxo do `#bootstrap-fallback` por marcação que **case visualmente** com o novo `TelaCarregamento` (mesmo fundo, mesmo logo, mesmo anel). Sem React aqui, então será HTML/CSS inline equivalente.
-- `src/main.tsx` — Suspense fallback usa `TelaCarregamento`.
-- `src/App.tsx` — loading global usa `TelaCarregamento`.
-- `src/components/WhiteLabelLayout.tsx` — loading + Suspense usam `TelaCarregamento`.
-- `src/components/ProtectedRoute.tsx`, `src/components/AppLayout.tsx`, `src/components/RootGuard.tsx`, `src/components/ModuleGuard.tsx` — trocar spinners de borda.
-- `src/pages/Dashboard.tsx` (redirect loading), `src/pages/CustomerPreviewPage.tsx`, `src/pages/customer/CustomPage.tsx`, `src/pages/PartnerLandingPage.tsx`, `src/features/agendar_demonstracao/pagina_agendar_demonstracao.tsx`.
+Arquivos:
+- `src/contexts/AuthContext.tsx`
+- `src/contexts/BrandContext.tsx`
+- `src/compartilhados/components/tela_carregamento.tsx`
 
-Loaders inline em listas (substituir `border-b-2 border-primary` por `TelaCarregamentoInline`):
-- `src/pages/Brands.tsx`, `Tenants.tsx`, `Branches.tsx`, `Vouchers.tsx`, `BrandDomains.tsx`, `PaginaDominiosMarca.tsx`, `AuditLogsPage.tsx`.
+Mudanças:
+- tratar como críticas apenas:
+  - sessão,
+  - roles,
+  - resolução mínima de brand/contexto;
+- deixar consultas secundárias fora do caminho crítico;
+- ajustar mensagens da `TelaCarregamento` para refletir etapas reais, incluindo permissões quando necessário;
+- evitar que timeouts apenas escondam o problema visualmente sem liberar o fluxo correto.
 
-> Não vamos mexer em **botões** com `Loader2` (estado de submit) nem em **skeletons** de tabela/lista — esses padrões continuam corretos e atendem ao design system.
+Resultado esperado:
+- abertura mais direta;
+- mensagens mais honestas;
+- menos sensação de travamento.
 
-### Detalhes técnicos
+### 4) Endurecer a recuperação de erro de chunk sem loop
+Vou manter a proteção contra chunk stale, mas sem comportamento agressivo contínuo.
 
-```tsx
-// src/compartilhados/components/tela_carregamento.tsx
-interface PropsTelaCarregamento {
-  mensagem?: string;        // texto opcional sob o logo
-  etapas?: string[];        // ciclo de mensagens (rotaciona a cada 2.5s)
-  variante?: "tela" | "inline";
-  logoUrl?: string;         // override (white-label)
-}
-```
+Arquivos:
+- `src/lib/lazyWithRetry.ts`
+- `src/lib/pwaRecovery.ts`
+- `index.html`
 
-- Anel: SVG com `<circle stroke="url(#grad)" />` e `animate-spin` controlado por Tailwind.
-- Barra de progresso indeterminada: `div` absoluto top-0 com `keyframes` `translateX(-100%) → translateX(100%)`.
-- Logo com fallback para `/logo-vale-resgate.png` (memory: *Branding Fallback*).
-- Respeita tokens HSL do design system (`hsl(var(--primary))`, `hsl(var(--background))`), sem cores hardcoded — exceto no `index.html`, que precisa ser inline e usará os mesmos valores em hex equivalentes (`#0f0a2e`, `#6d4aff`) para casar com o tema atual.
-- Acessibilidade: `role="status"`, `aria-live="polite"`, `aria-label="Carregando aplicação"`.
+Mudanças:
+- preservar o retry com reload apenas para erro real de import dinâmico;
+- impedir sequência de recuperação duplicada entre HTML bootstrap, lazy import e hook PWA;
+- garantir cooldown único e fonte única de verdade para recovery.
 
-### Sobre a tela "só carregando" da landing
+Resultado esperado:
+- continua se recuperando de build antiga/cache velho;
+- sem loop de limpeza e reload;
+- mais estabilidade em rede ruim.
 
-Esse problema atual (PWA preso no spinner) tem causa separada (Service Worker + chunks v5, já tratada nas iterações anteriores). A padronização do loader **não conserta a causa raiz**, mas:
-- A **barra de progresso indeterminada** + **mensagens rotativas** ("Atualizando aplicativo…", "Limpando cache…", "Quase lá…") deixam claro que o app está vivo.
-- Após **8 segundos** sem montar, o `TelaCarregamento` exibe automaticamente um botão **"Atualizar agora"** (reaproveitando o `botao_atualizar_app` já existente), oferecendo saída em vez de tela infinita.
+### 5) Validar os gargalos residuais do shell inicial
+Depois da correção estrutural, vou revisar o que ainda entra no caminho crítico da abertura.
 
-### Critérios de aceite
+Arquivos prováveis:
+- `src/components/AppLayout.tsx`
+- `src/hooks/useBrandName.ts`
+- `src/hooks/useBrandModules.ts`
+- `src/contexts/BrandContext.tsx`
 
-- Todas as telas de boot/loading global mostram exatamente o mesmo visual (logo + anel roxo + barra indeterminada + fundo dark).
-- Transição do `index.html` → React acontece **sem flash** de cor ou troca de spinner.
-- Listas administrativas usam o inline padronizado, sem mais `border-b-2 border-primary` soltos.
-- Após 8s travado, o usuário vê o botão "Atualizar agora" automaticamente.
-- Botões de submit (`Loader2` no botão) e skeletons continuam intactos.
+Foco:
+- evitar busca desnecessária no primeiro paint;
+- adiar o que não precisa acontecer antes de mostrar a shell;
+- manter tema/configurações não essenciais fora do bloqueio inicial.
 
+## Critérios de aceite
+
+- O app abre sem ficar parado indefinidamente na `TelaCarregamento`.
+- Não há limpeza automática de Service Worker/cache em toda visita.
+- O boot não depende mais de `roles.length === 0` para decidir loading.
+- Usuário autenticado consegue chegar à rota correta sem spinner infinito.
+- Em caso de chunk quebrado, a recuperação acontece de forma controlada, sem loop.
+- A experiência visual do loader continua moderna, mas agora com boot realmente funcional.
+
+## Arquivos que devem ser alterados
+
+- `index.html`
+- `src/main.tsx`
+- `src/lib/pwaRecovery.ts`
+- `src/lib/lazyWithRetry.ts`
+- `src/hooks/usePWA.ts`
+- `src/contexts/AuthContext.tsx`
+- `src/hooks/useBrandGuard.ts`
+- `src/contexts/BrandContext.tsx`
+- `src/components/AppLayout.tsx`
+- `src/components/ProtectedRoute.tsx`
+- `src/components/RootGuard.tsx`
+- `src/components/ModuleGuard.tsx`
+- `src/compartilhados/components/tela_carregamento.tsx`
