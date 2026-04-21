@@ -43,7 +43,9 @@ export function useProductScope(brandIdOverride?: string): EscopoProduto {
   const { data, isLoading } = useQuery({
     queryKey: ["product-scope", brandId],
     enabled: !!brandId,
-    staleTime: 60_000,
+    staleTime: 10 * 60_000, // 10 min — plano muda raramente
+    gcTime: 15 * 60_000,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       // Reaproveita o cache de useBrandInfo quando disponível (evita query extra)
       const cached = queryClient.getQueryData<any>(["brand-info", brandId]);
