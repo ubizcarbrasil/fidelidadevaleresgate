@@ -8,6 +8,8 @@ import BlocoTopbar from "./components/bloco_topbar";
 import BlocoHero from "./components/bloco_hero";
 import BlocoMetricasDestaque from "./components/bloco_metricas_destaque";
 import BlocoDoresSolucoes from "./components/bloco_dores_solucoes";
+import BlocoComoFunciona from "./components/bloco_como_funciona";
+import BlocoParaQuem from "./components/bloco_para_quem";
 import BlocoFuncionalidadesGrid from "./components/bloco_funcionalidades_grid";
 import BlocoPricingDestaque from "./components/bloco_pricing_destaque";
 import BlocoPreviewApp from "./components/bloco_preview_app";
@@ -78,7 +80,7 @@ export default function PaginaLandingProduto() {
       <BlocoTopbar
         trialUrl={trialUrl}
         primaryColor={color}
-        ctaLabel="Trial grátis"
+        ctaLabel={lc.cta_label || "Agendar demo"}
       />
 
       <BlocoHero
@@ -86,7 +88,7 @@ export default function PaginaLandingProduto() {
         headline={lc.headline || produto.product_name}
         subheadline={lc.subheadline}
         heroImageUrl={lc.hero_image_url}
-        ctaLabel={lc.cta_label || `Começar trial ${produto.trial_days} dias grátis`}
+        ctaLabel={lc.cta_label || "Agendar demonstração"}
         trialUrl={trialUrl}
         trialDays={produto.trial_days}
         primaryColor={color}
@@ -103,6 +105,10 @@ export default function PaginaLandingProduto() {
         primaryColor={color}
       />
 
+      <BlocoComoFunciona productName={produto.product_name} primaryColor={color} />
+
+      <BlocoParaQuem primaryColor={color} />
+
       <BlocoFuncionalidadesGrid
         benefits={(lc.benefits ?? []).length > 0 ? lc.benefits! : produto.features}
         primaryColor={color}
@@ -114,6 +120,8 @@ export default function PaginaLandingProduto() {
         productName={produto.product_name}
         primaryColor={color}
       />
+
+      <BlocoDepoimentos testimonials={lc.testimonials ?? []} primaryColor={color} />
 
       <BlocoPricingDestaque
         ciclo={ciclo}
@@ -129,8 +137,6 @@ export default function PaginaLandingProduto() {
         primaryColor={color}
         onCta={irParaTrial}
       />
-
-      <BlocoDepoimentos testimonials={lc.testimonials ?? []} primaryColor={color} />
 
       <BlocoPerguntasObjecoes
         faq={lc.faq ?? []}
