@@ -67,6 +67,7 @@ const ROOT_GROUPS: DefinicaoGrupoSimples[] = [
     { key: "sidebar.atualizacoes" }, { key: "sidebar.kit_inicial" },
     { key: "sidebar.configuracoes" }, { key: "sidebar.subscription" },
     { key: "sidebar.plan_templates" }, { key: "sidebar.produtos_comerciais" },
+    { key: "sidebar.leads_comerciais" },
   ]},
 ];
 
