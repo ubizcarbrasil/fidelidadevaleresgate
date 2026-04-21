@@ -5,6 +5,9 @@
  */
 export type FaixaHoraria = "manha" | "tarde" | "noite" | "madrugada" | "sem_dados";
 
+/** Origem do prêmio do duelo. */
+export type DuelOrigin = "DRIVER_VS_DRIVER" | "SPONSORED";
+
 export interface ParSugerido {
   a_participant_id: string;
   a_customer_id: string;
