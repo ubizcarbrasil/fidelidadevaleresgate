@@ -22,6 +22,81 @@ function parseLanding(value: unknown): LandingConfig {
   return value as LandingConfig;
 }
 
+/** Normaliza um benefit (string ou objeto) sem nunca devolver objeto cru. */
+function normalizeBenefit(b: unknown) {
+  if (typeof b === "string") return b;
+  if (b && typeof b === "object") {
+    const obj = b as Record<string, unknown>;
+    const title = typeof obj.title === "string" ? obj.title : "";
+    const description = typeof obj.description === "string" ? obj.description : undefined;
+    const icon = typeof obj.icon === "string" ? obj.icon : undefined;
+    if (!title) return null;
+    return { title, description, icon };
+  }
+  return null;
+}
+
+/**
+ * Sanea o landing_config_json para que objetos ricos (benefits, faq, metrics, etc.)
+ * sempre cheguem na UI no formato esperado, evitando React error #31.
+ */
+function sanitizeLanding(raw: LandingConfig): LandingConfig {
+  const safe: LandingConfig = { ...raw };
+
+  if (Array.isArray(raw.benefits)) {
+    safe.benefits = raw.benefits
+      .map(normalizeBenefit)
+      .filter((b): b is NonNullable<ReturnType<typeof normalizeBenefit>> => b !== null);
+  }
+
+  if (Array.isArray(raw.faq)) {
+    safe.faq = raw.faq
+      .filter((f): f is { question: string; answer: string } =>
+        !!f && typeof f === "object" &&
+        typeof (f as any).question === "string" &&
+        typeof (f as any).answer === "string",
+      );
+  }
+
+  if (Array.isArray(raw.metrics)) {
+    safe.metrics = raw.metrics.filter(
+      (m): m is { value: string; label: string } =>
+        !!m && typeof m === "object" &&
+        typeof (m as any).value === "string" &&
+        typeof (m as any).label === "string",
+    );
+  }
+
+  if (Array.isArray(raw.testimonials)) {
+    safe.testimonials = raw.testimonials.filter(
+      (t) => !!t && typeof t === "object" &&
+        typeof (t as any).name === "string" &&
+        typeof (t as any).quote === "string",
+    );
+  }
+
+  if (Array.isArray(raw.screenshots)) {
+    safe.screenshots = raw.screenshots.filter(
+      (s) => !!s && typeof s === "object" && typeof (s as any).url === "string",
+    );
+  }
+
+  if (Array.isArray(raw.problems)) {
+    safe.problems = raw.problems.filter((p): p is string => typeof p === "string");
+  }
+  if (Array.isArray(raw.solutions)) {
+    safe.solutions = raw.solutions.filter((s): s is string => typeof s === "string");
+  }
+
+  return safe;
+}
+
+/** Sanea features (sempre array de strings). */
+function sanitizeFeatures(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((v): v is string => typeof v === "string");
+}
+
 export function useProdutosComerciais() {
   return useQuery({
     queryKey: QK_LIST,
