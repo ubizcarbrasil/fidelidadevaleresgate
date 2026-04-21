@@ -1,292 +1,131 @@
 
 
-## Sub-fase C.1 — Schema + Seed do Campeonato Duelo Motorista
+# Confirmações de schema (antes da migração)
 
-### 1. Decisões e ajustes ao briefing original
+## 1. TAG `[MOTORISTA]`
 
-**Ajuste crítico de FKs**: o projeto **não tem** tabelas `drivers` nem `rides`. Motoristas são `customers` com tag `[MOTORISTA]` no nome (campo `external_driver_id`/`customer_tier`), e corridas são `machine_rides`. Vou trocar todas as FKs para refletir a realidade:
+- **Não existe tabela `user_tags`.** A "tag" é um **prefixo no campo `customers.name`**, no formato `[MOTORISTA] Nome do Motorista`.
+- Tabela: `public.customers` — coluna `name text`.
+- Query padrão usada em todo o projeto:
+  ```sql
+  SELECT id, name, branch_id, brand_id, is_active
+  FROM public.customers
+  WHERE brand_id = :brand_id
+    AND branch_id = :branch_id
+    AND name ILIKE '%[MOTORISTA]%'
+    AND is_active = true;
+  ```
+- Confirmado em 16 arquivos do código (ex.: `hook_preview_reset.ts`, `import-drivers-bulk`, `reset-duelo-ciclo`, `ConfiguracaoModulo.tsx`).
+- Existe também a tabela `driver_profiles` (perfil estendido), mas a identificação canônica de "é motorista" é o prefixo no nome.
 
-- `driver_id uuid → customers(id)` (em vez de `drivers`)
-- `event_ref_id uuid` referencia `machine_rides(id)` (sem FK forte, pois `machine_rides` pode ter SET NULL/limpeza)
-- O termo "driver" fica apenas nas **colunas** (mantendo a semântica do produto: o `customer` é o motorista da temporada).
+## 2. Vínculo motorista ↔ branch
 
-**Helpers RLS confirmados**: existem `get_user_brand_ids(uuid)`, `get_user_branch_ids(uuid)` e `has_role(uuid, app_role)`. Sigo exatamente o padrão de `city_business_model_overrides` (4 policies por tabela: select_scope amplo + root_admin_all + brand_admin_manage + branch_admin_manage quando aplicável).
+- **Direto** em `customers.branch_id uuid` (FK para `branches.id`). Não há tabela `driver_branches`.
+- `customers.brand_id uuid` mantém o isolamento de marca.
+- **Multi-branch**: o modelo atual é **1 motorista = 1 branch** por registro. Um mesmo CPF pode existir em mais de uma cidade como **registros distintos** em `customers` (cada um com seu `branch_id`). Isso é coerente com as regras de portabilidade (`customer-onboarding-and-access-policy`) e com o ciclo de duelo por cidade (`reset-duelo-ciclo`).
+- **Implicação para o seed**: o seed roda **por `branch_id`** (escopo da temporada). Cada cidade tem seu próprio universo de motoristas. Não há necessidade de "fan-out" entre cidades.
 
-**Migration única**: schema + RLS + seed em um arquivo só, commit atômico.
+## 3. `machine_rides`
 
-**Flag**: `constantes_features.ts` já existe e tem `USE_BUSINESS_MODELS = false`. Adição de `USE_DUELO_CAMPEONATO = false` é não-breaking.
+- Coluna do motorista: **`driver_customer_id uuid`** (FK lógica para `customers.id`). Existe também `driver_id text` (ID externo da TaxiMachine) e `driver_name text`, mas a referência interna usada nos hooks é `driver_customer_id`.
+- Status: coluna `ride_status text` com valores reais `ACCEPTED, CANCELLED, DENIED, FINALIZED, IN_PROGRESS, NO_VALUE, PENDING`. Corrida concluída = **`ride_status = 'FINALIZED'`**.
+- Timestamp de finalização: **`finalized_at timestamptz`** (padrão `analytical-consistency-standard`).
+- Escopo: `machine_rides.branch_id` e `machine_rides.brand_id` permitem filtrar diretamente por cidade.
+- **Rating**: **não existe coluna de rating em `machine_rides`**. O único rating que existe hoje é em `driver_duel_ratings (rating smallint, rated_customer_id uuid, created_at timestamptz)` — é rating **de duelo entre motoristas**, não de passageiro. Não há rating de passageiro no schema atual.
 
-### 2. SQL completo da migration
+# Correções aplicadas ao plano de C.1
 
-Arquivo: `supabase/migrations/<timestamp>_duelo_campeonato_schema_e_seed.sql`
+1. **Critério de desempate "avaliação média 90d" — REMOVIDO.** Não há rating de passageiro no banco. Usar `driver_duel_ratings` distorceria a classificação inicial (mistura percepção entre motoristas com desempenho real).
+   - **Novo desempate (em ordem)**:
+     1. `rides_90d` desc (volume de corridas FINALIZED nos últimos 90 dias);
+     2. `total_value_90d` desc (soma de `ride_value` no período — proxy direto de produtividade financeira);
+     3. `last_finalized_at` desc (atividade mais recente);
+     4. `customers.created_at` asc (antiguidade na plataforma como último critério).
+
+2. **Identificação de motorista** na RPC: `customers.name ILIKE '%[MOTORISTA]%' AND branch_id = p_branch_id AND brand_id = p_brand_id AND is_active = true`. Sem dependência de `user_roles` ou `driver_profiles`.
+
+3. **Fonte de corridas**: `machine_rides` filtrada por `branch_id`, `driver_customer_id IN (motoristas elegíveis)`, `ride_status = 'FINALIZED'`, `finalized_at >= now() - interval '90 days'`.
+
+4. **Janela proporcional para novos (30–89 dias)**: usar `customers.created_at` da própria branch como referência de "dias ativos" para projeção linear de `rides_90d`.
+
+5. **Multi-branch**: a RPC é **estritamente branch-scoped**. Cada `(season_id → branch_id)` tem seu próprio seed. Nada precisa mudar no schema de `duelo_tier_memberships` — `season_id` já carrega o `branch_id` indiretamente via `duelo_seasons.branch_id`.
+
+6. **Resto do plano C.1 permanece igual**:
+   - Schema novo: `duelo_season_tiers`, `duelo_tier_memberships`, `duelo_driver_tier_history`, `plan_duelo_prize_ranges`, `brand_duelo_prizes`, `duelo_champions`.
+   - Alterações: `duelo_seasons` (+ `tiers_count`, `relegation_policy`, `tiers_config_json`, `tier_seeding_completed_at`), `duelo_season_standings` (+ `tier_id`, `position_in_tier`, `relegated_auto`), `duelo_brackets` (+ `tier_id`).
+   - Backfill: 1 tier "Única" por temporada existente.
+   - RPC `duelo_seed_initial_tier_memberships(p_season_id uuid)` `SECURITY DEFINER`, idempotente via `tier_seeding_completed_at`, com gate trigger.
+   - Flag `USE_DUELO_CAMPEONATO` + `brand_settings_json.duelo_campeonato_enabled === true`.
+   - Seed de `plan_duelo_prize_ranges` via ferramenta de dados (não migration).
+
+# Detalhe técnico — núcleo da RPC (versão corrigida)
 
 ```sql
--- =====================================================================
--- CAMPEONATO DUELO MOTORISTA — Sub-fase C.1
--- Schema (7 tabelas), RLS multi-tenant e seed de plan_duelo_prize_ranges
--- =====================================================================
-
--- 1. duelo_seasons -----------------------------------------------------
-CREATE TABLE public.duelo_seasons (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
-  branch_id uuid NOT NULL REFERENCES public.branches(id) ON DELETE CASCADE,
-  name text NOT NULL,
-  year int NOT NULL,
-  month int NOT NULL CHECK (month BETWEEN 1 AND 12),
-  phase text NOT NULL DEFAULT 'classification'
-    CHECK (phase IN ('classification','knockout_r16','knockout_qf','knockout_sf','knockout_final','finished')),
-  classification_starts_at timestamptz NOT NULL,
-  classification_ends_at   timestamptz NOT NULL,
-  knockout_starts_at       timestamptz NOT NULL,
-  knockout_ends_at         timestamptz NOT NULL,
-  created_by uuid,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (brand_id, branch_id, year, month)
-);
-CREATE INDEX idx_duelo_seasons_brand_branch_period
-  ON public.duelo_seasons (brand_id, branch_id, year DESC, month DESC);
-CREATE TRIGGER trg_duelo_seasons_updated_at
-  BEFORE UPDATE ON public.duelo_seasons
-  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
--- 2. duelo_season_standings -------------------------------------------
-CREATE TABLE public.duelo_season_standings (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  season_id uuid NOT NULL REFERENCES public.duelo_seasons(id) ON DELETE CASCADE,
-  driver_id uuid NOT NULL REFERENCES public.customers(id) ON DELETE CASCADE,
-  points int NOT NULL DEFAULT 0,
-  five_star_count int NOT NULL DEFAULT 0,
-  last_ride_at timestamptz,
-  position int,
-  qualified boolean NOT NULL DEFAULT false,
-  UNIQUE (season_id, driver_id)
-);
-CREATE INDEX idx_duelo_standings_ranking
-  ON public.duelo_season_standings (season_id, points DESC, five_star_count DESC, last_ride_at ASC);
-
--- 3. duelo_brackets ----------------------------------------------------
-CREATE TABLE public.duelo_brackets (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  season_id uuid NOT NULL REFERENCES public.duelo_seasons(id) ON DELETE CASCADE,
-  round text NOT NULL CHECK (round IN ('r16','qf','sf','final')),
-  slot int NOT NULL,
-  driver_a_id uuid REFERENCES public.customers(id) ON DELETE SET NULL,
-  driver_b_id uuid REFERENCES public.customers(id) ON DELETE SET NULL,
-  driver_a_rides int NOT NULL DEFAULT 0,
-  driver_b_rides int NOT NULL DEFAULT 0,
-  winner_id uuid REFERENCES public.customers(id) ON DELETE SET NULL,
-  starts_at timestamptz NOT NULL,
-  ends_at   timestamptz NOT NULL,
-  UNIQUE (season_id, round, slot)
-);
-CREATE INDEX idx_duelo_brackets_season_round
-  ON public.duelo_brackets (season_id, round);
-
--- 4. duelo_match_events -----------------------------------------------
-CREATE TABLE public.duelo_match_events (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  bracket_id uuid NOT NULL REFERENCES public.duelo_brackets(id) ON DELETE CASCADE,
-  driver_id uuid NOT NULL REFERENCES public.customers(id) ON DELETE CASCADE,
-  event_type text NOT NULL DEFAULT 'ride_completed',
-  event_ref_id uuid,            -- machine_rides.id; sem FK forte (limpeza independente)
-  occurred_at timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX idx_duelo_match_events_bracket_driver
-  ON public.duelo_match_events (bracket_id, driver_id);
-
--- 5. plan_duelo_prize_ranges (governança Raiz) ------------------------
-CREATE TABLE public.plan_duelo_prize_ranges (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  plan_key text NOT NULL,
-  position text NOT NULL CHECK (position IN ('champion','runner_up','semifinalist','quarterfinalist','r16')),
-  min_points int NOT NULL CHECK (min_points >= 0),
-  max_points int NOT NULL CHECK (max_points >= min_points),
-  UNIQUE (plan_key, position)
-);
-
--- 6. brand_duelo_prizes (configuração do empreendedor) ---------------
-CREATE TABLE public.brand_duelo_prizes (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
-  position text NOT NULL CHECK (position IN ('champion','runner_up','semifinalist','quarterfinalist','r16')),
-  points_reward int NOT NULL CHECK (points_reward >= 0),
-  updated_by uuid,
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (brand_id, position)
-);
-CREATE INDEX idx_brand_duelo_prizes_brand ON public.brand_duelo_prizes (brand_id);
-
--- 7. duelo_champions (Hall da Fama) -----------------------------------
-CREATE TABLE public.duelo_champions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  season_id uuid NOT NULL UNIQUE REFERENCES public.duelo_seasons(id) ON DELETE CASCADE,
-  brand_id uuid NOT NULL,
-  branch_id uuid NOT NULL,
-  champion_driver_id uuid REFERENCES public.customers(id) ON DELETE SET NULL,
-  runner_up_driver_id uuid REFERENCES public.customers(id) ON DELETE SET NULL,
-  semifinalist_ids uuid[] NOT NULL DEFAULT '{}',
-  quarterfinalist_ids uuid[] NOT NULL DEFAULT '{}',
-  r16_ids uuid[] NOT NULL DEFAULT '{}',
-  prizes_distributed boolean NOT NULL DEFAULT false,
-  finalized_at timestamptz
-);
-CREATE INDEX idx_duelo_champions_brand_branch ON public.duelo_champions (brand_id, branch_id);
-
--- =====================================================================
--- RLS — padrão city_business_model_overrides
--- =====================================================================
-ALTER TABLE public.duelo_seasons           ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.duelo_season_standings  ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.duelo_brackets          ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.duelo_match_events      ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.plan_duelo_prize_ranges ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.brand_duelo_prizes      ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.duelo_champions         ENABLE ROW LEVEL SECURITY;
-
--- duelo_seasons (tem brand_id + branch_id)
-CREATE POLICY "duelo_seasons_select_scope" ON public.duelo_seasons FOR SELECT TO authenticated
-USING (has_role(auth.uid(),'root_admin') OR brand_id IN (SELECT get_user_brand_ids(auth.uid()))
-       OR branch_id IN (SELECT get_user_branch_ids(auth.uid())));
-CREATE POLICY "duelo_seasons_root_all" ON public.duelo_seasons TO authenticated
-USING (has_role(auth.uid(),'root_admin')) WITH CHECK (has_role(auth.uid(),'root_admin'));
-CREATE POLICY "duelo_seasons_brand_admin" ON public.duelo_seasons TO authenticated
-USING (brand_id IN (SELECT get_user_brand_ids(auth.uid())) AND has_role(auth.uid(),'brand_admin'))
-WITH CHECK (brand_id IN (SELECT get_user_brand_ids(auth.uid())) AND has_role(auth.uid(),'brand_admin'));
-CREATE POLICY "duelo_seasons_branch_admin" ON public.duelo_seasons TO authenticated
-USING (branch_id IN (SELECT get_user_branch_ids(auth.uid())) AND has_role(auth.uid(),'branch_admin'))
-WITH CHECK (branch_id IN (SELECT get_user_branch_ids(auth.uid())) AND has_role(auth.uid(),'branch_admin'));
-
--- duelo_season_standings / duelo_brackets / duelo_match_events / duelo_champions
--- escopo via JOIN com duelo_seasons (security via EXISTS)
-CREATE POLICY "duelo_standings_scope" ON public.duelo_season_standings FOR SELECT TO authenticated
-USING (EXISTS (SELECT 1 FROM public.duelo_seasons s WHERE s.id = season_id
-  AND (has_role(auth.uid(),'root_admin') OR s.brand_id IN (SELECT get_user_brand_ids(auth.uid()))
-       OR s.branch_id IN (SELECT get_user_branch_ids(auth.uid())))));
-CREATE POLICY "duelo_standings_admin_write" ON public.duelo_season_standings TO authenticated
-USING (EXISTS (SELECT 1 FROM public.duelo_seasons s WHERE s.id = season_id
-  AND (has_role(auth.uid(),'root_admin')
-       OR (s.brand_id IN (SELECT get_user_brand_ids(auth.uid())) AND has_role(auth.uid(),'brand_admin'))
-       OR (s.branch_id IN (SELECT get_user_branch_ids(auth.uid())) AND has_role(auth.uid(),'branch_admin')))))
-WITH CHECK (EXISTS (SELECT 1 FROM public.duelo_seasons s WHERE s.id = season_id
-  AND (has_role(auth.uid(),'root_admin')
-       OR (s.brand_id IN (SELECT get_user_brand_ids(auth.uid())) AND has_role(auth.uid(),'brand_admin'))
-       OR (s.branch_id IN (SELECT get_user_branch_ids(auth.uid())) AND has_role(auth.uid(),'branch_admin')))));
-
--- mesmas duas policies replicadas para duelo_brackets, duelo_match_events e duelo_champions
--- (criadas no arquivo final com nomes únicos: duelo_brackets_scope/_admin_write etc.)
-
--- plan_duelo_prize_ranges (governança raiz)
-CREATE POLICY "plan_duelo_prize_ranges_select_all" ON public.plan_duelo_prize_ranges FOR SELECT TO authenticated USING (true);
-CREATE POLICY "plan_duelo_prize_ranges_root_only" ON public.plan_duelo_prize_ranges TO authenticated
-USING (has_role(auth.uid(),'root_admin')) WITH CHECK (has_role(auth.uid(),'root_admin'));
-
--- brand_duelo_prizes
-CREATE POLICY "brand_duelo_prizes_select_scope" ON public.brand_duelo_prizes FOR SELECT TO authenticated
-USING (has_role(auth.uid(),'root_admin') OR brand_id IN (SELECT get_user_brand_ids(auth.uid())));
-CREATE POLICY "brand_duelo_prizes_root_all" ON public.brand_duelo_prizes TO authenticated
-USING (has_role(auth.uid(),'root_admin')) WITH CHECK (has_role(auth.uid(),'root_admin'));
-CREATE POLICY "brand_duelo_prizes_brand_admin" ON public.brand_duelo_prizes TO authenticated
-USING (brand_id IN (SELECT get_user_brand_ids(auth.uid())) AND has_role(auth.uid(),'brand_admin'))
-WITH CHECK (brand_id IN (SELECT get_user_brand_ids(auth.uid())) AND has_role(auth.uid(),'brand_admin'));
-
--- =====================================================================
--- SEED — plan_duelo_prize_ranges (4 planos × 5 posições = 20 linhas)
--- =====================================================================
-INSERT INTO public.plan_duelo_prize_ranges (plan_key, position, min_points, max_points) VALUES
-  -- champion
-  ('free','champion',1000,5000),
-  ('starter','champion',3000,15000),
-  ('profissional','champion',5000,30000),
-  ('enterprise','champion',10000,100000),
-  -- runner_up
-  ('free','runner_up',500,2500),
-  ('starter','runner_up',1500,7500),
-  ('profissional','runner_up',2500,15000),
-  ('enterprise','runner_up',5000,50000),
-  -- semifinalist
-  ('free','semifinalist',250,1250),
-  ('starter','semifinalist',750,3750),
-  ('profissional','semifinalist',1250,7500),
-  ('enterprise','semifinalist',2500,25000),
-  -- quarterfinalist
-  ('free','quarterfinalist',100,500),
-  ('starter','quarterfinalist',300,1500),
-  ('profissional','quarterfinalist',500,3000),
-  ('enterprise','quarterfinalist',1000,10000),
-  -- r16
-  ('free','r16',30,150),
-  ('starter','r16',100,500),
-  ('profissional','r16',170,1000),
-  ('enterprise','r16',350,3000);
-
--- =====================================================================
--- ROLLBACK (comentado) — ordem reversa de FK
--- =====================================================================
--- DROP TABLE IF EXISTS public.duelo_champions;
--- DROP TABLE IF EXISTS public.brand_duelo_prizes;
--- DROP TABLE IF EXISTS public.plan_duelo_prize_ranges;
--- DROP TABLE IF EXISTS public.duelo_match_events;
--- DROP TABLE IF EXISTS public.duelo_brackets;
--- DROP TABLE IF EXISTS public.duelo_season_standings;
--- DROP TABLE IF EXISTS public.duelo_seasons;
+WITH elegiveis AS (
+  SELECT id AS driver_id, created_at
+  FROM public.customers
+  WHERE brand_id  = v_brand_id
+    AND branch_id = v_branch_id
+    AND is_active = true
+    AND name ILIKE '%[MOTORISTA]%'
+),
+metricas_90d AS (
+  SELECT
+    e.driver_id,
+    e.created_at,
+    COUNT(r.id)                       AS rides_90d,
+    COALESCE(SUM(r.ride_value), 0)    AS total_value_90d,
+    MAX(r.finalized_at)               AS last_finalized_at,
+    COUNT(*) FILTER (
+      WHERE r.finalized_at >= now() - interval '30 days'
+    )                                 AS rides_30d
+  FROM elegiveis e
+  LEFT JOIN public.machine_rides r
+    ON r.driver_customer_id = e.driver_id
+   AND r.branch_id          = v_branch_id
+   AND r.ride_status        = 'FINALIZED'
+   AND r.finalized_at       >= now() - interval '90 days'
+  GROUP BY e.driver_id, e.created_at
+),
+ranqueados AS (
+  SELECT
+    m.*,
+    CASE
+      WHEN now() - m.created_at < interval '30 days' THEN -1   -- exceção
+      ELSE m.rides_90d
+    END AS score_principal,
+    ROW_NUMBER() OVER (
+      ORDER BY
+        CASE WHEN now() - m.created_at < interval '30 days' THEN 1 ELSE 0 END ASC,
+        m.rides_90d        DESC,
+        m.total_value_90d  DESC,
+        m.last_finalized_at DESC NULLS LAST,
+        m.created_at       ASC
+    ) AS rn
+  FROM metricas_90d m
+  WHERE m.rides_30d >= 1                       -- elegibilidade mínima
+     OR now() - m.created_at < interval '30 days'  -- novo motorista entra mesmo sem 30d
+)
+-- distribuição em tiers via faixas cumulativas de target_size,
+-- com motoristas <30 dias forçados ao último tier_order.
 ```
 
-### 3. Edição em `constantes_features.ts`
+# Arquivos (inalterados em relação ao plano anterior)
 
-```ts
-/**
- * Liga funcionalidade Campeonato Duelo Motorista (Brasileirão dos motoristas).
- * Por brand: brand_settings_json.duelo_campeonato_enabled === true.
- * Independente de USE_BUSINESS_MODELS.
- */
-export const USE_DUELO_CAMPEONATO = false;
-```
+**Criar**
+- `supabase/migrations/<timestamp>_duelo_series_hierarquicas.sql`
+- `src/features/campeonato_duelo/types/tipos_serie.ts`
+- `src/compartilhados/hooks/hook_duelo_campeonato_habilitado.ts`
 
-### 4. Respostas às 8 questões
+**Modificar**
+- `src/compartilhados/constants/constantes_features.ts`
+- `src/features/campeonato_duelo/types/tipos_campeonato.ts`
 
-1. **Nada quebra**: as 7 tabelas são novas e isoladas; FKs corrigidas para `customers` (motoristas) e `branches/brands` existentes. Nenhum trigger toca tabelas existentes.
-2. **Seed de ranges**: faz sentido como placeholder. Sugiro **manter exatamente** o briefing — a Raiz ajusta na C.4.
-3. **Migration única** (schema + RLS + seed). Commit atômico.
-4. **Ordem de rollback** (FK reverso): `duelo_champions` → `brand_duelo_prizes` → `plan_duelo_prize_ranges` → `duelo_match_events` → `duelo_brackets` → `duelo_season_standings` → `duelo_seasons`.
-5. **Flag**: `constantes_features.ts` já existe; adição de `USE_DUELO_CAMPEONATO = false` é não-breaking (constante nova, sem consumidores).
-6. **Nome do arquivo**: `<timestamp>_duelo_campeonato_schema_e_seed.sql` (timestamp gerado pela tooling).
-7. **Estimativa**: ~5 min de execução de migration; ~10 min de revisão. Implementação total da sub-fase: ~20 min.
-8. **Testes de aceite SQL pós-criação**:
-```sql
--- contagem das tabelas
-SELECT 'duelo_seasons' t, count(*) FROM duelo_seasons
-UNION ALL SELECT 'duelo_season_standings', count(*) FROM duelo_season_standings
-UNION ALL SELECT 'duelo_brackets', count(*) FROM duelo_brackets
-UNION ALL SELECT 'duelo_match_events', count(*) FROM duelo_match_events
-UNION ALL SELECT 'plan_duelo_prize_ranges', count(*) FROM plan_duelo_prize_ranges -- esperado: 20
-UNION ALL SELECT 'brand_duelo_prizes', count(*) FROM brand_duelo_prizes
-UNION ALL SELECT 'duelo_champions', count(*) FROM duelo_champions;
+# Próximos passos (após aprovação)
 
--- RLS habilitada nas 7
-SELECT tablename, rowsecurity FROM pg_tables
-WHERE schemaname='public' AND tablename LIKE 'duelo_%' OR tablename IN ('plan_duelo_prize_ranges','brand_duelo_prizes');
-```
-
-### 5. Arquivos novos
-- `supabase/migrations/<timestamp>_duelo_campeonato_schema_e_seed.sql`
-
-### 6. Arquivos editados
-- `src/compartilhados/constants/constantes_features.ts` (adiciona `USE_DUELO_CAMPEONATO = false`)
-
-### 7. Critério de aceite
-1. As 7 tabelas existem, com PKs/FKs/uniques/indexes conforme spec.
-2. RLS habilitada nas 7 com policies do padrão `city_business_model_overrides`.
-3. `plan_duelo_prize_ranges` tem exatamente 20 linhas (4 planos × 5 posições).
-4. `brand_duelo_prizes` vazia (zero seed proposital).
-5. `npx tsc --noEmit` limpo.
-6. Flag `USE_DUELO_CAMPEONATO` exportada e `false` por padrão.
-7. Nada de UI, RPC, trigger ou cron — pura infraestrutura.
-
-### 8. Restrições respeitadas
-- Multi-tenant via `get_user_brand_ids` / `get_user_branch_ids` / `has_role` (memória `brand-guard` e `multi-tenant-data-protection`).
-- Sem realtime (não exigido nesta fase).
-- Sem mudança em `business_models` — Campeonato é sub-produto do `duelo_motorista` existente.
-- Flag em `branch_settings_json` segue convenção `=== true` (memória `city-flag-resolution-rule`) — será usada quando entrar UI nas C.2+.
+1. Aplicar migração + backfill + criar RPC `duelo_seed_initial_tier_memberships` com a lógica corrigida acima.
+2. Inserir seed de `plan_duelo_prize_ranges`.
+3. Rodar linter de segurança e `tsc --noEmit`.
+4. Validar compatibilidade retroativa das telas atuais.
+5. Aguardar aprovação para C.2.
 
