@@ -958,6 +958,42 @@ export type Database = {
           },
         ]
       }
+      brand_duelo_prizes_v2: {
+        Row: {
+          branch_id: string | null
+          brand_id: string
+          created_at: string
+          id: string
+          points_reward: number
+          position: string
+          tier_name: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          brand_id: string
+          created_at?: string
+          id?: string
+          points_reward: number
+          position: string
+          tier_name: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          brand_id?: string
+          created_at?: string
+          id?: string
+          points_reward?: number
+          position?: string
+          tier_name?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       brand_modules: {
         Row: {
           brand_id: string
@@ -4572,6 +4608,7 @@ export type Database = {
           season_id: string
           slot: number
           starts_at: string
+          tier_id: string | null
           winner_id: string | null
         }
         Insert: {
@@ -4585,6 +4622,7 @@ export type Database = {
           season_id: string
           slot: number
           starts_at: string
+          tier_id?: string | null
           winner_id?: string | null
         }
         Update: {
@@ -4598,6 +4636,7 @@ export type Database = {
           season_id?: string
           slot?: number
           starts_at?: string
+          tier_id?: string | null
           winner_id?: string | null
         }
         Relationships: [
@@ -4634,6 +4673,13 @@ export type Database = {
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "duelo_seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_brackets_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_season_tiers"
             referencedColumns: ["id"]
           },
           {
@@ -4789,6 +4835,70 @@ export type Database = {
           },
         ]
       }
+      duelo_driver_tier_history: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string
+          driver_id: string
+          ending_position: number | null
+          ending_tier_id: string | null
+          id: string
+          outcome: string | null
+          season_id: string
+          starting_tier_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          driver_id: string
+          ending_position?: number | null
+          ending_tier_id?: string | null
+          id?: string
+          outcome?: string | null
+          season_id: string
+          starting_tier_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          driver_id?: string
+          ending_position?: number | null
+          ending_tier_id?: string | null
+          id?: string
+          outcome?: string | null
+          season_id?: string
+          starting_tier_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duelo_driver_tier_history_ending_tier_id_fkey"
+            columns: ["ending_tier_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_season_tiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_driver_tier_history_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_driver_tier_history_starting_tier_id_fkey"
+            columns: ["starting_tier_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_season_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       duelo_match_events: {
         Row: {
           bracket_id: string
@@ -4846,8 +4956,11 @@ export type Database = {
           last_ride_at: string | null
           points: number
           position: number | null
+          position_in_tier: number | null
           qualified: boolean
+          relegated_auto: boolean
           season_id: string
+          tier_id: string | null
         }
         Insert: {
           driver_id: string
@@ -4856,8 +4969,11 @@ export type Database = {
           last_ride_at?: string | null
           points?: number
           position?: number | null
+          position_in_tier?: number | null
           qualified?: boolean
+          relegated_auto?: boolean
           season_id: string
+          tier_id?: string | null
         }
         Update: {
           driver_id?: string
@@ -4866,8 +4982,11 @@ export type Database = {
           last_ride_at?: string | null
           points?: number
           position?: number | null
+          position_in_tier?: number | null
           qualified?: boolean
+          relegated_auto?: boolean
           season_id?: string
+          tier_id?: string | null
         }
         Relationships: [
           {
@@ -4891,6 +5010,63 @@ export type Database = {
             referencedRelation: "duelo_seasons"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "duelo_season_standings_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_season_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      duelo_season_tiers: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string
+          id: string
+          name: string
+          promotion_count: number
+          relegation_count: number
+          season_id: string
+          target_size: number
+          tier_order: number
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          id?: string
+          name: string
+          promotion_count?: number
+          relegation_count?: number
+          season_id: string
+          target_size?: number
+          tier_order: number
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          promotion_count?: number
+          relegation_count?: number
+          season_id?: string
+          target_size?: number
+          tier_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duelo_season_tiers_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_seasons"
+            referencedColumns: ["id"]
+          },
         ]
       }
       duelo_seasons: {
@@ -4907,6 +5083,10 @@ export type Database = {
           month: number
           name: string
           phase: string
+          relegation_policy: string
+          tier_seeding_completed_at: string | null
+          tiers_config_json: Json
+          tiers_count: number
           updated_at: string
           year: number
         }
@@ -4923,6 +5103,10 @@ export type Database = {
           month: number
           name: string
           phase?: string
+          relegation_policy?: string
+          tier_seeding_completed_at?: string | null
+          tiers_config_json?: Json
+          tiers_count?: number
           updated_at?: string
           year: number
         }
@@ -4939,6 +5123,10 @@ export type Database = {
           month?: number
           name?: string
           phase?: string
+          relegation_policy?: string
+          tier_seeding_completed_at?: string | null
+          tiers_config_json?: Json
+          tiers_count?: number
           updated_at?: string
           year?: number
         }
@@ -4962,6 +5150,54 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      duelo_tier_memberships: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string
+          driver_id: string
+          id: string
+          season_id: string
+          source: string
+          tier_id: string
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          driver_id: string
+          id?: string
+          season_id: string
+          source?: string
+          tier_id: string
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          driver_id?: string
+          id?: string
+          season_id?: string
+          source?: string
+          tier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duelo_tier_memberships_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_tier_memberships_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_season_tiers"
             referencedColumns: ["id"]
           },
         ]
@@ -6736,25 +6972,34 @@ export type Database = {
       }
       plan_duelo_prize_ranges: {
         Row: {
+          created_at: string
           id: string
           max_points: number
           min_points: number
           plan_key: string
           position: string
+          tier_name: string
+          updated_at: string
         }
         Insert: {
+          created_at?: string
           id?: string
           max_points: number
           min_points: number
           plan_key: string
           position: string
+          tier_name?: string
+          updated_at?: string
         }
         Update: {
+          created_at?: string
           id?: string
           max_points?: number
           min_points?: number
           plan_key?: string
           position?: string
+          tier_name?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -9813,6 +10058,10 @@ export type Database = {
         Returns: Json
       }
       duelo_gerar_chaveamento: { Args: { p_season_id: string }; Returns: Json }
+      duelo_seed_initial_tier_memberships: {
+        Args: { p_season_id: string }
+        Returns: Json
+      }
       finalize_duel: { Args: { p_duel_id: string }; Returns: Json }
       get_branch_dashboard_stats: {
         Args: { p_branch_id: string }

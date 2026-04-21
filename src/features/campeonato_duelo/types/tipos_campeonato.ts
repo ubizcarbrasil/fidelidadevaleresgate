@@ -27,6 +27,11 @@ export interface TemporadaCampeonato {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  // Sub-fase C.1 — Séries Hierárquicas
+  tiers_count?: number;
+  relegation_policy?: string;
+  tiers_config_json?: Record<string, unknown>;
+  tier_seeding_completed_at?: string | null;
 }
 
 export interface ClassificacaoMotorista {
@@ -39,6 +44,10 @@ export interface ClassificacaoMotorista {
   position: number | null;
   qualified: boolean;
   driver_name?: string | null;
+  // Sub-fase C.1 — Séries Hierárquicas
+  tier_id?: string | null;
+  position_in_tier?: number | null;
+  relegated_auto?: boolean;
 }
 
 export interface ConfrontoMataMata {
@@ -55,6 +64,8 @@ export interface ConfrontoMataMata {
   ends_at: string;
   driver_a_name?: string | null;
   driver_b_name?: string | null;
+  // Sub-fase C.1 — Séries Hierárquicas
+  tier_id?: string | null;
 }
 
 export interface NovaTemporadaInput {
