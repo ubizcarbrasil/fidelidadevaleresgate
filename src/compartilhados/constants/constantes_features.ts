@@ -20,3 +20,10 @@ export const USE_RESOLVED_MODULES = true;
  * ainda — substituição vem na Sub-fase 5.7).
  */
 export const USE_BUSINESS_MODELS = false;
+
+/**
+ * Liga funcionalidade Campeonato Duelo Motorista (Brasileirão dos motoristas).
+ * Por brand: `brand_settings_json.duelo_campeonato_enabled === true`.
+ * Independente de `USE_BUSINESS_MODELS`.
+ */
+export const USE_DUELO_CAMPEONATO = false;
