@@ -20,6 +20,41 @@ import BlocoCtaStickyMobile from "./components/bloco_cta_sticky_mobile";
 import BlocoFooter from "./components/bloco_footer";
 import type { CicloCobranca } from "./components/toggle_ciclo";
 import BotaoAtualizarApp from "@/compartilhados/components/botao_atualizar_app";
+import type { LandingBenefit } from "@/features/produtos_comerciais/types/tipos_produto";
+
+/**
+ * Sanitiza benefits no ponto de consumo. Aceita apenas string não-vazia
+ * ou objeto com `title` string. Descarta o resto silenciosamente.
+ * Defesa em profundidade — o hook já sanitiza, mas garantimos shape aqui também.
+ */
+function sanitizarBenefits(input: unknown): LandingBenefit[] {
+  if (!Array.isArray(input)) return [];
+  const out: LandingBenefit[] = [];
+  for (const item of input) {
+    if (typeof item === "string" && item.trim().length > 0) {
+      out.push(item);
+    } else if (item && typeof item === "object") {
+      const o = item as Record<string, unknown>;
+      if (typeof o.title === "string" && o.title.trim().length > 0) {
+        const safe: { title: string; description?: string; icon?: string } = {
+          title: o.title,
+        };
+        if (typeof o.description === "string") safe.description = o.description;
+        if (typeof o.icon === "string") safe.icon = o.icon;
+        out.push(safe);
+      }
+    }
+  }
+  return out;
+}
+
+/** Sanitiza features (sempre array de strings não-vazias). */
+function sanitizarFeatures(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  return input.filter(
+    (v): v is string => typeof v === "string" && v.trim().length > 0,
+  );
+}
 
 export default function PaginaLandingProduto() {
   const { slug } = useParams<{ slug: string }>();
