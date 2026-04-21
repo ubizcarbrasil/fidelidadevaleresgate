@@ -4730,6 +4730,65 @@ export type Database = {
           },
         ]
       }
+      duelo_classificacao_auditoria: {
+        Row: {
+          attempted_by: string | null
+          block_code: string | null
+          block_reason: string | null
+          branch_id: string
+          brand_id: string
+          created_at: string
+          details_json: Json
+          divergent_count: number | null
+          divergent_sample: Json | null
+          eligible_count: number | null
+          id: string
+          outcome: string
+          required_count: number | null
+          season_id: string
+        }
+        Insert: {
+          attempted_by?: string | null
+          block_code?: string | null
+          block_reason?: string | null
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          details_json?: Json
+          divergent_count?: number | null
+          divergent_sample?: Json | null
+          eligible_count?: number | null
+          id?: string
+          outcome: string
+          required_count?: number | null
+          season_id: string
+        }
+        Update: {
+          attempted_by?: string | null
+          block_code?: string | null
+          block_reason?: string | null
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          details_json?: Json
+          divergent_count?: number | null
+          divergent_sample?: Json | null
+          eligible_count?: number | null
+          id?: string
+          outcome?: string
+          required_count?: number | null
+          season_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duelo_classificacao_auditoria_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       duelo_match_events: {
         Row: {
           bracket_id: string
@@ -9603,6 +9662,23 @@ export type Database = {
       }
     }
     Functions: {
+      _duelo_log_attempt: {
+        Args: {
+          p_actor: string
+          p_branch_id: string
+          p_brand_id: string
+          p_code: string
+          p_details: Json
+          p_divergent_count: number
+          p_divergent_sample: Json
+          p_eligible_count: number
+          p_outcome: string
+          p_reason: string
+          p_required_count: number
+          p_season_id: string
+        }
+        Returns: undefined
+      }
       accept_side_bet: {
         Args: { p_bet_id: string; p_customer_id: string }
         Returns: Json
