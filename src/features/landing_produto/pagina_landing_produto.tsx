@@ -84,9 +84,16 @@ export default function PaginaLandingProduto() {
     ciclo === "yearly" && hasYearly ? produto.price_yearly_cents! : produto.price_cents;
 
   // Sanitização defensiva no ponto de consumo (defesa em profundidade
-  // sobre a já feita em sanitizeLanding/sanitizeFeatures do hook).
+  // sobre a já feita em sanitizeLanding do hook). Garante que TODO campo
+  // rico chegue aos blocos filhos como array canônico — nunca payload cru.
   const benefitsSanitizados = sanitizarBenefits(lc.benefits);
-  const featuresSanitizadas = sanitizarFeatures(produto.features);
+  const featuresSanitizadas = sanitizarStrings(produto.features);
+  const metricsSanitizadas = sanitizarMetrics(lc.metrics);
+  const problemsSanitizados = sanitizarStrings(lc.problems);
+  const solutionsSanitizadas = sanitizarStrings(lc.solutions);
+  const screenshotsSanitizados = sanitizarScreenshots(lc.screenshots);
+  const testimonialsSanitizados = sanitizarTestimonials(lc.testimonials);
+  const faqSanitizado = sanitizarFaq(lc.faq);
   const benefitsParaGrid =
     benefitsSanitizados.length > 0
       ? benefitsSanitizados
