@@ -5,6 +5,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ORDEM_RODADAS, ROTULOS_RODADA } from "../constants/constantes_campeonato";
 import type { RodadaMataMata } from "../types/tipos_campeonato";
 
@@ -19,6 +21,10 @@ interface Props {
   driverId: string | "todos";
   aoMudarDriver: (v: string) => void;
   motoristas: OpcaoMotorista[];
+  dataInicio: string;
+  aoMudarDataInicio: (v: string) => void;
+  dataFim: string;
+  aoMudarDataFim: (v: string) => void;
 }
 
 export default function FiltrosLogEventos({
@@ -27,6 +33,10 @@ export default function FiltrosLogEventos({
   driverId,
   aoMudarDriver,
   motoristas,
+  dataInicio,
+  aoMudarDataInicio,
+  dataFim,
+  aoMudarDataFim,
 }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -57,6 +67,31 @@ export default function FiltrosLogEventos({
           ))}
         </SelectContent>
       </Select>
+
+      <div className="flex items-center gap-1">
+        <Label htmlFor="data-inicio" className="text-[10px] text-muted-foreground">
+          De
+        </Label>
+        <Input
+          id="data-inicio"
+          type="datetime-local"
+          value={dataInicio}
+          onChange={(e) => aoMudarDataInicio(e.target.value)}
+          className="h-8 w-44 text-xs"
+        />
+      </div>
+      <div className="flex items-center gap-1">
+        <Label htmlFor="data-fim" className="text-[10px] text-muted-foreground">
+          Até
+        </Label>
+        <Input
+          id="data-fim"
+          type="datetime-local"
+          value={dataFim}
+          onChange={(e) => aoMudarDataFim(e.target.value)}
+          className="h-8 w-44 text-xs"
+        />
+      </div>
     </div>
   );
 }
