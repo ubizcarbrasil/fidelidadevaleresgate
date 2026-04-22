@@ -106,9 +106,23 @@ export default function AppLayout() {
   // Trigger API key onboarding once brand_settings is loaded (sem query extra)
   useEffect(() => {
     if (consoleScope !== "BRAND" || !brandId) return;
-    if (brandSettings && !brandSettings.api_key_onboarding_seen) {
-      setShowApiKeyOnboarding(true);
-    }
+    if (!brandSettings || brandSettings.api_key_onboarding_seen) return;
+
+    // Só mostra o onboarding se a marca ainda NÃO tiver a API Key da matriz configurada.
+    let cancelled = false;
+    supabase
+      .from("brands")
+      .select("matrix_api_key")
+      .eq("id", brandId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const jaConfigurado = !!data?.matrix_api_key;
+        if (!jaConfigurado) setShowApiKeyOnboarding(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [consoleScope, brandId, brandSettings]);
 
   // Boot: apenas platform_theme. brand_settings_json já vem cacheado via useBrandInfo.
