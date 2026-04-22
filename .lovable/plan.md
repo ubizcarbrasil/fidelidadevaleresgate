@@ -1,61 +1,88 @@
 
 
-# Corrigir erro ao trocar formato para "Campeonato"
+# Habilitar/desabilitar formatos de engajamento (Duelo 1v1, Desafio em Massa, Campeonato) por marca
 
 ## Diagnóstico
 
-Ao clicar em **Campeonato** no seletor de Formato de engajamento, a UI dispara o RPC `duelo_change_engagement_format`, que falha com:
+Hoje o seletor de **Formato de engajamento** mostra os 3 cards fixos (`duelo`, `mass_duel`, `campeonato`) e qualquer um pode ser ativado. Não há controle de:
 
-```
-op ANY/ALL (array) requires array on right side
-```
+- **Root**: quais formatos cada marca tem disponíveis no plano dela
+- **Empreendedor**: visualização de quais formatos estão liberados pra ele
 
-**Causa raiz** — bug na função SQL `public.duelo_change_engagement_format` (criada em `20260422002423_…sql`, linha 147):
-
-```sql
-IF NOT (has_role(auth.uid(),'root_admin')
-     OR (p_brand_id = ANY(get_user_brand_ids(auth.uid()))
-         AND has_role(auth.uid(),'brand_admin'))) THEN
-```
-
-A função `public.get_user_brand_ids(uuid)` retorna `SETOF uuid` (um conjunto de linhas), não `uuid[]` (array). O operador `= ANY(...)` exige um **array** do lado direito. Como o que vem é um SET, o Postgres lança o erro acima e o usuário fica preso na tela.
-
-Confirmado por inspeção:
-- `pg_proc` mostra `get_user_brand_ids` com `returns SETOF uuid`
-- Apenas **uma** função em todo o banco usa o padrão errado: `duelo_change_engagement_format` (verificado por `pg_proc.prosrc`)
-- O fluxo de UI funciona (toast de erro genérico aparece corretamente), o servidor é o único ponto a corrigir
+A flag `engagement_format` em `brand_business_models` guarda **qual** formato está ativo, mas não **quais** podem ser escolhidos.
 
 ## Solução
 
-Migration única que recria `public.duelo_change_engagement_format` trocando o trecho do `ANY(...)` por uma das duas formas válidas com `SETOF`:
+Modelo em 2 camadas (Root libera → Empreendedor escolhe entre liberados, mantendo 1 ativo por vez):
 
-```sql
--- Antes
-p_brand_id = ANY(get_user_brand_ids(auth.uid()))
+### Camada 1 — Config no banco (1 migration)
 
--- Depois (usar IN com subquery — idiomático para SETOF)
-p_brand_id IN (SELECT public.get_user_brand_ids(auth.uid()))
+Adicionar campo `allowed_engagement_formats text[]` em `brand_business_models`:
+
+- Default: `ARRAY['duelo','mass_duel','campeonato']` (todas liberadas)
+- Somente Root pode editar (RLS já bloqueia escrita do empreendedor por padrão; reforçar via política se necessário)
+- Validar que `engagement_format` ativo está sempre dentro de `allowed_engagement_formats` (constraint via trigger)
+- Backfill: marcar todas as linhas existentes com as 3 formas liberadas
+
+Atualizar a função `duelo_change_engagement_format` para também rejeitar troca se o novo formato não estiver na lista permitida da marca, com mensagem clara: _"Formato 'Campeonato' não está liberado para esta marca."_.
+
+### Camada 2 — UI Root Admin (Central de Módulos → Empreendedores)
+
+Quando o root abrir o card do modelo `duelo_motorista` de uma marca, expor um novo bloco **"Formatos disponíveis"** com 3 switches (Duelo 1v1 / Desafio em Massa / Campeonato). 
+
+- Pelo menos 1 deve permanecer ligado (validação client + server)
+- Se o root desligar o formato que está atualmente ativo na marca, mostra confirmação: _"Isso vai desativar o formato atual. A marca precisará escolher outro."_ → ao confirmar, troca o `engagement_format` para o primeiro disponível restante
+- Hook novo `useFormatosPermitidos(brandId)` busca/atualiza o array via Supabase
+
+### Camada 3 — UI Empreendedor (`SeletorFormatoEngajamento.tsx`)
+
+Reaproveitar o componente atual com 1 mudança visual:
+
+```text
+┌─────────────────────────────────┐
+│ ⚔ Duelo 1v1          [✓ Ativo] │ ← liberado + selecionado
+├─────────────────────────────────┤
+│ ⚡ Desafio em Massa             │ ← liberado, clicável pra trocar
+├─────────────────────────────────┤
+│ 🔒 Campeonato       [Bloqueado] │ ← cinza, cadeado, tooltip
+└─────────────────────────────────┘
 ```
 
-Nada mais muda na função: mesmo nome, mesma assinatura, mesmas regras de negócio (validação de formato, bloqueio se houver temporada ativa, log em `duelo_attempts_log`, retorno JSON com `previous_format`/`new_format`/`changed_at`).
+- Hook `useFormatosPermitidos(brandId)` no componente
+- Card desabilitado: `opacity-60`, ícone `Lock` no canto, badge "Não disponível no seu plano", `disabled` no botão, `cursor-not-allowed`, tooltip "Fale com o suporte para liberar este formato"
+- Confirmação de troca (`AlertDialog`) só dispara para formatos liberados — comportamento atual preservado
 
-### Verificação pós-aplicação
+### Camada 4 — Aproveitamento na criação de produtos/ofertas
 
-1. Empreendedor abre **Painel → Campeonato → Formato de engajamento**
-2. Toca em **Campeonato** → toast verde "Formato alterado com sucesso"
-3. Card "Formato atual diferente de Campeonato" desaparece e aparece o painel de criação de temporada
-4. Tentativa de troca com temporada ativa continua dando o erro de negócio correto ("Não é possível trocar formato com temporada ativa")
+Como o seletor de produtos hoje lista modelos via `business_models` (auto-incluindo `campeonato_motorista` após o registro anterior), o filtro adicional fica simples: ao montar a lista de audiências/modelos no criador de produtos, esconder/bloquear os modelos cujo `engagement_format` correspondente não esteja nos `allowed_engagement_formats` da marca. Isso mantém a regra "1 produto = 1 formato" e respeita a configuração do root.
+
+### Resultado esperado
+
+| Persona | Antes | Depois |
+|---|---|---|
+| Root Admin | Sem controle por marca | Toggles "Quais formatos esta marca pode usar" no card do modelo Duelo Motorista |
+| Empreendedor | Vê 3 cards iguais | Vê 3 cards: liberados clicáveis + bloqueados com cadeado |
+| Criador de produtos | Lista todos os modelos motorista | Esconde/bloqueia modelos cujo formato não está liberado pra marca |
 
 ## Arquivos impactados
 
 **Migration nova (1):**
-- `supabase/migrations/<timestamp>_fix_duelo_change_engagement_format.sql` — recria a função com o `IN (SELECT ...)` corrigido
+- `supabase/migrations/<timestamp>_allowed_engagement_formats.sql` — coluna nova + default + backfill + trigger de validação + atualiza RPC `duelo_change_engagement_format`
 
-**Sem mudança em código TypeScript** — o hook `useTrocarFormatoEngajamento` e o serviço `trocarFormatoEngajamento` já estão corretos, só consomem o RPC.
+**Hooks novos (1):**
+- `src/compartilhados/hooks/hook_formatos_permitidos.ts` — read + mutation (escrita só funciona pra root)
+
+**Componentes novos (1):**
+- `src/features/painel_modelos_negocio/components/configurador_formatos_duelo.tsx` — bloco com 3 switches usado dentro do CardModeloBrand quando `def.key === 'duelo_motorista'`
+
+**Edição (3):**
+- `src/features/painel_modelos_negocio/components/card_modelo_brand.tsx` — montar o configurador quando key for duelo_motorista (visível só pra root)
+- `src/features/campeonato_duelo/components/empreendedor/SeletorFormatoEngajamento.tsx` — consumir `useFormatosPermitidos` e renderizar estado bloqueado
+- 1 arquivo do criador de produtos (a confirmar entre `passo_modelos.tsx` ou similar) — filtrar modelos por formatos liberados
 
 ## Risco e rollback
 
-- **Risco zero**: a função é recriada via `CREATE OR REPLACE`, mantendo assinatura, permissões e dependentes intactos.
-- Lógica de autorização permanece idêntica — só muda a sintaxe de comparação com a lista de marcas do usuário.
-- **Rollback**: down trivial reaplicando o `CREATE OR REPLACE` antigo (preservado no histórico de migrations).
+- **Risco baixo**: nova coluna com default cobre marcas existentes (todas as 3 liberadas → comportamento atual).
+- Trigger de validação rejeita estados inválidos antes do commit.
+- **Rollback**: down migration remove coluna e trigger, restaura a versão anterior da RPC. UI volta a mostrar os 3 cards sem cadeado naturalmente (hook devolve default).
 
