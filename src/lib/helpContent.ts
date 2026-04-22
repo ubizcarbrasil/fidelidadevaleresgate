@@ -2218,26 +2218,6 @@ const helpContent: Record<string, HelpEntry> = {
     ],
   },
 
-  "/vouchers": {
-    pageTitle: "Vouchers",
-    sections: [
-      {
-        title: "Gerenciar vouchers",
-        summary: "Crie, edite e acompanhe vouchers (cupons promocionais) emitidos pela marca.",
-        steps: [
-          "Clique em 'Novo Voucher' para criar.",
-          "Defina código, valor, validade, parceiro vinculado e oferta de origem.",
-          "Ative para liberar o uso pelos clientes.",
-          "Acompanhe o status: ATIVO, USADO, EXPIRADO, CANCELADO.",
-        ],
-        tips: [
-          "Vouchers seguem o ciclo de 12 etapas (versionamento de termos, snapshot de parâmetros, baixa por PIN).",
-          "Use vouchers para campanhas pontuais sem mexer nas regras de pontos.",
-        ],
-      },
-    ],
-  },
-
   "/vouchers/redeem": {
     pageTitle: "Resgatar Voucher",
     sections: [
