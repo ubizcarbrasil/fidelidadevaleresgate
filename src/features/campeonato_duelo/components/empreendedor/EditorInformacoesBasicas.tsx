@@ -62,6 +62,15 @@ export default function EditorInformacoesBasicas({ brandId, branchId }: Props = 
     staleTime: 10_000,
   });
   const temConflitoMesAno = !!temporadaExistente;
+  const statusTemporadaExistente = temporadaExistente
+    ? temporadaExistente.cancelled_at
+      ? "cancelada"
+      : temporadaExistente.paused_at
+        ? "pausada"
+        : temporadaExistente.phase === "completed"
+          ? "finalizada"
+          : "ativa"
+    : "";
 
   // Datas atuais para encadear limites e validar conflitos reativos.
   const classStart = form.watch("classificationStartsAt") ?? "";
@@ -235,12 +244,12 @@ export default function EditorInformacoesBasicas({ brandId, branchId }: Props = 
       </div>
 
       {temConflitoMesAno && temporadaExistente && (
-        <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
+        <div className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3 text-xs text-warning-foreground">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <div className="space-y-1">
             <p>
               Já existe a temporada{" "}
-              <strong>"{temporadaExistente.name}"</strong> ({temporadaExistente.status}){" "}
+              <strong>"{temporadaExistente.name}"</strong> ({statusTemporadaExistente}){" "}
               em <strong>{NOMES_MESES[(mesAtual ?? 1) - 1]}/{anoSelecionado}</strong>{" "}
               nesta cidade.
             </p>
