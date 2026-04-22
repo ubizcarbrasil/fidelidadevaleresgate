@@ -28,7 +28,7 @@ export default function GamificacaoAdminPage() {
   const isBrandScope = consoleScope === "BRAND" || consoleScope === "ROOT";
   const effectiveBranchId = isBrandScope ? selectedBranchId : currentBranchId;
 
-  const { isCampeonato } = useFormatoEngajamento(currentBrandId);
+  const { isCampeonato, formato } = useFormatoEngajamento(currentBrandId);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const ABAS_LEGADAS = ["duelos", "apostas", "ranking", "cinturao"] as const;
@@ -201,7 +201,12 @@ export default function GamificacaoAdminPage() {
         </TabsList>
 
         <TabsContent value="configuracao">
-          <PaginaConfiguracoesDuelo branchId={branch.id} brandId={branch.brand_id} settings={settings} />
+          <PaginaConfiguracoesDuelo
+            branchId={branch.id}
+            brandId={branch.brand_id}
+            settings={settings}
+            engagementFormat={formato}
+          />
         </TabsContent>
         {!isCampeonato && (
           <>
