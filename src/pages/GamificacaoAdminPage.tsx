@@ -174,7 +174,7 @@ export default function GamificacaoAdminPage() {
         </>
       )}
 
-      <Tabs defaultValue={isCampeonato ? "campeonato" : "configuracao"} className="w-full">
+      <Tabs value={abaAtiva} onValueChange={handleTabChange} className="w-full">
         <TabsList
           className={`w-full flex overflow-x-auto scrollbar-none pr-4 ${
             isCampeonato ? "md:grid md:grid-cols-3" : "md:grid md:grid-cols-7"
