@@ -5076,6 +5076,8 @@ export type Database = {
         Row: {
           branch_id: string
           brand_id: string
+          cancellation_reason: string | null
+          cancelled_at: string | null
           classification_ends_at: string
           classification_starts_at: string
           created_at: string
@@ -5085,6 +5087,7 @@ export type Database = {
           knockout_starts_at: string
           month: number
           name: string
+          paused_at: string | null
           phase: string
           promotion_applied_at: string | null
           relegation_policy: string
@@ -5097,6 +5100,8 @@ export type Database = {
         Insert: {
           branch_id: string
           brand_id: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
           classification_ends_at: string
           classification_starts_at: string
           created_at?: string
@@ -5106,6 +5111,7 @@ export type Database = {
           knockout_starts_at: string
           month: number
           name: string
+          paused_at?: string | null
           phase?: string
           promotion_applied_at?: string | null
           relegation_policy?: string
@@ -5118,6 +5124,8 @@ export type Database = {
         Update: {
           branch_id?: string
           brand_id?: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
           classification_ends_at?: string
           classification_starts_at?: string
           created_at?: string
@@ -5127,6 +5135,7 @@ export type Database = {
           knockout_starts_at?: string
           month?: number
           name?: string
+          paused_at?: string | null
           phase?: string
           promotion_applied_at?: string | null
           relegation_policy?: string
@@ -9972,6 +9981,24 @@ export type Database = {
         }
         Returns: Json
       }
+      brand_get_brackets_full: { Args: { p_season_id: string }; Returns: Json }
+      brand_get_campeonato_dashboard: {
+        Args: { p_brand_id: string }
+        Returns: Json
+      }
+      brand_get_drivers_available: {
+        Args: { p_brand_id: string; p_season_id: string }
+        Returns: Json
+      }
+      brand_get_season_summary: { Args: { p_season_id: string }; Returns: Json }
+      brand_get_seasons_list: {
+        Args: { p_brand_id: string; p_status?: string }
+        Returns: Json
+      }
+      brand_get_series_detail: {
+        Args: { p_season_id: string; p_tier_id: string }
+        Returns: Json
+      }
       collect_duel_ride_ids: {
         Args: {
           p_branch_id: string
@@ -10091,12 +10118,27 @@ export type Database = {
         Args: { p_brand_id: string; p_driver_id: string; p_limit?: number }
         Returns: Json
       }
+      duelo_add_driver_to_season: {
+        Args: {
+          p_driver_id: string
+          p_initial_points?: number
+          p_reason?: string
+          p_season_id: string
+          p_tier_id: string
+        }
+        Returns: Json
+      }
+      duelo_admin_can_manage: { Args: { p_brand_id: string }; Returns: boolean }
       duelo_advance_phases: { Args: never; Returns: Json }
       duelo_apply_promotion_relegation: {
         Args: { p_season_id: string }
         Returns: Json
       }
       duelo_backfill_standings: { Args: { p_season_id: string }; Returns: Json }
+      duelo_cancel_season: {
+        Args: { p_reason: string; p_season_id: string }
+        Returns: Json
+      }
       duelo_change_engagement_format: {
         Args: { p_brand_id: string; p_new_format: string }
         Returns: Json
@@ -10121,9 +10163,20 @@ export type Database = {
         Args: { p_branch_id: string; p_finalized_at: string }
         Returns: boolean
       }
+      duelo_pause_season: { Args: { p_season_id: string }; Returns: Json }
       duelo_reconcile_standings: { Args: { p_hours?: number }; Returns: Json }
+      duelo_resume_season: { Args: { p_season_id: string }; Returns: Json }
       duelo_seed_initial_tier_memberships: {
         Args: { p_season_id: string }
+        Returns: Json
+      }
+      duelo_update_prize: {
+        Args: {
+          p_brand_id: string
+          p_new_points: number
+          p_position: string
+          p_tier_name: string
+        }
         Returns: Json
       }
       finalize_duel: { Args: { p_duel_id: string }; Returns: Json }
