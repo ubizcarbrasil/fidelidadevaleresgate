@@ -10325,6 +10325,10 @@ export type Database = {
         }
         Returns: Json
       }
+      driver_get_pending_or_active_season: {
+        Args: { p_brand_id: string; p_driver_id: string }
+        Returns: Json
+      }
       driver_mark_all_read: {
         Args: { p_brand_id: string; p_driver_id: string }
         Returns: number
@@ -10389,6 +10393,10 @@ export type Database = {
       duelo_is_weekend_at: {
         Args: { p_branch_id: string; p_finalized_at: string }
         Returns: boolean
+      }
+      duelo_materialize_and_seed_season: {
+        Args: { p_season_id: string }
+        Returns: Json
       }
       duelo_move_driver_to_tier: {
         Args: {
