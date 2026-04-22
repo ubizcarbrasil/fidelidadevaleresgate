@@ -2,7 +2,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ajustarPremio,
+  calcularPremiosManualmente,
+  cancelarPremio,
   cancelarTemporada,
+  confirmarDistribuicaoPremios,
   criarTemporadaCompleta,
   incluirMotoristaTemporada,
   pausarTemporada,
@@ -11,6 +14,7 @@ import {
 } from "../services/servico_campeonato_empreendedor";
 import type {
   AjustarPremioInput,
+  CancelarPremioInput,
   CancelarTemporadaInput,
   CriarTemporadaCompletaInput,
   IncluirMotoristaInput,
@@ -23,6 +27,7 @@ function invalidarTudo(qc: ReturnType<typeof useQueryClient>, brandId?: string) 
   qc.invalidateQueries({ queryKey: ["empreendedor-season-summary"] });
   qc.invalidateQueries({ queryKey: ["empreendedor-series-detail"] });
   qc.invalidateQueries({ queryKey: ["empreendedor-brackets-full"] });
+  qc.invalidateQueries({ queryKey: ["empreendedor-prize-distributions"] });
   qc.invalidateQueries({ queryKey: ["duelo-engagement-format", brandId] });
 }
 
@@ -122,6 +127,50 @@ export function useIncluirMotorista(brandId?: string) {
     },
     onError: (err: any) => {
       toast.error(err?.message ?? "Erro ao incluir motorista");
+    },
+  });
+}
+
+export function useConfirmarDistribuicao(brandId?: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (seasonId: string) => confirmarDistribuicaoPremios(seasonId),
+    onSuccess: (data) => {
+      toast.success(
+        `Distribuição confirmada: ${data.total_drivers} motoristas premiados (${data.total_points} pts)`,
+      );
+      invalidarTudo(qc, brandId);
+    },
+    onError: (err: any) => {
+      toast.error(err?.message ?? "Erro ao confirmar distribuição");
+    },
+  });
+}
+
+export function useCancelarPremio(brandId?: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CancelarPremioInput) => cancelarPremio(input),
+    onSuccess: () => {
+      toast.success("Prêmio cancelado");
+      invalidarTudo(qc, brandId);
+    },
+    onError: (err: any) => {
+      toast.error(err?.message ?? "Erro ao cancelar prêmio");
+    },
+  });
+}
+
+export function useCalcularPremios(brandId?: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (seasonId: string) => calcularPremiosManualmente(seasonId),
+    onSuccess: () => {
+      toast.success("Prêmios recalculados");
+      invalidarTudo(qc, brandId);
+    },
+    onError: (err: any) => {
+      toast.error(err?.message ?? "Erro ao calcular prêmios");
     },
   });
 }

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
+  listarDistribuicoesPendentes,
   listarMotoristasDisponiveis,
   listarTemporadasMarca,
   obterBracketsCompleto,
@@ -73,5 +74,14 @@ export function useMotoristasDisponiveis(
     enabled: !!brandId && !!seasonId,
     staleTime: 30_000,
     queryFn: () => listarMotoristasDisponiveis(brandId!, seasonId!),
+  });
+}
+
+export function useDistribuicoesPendentes(seasonId?: string | null) {
+  return useQuery({
+    queryKey: ["empreendedor-prize-distributions", seasonId],
+    enabled: !!seasonId,
+    staleTime: 60_000,
+    queryFn: () => listarDistribuicoesPendentes(seasonId!),
   });
 }
