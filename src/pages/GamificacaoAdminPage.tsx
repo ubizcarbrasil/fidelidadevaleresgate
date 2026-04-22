@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,32 @@ export default function GamificacaoAdminPage() {
   const effectiveBranchId = isBrandScope ? selectedBranchId : currentBranchId;
 
   const { isCampeonato } = useFormatoEngajamento(currentBrandId);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const ABAS_LEGADAS = ["duelos", "apostas", "ranking", "cinturao"] as const;
+  const ABAS_CAMPEONATO = ["configuracao", "campeonato", "moderacao"] as const;
+  const ABAS_DUELO = ["configuracao", "duelos", "apostas", "campeonato", "ranking", "cinturao", "moderacao"] as const;
+
+  const abasPermitidas = (isCampeonato ? ABAS_CAMPEONATO : ABAS_DUELO) as readonly string[];
+  const abaPadrao = isCampeonato ? "campeonato" : "configuracao";
+  const abaUrl = searchParams.get("tab");
+  const abaAtiva = abaUrl && abasPermitidas.includes(abaUrl) ? abaUrl : abaPadrao;
+
+  // Bloqueio por rota: se a aba na URL não é permitida (ex.: ?tab=duelos em
+  // marca campeonato), reescreve a querystring para a aba padrão.
+  useEffect(() => {
+    if (abaUrl && !abasPermitidas.includes(abaUrl)) {
+      const next = new URLSearchParams(searchParams);
+      next.set("tab", abaPadrao);
+      setSearchParams(next, { replace: true });
+    }
+  }, [abaUrl, abasPermitidas, abaPadrao, searchParams, setSearchParams]);
+
+  const handleTabChange = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", value);
+    setSearchParams(next, { replace: true });
+  };
 
   // Fetch branches for brand-scoped users
   const { data: branches, isLoading: loadingBranches } = useQuery({
@@ -147,7 +174,7 @@ export default function GamificacaoAdminPage() {
         </>
       )}
 
-      <Tabs defaultValue={isCampeonato ? "campeonato" : "configuracao"} className="w-full">
+      <Tabs value={abaAtiva} onValueChange={handleTabChange} className="w-full">
         <TabsList
           className={`w-full flex overflow-x-auto scrollbar-none pr-4 ${
             isCampeonato ? "md:grid md:grid-cols-3" : "md:grid md:grid-cols-7"
