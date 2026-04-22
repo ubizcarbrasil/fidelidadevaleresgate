@@ -22,6 +22,8 @@ import DriverCityRedemptionHistory from "@/components/driver/DriverCityRedemptio
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 import DriverCategoryPage from "@/components/driver/DriverCategoryPage";
 import CampeonatoMotoristaPanel from "@/components/driver/campeonato/CampeonatoMotoristaPanel";
+import BadgeNotificacoes from "@/features/campeonato_duelo/components/notificacoes/BadgeNotificacoes";
+import OverlayNotificacoes from "@/features/campeonato_duelo/components/notificacoes/OverlayNotificacoes";
 
 function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, initialDealId, isAdminSession }: {
   brand: any;
@@ -70,6 +72,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
     | { type: "redeemDeal"; deal: any }
     | null
   >(null);
+  const [notifOpen, setNotifOpen] = useState(false);
 
   // Auto-fetch branch from driver's branch_id when URL doesn't include branchId
   const { data: derivedBranch, isLoading: loadingBranch } = useQuery({
@@ -248,6 +251,28 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             onBack={() => setHubOverlay(null)}
           />
         )}
+
+        {/* Badge de notificações fixo no topo direito */}
+        <div className="fixed top-2 right-2 z-50">
+          <BadgeNotificacoes
+            brandId={brand.id}
+            driverId={driver?.id}
+            onOpen={() => setNotifOpen(true)}
+            className="bg-background/80 backdrop-blur shadow-md hover:bg-background"
+          />
+        </div>
+
+        <OverlayNotificacoes
+          brandId={brand.id}
+          driverId={driver?.id}
+          open={notifOpen}
+          onOpenChange={setNotifOpen}
+          onNavigate={(url) => {
+            if (url.includes("campeonato=1")) {
+              setHubOverlay({ type: "campeonato" });
+            }
+          }}
+        />
       </div>
     </CustomerProvider>
   );
