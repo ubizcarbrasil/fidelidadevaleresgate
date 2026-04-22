@@ -26,7 +26,7 @@ export const USE_BUSINESS_MODELS = false;
  * Por brand: `brand_settings_json.duelo_campeonato_enabled === true`.
  * Independente de `USE_BUSINESS_MODELS`.
  */
-export const USE_DUELO_CAMPEONATO = false;
+export const USE_DUELO_CAMPEONATO = true;
 
 /**
  * Liga a camada de Séries Hierárquicas (A, B, C, ...) do Campeonato Duelo
