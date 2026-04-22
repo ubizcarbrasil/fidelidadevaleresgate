@@ -224,3 +224,18 @@ export interface CancelarPremioInput {
   distributionId: string;
   reason: string;
 }
+
+/* ============== Distribuição manual de séries (C.6) ============== */
+
+export interface MoverMotoristaInput {
+  seasonId: string;
+  driverId: string;
+  targetTierId: string;
+  reason?: string;
+}
+
+export interface RemoverMotoristaInput {
+  seasonId: string;
+  driverId: string;
+  reason?: string;
+}

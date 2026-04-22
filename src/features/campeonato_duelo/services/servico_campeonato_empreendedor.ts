@@ -10,6 +10,8 @@ import type {
   IncluirMotoristaInput,
   LinhaSerieDetalhe,
   MotoristaDisponivel,
+  MoverMotoristaInput,
+  RemoverMotoristaInput,
   ResumoDistribuicaoConfirmada,
   ResumoTemporadaAdmin,
   SeasonListItem,
@@ -280,6 +282,35 @@ export async function calcularPremiosManualmente(seasonId: string) {
   const { data, error } = await supabase.rpc("duelo_calculate_prizes", {
     p_season_id: seasonId,
   });
+  if (error) throw error;
+  return data;
+}
+
+/* ============== Distribuição manual de séries (C.6) ============== */
+
+export async function moverMotoristaParaSerie(input: MoverMotoristaInput) {
+  const { data, error } = await supabase.rpc(
+    "duelo_move_driver_to_tier" as any,
+    {
+      p_season_id: input.seasonId,
+      p_driver_id: input.driverId,
+      p_target_tier_id: input.targetTierId,
+      p_reason: input.reason ?? null,
+    },
+  );
+  if (error) throw error;
+  return data;
+}
+
+export async function removerMotoristaDaSeason(input: RemoverMotoristaInput) {
+  const { data, error } = await supabase.rpc(
+    "duelo_remove_driver_from_season" as any,
+    {
+      p_season_id: input.seasonId,
+      p_driver_id: input.driverId,
+      p_reason: input.reason ?? null,
+    },
+  );
   if (error) throw error;
   return data;
 }
