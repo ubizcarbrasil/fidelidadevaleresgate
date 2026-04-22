@@ -29,6 +29,32 @@ export default function GamificacaoAdminPage() {
 
   const { isCampeonato } = useFormatoEngajamento(currentBrandId);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const ABAS_LEGADAS = ["duelos", "apostas", "ranking", "cinturao"] as const;
+  const ABAS_CAMPEONATO = ["configuracao", "campeonato", "moderacao"] as const;
+  const ABAS_DUELO = ["configuracao", "duelos", "apostas", "campeonato", "ranking", "cinturao", "moderacao"] as const;
+
+  const abasPermitidas = (isCampeonato ? ABAS_CAMPEONATO : ABAS_DUELO) as readonly string[];
+  const abaPadrao = isCampeonato ? "campeonato" : "configuracao";
+  const abaUrl = searchParams.get("tab");
+  const abaAtiva = abaUrl && abasPermitidas.includes(abaUrl) ? abaUrl : abaPadrao;
+
+  // Bloqueio por rota: se a aba na URL não é permitida (ex.: ?tab=duelos em
+  // marca campeonato), reescreve a querystring para a aba padrão.
+  useEffect(() => {
+    if (abaUrl && !abasPermitidas.includes(abaUrl)) {
+      const next = new URLSearchParams(searchParams);
+      next.set("tab", abaPadrao);
+      setSearchParams(next, { replace: true });
+    }
+  }, [abaUrl, abasPermitidas, abaPadrao, searchParams, setSearchParams]);
+
+  const handleTabChange = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", value);
+    setSearchParams(next, { replace: true });
+  };
+
   // Fetch branches for brand-scoped users
   const { data: branches, isLoading: loadingBranches } = useQuery({
     queryKey: ["branches-for-gamificacao", currentBrandId],
