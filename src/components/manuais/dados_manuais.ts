@@ -589,17 +589,22 @@ export const gruposManuais: GrupoManual[] = [
         passos: [
           "Acesse 'Motoristas' no menu lateral.",
           "Use a barra de busca para filtrar por nome, CPF, telefone, e-mail ou placa do veículo.",
-          "Filtre por status (Ativo / Inativo / Bloqueado).",
+          "Filtre por status (Ativo / Inativo). 'Ativo' inclui motoristas com status NULL (sem status definido).",
+          "Veja o contador 'X de Y' (resultados filtrados de total) no topo da lista.",
+          "Use o botão 'Limpar filtros' para zerar busca e status de uma só vez.",
           "Navegue pelas páginas — 50 motoristas por página, paginação server-side suporta bases com milhares de registros.",
           "Clique em um motorista para abrir a ficha completa em 6 abas: Dados, Veículos, Docs, Pontos, Regras e Extrato.",
           "Use 'Importar CSV' para subir base completa de motoristas com 100+ campos por linha.",
-          "Use 'Bonificar' para creditar pontos manualmente."
+          "Use 'Bonificar' para creditar pontos manualmente.",
+          "Para exportar: toque em 'Exportar CSV' (preparação) e depois em 'Abrir CSV' (download). No iPhone/PWA o segundo toque abre via URL HTTPS assinada (válida por 30 minutos), evitando tela branca."
         ],
         dicas: [
           "Subir CSV antes da primeira corrida = motorista visível imediatamente na lista.",
           "Subir CSV depois da primeira corrida = enriquece o registro existente sem duplicar (match por external_id, CPF, telefone ou nome).",
           "Auto-cadastro continua ativo: motoristas novos sem CSV são criados automaticamente na primeira corrida com dados básicos vindos da TaxiMachine.",
           "Badges na ficha indicam origem: 🟢 CSV (importado), 🔵 1ª corrida (auto-cadastro), ⚪ aguardando dados completos.",
+          "Buscas com letras + números são tratadas como nome; o regex específico só dispara para placas válidas (ABC1D23 ou ABC-1234).",
+          "Status NULL conta como 'Ativo' por padrão — só mude para Inativo quem realmente saiu.",
           "Acompanhe os motoristas mais ativos para premiações.",
           "Use o extrato para resolver contestações de pontos."
         ],
