@@ -347,12 +347,17 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Gerenciar vouchers",
-        summary: "Vouchers são códigos promocionais que podem ser distribuídos.",
+        summary: "Crie e gerencie vouchers (cupons promocionais). Cada voucher segue o ciclo de 12 etapas (versionamento de termos, snapshot de parâmetros, baixa por PIN).",
         steps: [
-          "Crie um novo voucher definindo código, valor e regras de uso.",
+          "Clique em 'Novo Voucher' para criar.",
+          "Defina código, valor, validade, parceiro vinculado e oferta de origem.",
           "Configure limites: usos totais, por cliente e intervalo entre usos.",
-          "Defina público-alvo e período de validade.",
-          "Distribua o código para os clientes desejados.",
+          "Ative para liberar o uso pelos clientes.",
+          "Acompanhe o status: ATIVO, USADO, EXPIRADO, CANCELADO.",
+        ],
+        tips: [
+          "Vouchers só são considerados USADOS quando o parceiro confirma o PIN.",
+          "Use vouchers para campanhas pontuais sem mexer nas regras de pontos.",
         ],
       },
     ],
