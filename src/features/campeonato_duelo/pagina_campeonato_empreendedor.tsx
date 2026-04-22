@@ -156,15 +156,15 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
           />
 
           {tiers.length === 0 ? (
-            <Card className="border-yellow-300 bg-yellow-50 dark:border-yellow-900/50 dark:bg-yellow-950/30">
+            <Card className="border-amber-300 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30">
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-start gap-3">
-                  <AlertTriangle className="h-5 w-5 text-yellow-700 dark:text-yellow-400 mt-0.5 shrink-0" />
+                  <AlertTriangle className="h-5 w-5 text-amber-700 dark:text-amber-400 mt-0.5 shrink-0" />
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-100">
+                    <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
                       Temporada criada, mas os motoristas ainda não foram distribuídos
                     </p>
-                    <p className="text-xs text-yellow-800/90 dark:text-yellow-200/80">
+                    <p className="text-xs text-amber-800/90 dark:text-amber-200/80">
                       Clique em <strong>Distribuir motoristas agora</strong> para
                       criar as séries e alocar os motoristas elegíveis da cidade.
                       Sem este passo, o app do motorista mostra "nenhum
