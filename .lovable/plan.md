@@ -1,81 +1,100 @@
 
+# Corrigir definitivamente o CSV no iPhone/PWA e adicionar regressões automáticas
 
-# Corrigir filtros da página de Motoristas
+## Problema atual
 
-## Diagnóstico (3 bugs)
+O fluxo ainda depende de um caminho frágil no mobile:
 
-Investiguei a base de Ipatinga (4.256 motoristas) e os logs de rede da sessão. Os filtros estão quebrados por três motivos sobrepostos:
+- `useExportarMotoristas` guarda um `Blob` em memória (`arquivoPendente`) e exige um 2º toque.
+- No 2º toque, `baixarCsvMotoristas()` tenta `navigator.share({ files })`.
+- Se o iPhone/PWA não aceitar compartilhamento de arquivo naquele contexto, o código **bloqueia todos os fallbacks** e retorna erro:
+  `Não foi possível abrir o compartilhamento nativo...`
+- O caminho antigo com `blob:` / `window.open()` é justamente o que tende a gerar a tela branca no iOS standalone.
 
-### Bug 1 — Busca por nome é tratada como busca por placa
-Em `hook_listagem_motoristas.ts` (linha 48):
-```ts
-const buscaPareceComPlaca = /[a-zA-Z]/.test(termo) && termo.length >= 3;
-```
-Qualquer texto com letras e ≥ 3 caracteres é interpretado como **placa**. Buscar "Pedro" dispara `vehicle1_plate.ilike.%PEDRO%` em `driver_profiles` — confirmado nos logs: retornou `[]` e a tela ficou vazia.
+Ou seja: hoje o app consegue montar o CSV, mas a entrega do arquivo ao iPhone continua dependente de APIs instáveis para PWA standalone.
 
-Pior: na base de Ipatinga, **0 motoristas têm placa cadastrada** em `driver_profiles`. A heurística é 100% destrutiva.
+## Solução definitiva
 
-### Bug 2 — Filtro de status quebra a listagem
-A coluna `driver_profiles.registration_status` tem hoje em Ipatinga:
-- `Ativo` → 311 motoristas
-- `NULL` → 3.945 motoristas
-- `Inativo` / `Bloqueado` → 0 motoristas
+### 1. Trocar a entrega do CSV de `Blob` local por arquivo real com URL HTTPS
+Implementar um fluxo em que o CSV final vira um arquivo hospedado temporariamente no backend, e a tela passa a trabalhar com **URL assinada** em vez de `Blob` em memória.
 
-Selecionar **Ativo** mostra só 311 (parece "filtro funcionando" mas esconde 92% da base, que está com status `NULL`). Selecionar **Inativo** ou **Bloqueado** mostra **zero**.
+### 2. Novo fluxo de exportação
+Na prática:
 
-A regra de negócio real do sistema é: **todo motorista cadastrado é ativo por padrão**; "Inativo" e "Bloqueado" não estão sendo usados na operação atual da cidade.
+1. Usuário toca em **CSV**
+2. O sistema busca todos os motoristas e gera o CSV
+3. O CSV é enviado para armazenamento temporário no backend
+4. O frontend recebe uma **URL HTTPS**
+5. O botão muda para **Abrir CSV**
+6. No iPhone/PWA, o 2º toque abre essa URL real, sem `blob:` e sem depender de `share(files)`
 
-### Bug 3 — Filtros não compõem corretamente com paginação
-Quando o filtro `customerIdsFiltrados` retorna mais de 1.000 IDs, o `.in('id', ...)` no Postgrest pode silenciosamente truncar; e o `count: exact` da query principal sempre vai dar 311 mesmo quando o usuário só quer "Todos status" + busca.
+### 3. Regra por plataforma
+- **iPhone / PWA standalone**: usar URL HTTPS como caminho principal
+- **Desktop**: pode continuar baixando direto
+- **Mobile com share compatível**: `share({ url })` pode ser opcional, mas nunca obrigatório
+- **Nunca mais usar `window.open(blobUrl)` no iOS/PWA**
 
-## Solução
+## Implementação
 
-### 1. Remover heurística destrutiva de placa
-- Apagar `buscaPareceComPlaca`
-- **Toda busca textual** vai sempre para `customers` (nome, cpf, telefone, e-mail) via `.or()`
-- Busca por placa volta como **opcional explícito**: só é feita em `driver_profiles` se a busca tiver formato de placa Mercosul ou tradicional (regex `^[A-Z]{3}-?[0-9][A-Z0-9][0-9]{2}$` após normalização). Se não tiver formato de placa, **nem tenta** — evita o sequestro.
+### Frontend
+Refatorar a exportação para trocar o estado atual:
 
-### 2. Corrigir filtro de Status
-Tratar `NULL` como `ATIVO` (regra de negócio real):
-- **ATIVO**: `registration_status IS NULL OR registration_status ILIKE 'Ativo'`
-- **INATIVO**: `registration_status ILIKE 'Inativo'`
-- **BLOQUEADO**: `registration_status ILIKE 'Bloqueado'`
+- de `arquivoPendente: { blob, nomeArquivo... }`
+- para algo como `arquivoPendente: { url, nomeArquivo, expiraEm... }`
 
-Na prática: ao escolher "Ativo", o usuário verá os 4.256 motoristas (não 311). "Inativo"/"Bloqueado" mostrarão vazio quando não houver dados, com mensagem clara.
+Ajustes:
+- `useExportarMotoristas`
+  - gerar o CSV
+  - enviar o arquivo para armazenamento temporário
+  - guardar a URL assinada
+  - no 2º toque, abrir a URL real
+- `utilitarios_export_motoristas.ts`
+  - remover o caminho dependente de `blob:` no iPhone/PWA
+  - separar claramente:
+    - abrir URL HTTPS
+    - baixar em desktop
+    - compartilhar URL quando suportado
+- `DriverManagementPage.tsx`
+  - botão alterna entre:
+    - `Exportar CSV`
+    - `Preparando CSV...`
+    - `Abrir CSV`
+  - manter feedback claro por toast
 
-### 3. Robustez da composição de filtros
-- Quando `customerIdsFiltrados` excede 1.000, particionar em chunks e fazer `Promise.all` de queries `.in()` — depois unir resultados na memória respeitando paginação.
-- Garantir que `count: exact` reflete o total **após** todos os filtros aplicados (validar com `total === motoristas.length` quando última página).
+### Backend
+Adicionar suporte para artefato temporário de exportação:
 
-### 4. Refinar a UX dos filtros
-- **Placeholder atualizado**: "Buscar por nome, CPF, telefone ou e-mail..." (remove "placa" para não confundir, já que a base não usa)
-- **Contador "X de Y"**: mostrar `311 de 4.256` quando há filtro ativo, em vez de só `311 motoristas`. Ajuda o usuário a entender o que está sendo escondido.
-- **Botão "Limpar filtros"** ao lado do select de status quando `busca !== '' || status !== 'ALL'`, para reset rápido.
+- criar área de armazenamento temporário para CSVs
+- salvar o arquivo com caminho por usuário/data
+- gerar URL assinada com expiração curta
+- opcionalmente sobrescrever/reaproveitar export anterior recente para evitar lixo
 
-## Arquivos impactados
+Se o armazenamento exigir configuração de acesso, incluir isso no backend com políticas mínimas e seguras.
 
-**Editado (2):**
-- `src/features/gestao_motoristas/hooks/hook_listagem_motoristas.ts` — remove heurística de placa, corrige filtro de status com `NULL`, adiciona chunking para `.in()`, mesma correção replicada no service de exportação
-- `src/features/gestao_motoristas/services/servico_exportacao_motoristas.ts` — aplica as mesmas regras corrigidas (status + busca) para que a exportação CSV continue consistente com a tela
-- `src/features/gestao_motoristas/components/barra_busca_motoristas.tsx` — placeholder atualizado + botão "Limpar filtros"
-- `src/pages/DriverManagementPage.tsx` — contador "X de Y" no badge
+### PWA / cache
+Se a abertura do arquivo usar rota same-origin nova, incluir essa rota na proteção do PWA para evitar interceptação indevida do service worker e fazer bump do `cacheId`.
+Se a entrega for por URL externa/assinada, manter o PWA sem interceptar esse caminho.
 
-**Sem migration. Sem nova RPC. Sem mudança em RLS.**
+## Testes automatizados
 
-## Resultado esperado
+### 1. Testes unitários
+Criar testes para `utilitarios_export_motoristas.ts` cobrindo:
 
-| Ação | Antes | Depois |
-|---|---|---|
-| Buscar "Pedro" | Lista vazia (sequestrada para placa) | Lista todos os motoristas com "Pedro" no nome |
-| Filtro "Ativo" | 311 motoristas (esconde 92%) | 4.256 motoristas (NULL = ativo) |
-| Filtro "Inativo" | 0 motoristas (sem aviso) | 0 motoristas (com mensagem clara) |
-| Buscar "ABC1D23" | Funciona (era o único caso ok) | Funciona (regex de placa) |
-| Buscar "031.555.444-22" | Funciona | Funciona |
-| Limpar filtros | Tem que apagar tudo manualmente | Botão único reset |
+- detecção de iPhone / standalone
+- caminho de iPhone PWA abre **URL HTTPS**
+- garantia de que **não usa** `window.open("blob:...")` nesse cenário
+- fallback desktop continua funcionando
 
-## Risco e rollback
+### 2. Testes do hook
+Criar testes para `useExportarMotoristas` cobrindo:
 
-- **Zero impacto em escrita** (apenas leitura)
-- Rollback trivial: reverter os 4 arquivos
-- Sem efeito colateral em outras telas (`useListagemMotoristas` é exclusivo desta página)
+- exportação bem-sucedida gera estado `arquivoPendente`
+- 2º toque consome a URL pronta
+- erro no upload / geração mostra toast correto
+- cancelamento de share não vira erro fatal
+- após abrir com sucesso, o estado pendente é limpo
 
+### 3. Cenário E2E / regressão
+Adicionar cenário automatizado específico para o fluxo pedido:
+
+**Cenário
