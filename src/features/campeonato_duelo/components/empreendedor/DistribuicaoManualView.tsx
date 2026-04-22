@@ -31,6 +31,8 @@ import ColunaMotoristasDisponiveis from "./ColunaMotoristasDisponiveis";
 import ColunaSerie from "./ColunaSerie";
 import BarraAcoesEmLote from "./BarraAcoesEmLote";
 import ConfirmRemoverMotorista from "./ConfirmRemoverMotorista";
+import TutorialDistribuicaoMotoristas from "./TutorialDistribuicaoMotoristas";
+import TourGuiadoDistribuicao from "./TourGuiadoDistribuicao";
 
 interface Props {
   open: boolean;
