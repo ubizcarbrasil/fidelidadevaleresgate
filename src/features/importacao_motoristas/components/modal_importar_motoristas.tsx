@@ -8,7 +8,7 @@ import EtapaPreview from "./etapa_preview";
 import EtapaProgresso from "./etapa_progresso";
 import EtapaResultado from "./etapa_resultado";
 import { useImportarMotoristas } from "../hooks/hook_importar_motoristas";
-import { ImportacaoTimeoutError, ImportacaoUploadError, type EtapaImportacao } from "../types/tipos_importacao";
+import { ImportacaoTimeoutError, type EtapaImportacao } from "../types/tipos_importacao";
 
 interface Props {
   brandId: string;
