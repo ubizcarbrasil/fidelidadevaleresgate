@@ -7,6 +7,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import CustomerAuthPage from "@/pages/customer/CustomerAuthPage";
 import { ContextBadge } from "@/components/ContextBadge";
 import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
+import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
 
 type Brand = Tables<"brands">;
 type Branch = Tables<"branches">;
@@ -167,6 +168,7 @@ export default function CustomerPreviewPage() {
     <BrandProviderOverride brand={brand} branches={branches}>
       <div className="relative">
         <WhiteLabelLayout />
+        <ContextualHelpDrawer />
       </div>
     </BrandProviderOverride>
   );

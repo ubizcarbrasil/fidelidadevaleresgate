@@ -188,16 +188,20 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Gerenciar cidades",
-        summary: "Cidades representam as regiões onde a sua marca opera.",
+        summary: "Cidades (filiais) representam as regiões onde a sua marca opera. Cada cidade tem seus próprios módulos, parceiros e configurações.",
         steps: [
           "Clique em 'Nova cidade' para criar.",
-          "Preencha: nome, apelido (usado no endereço web), cidade, estado e localização geográfica.",
-          "Selecione o fuso horário correto.",
-          "Ative ou desative cidades conforme necessário.",
+          "Preencha: nome, apelido (slug usado no endereço web), cidade, estado, latitude/longitude e fuso horário.",
+          "Escolha o Modelo de Pontuação: DRIVER_ONLY (só motoristas), PASSENGER_ONLY (só clientes) ou BOTH (ambos).",
+          "Em 'Módulos de Negócio', ative/desative o que vale para esta cidade — herda da marca, mas pode sobrescrever.",
+          "Em 'Gamificação', configure Duelos, Ranking e Cinturão (depende do módulo achadinhos_motorista).",
+          "Use 'Resetar pontos' para zerar saldos em massa quando precisar (processado por Edge Function).",
+          "A exclusão de cidade é hard-delete via Edge Function — confirme antes de remover.",
         ],
         tips: [
-          "A localização é usada para mostrar parceiros e ofertas mais próximas do cliente no aplicativo.",
-          "Cada cidade pode ter suas próprias regras de pontos e configurações.",
+          "Slug deve ser único, sem espaços, com hífens.",
+          "Cidades inativas somem para o usuário final.",
+          "Atalho 'Criar Franqueado' está disponível em cada card de cidade.",
         ],
       },
     ],
@@ -343,12 +347,17 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Gerenciar vouchers",
-        summary: "Vouchers são códigos promocionais que podem ser distribuídos.",
+        summary: "Crie e gerencie vouchers (cupons promocionais). Cada voucher segue o ciclo de 12 etapas (versionamento de termos, snapshot de parâmetros, baixa por PIN).",
         steps: [
-          "Crie um novo voucher definindo código, valor e regras de uso.",
+          "Clique em 'Novo Voucher' para criar.",
+          "Defina código, valor, validade, parceiro vinculado e oferta de origem.",
           "Configure limites: usos totais, por cliente e intervalo entre usos.",
-          "Defina público-alvo e período de validade.",
-          "Distribua o código para os clientes desejados.",
+          "Ative para liberar o uso pelos clientes.",
+          "Acompanhe o status: ATIVO, USADO, EXPIRADO, CANCELADO.",
+        ],
+        tips: [
+          "Vouchers só são considerados USADOS quando o parceiro confirma o PIN.",
+          "Use vouchers para campanhas pontuais sem mexer nas regras de pontos.",
         ],
       },
     ],
@@ -1010,15 +1019,17 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Gerenciar carteira de pontos",
-        summary: "Controle o saldo de pontos disponíveis para distribuição na sua cidade.",
+        summary: "A cidade opera com carteira pré-paga: pontos são debitados conforme motoristas/clientes são pontuados. Saldos negativos ficam registrados como dívida operacional.",
         steps: [
-          "Visualize o saldo atual, total distribuído e total carregado no topo da página.",
-          "Consulte o extrato de transações da carteira (cargas e distribuições).",
-          "Solicite recarga de pontos quando o saldo estiver baixo.",
+          "Visualize saldo atual, total distribuído e total carregado no topo.",
+          "Consulte o extrato completo (carregamentos, distribuições, ajustes).",
+          "Compre pacotes de pontos em 'Loja de Pacotes' para reabastecer.",
+          "Configure o alerta de saldo baixo para ser avisado antes de zerar.",
         ],
         tips: [
-          "Configure o alerta de saldo baixo para ser notificado antes de ficar sem pontos.",
-          "Cada distribuição de pontos é registrada automaticamente no extrato.",
+          "Saldo negativo é permitido — o sistema continua pontuando, mas registra a dívida para acerto futuro.",
+          "Cada operação fica registrada em branch_wallet_transactions com tipo (LOAD/DISTRIBUTE/ADJUST).",
+          "Tudo é processado por Edge Function para manter integridade transacional.",
         ],
       },
     ],
@@ -1048,16 +1059,45 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Gerenciar motoristas",
-        summary: "Visualize e gerencie os motoristas cadastrados na sua cidade.",
+        summary: "Visualize e gerencie os motoristas da sua marca/cidade. A lista é paginada (50 por página) e suporta bases com milhares de registros.",
         steps: [
-          "Use a busca para encontrar motoristas por nome, telefone ou ID externo.",
-          "Clique em um motorista para ver detalhes: saldo, histórico e corridas.",
-          "Ative ou desative motoristas conforme necessário.",
-          "Use filtros para segmentar por tier ou status.",
+          "Use o campo de busca para encontrar por nome, CPF, telefone, e-mail ou placa (a placa é detectada automaticamente pelo formato Mercosul/antigo).",
+          "Filtre por status: 'Ativo' inclui motoristas sem status definido (status NULL conta como Ativo). 'Inativo' mostra apenas quem foi desativado manualmente.",
+          "O contador no topo mostra 'X de Y' (resultados filtrados de total).",
+          "Use 'Limpar filtros' para resetar busca e status de uma só vez.",
+          "Clique em um motorista para abrir a ficha completa (saldo, corridas, badges de origem).",
         ],
         tips: [
-          "Motoristas inativos não acumulam pontos automaticamente.",
-          "O ID externo vincula o motorista ao sistema de corridas.",
+          "Buscas com letras + números são tratadas como nome; o regex específico só dispara para placas válidas (ABC1D23 ou ABC-1234).",
+          "Badges na ficha indicam origem: 🟢 CSV, 🔵 1ª corrida (auto-cadastro), ⚪ aguardando dados completos.",
+          "Motoristas com status NULL aparecem como 'Ativo' por padrão — só mude para Inativo quem realmente saiu.",
+        ],
+      },
+      {
+        title: "Exportar lista em CSV",
+        summary: "A exportação ocorre em duas etapas para funcionar bem em iPhone e PWA instalado.",
+        steps: [
+          "Toque em 'Exportar CSV' — o sistema busca todos os motoristas e prepara o arquivo no servidor.",
+          "Quando o botão mudar para 'Abrir CSV', toque novamente para baixar.",
+          "No iPhone/PWA, o segundo toque abre o arquivo via URL HTTPS assinada (válida por 30 minutos), evitando tela branca.",
+          "No desktop, o download é direto pelo navegador.",
+        ],
+        tips: [
+          "Se aparecer erro durante a preparação, basta tocar de novo em 'Exportar CSV'.",
+          "O arquivo gerado fica disponível por 30 minutos antes de expirar.",
+        ],
+      },
+      {
+        title: "Importar CSV em massa",
+        summary: "Suba a base completa de motoristas (até 10 mil linhas, 100+ campos por linha).",
+        steps: [
+          "Clique em 'Importar CSV' e baixe o template oficial.",
+          "Preencha os dados (CPF, telefone e nome ajudam o sistema a casar com motoristas que já existem).",
+          "Faça upload — o sistema deduplica por external_id, CPF, telefone ou nome.",
+          "Subir CSV antes da primeira corrida = motorista visível imediatamente. Depois da primeira corrida = enriquece o registro existente sem duplicar.",
+        ],
+        tips: [
+          "O auto-cadastro continua ativo: motoristas novos sem CSV são criados na primeira corrida com dados básicos da TaxiMachine.",
         ],
       },
     ],
@@ -1300,12 +1340,17 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Personalizar o painel do motorista",
-        summary: "Configure o que os motoristas veem e podem fazer no painel deles.",
+        summary: "Centraliza opções de layout e funcionalidade do app do motorista (Home Inteligente, ofertas exclusivas, hub de navegação).",
         steps: [
-          "Defina quais seções são visíveis no painel do motorista.",
-          "Configure textos e labels personalizados.",
-          "Ative ou desative funcionalidades específicas (extrato, ofertas, ranking).",
-          "Salve para aplicar.",
+          "Habilite a 'Home Inteligente' (driver_hub) para o motorista cair em uma central de navegação ao entrar.",
+          "Configure quais seções aparecem: Achadinhos, Compre com Pontos, Histórico de Resgates Locais, Ranking, Cinturão.",
+          "Ative 'Compra de Pontos' para liberar a aquisição de pontos pelo motorista (preço definido em Pacotes de Pontos).",
+          "Marque 'Ofertas restritas a motoristas' para usar o campo driver_only nas ofertas.",
+          "Personalize textos e labels da interface do motorista.",
+        ],
+        tips: [
+          "A vinculação automática por CPF associa o motorista a registros existentes no primeiro acesso.",
+          "Ofertas com driver_only=true só aparecem no painel do motorista.",
         ],
       },
     ],
@@ -1865,16 +1910,406 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Usar o painel do motorista",
-        summary: "Acesse seu saldo, ofertas exclusivas e ranking como motorista.",
+        summary: "Hub central do motorista: saldo, achadinhos, compra de pontos, histórico de resgates locais e gamificação.",
         steps: [
-          "Visualize seu saldo de pontos no topo da tela.",
-          "Navegue pelas ofertas disponíveis para motoristas.",
-          "Consulte seu ranking e posição na cidade.",
-          "Resgate pontos por prêmios ou produtos disponíveis.",
+          "A 'Home Inteligente' é o ponto de entrada — escolha entre Achadinhos, Compre com Pontos, Resgates Locais ou Ranking.",
+          "O saldo de pontos aparece sempre no topo, atualizado em tempo real.",
+          "Use 'Comprar pontos' (se habilitado) para adquirir pacotes diretamente pelo app.",
+          "Resgate em parceiros locais via fluxo OTP → confirmação → PIN.",
+          "Acompanhe duelos, ranking mensal e cinturão da cidade.",
         ],
         tips: [
-          "Complete mais corridas para subir no ranking.",
-          "Fique atento a ofertas exclusivas para motoristas.",
+          "Ofertas com driver_only=true são exclusivas — não aparecem para clientes comuns.",
+          "O CPF vincula automaticamente o motorista a registros existentes na marca.",
+        ],
+      },
+    ],
+  },
+
+  /* ═══════════════════════════════════════════════
+     ROTAS ADICIONAIS — atualização manuais 2026-04
+     ═══════════════════════════════════════════════ */
+  "/conversao-resgate": {
+    pageTitle: "Conversão de Resgates",
+    sections: [
+      {
+        title: "Acompanhar funil de resgate",
+        summary: "Veja em que etapa do ciclo de 12 passos cada cupom está e onde os clientes desistem.",
+        steps: [
+          "Selecione o período de análise.",
+          "Veja a taxa de conversão entre as etapas (geração → confirmação → uso).",
+          "Identifique parceiros com baixa taxa de baixa de cupom.",
+          "Use os filtros por cidade, parceiro e tipo de oferta.",
+        ],
+        tips: [
+          "Cupons só são contabilizados como convertidos quando o parceiro dá baixa (PIN).",
+          "Use o relatório para negociar melhorias com parceiros que demoram para confirmar resgates.",
+        ],
+      },
+    ],
+  },
+
+  "/relatorio-corridas": {
+    pageTitle: "Relatório Detalhado de Corridas",
+    sections: [
+      {
+        title: "Visão consolidada das cidades",
+        summary: "Agrega corridas, pontos emitidos e ganhos de todas as suas cidades em um único painel.",
+        steps: [
+          "Selecione o intervalo de datas (filtra por finalized_at — apenas corridas FINALIZED contam).",
+          "Compare cidades lado a lado: corridas, pontos, motoristas únicos.",
+          "Faça drilldown clicando em uma cidade para ver detalhes por motorista.",
+          "Exporte em CSV para análise externa.",
+        ],
+        tips: [
+          "O isolamento por branch_id é automático — você só vê o que tem acesso.",
+          "Use este relatório para entender qual cidade gera mais movimento operacional.",
+        ],
+      },
+    ],
+  },
+
+  "/leads-comerciais": {
+    pageTitle: "Leads Comerciais",
+    sections: [
+      {
+        title: "Gerenciar leads recebidos",
+        summary: "Centraliza interessados que chegaram pelos formulários da landing page e produtos comerciais.",
+        steps: [
+          "Visualize todos os leads com status (novo, contatado, qualificado, convertido).",
+          "Clique em um lead para ver dados completos (empresa, cargo, UTMs).",
+          "Adicione notas e atribua o lead a um responsável.",
+          "Marque como contatado/qualificado/convertido conforme avança a negociação.",
+        ],
+        tips: [
+          "Os UTMs ajudam a identificar quais campanhas geram leads mais qualificados.",
+          "Use as notas para registrar histórico de contato.",
+        ],
+      },
+    ],
+  },
+
+  "/admin/central-modulos": {
+    pageTitle: "Central de Módulos (Root)",
+    sections: [
+      {
+        title: "Governar módulos da plataforma",
+        summary: "Visão Root: cataloga todos os módulos, define se são customer_facing e controla disponibilidade global.",
+        steps: [
+          "Liste todos os module_definitions disponíveis no SaaS.",
+          "Marque cada módulo como customer_facing (aparece no app do cliente) ou interno.",
+          "Defina dependências entre módulos (ex.: gamificação depende de achadinhos_motorista).",
+          "Ative ou desative módulos para todas as marcas de uma vez.",
+        ],
+        tips: [
+          "Mudanças aqui afetam toda a plataforma — use com cautela.",
+          "Marcas só conseguem ativar módulos que estão liberados para o plano delas.",
+        ],
+      },
+    ],
+  },
+
+  "/admin/produtos-comerciais": {
+    pageTitle: "Produtos Comerciais (Root)",
+    sections: [
+      {
+        title: "Catálogo comercial vendável",
+        summary: "Crie e gerencie os produtos comerciais (bundles de módulos + planos) que o time comercial vende.",
+        steps: [
+          "Clique em 'Novo Produto' para criar um bundle.",
+          "Defina nome, headline, audiência (DRIVER/PASSENGER/MIXED), preço e módulos incluídos.",
+          "Configure a landing page pública e o link de cadastro.",
+          "Ative o produto para liberá-lo na vitrine comercial.",
+        ],
+        tips: [
+          "Use o tutorial guiado em 'Manuais' para ver um exemplo completo (Vale Resgate Motorista Premium).",
+          "Cada produto pode ter sua própria landing page com formulário de leads.",
+        ],
+      },
+    ],
+  },
+
+  "/admin/auditoria-duplicacoes": {
+    pageTitle: "Auditoria de Duplicações",
+    sections: [
+      {
+        title: "Investigar registros duplicados",
+        summary: "Ferramenta Root para detectar e mesclar duplicatas de motoristas, clientes ou parceiros.",
+        steps: [
+          "Escolha o tipo de entidade (motoristas, clientes, parceiros).",
+          "Veja a lista de candidatos a duplicação (match por CPF, telefone, e-mail ou nome).",
+          "Compare os registros lado a lado.",
+          "Confirme a mescla — o sistema preserva o registro mais antigo e migra pontos/histórico.",
+        ],
+        tips: [
+          "A mescla é irreversível — confirme com cuidado.",
+          "Mescle preferencialmente para o registro com mais histórico de pontos.",
+        ],
+      },
+    ],
+  },
+
+  "/configuracao-cidade": {
+    pageTitle: "Configuração da Cidade",
+    sections: [
+      {
+        title: "Configurações operacionais por cidade",
+        summary: "Painel central de configurações específicas: scoring model, timezone, geolocalização e flags operacionais.",
+        steps: [
+          "Edite nome, slug, cidade/estado, latitude/longitude e fuso horário.",
+          "Escolha o scoring_model: DRIVER_ONLY, PASSENGER_ONLY ou BOTH.",
+          "Habilite 'is_city_redemption_enabled' para liberar resgates locais por motoristas.",
+          "Configure flags em branch_settings_json (precisam ser === true para ligar).",
+        ],
+        tips: [
+          "Flags ausentes em branch_settings_json contam como OFF (regra estrita).",
+          "Mudança de scoring_model afeta quais módulos aparecem no menu da cidade.",
+        ],
+      },
+    ],
+  },
+
+  "/configuracao-modulos-cidade": {
+    pageTitle: "Módulos da Cidade",
+    sections: [
+      {
+        title: "Ativar/desativar módulos por cidade",
+        summary: "Override granular: cada cidade pode ligar/desligar módulos independentemente da marca.",
+        steps: [
+          "Veja a lista de módulos com o estado atual (herdado da marca ou override).",
+          "Use os toggles para sobrescrever o estado da marca em uma cidade específica.",
+          "Salve para persistir em city_module_overrides.",
+        ],
+        tips: [
+          "Sem override, a cidade herda automaticamente o que a marca configurou.",
+          "Override permite testar módulos em uma cidade antes de liberar para todas.",
+        ],
+      },
+    ],
+  },
+
+  "/branch-business-models": {
+    pageTitle: "Modelos de Negócio por Cidade",
+    sections: [
+      {
+        title: "Configurar modelos por cidade",
+        summary: "Override por cidade dos modelos de negócio (Duelo, Achadinho, Mercado Livre etc.) ativados pela marca.",
+        steps: [
+          "Liste os business models disponíveis na marca.",
+          "Para cada cidade, ative ou desative o modelo independentemente.",
+          "Salve em city_business_model_overrides.",
+        ],
+        tips: [
+          "Cidades sem override seguem o que a marca habilitou.",
+          "Use para liberar Ganha-Ganha apenas em cidades-piloto.",
+        ],
+      },
+    ],
+  },
+
+  "/brand-modules/ganha-ganha": {
+    pageTitle: "Configuração Ganha-Ganha",
+    sections: [
+      {
+        title: "Configurar ecossistema Ganha-Ganha",
+        summary: "Ecossistema de fidelidade compartilhado entre parceiros mistos (Emissor + Receptor).",
+        steps: [
+          "Defina a margem global (ganha_ganha_margin_pct) sobre o valor das transações.",
+          "Configure o engajamento entre parceiros (cada parceiro emite e recebe pontos).",
+          "Habilite módulos auxiliares: relatórios, fechamento, billing.",
+          "Salve para aplicar em toda a marca.",
+        ],
+        tips: [
+          "A margem é a única fonte de receita do ecossistema — ajuste com cuidado.",
+          "Use 'Ganha-Ganha Reports' para acompanhar performance.",
+        ],
+      },
+    ],
+  },
+
+  "/ganha-ganha-reports": {
+    pageTitle: "Relatórios Ganha-Ganha",
+    sections: [
+      {
+        title: "Acompanhar transações do ecossistema",
+        summary: "Visualize emissões, recebimentos e fechamentos do Ganha-Ganha por período e parceiro.",
+        steps: [
+          "Selecione o período e o parceiro (opcional).",
+          "Veja totais por categoria: emitido, recebido, líquido.",
+          "Drilldown por parceiro mostra quem mais emite e recebe pontos.",
+          "Exporte em CSV.",
+        ],
+        tips: [
+          "Parceiros com saldo negativo persistente devem ser revisados.",
+          "Use o fechamento mensal para conciliar valores.",
+        ],
+      },
+    ],
+  },
+
+  "/store/ganha-ganha": {
+    pageTitle: "Ganha-Ganha (Parceiro)",
+    sections: [
+      {
+        title: "Resumo da participação no Ganha-Ganha",
+        summary: "Visão consolidada para o parceiro lojista: pontos emitidos, recebidos e saldo no ecossistema.",
+        steps: [
+          "Veja seu saldo líquido no Ganha-Ganha.",
+          "Liste transações recentes (você emitiu / você recebeu).",
+          "Acompanhe o fechamento do mês corrente.",
+        ],
+        tips: [
+          "Quanto mais você participa, mais clientes do ecossistema voltam ao seu estabelecimento.",
+        ],
+      },
+    ],
+  },
+
+  "/driver-points-purchase": {
+    pageTitle: "Compra de Pontos pelo Motorista",
+    sections: [
+      {
+        title: "Comprar pontos via app",
+        summary: "Motorista adquire pontos diretamente, com confirmação manual do empreendedor.",
+        steps: [
+          "Escolha o pacote de pontos disponível.",
+          "Confirme o método de pagamento combinado com o empreendedor.",
+          "Aguarde a confirmação manual — os pontos entram no saldo após aprovação.",
+        ],
+        tips: [
+          "O preço do milheiro é definido pelo empreendedor em Pacotes de Pontos.",
+          "O histórico de compras fica visível no extrato do motorista.",
+        ],
+      },
+    ],
+  },
+
+  "/affiliate-deals/import-mobile": {
+    pageTitle: "Importação de Ofertas (Mobile)",
+    sections: [
+      {
+        title: "Importar ofertas pelo celular",
+        summary: "Fluxo otimizado para mobile: cole links de programas de afiliados e o sistema extrai os dados.",
+        steps: [
+          "Cole o link da oferta no campo indicado.",
+          "Aguarde a extração automática (título, preço, imagem, descrição).",
+          "Revise e ajuste se necessário.",
+          "Salve para publicar nas Achadinhos.",
+        ],
+        tips: [
+          "Funciona com Amazon, Mercado Livre e principais marketplaces.",
+          "Imagens são otimizadas automaticamente para o app.",
+        ],
+      },
+    ],
+  },
+
+  "/public-vouchers": {
+    pageTitle: "Vouchers Públicos",
+    sections: [
+      {
+        title: "Vitrine pública de vouchers",
+        summary: "Página pública (sem login) que lista vouchers ativos para divulgação externa.",
+        steps: [
+          "Compartilhe o link público com clientes que ainda não usam o app.",
+          "Cada voucher mostra estabelecimento, valor e validade.",
+          "Para resgatar, o cliente é direcionado ao app.",
+        ],
+        tips: [
+          "Use a página em campanhas de aquisição.",
+          "Vouchers expirados somem automaticamente.",
+        ],
+      },
+    ],
+  },
+
+  "/vouchers/redeem": {
+    pageTitle: "Resgatar Voucher",
+    sections: [
+      {
+        title: "Fluxo de resgate de voucher",
+        summary: "Cliente apresenta o voucher e o parceiro confirma o uso via PIN.",
+        steps: [
+          "Cliente abre o voucher no app — gera um PIN único.",
+          "Parceiro digita o PIN para confirmar a baixa.",
+          "Sistema marca o voucher como USADO e registra timestamp.",
+        ],
+        tips: [
+          "O PIN expira em poucos minutos por segurança.",
+          "Vouchers só podem ser usados uma vez.",
+        ],
+      },
+    ],
+  },
+
+  "/brand-journey": {
+    pageTitle: "Jornada da Marca",
+    sections: [
+      {
+        title: "Acompanhar onboarding da marca",
+        summary: "Checklist guiado de configuração inicial: aparência, cidades, módulos, parceiros, motoristas.",
+        steps: [
+          "Cumpra cada etapa para deixar a marca pronta para operar.",
+          "Etapas concluídas ficam marcadas em verde.",
+          "Pule etapas opcionais conforme o seu modelo de negócio.",
+        ],
+        tips: [
+          "A jornada cobre o mínimo para colocar o app no ar com qualidade.",
+          "Volte aqui sempre que quiser revisar a configuração.",
+        ],
+      },
+    ],
+  },
+
+  "/root-journey": {
+    pageTitle: "Jornada Root",
+    sections: [
+      {
+        title: "Onboarding administrativo Root",
+        summary: "Checklist Root: provisionar tenants, marcas, planos e módulos disponíveis no SaaS.",
+        steps: [
+          "Cadastre tenants e marcas iniciais.",
+          "Configure planos (Free/Starter/Pro/Enterprise).",
+          "Defina módulos disponíveis em cada plano.",
+          "Acompanhe a saúde geral da plataforma.",
+        ],
+      },
+    ],
+  },
+
+  "/emitter-journey": {
+    pageTitle: "Jornada do Emissor",
+    sections: [
+      {
+        title: "Onboarding de parceiros emissores",
+        summary: "Guia para parceiros que vão emitir pontos: configurar regras, treinar equipe, ativar baixas.",
+        steps: [
+          "Configure regra de pontos (R$ por ponto) na sua loja.",
+          "Treine sua equipe para registrar pontuações.",
+          "Habilite o módulo de baixa de cupons via PIN.",
+        ],
+        tips: [
+          "Mantenha a regra clara para o cliente entender quanto ganha.",
+        ],
+      },
+    ],
+  },
+
+  "/brand-domains": {
+    pageTitle: "Domínios da Marca",
+    sections: [
+      {
+        title: "Configurar domínios personalizados",
+        summary: "Vincule um endereço próprio (ex.: app.suamarca.com.br) à sua marca, com SSL automático.",
+        steps: [
+          "Clique em 'Adicionar domínio' e digite o endereço desejado.",
+          "Configure o CNAME no seu provedor apontando para o endereço fornecido.",
+          "Aguarde a verificação automática (até 48h).",
+          "Marque como primário quando estiver verificado.",
+        ],
+        tips: [
+          "Provisionamento automático usa sufixo .com.br por padrão.",
+          "É possível ter múltiplos domínios, mas só um primário.",
         ],
       },
     ],

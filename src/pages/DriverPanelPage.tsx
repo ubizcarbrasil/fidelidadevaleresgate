@@ -24,6 +24,7 @@ import DriverCategoryPage from "@/components/driver/DriverCategoryPage";
 import CampeonatoMotoristaPanel from "@/components/driver/campeonato/CampeonatoMotoristaPanel";
 import BadgeNotificacoes from "@/features/campeonato_duelo/components/notificacoes/BadgeNotificacoes";
 import OverlayNotificacoes from "@/features/campeonato_duelo/components/notificacoes/OverlayNotificacoes";
+import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
 
 function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, initialDealId, isAdminSession }: {
   brand: any;
@@ -406,6 +407,7 @@ export default function DriverPanelPage() {
         initialDealId={initialDealId}
         isAdminSession={!!sessionRequestKey}
       />
+      <ContextualHelpDrawer />
     </DriverSessionProvider>
   );
 }
