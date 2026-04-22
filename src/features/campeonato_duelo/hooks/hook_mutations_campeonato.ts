@@ -35,7 +35,16 @@ export function useTrocarFormato() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: TrocarFormatoInput) => trocarFormatoEngajamento(input),
-    onSuccess: (_d, vars) => {
+    onSuccess: (data: any, vars) => {
+      // Proteção defensiva: a RPC retorna `rows_affected`. Se vier 0,
+      // a configuração da marca está incompleta (sem linha em
+      // brand_business_models) e a troca não teve efeito real.
+      if (data && typeof data === "object" && "rows_affected" in data && data.rows_affected === 0) {
+        toast.error(
+          "Não foi possível trocar o formato. A configuração da marca está incompleta — fale com o suporte.",
+        );
+        return;
+      }
       toast.success("Formato de engajamento atualizado");
       invalidarTudo(qc, vars.brandId);
     },
