@@ -31,6 +31,7 @@ import ColunaMotoristasDisponiveis from "./ColunaMotoristasDisponiveis";
 import ColunaSerie from "./ColunaSerie";
 import BarraAcoesEmLote from "./BarraAcoesEmLote";
 import ConfirmRemoverMotorista from "./ConfirmRemoverMotorista";
+import TutorialDistribuicaoMotoristas from "./TutorialDistribuicaoMotoristas";
 
 interface Props {
   open: boolean;
@@ -194,6 +195,8 @@ export default function DistribuicaoManualView({
               "Disponíveis" e mover em lote.
             </DialogDescription>
           </DialogHeader>
+
+          <TutorialDistribuicaoMotoristas />
 
           {modoLeitura && (
             <div className="flex items-center gap-2 rounded-md border border-warning/40 bg-warning/10 p-2 text-xs text-warning-foreground">
