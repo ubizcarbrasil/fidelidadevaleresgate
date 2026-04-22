@@ -166,6 +166,8 @@ export interface CriarTemporadaCompletaInput {
   knockoutEndsAt: string;
   series: TemplateSerie[];
   prizesPerTier: Record<string, TemplatePremio[]>;
+  scoringMode?: "total_points" | "daily_matchup";
+  scoringConfig?: { win: number; draw: number; loss: number };
 }
 
 export interface CancelarTemporadaInput {

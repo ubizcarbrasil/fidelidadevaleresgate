@@ -65,6 +65,8 @@ function gerarValoresIniciais(template: TemplateKey): FormCriarTemporadaInput {
         points: t.prizes.find((x) => x.position === p)?.points ?? 0,
       })),
     })),
+    scoringMode: "total_points",
+    scoringConfig: { win: 3, draw: 1, loss: 0 },
   };
 }
 
@@ -122,6 +124,8 @@ export default function FormCriarTemporada({
           relegate_count: s.relegate_count,
         })),
         prizesPerTier: prizesObj,
+        scoringMode: values.scoringMode,
+        scoringConfig: values.scoringConfig,
       },
       { onSuccess: () => onClose() },
     );
