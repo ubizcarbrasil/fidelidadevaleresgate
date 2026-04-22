@@ -4948,6 +4948,81 @@ export type Database = {
           },
         ]
       }
+      duelo_notifications: {
+        Row: {
+          action_url: string | null
+          brand_id: string
+          created_at: string
+          driver_id: string
+          event_type: string
+          id: string
+          message: string
+          read_at: string | null
+          season_id: string | null
+          title: string
+        }
+        Insert: {
+          action_url?: string | null
+          brand_id: string
+          created_at?: string
+          driver_id: string
+          event_type: string
+          id?: string
+          message: string
+          read_at?: string | null
+          season_id?: string | null
+          title: string
+        }
+        Update: {
+          action_url?: string | null
+          brand_id?: string
+          created_at?: string
+          driver_id?: string
+          event_type?: string
+          id?: string
+          message?: string
+          read_at?: string | null
+          season_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duelo_notifications_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_notifications_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_notifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_notifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_notifications_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       duelo_prize_distributions: {
         Row: {
           branch_id: string
@@ -10231,6 +10306,23 @@ export type Database = {
       driver_get_history: {
         Args: { p_brand_id: string; p_driver_id: string; p_limit?: number }
         Returns: Json
+      }
+      driver_get_notifications: {
+        Args: {
+          p_brand_id: string
+          p_driver_id: string
+          p_limit?: number
+          p_only_unread?: boolean
+        }
+        Returns: Json
+      }
+      driver_mark_all_read: {
+        Args: { p_brand_id: string; p_driver_id: string }
+        Returns: number
+      }
+      driver_mark_notification_read: {
+        Args: { p_driver_id: string; p_notification_id: string }
+        Returns: boolean
       }
       duelo_add_driver_to_season: {
         Args: {
