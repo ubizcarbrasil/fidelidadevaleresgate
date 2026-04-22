@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trophy, Calendar } from "lucide-react";
+import { Plus, Trophy, Calendar, AlertTriangle, Loader2 } from "lucide-react";
 import { useDashboardCampeonato } from "./hooks/hook_campeonato_empreendedor";
 import { useFormatoEngajamento } from "./hooks/hook_formato_engajamento";
 import { useDueloCampeonatoHabilitado } from "@/compartilhados/hooks/hook_duelo_campeonato_habilitado";
+import { useExecutarSeedingTemporada } from "./hooks/hook_mutations_campeonato";
 import { CORES_FASE, ROTULOS_FASE } from "./constants/constantes_campeonato";
 import { formatarPeriodo } from "./utils/utilitarios_campeonato";
 import SeletorFormatoEngajamento from "./components/empreendedor/SeletorFormatoEngajamento";
@@ -29,6 +30,7 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
     useDueloCampeonatoHabilitado(brandId);
   const { isCampeonato, isLoading: loadingFormato } = useFormatoEngajamento(brandId);
   const { data: dashboard, isLoading } = useDashboardCampeonato(brandId);
+  const seedingMutation = useExecutarSeedingTemporada(brandId);
   const [modalCriar, setModalCriar] = useState(false);
   const [serieAberta, setSerieAberta] = useState<{
     tier_id: string;
@@ -154,9 +156,38 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
           />
 
           {tiers.length === 0 ? (
-            <Card>
-              <CardContent className="p-6 text-center text-sm text-muted-foreground">
-                Aguardando seeding inicial das séries.
+            <Card className="border-yellow-300 bg-yellow-50 dark:border-yellow-900/50 dark:bg-yellow-950/30">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-yellow-700 dark:text-yellow-400 mt-0.5 shrink-0" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-100">
+                      Temporada criada, mas os motoristas ainda não foram distribuídos
+                    </p>
+                    <p className="text-xs text-yellow-800/90 dark:text-yellow-200/80">
+                      Clique em <strong>Distribuir motoristas agora</strong> para
+                      criar as séries e alocar os motoristas elegíveis da cidade.
+                      Sem este passo, o app do motorista mostra "nenhum
+                      campeonato ativo".
+                    </p>
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    onClick={() => seedingMutation.mutate(ativa.id)}
+                    disabled={seedingMutation.isPending}
+                  >
+                    {seedingMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Distribuindo...
+                      </>
+                    ) : (
+                      "Distribuir motoristas agora"
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ) : (
