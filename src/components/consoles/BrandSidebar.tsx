@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutDashboard, LogOut, ChevronRight, FileText } from "lucide-react";
+import { LogOut, ChevronRight, FileText } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -12,6 +12,7 @@ import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useResolvedModules } from "@/compartilhados/hooks/hook_modulos_resolvidos";
 import { USE_RESOLVED_MODULES } from "@/compartilhados/constants/constantes_features";
 import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
+import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
 import { useProductScope } from "@/features/city_onboarding/hooks/hook_escopo_produto";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,19 +34,16 @@ import {
   type DefinicaoGrupoSidebar,
 } from "@/compartilhados/constants/constantes_menu_sidebar";
 
-const dashboardItem = MENU_REGISTRY["sidebar.dashboard"];
-
 const brandGroupDefs: DefinicaoGrupoSidebar[] = [
   {
-    label: "Guias Inteligentes",
+    label: "Painel",
+    items: ["sidebar.dashboard"],
+  },
+  {
+    label: "Guias & Manuais",
     items: [
       "sidebar.jornada", "sidebar.jornada_emissor",
       { key: "sidebar.modulos", overrides: { defaultTitle: "Módulos" } },
-    ],
-  },
-  {
-    label: "Manuais",
-    items: [
       { key: "sidebar.manuais", overrides: { defaultTitle: "Manuais da Plataforma", moduleKey: undefined } },
     ],
   },
@@ -227,6 +225,7 @@ export function BrandSidebar() {
   const { name: brandName, logoUrl: brandLogoUrl, subscriptionPlan, brandId: infoBrandId } = useBrandInfo();
   const { currentBrandId } = useBrandGuard();
   const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
+  const { isCampeonato } = useFormatoEngajamento(currentBrandId);
   const escopoProduto = useProductScope();
   // Audiência do plano (produto contratado) tem precedência sobre o scoring_model das branches.
   // Se o plano não cobre a audiência, esconde mesmo que alguma cidade esteja como BOTH (legado).
@@ -281,6 +280,7 @@ export function BrandSidebar() {
       })
       .filter(item => !item.moduleKey || isModuleEnabled(item.moduleKey))
       .filter(item => !isBasicPlan || !BASIC_PLAN_HIDDEN_MODULES.includes(item.moduleKey ?? ""))
+      .filter(item => !(isCampeonato && item.key === "sidebar.aprovar_regras"))
       .filter(item => {
         if (!item.scoringFilter) return true;
         if (item.scoringFilter === "DRIVER") return audienciaMotoristaAtiva;
@@ -320,28 +320,6 @@ export function BrandSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-2">
-        {(!dashboardItem.moduleKey || isModuleEnabled(dashboardItem.moduleKey)) && (
-          <SidebarGroup className="pb-0">
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={location.pathname === "/"} tooltip={getLabel(dashboardItem.key)}>
-                    <NavLink
-                      to="/" end
-                      className={`transition-colors rounded-md ${location.pathname === '/' ? 'bg-primary/10 text-primary border-l-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}
-                      activeClassName=""
-                      onClick={() => setOpenMobile(false)}
-                    >
-                      <LayoutDashboard className="h-4 w-4" />
-                      {!collapsed && <span className="flex-1">{getLabel(dashboardItem.key)}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-
         {sortedGroups.map((group) => {
           if (group.items.length === 0) return null;
           return (
