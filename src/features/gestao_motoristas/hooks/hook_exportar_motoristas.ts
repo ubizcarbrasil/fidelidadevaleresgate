@@ -55,20 +55,32 @@ export function useExportarMotoristas() {
 
       const blob = gerarCsvMotoristas(resultado.motoristas);
       const data = new Date().toISOString().slice(0, 10);
-      baixarCsvMotoristas(blob, `motoristas-${data}.csv`);
+      const modo = await baixarCsvMotoristas(blob, `motoristas-${data}.csv`);
 
       toast.dismiss(toastId);
+      const totalFmt = resultado.motoristas.length.toLocaleString("pt-BR");
+
       if (resultado.excedeuLimite) {
         toast.warning(
-          `Limite de 20.000 atingido. Exportados ${resultado.motoristas.length.toLocaleString("pt-BR")} motoristas. Refine a busca para exportar o restante.`,
+          `Limite de 20.000 atingido. Exportados ${totalFmt} motoristas. Refine a busca para exportar o restante.`,
+        );
+      } else if (modo === "share") {
+        toast.success(
+          `${totalFmt} motoristas prontos. Toque em "Salvar em Arquivos" para guardar.`,
+        );
+      } else if (modo === "nova-aba") {
+        toast.success(
+          `${totalFmt} motoristas exportados. Use o menu do navegador para salvar o arquivo.`,
         );
       } else {
-        toast.success(
-          `${resultado.motoristas.length.toLocaleString("pt-BR")} motoristas exportados`,
-        );
+        toast.success(`${totalFmt} motoristas exportados`);
       }
     } catch (err: any) {
       toast.dismiss(toastId);
+      // Usuário cancelou o share sheet — não mostrar erro.
+      if (err?.name === "AbortError") {
+        return;
+      }
       toast.error(err?.message || "Erro ao exportar motoristas");
     } finally {
       setExportando(false);
