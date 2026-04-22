@@ -192,3 +192,35 @@ export interface TrocarFormatoInput {
   brandId: string;
   newFormat: FormatoEngajamento;
 }
+
+/* ============== Distribuição de prêmios (C.5) ============== */
+
+export type StatusDistribuicaoPremio = "pending" | "confirmed" | "cancelled";
+
+export interface DistribuicaoPremio {
+  id: string;
+  season_id: string;
+  driver_id: string;
+  driver_name: string | null;
+  brand_id: string;
+  branch_id: string;
+  tier_id: string;
+  tier_name: string;
+  position: PosicaoPremio;
+  points_awarded: number;
+  status: StatusDistribuicaoPremio;
+  confirmed_at: string | null;
+  cancelled_reason: string | null;
+  created_at: string;
+}
+
+export interface ResumoDistribuicaoConfirmada {
+  total_drivers: number;
+  total_points: number;
+  confirmed_at: string;
+}
+
+export interface CancelarPremioInput {
+  distributionId: string;
+  reason: string;
+}
