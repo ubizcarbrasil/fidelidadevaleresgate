@@ -198,6 +198,10 @@ export default function DistribuicaoManualView({
             </DialogDescription>
           </DialogHeader>
 
+          <TutorialDistribuicaoMotoristas
+            aoIniciarTour={() => setTourAtivo(true)}
+          />
+
           {modoLeitura && (
             <div className="flex items-center gap-2 rounded-md border border-warning/40 bg-warning/10 p-2 text-xs text-warning-foreground">
               <AlertCircle className="h-3.5 w-3.5 shrink-0" />
@@ -207,13 +211,15 @@ export default function DistribuicaoManualView({
           )}
 
           {!modoLeitura && (
-            <BarraAcoesEmLote
-              total={selecionados.size}
-              series={seriesAlvo}
-              desabilitado={mover.isPending}
-              aoMover={moverEmLote}
-              aoLimpar={limparSelecao}
-            />
+            <div data-tour="barra-acoes-lote">
+              <BarraAcoesEmLote
+                total={selecionados.size}
+                series={seriesAlvo}
+                desabilitado={mover.isPending}
+                aoMover={moverEmLote}
+                aoLimpar={limparSelecao}
+              />
+            </div>
           )}
 
           {carregando ? (
