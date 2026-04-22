@@ -319,6 +319,18 @@ export default function DriverManagementPage() {
         }
         brandId={currentBrandId || ""}
       />
+
+      {arquivoPendenteDetalhes && (
+        <MenuDownloadCsv
+          aberto={menuDownloadAberto}
+          onFechar={() => setMenuDownloadAberto(false)}
+          url={arquivoPendenteDetalhes.url}
+          nomeArquivo={arquivoPendenteDetalhes.nomeArquivo}
+          totalMotoristas={arquivoPendenteDetalhes.totalMotoristas}
+          excedeuLimite={arquivoPendenteDetalhes.excedeuLimite}
+          onSucesso={() => limparArquivoPendente()}
+        />
+      )}
     </div>
   );
 }
