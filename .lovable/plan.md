@@ -1,121 +1,92 @@
 
 
-# Processo de configuração do Campeonato Duelo
+# Corrigir exportação CSV de motoristas (baixa só 50 de 4.256)
 
-## Diagnóstico
+## Problema
 
-Hoje o módulo tem **3 chaves** que precisam estar ligadas. Apenas 1 tem UI:
+O botão **CSV** na tela `/motoristas` (cidade no console do empreendedor "Meu Mototáxi") exporta apenas a página atual da listagem — 50 motoristas — em vez de todos os 4.256.
 
-| # | Chave | Onde mora | Tem UI? | Estado atual |
-|---|---|---|---|---|
-| 1 | `USE_DUELO_CAMPEONATO` | `src/compartilhados/constants/constantes_features.ts` | ❌ Código | `false` |
-| 2 | `brand_settings_json.duelo_campeonato_enabled` | tabela `brands` | ❌ Só banco | `null` |
-| 3 | `brand_business_models.engagement_format` | tabela `brand_business_models` | ✅ Aba Campeonato (seletor) | `duelo` |
+**Causa raiz** (`src/pages/DriverManagementPage.tsx`, linhas 72-95): a função `handleExportCsv` itera sobre `motoristas`, que é o resultado paginado de `useListagemMotoristas` com `POR_PAGINA = 50`. Nada busca o restante.
 
-**Resultado**: o empreendedor abre `/gamificacao` → aba **Campeonato** e vê só o seletor de formato. Mesmo trocando para "Campeonato", nada funciona porque as camadas 1 e 2 estão OFF.
-
-## Onde configurar HOJE (caminho manual)
-
-**Console do empreendedor:**
-1. Acessar **Gamificação** (sidebar) → escolher cidade → aba **Campeonato**
-2. No seletor superior, trocar formato para **Campeonato**
-
-Mas isso **não funciona em produção** sem antes ligar as camadas 1 e 2 (que exigem alteração de código + migration). É o gargalo que vamos resolver.
-
-## Proposta de processo correto (3 commits)
-
-### Commit 1 — Ligar a flag global (1 linha)
-
-`src/compartilhados/constants/constantes_features.ts`:
 ```ts
-export const USE_DUELO_CAMPEONATO = true;  // era false
+const POR_PAGINA = 50;                   // ← limita a query
+const motoristas = resultado?.motoristas; // ← só a página atual
+const rows = motoristas.map(...)          // ← exporta só 50
 ```
 
-Justificativa: Bloco C inteiro (C.1–C.5) está concluído, validado e em produção. A flag de código existia para rollback rápido durante rollout — agora pode ser ligada por padrão. Mantém-se desligada por marca (camada 2) para controle gradual.
+## Solução
 
-### Commit 2 — Criar UI de ativação por marca (camada 2)
+Criar um **fluxo de exportação dedicado** que busca todos os motoristas em lotes (chunks), respeitando exatamente os mesmos filtros aplicados na tela (busca, status, escopo de cidade), e gera o CSV com o conjunto completo.
 
-**Local certo**: na aba **Campeonato** do `/gamificacao`, **antes** do `SeletorFormatoEngajamento`, adicionar um **card de ativação** que persiste `brand_settings_json.duelo_campeonato_enabled`.
+### 1. Novo serviço — exportação paginada em lotes
 
-**Novo componente**: `src/features/campeonato_duelo/components/empreendedor/CardAtivarCampeonato.tsx`
+**Arquivo novo**: `src/features/gestao_motoristas/services/servico_exportacao_motoristas.ts`
 
-```text
-┌─────────────────────────────────────────────────┐
-│  🏆  Campeonato Duelo Motorista                  │
-│                                                  │
-│  Sistema de temporadas mensais com séries       │
-│  hierárquicas (A, B, C…), classificação,        │
-│  mata-mata, hall da fama público e prêmios.     │
-│                                                  │
-│  Status: ⚪ Desativado para esta marca          │
-│                                                  │
-│  [ Ativar Campeonato ]                          │
-└─────────────────────────────────────────────────┘
-```
+- Função `exportarTodosMotoristas({ brandId, branchId, isBranchScope, busca, statusFiltro, onProgresso })`
+- Reaproveita a mesma lógica de filtros do `useListagemMotoristas` (pré-filtro por placa/status em `driver_profiles`, filtros em `customers`)
+- Itera em **lotes de 1.000 registros** usando `.range(from, to)` até esgotar (`from >= count`)
+- Em cada lote, faz o enriquecimento (`get_driver_ride_stats`, `branches`, `profiles`) igual ao hook atual
+- Devolve o array completo `DriverRow[]`
+- Callback `onProgresso(carregados, total)` para atualizar UI
 
-Quando ativado, o card colapsa e mostra apenas:
-```text
-🏆 Campeonato ativo • [Desativar]
-```
+### 2. Novo utilitário — geração do CSV
 
-**Comportamento**:
-- Toggle escreve em `brands.brand_settings_json` via update padrão (com `.select()` por causa do Supabase Update Hardening)
-- Invalidação cruzada de `useDueloCampeonatoHabilitado`, `useFormatoEngajamento`, `useDashboardCampeonato`
-- Audit log em `duelo_attempts_log` (code: `brand_campeonato_toggled`)
-- Confirmação via `AlertDialog` ao desativar (avisa que pausa temporadas em curso, sem cancelá-las)
+**Arquivo novo**: `src/features/gestao_motoristas/utils/utilitarios_export_motoristas.ts`
 
-**Renderização condicional** em `pagina_campeonato_empreendedor.tsx`:
-- Se `!campeonatoHabilitado` → mostra **só** o `CardAtivarCampeonato`
-- Se `campeonatoHabilitado && !isCampeonato` → mostra `CardAtivarCampeonato` (modo compacto) + `SeletorFormatoEngajamento` + card "Selecione formato Campeonato"
-- Se `campeonatoHabilitado && isCampeonato` → fluxo atual (seletor + dashboard)
+- Função `gerarCsvMotoristas(motoristas: DriverRow[]): Blob`
+- Função `baixarCsvMotoristas(blob: Blob, nomeArquivo: string)`
+- Mantém o mesmo cabeçalho atual (Nome, CPF, Telefone, Email, Saldo, Pontos Corridas, Tier, Pontuação Ativa)
+- Acrescenta colunas úteis que já existem: **Cidade** (`branch_name`) e **Total Corridas** (`total_rides`)
+- Escapa aspas e usa BOM UTF-8 (compatível com Excel)
 
-### Commit 3 — Documentar o processo (Manual + Memory)
+### 3. Novo hook — orquestrar exportação com loading/progresso
 
-**3.1** Adicionar entrada na **Central de Módulos → Manual** (`src/features/central_modulos/components/aba_manual.tsx`):
-> **Como ativar o Campeonato Duelo Motorista**  
-> Passo 1: Console do empreendedor → Gamificação → cidade → aba Campeonato  
-> Passo 2: Clicar em "Ativar Campeonato" no card de ativação  
-> Passo 3: No seletor de formato, escolher "Campeonato"  
-> Passo 4: Clicar em "Criar temporada" e preencher o formulário (template Padrão recomendado)
+**Arquivo novo**: `src/features/gestao_motoristas/hooks/hook_exportar_motoristas.ts`
 
-**3.2** Atualizar memória `mem://modules/gamification/comprehensive-governance` com a nova UI de ativação.
+- Hook `useExportarMotoristas()` retorna `{ exportar, exportando, progresso }`
+- `progresso` = `{ atual: number, total: number } | null`
+- Em caso de erro: `toast.error` com mensagem clara
+- Em sucesso: `toast.success("X motoristas exportados")`
+
+### 4. Integração na página
+
+**Arquivo editado**: `src/pages/DriverManagementPage.tsx`
+
+- Remover `handleExportCsv` inline (linhas 72-95)
+- Trocar por `const { exportar, exportando, progresso } = useExportarMotoristas()`
+- Botão CSV passa a:
+  - Mostrar `Loader2` girando + "Exportando…" enquanto `exportando`
+  - Mostrar "X / Y" quando há `progresso` (texto pequeno ao lado)
+  - Disabled enquanto exporta (não enquanto `motoristas.length === 0`, para permitir exportar mesmo se a página atual estiver vazia por algum filtro mas o total for >0)
+- Disabled real: `total === 0 || exportando`
+
+### 5. Limites e segurança
+
+- Limite máximo defensivo: **20.000 motoristas** por exportação (cobre o caso atual com folga). Se ultrapassar, `toast.warning` sugere refinar busca/cidade.
+- Tamanho do lote: 1.000 (alinhado com o padrão do projeto para listagens grandes; mantém timeouts seguros)
+- Sem alteração de banco — usa tabelas e RPC já existentes
 
 ## Arquivos impactados
 
-**Editados:**
-- `src/compartilhados/constants/constantes_features.ts` (1 linha)
-- `src/features/campeonato_duelo/pagina_campeonato_empreendedor.tsx` (renderização condicional)
-- `src/features/central_modulos/components/aba_manual.tsx` (adiciona seção)
+**Criados (3):**
+- `src/features/gestao_motoristas/services/servico_exportacao_motoristas.ts`
+- `src/features/gestao_motoristas/utils/utilitarios_export_motoristas.ts`
+- `src/features/gestao_motoristas/hooks/hook_exportar_motoristas.ts`
 
-**Criados:**
-- `src/features/campeonato_duelo/components/empreendedor/CardAtivarCampeonato.tsx`
-- `src/features/campeonato_duelo/hooks/hook_ativar_campeonato.ts` (mutation toggle)
-- `src/features/campeonato_duelo/services/servico_ativar_campeonato.ts` (update em `brands`)
+**Editado (1):**
+- `src/pages/DriverManagementPage.tsx` (remove função inline + integra hook)
 
-**Sem migration**: usa coluna `brand_settings_json` já existente. Sem nova RPC: update direto na tabela `brands` já tem RLS para `brand_admin`.
+**Sem migration. Sem mudança em RPCs. Sem mudança no fluxo de importação** (que já funciona — limite de 5.000 linhas por upload).
 
-## Fluxo final do empreendedor (depois dos 3 commits)
+## Resultado esperado
 
-```text
-1. Sidebar → Gamificação
-2. Selecionar cidade
-3. Aba "Campeonato"
-4. [ Ativar Campeonato ]  ← NOVO botão claro
-5. Seletor: trocar para "Campeonato"
-6. [ + Criar temporada ]  ← já existe, abre Accordion 4 seções
-7. Pronto — cron horário começa a operar
-```
+- Empreendedor clica em **CSV** → vê "Exportando 1.000 / 4.256…" → arquivo baixado com **todos os 4.256 motoristas** da cidade Ipatinga (ou do escopo aplicado)
+- Filtros de busca, status e cidade continuam respeitados — exporta exatamente o que o filtro retornaria
+- Performance: ~5 lotes × ~400ms = exportação em poucos segundos para 4-5 mil motoristas
 
-## Riscos & rollback
+## Risco e rollback
 
-- **Commit 1** (flag global): rollback = trocar de volta para `false` e redeploy. Zero impacto em dados.
-- **Commit 2** (UI de toggle): toggle nunca apaga dados. Desativar só esconde a UI; temporadas em curso ficam intactas no banco e podem ser retomadas ao reativar.
-- **Commit 3** (docs): cosmético.
-
-## Aprovação
-
-Confirmar se posso executar os 3 commits sequencialmente, ou se prefere:
-- **(a)** Apenas Commit 1 + Commit 2 agora; manual em commit separado depois
-- **(b)** Os 3 commits de uma vez
-- **(c)** Apenas o Commit 2 (UI), mantendo flag global em `false` para rollout controlado por código
+- **Zero impacto em escrita** — operação 100% leitura
+- Rollback trivial: reverter `DriverManagementPage.tsx` para versão atual
+- Sem efeito em outras telas (gestão de motoristas é a única que usa `useListagemMotoristas`)
 
