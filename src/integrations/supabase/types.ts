@@ -816,6 +816,7 @@ export type Database = {
       brand_business_models: {
         Row: {
           activated_at: string | null
+          allowed_engagement_formats: string[]
           brand_id: string
           business_model_id: string
           config_json: Json
@@ -828,6 +829,7 @@ export type Database = {
         }
         Insert: {
           activated_at?: string | null
+          allowed_engagement_formats?: string[]
           brand_id: string
           business_model_id: string
           config_json?: Json
@@ -840,6 +842,7 @@ export type Database = {
         }
         Update: {
           activated_at?: string | null
+          allowed_engagement_formats?: string[]
           brand_id?: string
           business_model_id?: string
           config_json?: Json
@@ -10369,6 +10372,10 @@ export type Database = {
         }
         Returns: number
       }
+      duelo_get_allowed_formats: {
+        Args: { p_brand_id: string }
+        Returns: string[]
+      }
       duelo_get_engagement_format: {
         Args: { p_brand_id: string }
         Returns: string
@@ -10382,6 +10389,10 @@ export type Database = {
       duelo_resume_season: { Args: { p_season_id: string }; Returns: Json }
       duelo_seed_initial_tier_memberships: {
         Args: { p_season_id: string }
+        Returns: Json
+      }
+      duelo_set_allowed_formats: {
+        Args: { p_brand_id: string; p_formats: string[] }
         Returns: Json
       }
       duelo_update_prize: {
