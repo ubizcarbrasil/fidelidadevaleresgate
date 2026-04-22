@@ -64,22 +64,22 @@ export const schemaCriarTemporada = z
     if (cs >= ce) {
       ctx.addIssue({
         code: "custom",
-        message: "Início da classificação deve ser antes do fim",
-        path: ["classificationStartsAt"],
+        message: "O fim da Classificação precisa ser depois do início.",
+        path: ["classificationEndsAt"],
       });
     }
     if (ce >= ks) {
       ctx.addIssue({
         code: "custom",
-        message: "Mata-mata precisa começar depois da classificação",
+        message: "O Mata-mata precisa começar depois do fim da Classificação.",
         path: ["knockoutStartsAt"],
       });
     }
     if (ks >= ke) {
       ctx.addIssue({
         code: "custom",
-        message: "Início do mata-mata deve ser antes do fim",
-        path: ["knockoutStartsAt"],
+        message: "O fim do Mata-mata precisa ser depois do início.",
+        path: ["knockoutEndsAt"],
       });
     }
 

@@ -11,6 +11,10 @@ import {
 import { AlertCircle, Trophy, Swords } from "lucide-react";
 import { NOMES_MESES } from "../../constants/constantes_campeonato";
 import type { FormCriarTemporadaInput } from "../../schemas/schema_criar_temporada";
+import {
+  compararInputDate,
+  somarDiasInputDate,
+} from "../../utils/utilitarios_campeonato";
 import LabelComAjuda from "./LabelComAjuda";
 
 export default function EditorInformacoesBasicas() {
@@ -19,13 +23,60 @@ export default function EditorInformacoesBasicas() {
   const anoAtual = new Date().getFullYear();
   const anos = [anoAtual - 1, anoAtual, anoAtual + 1];
 
-  // Validação reativa de coerência entre fim da Classificação e início do Mata-mata.
-  const classEnd = form.watch("classificationEndsAt");
-  const knockStart = form.watch("knockoutStartsAt");
+  // Datas atuais para encadear limites e validar conflitos reativos.
+  const classStart = form.watch("classificationStartsAt") ?? "";
+  const classEnd = form.watch("classificationEndsAt") ?? "";
+  const knockStart = form.watch("knockoutStartsAt") ?? "";
+  const knockEnd = form.watch("knockoutEndsAt") ?? "";
+
+  const conflitoClassificacao =
+    !!classStart && !!classEnd && compararInputDate(classEnd, classStart) <= 0;
   const conflitoFases =
-    !!classEnd &&
-    !!knockStart &&
-    new Date(knockStart) <= new Date(classEnd);
+    !!classEnd && !!knockStart && compararInputDate(knockStart, classEnd) <= 0;
+  const conflitoMataMata =
+    !!knockStart && !!knockEnd && compararInputDate(knockEnd, knockStart) <= 0;
+
+  // Limites mínimos encadeados (YYYY-MM-DD) para os inputs nativos.
+  const minClassEnd = classStart ? somarDiasInputDate(classStart, 1) : undefined;
+  const minKnockStart = classEnd ? somarDiasInputDate(classEnd, 1) : undefined;
+  const minKnockEnd = knockStart ? somarDiasInputDate(knockStart, 1) : undefined;
+
+  /**
+   * Ao alterar uma data "âncora", empurra a próxima dependente para manter a
+   * sequência válida. Evita estados quebrados em que o usuário corrige um campo
+   * mas outro continua inválido silenciosamente.
+   */
+  function aoMudarClassEnd(valor: string) {
+    form.setValue("classificationEndsAt", valor, { shouldValidate: true });
+    if (valor && knockStart && compararInputDate(knockStart, valor) <= 0) {
+      const novoKnockStart = somarDiasInputDate(valor, 1);
+      form.setValue("knockoutStartsAt", novoKnockStart, { shouldValidate: true });
+      if (knockEnd && compararInputDate(knockEnd, novoKnockStart) <= 0) {
+        form.setValue("knockoutEndsAt", somarDiasInputDate(novoKnockStart, 1), {
+          shouldValidate: true,
+        });
+      }
+    }
+  }
+
+  function aoMudarKnockStart(valor: string) {
+    form.setValue("knockoutStartsAt", valor, { shouldValidate: true });
+    if (valor && knockEnd && compararInputDate(knockEnd, valor) <= 0) {
+      form.setValue("knockoutEndsAt", somarDiasInputDate(valor, 1), {
+        shouldValidate: true,
+      });
+    }
+  }
+
+  function aoMudarClassStart(valor: string) {
+    form.setValue("classificationStartsAt", valor, { shouldValidate: true });
+    if (valor && classEnd && compararInputDate(classEnd, valor) <= 0) {
+      const novoClassEnd = somarDiasInputDate(valor, 1);
+      form.setValue("classificationEndsAt", novoClassEnd, { shouldValidate: true });
+      // propaga para frente
+      aoMudarClassEnd(novoClassEnd);
+    }
+  }
 
   const scoringMode = form.watch("scoringMode");
 
@@ -100,18 +151,47 @@ export default function EditorInformacoesBasicas() {
             <LabelComAjuda ajuda="Data em que começa a contagem de pontos da fase de classificação.">
               Início
             </LabelComAjuda>
-            <Input type="date" {...form.register("classificationStartsAt")} />
+            <Input
+              type="date"
+              value={classStart}
+              onChange={(e) => aoMudarClassStart(e.target.value)}
+            />
           </div>
           <div className="space-y-1">
             <LabelComAjuda ajuda="Último dia válido para acumular pontos. Após essa data o ranking da série é congelado e o mata-mata começa.">
               Fim
             </LabelComAjuda>
-            <Input type="date" {...form.register("classificationEndsAt")} />
+            <Input
+              type="date"
+              min={minClassEnd}
+              value={classEnd}
+              aria-invalid={conflitoClassificacao || undefined}
+              className={
+                conflitoClassificacao
+                  ? "border-destructive focus-visible:ring-destructive"
+                  : undefined
+              }
+              onChange={(e) => aoMudarClassEnd(e.target.value)}
+            />
           </div>
         </div>
+        {conflitoClassificacao && (
+          <div className="flex items-start gap-1.5 rounded-sm bg-destructive/10 p-2 text-xs text-destructive">
+            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>
+              O fim da Classificação precisa ser <strong>depois</strong> do
+              início.
+            </span>
+          </div>
+        )}
         {errors.classificationStartsAt && (
           <p className="text-xs text-destructive">
             {errors.classificationStartsAt.message as string}
+          </p>
+        )}
+        {errors.classificationEndsAt && (
+          <p className="text-xs text-destructive">
+            {errors.classificationEndsAt.message as string}
           </p>
         )}
       </div>
@@ -122,7 +202,8 @@ export default function EditorInformacoesBasicas() {
         </p>
         <p className="text-[11px] leading-snug text-muted-foreground">
           Confrontos eliminatórios entre os classificados de cada série. Precisa
-          começar depois do fim da Fase 1.
+          começar <strong>depois</strong> do fim da Fase 1, e o fim precisa ser
+          depois do início.
         </p>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
@@ -131,34 +212,64 @@ export default function EditorInformacoesBasicas() {
             </LabelComAjuda>
             <Input
               type="date"
+              min={minKnockStart}
+              value={knockStart}
               aria-invalid={conflitoFases || undefined}
               className={
                 conflitoFases
                   ? "border-destructive focus-visible:ring-destructive"
                   : undefined
               }
-              {...form.register("knockoutStartsAt")}
+              onChange={(e) => aoMudarKnockStart(e.target.value)}
             />
           </div>
           <div className="space-y-1">
             <LabelComAjuda ajuda="Data limite para concluir o mata-mata e encerrar a temporada. Os prêmios são distribuídos automaticamente após essa data.">
               Fim
             </LabelComAjuda>
-            <Input type="date" {...form.register("knockoutEndsAt")} />
+            <Input
+              type="date"
+              min={minKnockEnd}
+              value={knockEnd}
+              aria-invalid={conflitoMataMata || undefined}
+              className={
+                conflitoMataMata
+                  ? "border-destructive focus-visible:ring-destructive"
+                  : undefined
+              }
+              onChange={(e) =>
+                form.setValue("knockoutEndsAt", e.target.value, {
+                  shouldValidate: true,
+                })
+              }
+            />
           </div>
         </div>
         {conflitoFases && (
           <div className="flex items-start gap-1.5 rounded-sm bg-destructive/10 p-2 text-xs text-destructive">
             <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             <span>
-              O início do Mata-mata precisa ser <strong>após</strong> o fim da
-              Classificação. Ajuste uma das datas para continuar.
+              O Mata-mata precisa começar <strong>depois</strong> do fim da
+              Classificação.
+            </span>
+          </div>
+        )}
+        {conflitoMataMata && (
+          <div className="flex items-start gap-1.5 rounded-sm bg-destructive/10 p-2 text-xs text-destructive">
+            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>
+              O fim do Mata-mata precisa ser <strong>depois</strong> do início.
             </span>
           </div>
         )}
         {errors.knockoutStartsAt && (
           <p className="text-xs text-destructive">
             {errors.knockoutStartsAt.message as string}
+          </p>
+        )}
+        {errors.knockoutEndsAt && (
+          <p className="text-xs text-destructive">
+            {errors.knockoutEndsAt.message as string}
           </p>
         )}
       </div>
