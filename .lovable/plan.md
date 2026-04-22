@@ -1,92 +1,83 @@
 
 
-# Corrigir exportação CSV de motoristas (baixa só 50 de 4.256)
+# Corrigir download CSV em mobile/PWA (iOS)
 
 ## Problema
 
-O botão **CSV** na tela `/motoristas` (cidade no console do empreendedor "Meu Mototáxi") exporta apenas a página atual da listagem — 50 motoristas — em vez de todos os 4.256.
+O export agora busca corretamente os 4.257 motoristas (visível no toast "Exportando 4.000 / 4.257"), mas **nenhum arquivo é salvo no celular**.
 
-**Causa raiz** (`src/pages/DriverManagementPage.tsx`, linhas 72-95): a função `handleExportCsv` itera sobre `motoristas`, que é o resultado paginado de `useListagemMotoristas` com `POR_PAGINA = 50`. Nada busca o restante.
+**Causa raiz**: `baixarCsvMotoristas` usa o truque clássico `<a href={blobUrl} download="...">.click()`. Esse padrão **não funciona em iOS Safari nem em PWAs em modo standalone** (que é o caso do print — ícone de bateria + 5G + barra de status sugerem app instalado/PWA). O navegador iOS:
+
+- Ignora o atributo `download` em `<a>`
+- Bloqueia abertura programática de blob URLs em modo standalone
+- Não tem "pasta de Downloads" acessível para arquivos via `<a download>`
+
+Por isso o toast termina com sucesso, mas nenhum arquivo aparece.
+
+## Solução: 3 estratégias em cascata
+
+Refatorar `baixarCsvMotoristas` para detectar o ambiente e usar a melhor estratégia disponível:
+
+### Estratégia 1 — Web Share API (preferida em mobile)
+
+Se `navigator.share` e `navigator.canShare({ files })` existirem (iOS 15+, Android Chrome), usar:
 
 ```ts
-const POR_PAGINA = 50;                   // ← limita a query
-const motoristas = resultado?.motoristas; // ← só a página atual
-const rows = motoristas.map(...)          // ← exporta só 50
+const file = new File([blob], nomeArquivo, { type: "text/csv" });
+if (navigator.canShare?.({ files: [file] })) {
+  await navigator.share({ files: [file], title: nomeArquivo });
+  return;
+}
 ```
 
-## Solução
+→ Abre o sheet nativo de compartilhar do iOS, permitindo "Salvar em Arquivos", enviar por email, WhatsApp, AirDrop, etc. **Esse é o fluxo natural do iOS**.
 
-Criar um **fluxo de exportação dedicado** que busca todos os motoristas em lotes (chunks), respeitando exatamente os mesmos filtros aplicados na tela (busca, status, escopo de cidade), e gera o CSV com o conjunto completo.
+### Estratégia 2 — `<a download>` clássico (desktop)
 
-### 1. Novo serviço — exportação paginada em lotes
+Se Web Share não existir mas estivermos em desktop, manter o fluxo atual.
 
-**Arquivo novo**: `src/features/gestao_motoristas/services/servico_exportacao_motoristas.ts`
+### Estratégia 3 — Fallback: abrir em nova aba
 
-- Função `exportarTodosMotoristas({ brandId, branchId, isBranchScope, busca, statusFiltro, onProgresso })`
-- Reaproveita a mesma lógica de filtros do `useListagemMotoristas` (pré-filtro por placa/status em `driver_profiles`, filtros em `customers`)
-- Itera em **lotes de 1.000 registros** usando `.range(from, to)` até esgotar (`from >= count`)
-- Em cada lote, faz o enriquecimento (`get_driver_ride_stats`, `branches`, `profiles`) igual ao hook atual
-- Devolve o array completo `DriverRow[]`
-- Callback `onProgresso(carregados, total)` para atualizar UI
+Se nada funcionar (caso raro), `window.open(blobUrl, "_blank")` para o usuário ver o conteúdo no navegador e salvar manualmente.
 
-### 2. Novo utilitário — geração do CSV
+### Detecção de iOS standalone
 
-**Arquivo novo**: `src/features/gestao_motoristas/utils/utilitarios_export_motoristas.ts`
+Adicionar helper:
+```ts
+const isStandalonePWA = () =>
+  window.matchMedia?.("(display-mode: standalone)").matches ||
+  (window.navigator as any).standalone === true;
+```
 
-- Função `gerarCsvMotoristas(motoristas: DriverRow[]): Blob`
-- Função `baixarCsvMotoristas(blob: Blob, nomeArquivo: string)`
-- Mantém o mesmo cabeçalho atual (Nome, CPF, Telefone, Email, Saldo, Pontos Corridas, Tier, Pontuação Ativa)
-- Acrescenta colunas úteis que já existem: **Cidade** (`branch_name`) e **Total Corridas** (`total_rides`)
-- Escapa aspas e usa BOM UTF-8 (compatível com Excel)
+Em PWA standalone iOS, **forçar Web Share** (pular tentativa de `<a download>` que sempre falha).
 
-### 3. Novo hook — orquestrar exportação com loading/progresso
+## Melhorias adicionais
 
-**Arquivo novo**: `src/features/gestao_motoristas/hooks/hook_exportar_motoristas.ts`
-
-- Hook `useExportarMotoristas()` retorna `{ exportar, exportando, progresso }`
-- `progresso` = `{ atual: number, total: number } | null`
-- Em caso de erro: `toast.error` com mensagem clara
-- Em sucesso: `toast.success("X motoristas exportados")`
-
-### 4. Integração na página
-
-**Arquivo editado**: `src/pages/DriverManagementPage.tsx`
-
-- Remover `handleExportCsv` inline (linhas 72-95)
-- Trocar por `const { exportar, exportando, progresso } = useExportarMotoristas()`
-- Botão CSV passa a:
-  - Mostrar `Loader2` girando + "Exportando…" enquanto `exportando`
-  - Mostrar "X / Y" quando há `progresso` (texto pequeno ao lado)
-  - Disabled enquanto exporta (não enquanto `motoristas.length === 0`, para permitir exportar mesmo se a página atual estiver vazia por algum filtro mas o total for >0)
-- Disabled real: `total === 0 || exportando`
-
-### 5. Limites e segurança
-
-- Limite máximo defensivo: **20.000 motoristas** por exportação (cobre o caso atual com folga). Se ultrapassar, `toast.warning` sugere refinar busca/cidade.
-- Tamanho do lote: 1.000 (alinhado com o padrão do projeto para listagens grandes; mantém timeouts seguros)
-- Sem alteração de banco — usa tabelas e RPC já existentes
+- **Toast de sucesso atualizado**: em mobile mostrar "Toque em 'Salvar em Arquivos' para guardar" em vez de "X motoristas exportados" (que sugere arquivo já salvo).
+- **Tratamento de cancelamento**: se o usuário fechar o share sheet (`AbortError`), não mostrar toast de erro — apenas dismiss silencioso.
+- **Type do blob**: já está `text/csv;charset=utf-8;` — manter.
 
 ## Arquivos impactados
 
-**Criados (3):**
-- `src/features/gestao_motoristas/services/servico_exportacao_motoristas.ts`
-- `src/features/gestao_motoristas/utils/utilitarios_export_motoristas.ts`
-- `src/features/gestao_motoristas/hooks/hook_exportar_motoristas.ts`
+**Editado (1):**
+- `src/features/gestao_motoristas/utils/utilitarios_export_motoristas.ts` — refatora `baixarCsvMotoristas` com cascata Web Share → `<a download>` → `window.open` + detecção iOS PWA
 
 **Editado (1):**
-- `src/pages/DriverManagementPage.tsx` (remove função inline + integra hook)
+- `src/features/gestao_motoristas/hooks/hook_exportar_motoristas.ts` — captura `AbortError` (cancelamento de share) e ajusta mensagem de sucesso para mobile
 
-**Sem migration. Sem mudança em RPCs. Sem mudança no fluxo de importação** (que já funciona — limite de 5.000 linhas por upload).
+**Sem alteração no serviço de busca** (que já está correto e exportando os 4.257). Sem migration.
 
 ## Resultado esperado
 
-- Empreendedor clica em **CSV** → vê "Exportando 1.000 / 4.256…" → arquivo baixado com **todos os 4.256 motoristas** da cidade Ipatinga (ou do escopo aplicado)
-- Filtros de busca, status e cidade continuam respeitados — exporta exatamente o que o filtro retornaria
-- Performance: ~5 lotes × ~400ms = exportação em poucos segundos para 4-5 mil motoristas
+**iPhone (PWA)**: clica CSV → aguarda "Exportando 4.257/4.257" → **abre o share sheet do iOS** → escolhe "Salvar em Arquivos" → arquivo `motoristas-2026-04-22.csv` salvo no app Arquivos.
+
+**Android Chrome**: mesma coisa via Web Share.
+
+**Desktop (Chrome/Firefox/Safari)**: download direto na pasta de Downloads (comportamento atual preservado).
 
 ## Risco e rollback
 
-- **Zero impacto em escrita** — operação 100% leitura
-- Rollback trivial: reverter `DriverManagementPage.tsx` para versão atual
-- Sem efeito em outras telas (gestão de motoristas é a única que usa `useListagemMotoristas`)
+- Zero risco de dados (só muda o método de entrega do blob já gerado)
+- Rollback trivial: reverter `utilitarios_export_motoristas.ts`
+- Sem efeito em outras funcionalidades
 
