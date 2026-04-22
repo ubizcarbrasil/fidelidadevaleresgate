@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Gift, Sparkles, MapPin } from "lucide-react";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
+import { useDueloCampeonatoHabilitado } from "@/compartilhados/hooks/hook_duelo_campeonato_habilitado";
+import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
 import { shareDriverUrl } from "@/lib/publicShareUrl";
 import HomeHeader from "./HomeHeader";
 import UserPointsCard from "./UserPointsCard";
@@ -29,6 +31,7 @@ interface Props {
   onOpenCityRedeem: () => void;
   onOpenCityRedemptions: () => void;
   onOpenBuyPoints: () => void;
+  onOpenCampeonato: () => void;
   onActivateSearch: () => void;
   achadinhosEnabled: boolean;
   marketplaceEnabled?: boolean;
@@ -41,9 +44,12 @@ export default function DriverHomePage({
   onGoToMarketplace, onOpenCategory, onOpenDeal, onOpenRedeemDeal,
   onOpenProfile, onOpenLedger, onOpenProgramInfo, onOpenRedeemStore,
   onOpenCityRedeem, onOpenCityRedemptions, onOpenBuyPoints, onActivateSearch, achadinhosEnabled, marketplaceEnabled = false,
-  buyPointsEnabled = false, whatsappNumber,
+  buyPointsEnabled = false, whatsappNumber, onOpenCampeonato,
 }: Props) {
   const { driver } = useDriverSession();
+  const { campeonatoHabilitado } = useDueloCampeonatoHabilitado(brand.id);
+  const { isCampeonato } = useFormatoEngajamento(brand.id);
+  const showCampeonato = campeonatoHabilitado && isCampeonato;
   const settings = brand.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
   const marketplaceTitle = settings?.driver_marketplace_title || "Achadinhos";
@@ -152,10 +158,12 @@ export default function DriverHomePage({
         showCityRedeem={isCityRedemptionEnabled}
         showCityRedemptions
         showBuyPoints={buyPointsEnabled}
+        showCampeonato={showCampeonato}
         whatsappNumber={whatsappNumber}
         onCityRedeem={onOpenCityRedeem}
         onCityRedemptions={onOpenCityRedemptions}
         onBuyPoints={onOpenBuyPoints}
+        onCampeonato={onOpenCampeonato}
         achadinhosEnabled={achadinhosEnabled}
       />
 
