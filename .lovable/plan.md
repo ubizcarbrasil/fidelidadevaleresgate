@@ -1,73 +1,63 @@
 
 
-# Reorganizar criação de temporada: definir séries antes das datas e refletir tamanho ao vivo
+# Tratar erro "temporada duplicada no mesmo mês" com mensagem clara e checagem prévia
 
-## Diagnóstico do que está acontecendo
+## O que está acontecendo
 
-Olhando o print e o código, dois problemas se combinam:
+O banco tem uma regra de unicidade: **só pode existir uma temporada por mês para cada cidade** (constraint `duelo_seasons_brand_id_branch_id_year_month_key`).
 
-1. **Ordem invertida no formulário.** O modal "Nova Temporada" está nesta sequência:
-   1. Informações básicas (datas, modo de pontuação)
-   2. Séries (quantidade de motoristas)
-   3. Prêmios
-   4. Revisão
+Quando você tenta criar uma temporada no mesmo Ano/Mês de outra que já existe (ativa, finalizada ou cancelada), o backend rejeita e o erro técnico aparece bruto na tela:
 
-   Ou seja, o empreendedor é obrigado a escolher datas **antes** de definir quantos motoristas haverá. Mas é o tamanho da maior série que determina a duração mínima da Classificação. Conceitualmente está fora de ordem.
+> `duplicate key value violates unique constraint "duelo_seasons_brand_id_branch_id_year_month_key"`
 
-2. **O aviso não atualiza ao vivo quando você muda o tamanho.** Em `EditorSeries.tsx`, os campos de tamanho/sobem/descem usam `form.register(...)` sem `valueAsNumber` e sem `shouldValidate` no `onChange`. Como o `useMemo` em `EditorInformacoesBasicas.tsx` depende de `form.watch("series")`, ele só recalcula quando o RHF re-renderiza — o que acontece tarde demais. Por isso, ao mudar de 16 para 20, o banner continua dizendo "16 motoristas" e a validação fica defasada.
+Ou seja, **não é um bug**, é uma regra de negócio que está sendo comunicada de forma ruim. E falta um aviso preventivo antes do clique em "Criar temporada".
 
 ## O que vou ajustar
 
-### 1. Inverter a ordem das seções do formulário
-A nova sequência será:
-1. **Séries** (tamanho dos motoristas, sobem/descem)
-2. **Informações básicas** (nome, mês, ano, datas, modo de pontuação)
-3. **Prêmios**
-4. **Revisão**
+### 1. Mensagem de erro amigável no submit
+No `useCriarTemporadaCompleta` (mutation), interceptar o código de erro `23505` (violação de unique do Postgres) e exibir um toast claro em português:
 
-Assim, quando o empreendedor chega na seção de datas, a duração mínima já reflete corretamente o número real de motoristas configurado.
+> "Já existe uma temporada para **{Mês}/{Ano}** nesta cidade. Escolha outro mês ou cancele/exclua a temporada existente antes de criar uma nova."
 
-### 2. Tornar o tamanho das séries reativo de verdade
-Em `EditorSeries.tsx`, todos os inputs numéricos (`size`, `promote_count`, `relegate_count`) passarão a usar:
-- `valueAsNumber: true` (para que o `watch` retorne número, não string)
-- `onChange` que dispara `form.trigger(["series", "classificationEndsAt"])` para forçar revalidação imediata
+Em vez do texto técnico atual.
 
-### 3. Reforçar o `useEffect` de propagação no editor de datas
-Em `EditorInformacoesBasicas.tsx`, o `useEffect` que recalcula a duração mínima passará a observar também a **maior série** (não só `classStart` e `duracaoMinima`), garantindo que ao mudar de 16 para 20 o `classificationEndsAt` seja empurrado para o novo mínimo automaticamente.
+### 2. Checagem prévia no formulário (preventivo)
+No `EditorInformacoesBasicas.tsx`, ao escolher **Ano** e **Mês**, fazer uma consulta leve (`select id, name, status` em `duelo_seasons` filtrando por `brand_id`, `branch_id`, `year`, `month`).
 
-### 4. Pequeno ajuste textual no banner
-Quando `classStart`/`classEnd` ainda não foram preenchidos (porque o usuário está vindo da seção de séries primeiro), o banner mostra apenas a recomendação ("Esta temporada precisa de no mínimo X dias…") sem o trecho "Janela atual: Y dias", que só aparece quando há datas escolhidas.
+Se já existir uma temporada nesse período, exibir um banner amarelo logo abaixo dos seletores:
+
+> ⚠️ Já existe a temporada **"{nome}"** ({status}) em {Mês}/{Ano} nesta cidade. Para criar uma nova, escolha outro mês ou remova a existente em "Temporadas Anteriores".
+
+E desabilitar o botão "Criar temporada" enquanto o conflito persistir, evitando o erro no submit.
+
+### 3. Atalho para resolver o conflito
+No mesmo banner, incluir um botão secundário **"Ver temporada existente"** que rola/abre a aba de temporadas anteriores, facilitando a resolução (cancelar/excluir antes de tentar de novo).
 
 ## Arquivos que serão ajustados
 
-- `src/features/campeonato_duelo/components/empreendedor/FormCriarTemporada.tsx`
-  - inverter a ordem dos `AccordionItem`: Séries (1) → Informações básicas (2) → Prêmios (3) → Revisão (4)
-  - atualizar numeração e ícones nos títulos (1. Séries, 2. Informações básicas, etc.)
-  - ajustar `defaultValue` do Accordion para o novo conjunto de chaves
-
-- `src/features/campeonato_duelo/components/empreendedor/EditorSeries.tsx`
-  - adicionar `valueAsNumber: true` em `size`, `promote_count` e `relegate_count`
-  - adicionar `onChange` que dispara `form.trigger` para revalidar dependências em tempo real
-
+- `src/features/campeonato_duelo/hooks/hook_mutations_campeonato.ts`
+  - tratar `error.code === "23505"` no `onError`, retornando mensagem amigável com Mês/Ano formatados
 - `src/features/campeonato_duelo/components/empreendedor/EditorInformacoesBasicas.tsx`
-  - incluir `maiorSerie` (ou um hash de `series.map(s.size)`) nas dependências do `useEffect` de propagação
-  - garantir que o banner trate o caso "ainda sem datas" sem mostrar "Janela atual: 0 dias"
+  - adicionar `useQuery` que consulta `duelo_seasons` por `(brand_id, branch_id, year, month)`
+  - exibir banner de conflito quando houver match
+  - expor flag `temConflitoMesAno` via contexto/state para travar o submit
+- `src/features/campeonato_duelo/components/empreendedor/FormCriarTemporada.tsx`
+  - desabilitar o botão "Criar temporada" se a checagem prévia detectar conflito
+  - exibir tooltip explicando o motivo do bloqueio
 
 ## Resultado esperado
 
-- Ao abrir o modal, o empreendedor primeiro define **quantos motoristas**, depois define **quando começa**.
-- Ao mudar o tamanho de 16 para 20, o banner imediatamente passa a dizer "20 motoristas" e a duração mínima é recalculada (ex: 20 dias).
-- Se as datas já estiverem preenchidas e ficarem curtas, o `classificationEndsAt` é automaticamente empurrado para frente, junto com `knockoutStartsAt` e `knockoutEndsAt`.
-- A mensagem em vermelho "A Classificação precisa de no mínimo 20 dias…" deixa de aparecer em conflito com um banner que diz "16 motoristas".
+- O usuário **percebe o conflito antes de clicar** em criar, ao escolher Ano/Mês.
+- Se ainda assim tentar submeter (ou em race condition), recebe um toast em português claro, sem texto técnico de constraint.
+- Caminho óbvio para resolver: trocar o mês ou ir para "Temporadas Anteriores" remover a existente.
 
 ## Detalhes técnicos
 
-O bug raiz do "16 fixo" é o `register` sem `valueAsNumber`. No RHF, sem essa flag o valor fica como string, e o `watch("series")` devolve `[{ size: "20", ... }]`. O helper `calcularDuracaoMinimaClassificacao` faz `Number(s.size)`, então funciona — mas o `useMemo` só dispara quando o objeto referenciado muda, o que pode atrasar um ciclo.
-
-Forçar `valueAsNumber: true` + `form.trigger` no `onChange` resolve os dois lados: o estado vira número imediatamente e a revalidação cascata acontece no mesmo evento.
+- Postgres devolve `code: "23505"` para violação de UNIQUE; o detail traz o nome da constraint. Vou casar pelo nome `duelo_seasons_brand_id_branch_id_year_month_key` para garantir que só essa constraint específica gere a mensagem de "mês duplicado" (outras unique constraints permanecem com mensagem genérica).
+- A checagem prévia usa `maybeSingle()` e fica gated por `enabled: !!brandId && !!branchId && !!year && !!month` para evitar requisições desnecessárias.
 
 ## Risco e rollback
 
-- **Risco baixo**: mudanças concentradas em ordem de seções e flags do RHF.
-- **Rollback**: restaurar a ordem original do `Accordion` e remover `valueAsNumber`/`form.trigger` dos inputs de série.
+- **Risco baixo**: lógica concentrada em UX e tratamento de erro.
+- **Rollback**: remover o `useQuery` de checagem e o handler específico do código 23505.
 
