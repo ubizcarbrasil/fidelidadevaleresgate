@@ -189,7 +189,9 @@ describe("gerarCsvMotoristas", () => {
         scoring_disabled: false,
       } as any,
     ]);
-    const texto = await blob.text();
+    // jsdom não implementa Blob.text(); lemos via arrayBuffer + TextDecoder.
+    const buffer = await new Response(blob).arrayBuffer();
+    const texto = new TextDecoder("utf-8").decode(buffer);
     expect(texto.charCodeAt(0)).toBe(0xfeff); // BOM
     expect(texto).toContain('"Nome"');
     expect(texto).toContain('"João"');
