@@ -68,6 +68,7 @@ const ApproveStoreRulesPage = lazyWithRetry(() => import("@/pages/ApproveStoreRu
 const CustomerPreviewPage = lazyWithRetry(() => import("@/pages/CustomerPreviewPage"));
 const PaginaLinks = lazyWithRetry(() => import("@/features/pagina_links/pagina_links"));
 const StoreRegistrationWizard = lazyWithRetry(() => import("@/pages/StoreRegistrationWizard"));
+const PaginaHallDaFama = lazyWithRetry(() => import("@/features/hall_da_fama/pagina_hall_da_fama"));
 
 const StoreOwnerPanel = lazyWithRetry(() => import("@/pages/StoreOwnerPanel"));
 const AffiliateDealsPage = lazyWithRetry(() => import("@/pages/AffiliateDealsPage"));
