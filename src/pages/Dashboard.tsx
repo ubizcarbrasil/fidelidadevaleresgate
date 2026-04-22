@@ -220,6 +220,7 @@ export default function Dashboard() {
   const { isRedirecting } = useStoreOwnerRedirect();
   const { consoleScope, currentBrandId, currentBranchId } = useBrandGuard();
   const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
+  const { isCampeonato } = useFormatoEngajamento(currentBrandId);
 
   // Allow BRAND/TENANT/ROOT admins to view a specific branch dashboard via URL param
   const urlBranchId = searchParams.get("branchId");
