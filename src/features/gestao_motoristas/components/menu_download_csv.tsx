@@ -114,7 +114,7 @@ export default function MenuDownloadCsv({
             {tela === "menu" ? (
               <>
                 {excedeuLimite ? (
-                  <span className="text-amber-500">
+                  <span className="text-warning">
                     Limite de 20.000 atingido —{" "}
                   </span>
                 ) : null}
