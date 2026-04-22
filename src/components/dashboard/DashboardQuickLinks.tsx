@@ -12,16 +12,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Building2, Store, ShoppingBag, Car, ExternalLink, Copy, LogIn,
-  Globe, Eye, Smartphone, Search, Link2, Swords, Blocks, Gift, Settings2, ArrowLeftRight, AlertCircle,
+  Globe, Eye, Smartphone, Search, Link2, Swords, Trophy, Blocks, Gift, Settings2, ArrowLeftRight, AlertCircle,
 } from "lucide-react";
 import DemoStoresToggle from "@/components/DemoStoresToggle";
 import DemoAccessCard from "@/components/dashboard/DemoAccessCard";
 import { CACHE } from "@/config/constants";
+import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
 
 /* ── Brand Quick Links ── */
 function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: { isDriverEnabled?: boolean; isPassengerEnabled?: boolean }) {
   const navigate = useNavigate();
   const { currentBrandId } = useBrandGuard();
+  const { isCampeonato } = useFormatoEngajamento(currentBrandId);
   // Reaproveita o cache do useBrandInfo (já carregado no AppLayout) — evita query duplicada
   const brandInfo = useBrandInfo();
   const brand = brandInfo.brandId
@@ -102,7 +104,13 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
   // Internal links — admin panel routes (SPA navigation)
   const linksInternos = [
     { label: "Painel Franqueado", path: "/branch-wallet", icon: Building2, description: "Painel do gestor da cidade" },
-    { label: "Gamificação", path: "/gamificacao-admin", icon: Swords, description: "Duelos & Ranking", scoringFilter: "DRIVER" as const },
+    {
+      label: isCampeonato ? "Campeonato" : "Gamificação",
+      path: "/gamificacao-admin",
+      icon: isCampeonato ? Trophy : Swords,
+      description: isCampeonato ? "Temporadas e premiações" : "Duelos & Ranking",
+      scoringFilter: "DRIVER" as const,
+    },
     { label: "Módulos", path: "/brand-modules", icon: Blocks, description: "Ativar/desativar módulos" },
     { label: "Produtos de Resgate", path: "/produtos-resgate", icon: Gift, description: "Catálogo de produtos resgatáveis" },
     { label: "Conversão por Público", path: "/conversao-resgate", icon: ArrowLeftRight, description: "Taxa pts/R$ por motorista e passageiro" },
