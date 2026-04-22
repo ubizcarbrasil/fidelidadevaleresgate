@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { LinhaPlanilha, LinhaMapeada, ResumoMapeamento, ResultadoImportacao } from "../types/tipos_importacao";
-import { ImportacaoTimeoutError } from "../types/tipos_importacao";
+import { ImportacaoTimeoutError, ImportacaoUploadError } from "../types/tipos_importacao";
 import { mapearLinha, calcularResumoMapeamento } from "../utils/mapeador_taximachine";
+import { uploadPlanilhaParaStorage } from "../utils/upload_planilha_storage";
 
 const POLLING_INTERVAL_MS = 1500;
 /** Tempo máximo absoluto de polling: 20 minutos. */
@@ -47,8 +48,20 @@ export function useImportarMotoristas({ brandId, branchId }: Args) {
     setErro(null);
     try {
       const mapeadas: LinhaMapeada[] = linhasBrutas.map(mapearLinha);
+
+      // 1) Upload do JSON para Storage (resiliente em iPhone PWA / rede móvel).
+      //    Se o upload falhar, propagamos como ImportacaoUploadError para a UI tratar.
+      const storagePath = await uploadPlanilhaParaStorage(mapeadas);
+
+      // 2) Chama a edge function passando apenas o caminho do arquivo.
+      //    Payload pequeno → não estoura timeout do invoke no Safari mobile.
       const { data, error } = await supabase.functions.invoke("import-drivers-bulk", {
-        body: { brand_id: brandId, branch_id: branchId ?? null, rows: mapeadas },
+        body: {
+          brand_id: brandId,
+          branch_id: branchId ?? null,
+          storage_path: storagePath,
+          total_rows: mapeadas.length,
+        },
       });
       if (error) throw error;
       const id = (data as { job_id?: string })?.job_id;
@@ -56,7 +69,12 @@ export function useImportarMotoristas({ brandId, branchId }: Args) {
       setJobId(id);
       return id;
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Falha ao iniciar importação";
+      const msg =
+        e instanceof ImportacaoUploadError
+          ? e.message
+          : e instanceof Error
+          ? e.message
+          : "Falha ao iniciar importação";
       setErro(msg);
       return null;
     } finally {

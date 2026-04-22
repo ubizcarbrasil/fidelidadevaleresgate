@@ -63,7 +63,9 @@ return ({
         // v7 (Importação Motoristas iOS/PWA) — exclui Edge Functions, driver_import_jobs e
         // operações de Storage do cache do SW. Polling de jobs precisa ser sempre fresco;
         // antes ficava preso em respostas cacheadas (status=running, processed=0) por 5 min.
-        cacheId: "vale-resgate-v7",
+        // v8 (Import via Storage) — força saída de SW antigos (clientsClaim+skipWaiting já
+        // ativos) e invalida bundle no iPhone PWA com upload de planilhas via Storage.
+        cacheId: "vale-resgate-v8",
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,jpg,jpeg,webp}"],

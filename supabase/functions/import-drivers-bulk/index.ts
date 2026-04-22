@@ -82,7 +82,12 @@ interface LinhaMapeada {
 interface Payload {
   brand_id: string;
   branch_id?: string | null;
-  rows: LinhaMapeada[];
+  /** Modo legado: linhas embutidas no body. */
+  rows?: LinhaMapeada[];
+  /** Modo novo (resiliente em iPhone PWA): caminho do JSON no Storage. */
+  storage_path?: string;
+  /** Total esperado, usado para criar o job antes de baixar o arquivo. */
+  total_rows?: number;
 }
 
 interface ErroLinha {
@@ -142,8 +147,41 @@ Deno.serve(async (req) => {
     });
   }
 
-  if (!payload.brand_id || !Array.isArray(payload.rows)) {
-    return new Response(JSON.stringify({ error: "brand_id e rows são obrigatórios" }), {
+  const temStorage = typeof payload.storage_path === "string" && payload.storage_path.length > 0;
+  if (!payload.brand_id || (!Array.isArray(payload.rows) && !temStorage)) {
+    return new Response(JSON.stringify({ error: "brand_id e (rows OU storage_path) são obrigatórios" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // 3. service role para operações internas
+  const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
+    auth: { persistSession: false },
+  });
+
+  // 3.5. Se vier storage_path, baixar JSON do bucket privado e popular `rows`.
+  if (temStorage && !Array.isArray(payload.rows)) {
+    try {
+      const { data: blob, error: dlErr } = await admin
+        .storage
+        .from("importacoes-motoristas")
+        .download(payload.storage_path!);
+      if (dlErr || !blob) throw dlErr || new Error("Arquivo não encontrado");
+      const text = await blob.text();
+      const parsed = JSON.parse(text) as { rows?: LinhaMapeada[] };
+      if (!Array.isArray(parsed.rows)) throw new Error("Formato inválido");
+      payload.rows = parsed.rows;
+    } catch (e: any) {
+      return new Response(
+        JSON.stringify({ error: "Falha ao ler planilha do Storage", details: e?.message || String(e) }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+  }
+
+  if (!Array.isArray(payload.rows) || payload.rows.length === 0) {
+    return new Response(JSON.stringify({ error: "Nenhuma linha para importar" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -155,11 +193,6 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-
-  // 3. service role para operações internas
-  const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
-    auth: { persistSession: false },
-  });
 
   // 4. valida permissão
   const { data: roles } = await admin

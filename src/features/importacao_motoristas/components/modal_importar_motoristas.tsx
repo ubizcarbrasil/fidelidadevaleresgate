@@ -8,7 +8,7 @@ import EtapaPreview from "./etapa_preview";
 import EtapaProgresso from "./etapa_progresso";
 import EtapaResultado from "./etapa_resultado";
 import { useImportarMotoristas } from "../hooks/hook_importar_motoristas";
-import { ImportacaoTimeoutError, type EtapaImportacao, type ResultadoImportacao } from "../types/tipos_importacao";
+import { ImportacaoTimeoutError, type EtapaImportacao } from "../types/tipos_importacao";
 
 interface Props {
   brandId: string;
@@ -64,7 +64,11 @@ export default function ModalImportarMotoristas({
 
   const handleConfirmar = async () => {
     const id = await importer.iniciarImportacao();
-    if (!id) return;
+    if (!id) {
+      // Erro já foi setado em importer.erro e exibido via toast pelo useEffect.
+      // Mantém na etapa preview pra usuário tentar novamente sem perder os dados.
+      return;
+    }
     setEtapa("progresso");
     await acompanharComTratamento(id);
   };

@@ -131,3 +131,11 @@ export class ImportacaoTimeoutError extends Error {
     this.name = "ImportacaoTimeoutError";
   }
 }
+
+/** Erro recuperável retornado quando o upload da planilha falha. */
+export class ImportacaoUploadError extends Error {
+  constructor(message = "Falha ao enviar planilha ao servidor") {
+    super(message);
+    this.name = "ImportacaoUploadError";
+  }
+}
