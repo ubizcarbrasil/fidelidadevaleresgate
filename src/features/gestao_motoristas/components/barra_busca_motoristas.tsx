@@ -1,5 +1,6 @@
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,12 @@ export default function BarraBuscaMotoristas({
   status,
   onStatusChange,
 }: Props) {
+  const temFiltro = busca.trim() !== "" || status !== "ALL";
+  const limparFiltros = () => {
+    onBuscaChange("");
+    onStatusChange("ALL");
+  };
+
   return (
     <div className="flex flex-col sm:flex-row gap-2 flex-1 max-w-2xl">
       <div className="relative flex-1">
@@ -29,7 +36,7 @@ export default function BarraBuscaMotoristas({
         <Input
           value={busca}
           onChange={(e) => onBuscaChange(e.target.value)}
-          placeholder="Nome, CPF, telefone, e-mail ou placa..."
+          placeholder="Nome, CPF, telefone ou e-mail..."
           className="pl-9"
         />
       </div>
@@ -44,6 +51,18 @@ export default function BarraBuscaMotoristas({
           <SelectItem value="BLOQUEADO">Bloqueado</SelectItem>
         </SelectContent>
       </Select>
+      {temFiltro && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={limparFiltros}
+          className="shrink-0 text-muted-foreground hover:text-foreground"
+          title="Limpar filtros"
+        >
+          <X className="h-4 w-4 mr-1" />
+          Limpar
+        </Button>
+      )}
     </div>
   );
 }

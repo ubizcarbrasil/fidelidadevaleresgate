@@ -123,7 +123,7 @@ export function useListagemMotoristas(params: ParametrosListagem) {
         let q = (supabase as any)
           .from("customers")
           .select(
-            "id, name, cpf, phone, email, points_balance, user_id, branch_id, customer_tier, scoring_disabled, driver_monthly_ride_count",
+            "id, name, cpf, phone, email, points_balance, user_id, branch_id, customer_tier, scoring_disabled, driver_monthly_ride_count, updated_at",
             { count: "exact" },
           )
           .eq("brand_id", brandId)
