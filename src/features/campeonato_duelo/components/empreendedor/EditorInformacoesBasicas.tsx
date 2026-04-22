@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef } from "react";
 import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,11 +9,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlertCircle, Trophy, Swords } from "lucide-react";
+import { AlertCircle, Info, Trophy, Swords } from "lucide-react";
 import { NOMES_MESES } from "../../constants/constantes_campeonato";
 import type { FormCriarTemporadaInput } from "../../schemas/schema_criar_temporada";
 import {
+  calcularDuracaoMinimaClassificacao,
+  calcularFimMinimoClassificacao,
   compararInputDate,
+  diferencaEmDiasInclusiva,
   somarDiasInputDate,
 } from "../../utils/utilitarios_campeonato";
 import LabelComAjuda from "./LabelComAjuda";
@@ -28,6 +32,20 @@ export default function EditorInformacoesBasicas() {
   const classEnd = form.watch("classificationEndsAt") ?? "";
   const knockStart = form.watch("knockoutStartsAt") ?? "";
   const knockEnd = form.watch("knockoutEndsAt") ?? "";
+  const series = form.watch("series") ?? [];
+  const scoringMode = form.watch("scoringMode");
+
+  // Duração mínima da classificação calculada a partir das séries e do modo.
+  const duracaoMinima = useMemo(
+    () => calcularDuracaoMinimaClassificacao(series, scoringMode),
+    [series, scoringMode],
+  );
+  const maiorSerie = useMemo(() => {
+    const tams = (series ?? [])
+      .map((s: any) => Number(s?.size) || 0)
+      .filter((n: number) => n > 0);
+    return tams.length ? Math.max(...tams) : 0;
+  }, [series]);
 
   const conflitoClassificacao =
     !!classStart && !!classEnd && compararInputDate(classEnd, classStart) <= 0;
@@ -37,9 +55,16 @@ export default function EditorInformacoesBasicas() {
     !!knockStart && !!knockEnd && compararInputDate(knockEnd, knockStart) <= 0;
 
   // Limites mínimos encadeados (YYYY-MM-DD) para os inputs nativos.
-  const minClassEnd = classStart ? somarDiasInputDate(classStart, 1) : undefined;
+  // Fim da Classificação: respeita início + (duração mínima - 1).
+  const minClassEnd = classStart
+    ? calcularFimMinimoClassificacao(classStart, duracaoMinima)
+    : undefined;
   const minKnockStart = classEnd ? somarDiasInputDate(classEnd, 1) : undefined;
   const minKnockEnd = knockStart ? somarDiasInputDate(knockStart, 1) : undefined;
+
+  const duracaoAtual = diferencaEmDiasInclusiva(classStart, classEnd);
+  const duracaoSuficiente =
+    !classStart || !classEnd || duracaoAtual >= duracaoMinima;
 
   /**
    * Ao alterar uma data "âncora", empurra a próxima dependente para manter a
@@ -78,7 +103,44 @@ export default function EditorInformacoesBasicas() {
     }
   }
 
-  const scoringMode = form.watch("scoringMode");
+  /**
+   * Propaga automaticamente a duração mínima da Classificação para frente
+   * quando o usuário altera o tamanho de uma série, o modo de pontuação ou
+   * o início da Classificação. Nunca encurta uma janela já maior que a mínima.
+   */
+  const ultimaPropagacaoRef = useRef<string>("");
+  useEffect(() => {
+    if (!classStart) return;
+    const fimMinimo = calcularFimMinimoClassificacao(classStart, duracaoMinima);
+    if (!fimMinimo) return;
+    // chave para evitar loops quando o estado já está coerente
+    const chave = `${classStart}|${duracaoMinima}|${classEnd}|${knockStart}|${knockEnd}`;
+    if (ultimaPropagacaoRef.current === chave) return;
+
+    let novoClassEnd = classEnd;
+    if (!classEnd || compararInputDate(classEnd, fimMinimo) < 0) {
+      novoClassEnd = fimMinimo;
+      form.setValue("classificationEndsAt", novoClassEnd, { shouldValidate: true });
+    }
+
+    if (novoClassEnd) {
+      const minKS = somarDiasInputDate(novoClassEnd, 1);
+      let novoKnockStart = knockStart;
+      if (!knockStart || compararInputDate(knockStart, minKS) < 0) {
+        novoKnockStart = minKS;
+        form.setValue("knockoutStartsAt", novoKnockStart, { shouldValidate: true });
+      }
+      if (novoKnockStart) {
+        const minKE = somarDiasInputDate(novoKnockStart, 1);
+        if (!knockEnd || compararInputDate(knockEnd, minKE) < 0) {
+          form.setValue("knockoutEndsAt", minKE, { shouldValidate: true });
+        }
+      }
+    }
+
+    ultimaPropagacaoRef.current = chave;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [classStart, duracaoMinima]);
 
   return (
     <div className="space-y-4">
@@ -146,6 +208,40 @@ export default function EditorInformacoesBasicas() {
           Período de pontos corridos. Os motoristas acumulam pontos pelas
           corridas concluídas para definir a colocação inicial em cada série.
         </p>
+        {maiorSerie > 0 && (
+          <div
+            className={`flex items-start gap-1.5 rounded-sm p-2 text-[11px] leading-snug ${
+              duracaoSuficiente
+                ? "bg-primary/10 text-foreground/80"
+                : "bg-destructive/10 text-destructive"
+            }`}
+          >
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>
+              {scoringMode === "daily_matchup" ? (
+                <>
+                  Esta temporada precisa de no mínimo{" "}
+                  <strong>{duracaoMinima} dias</strong> de classificação para que
+                  todos os <strong>{maiorSerie} motoristas</strong> da maior
+                  série se enfrentem (Confronto diário).
+                </>
+              ) : (
+                <>
+                  Recomenda-se no mínimo{" "}
+                  <strong>{duracaoMinima} dias</strong> de classificação para
+                  uma corrida por pontos justa com{" "}
+                  <strong>{maiorSerie} motoristas</strong> na maior série.
+                </>
+              )}
+              {classStart && classEnd && (
+                <>
+                  {" "}
+                  Janela atual: <strong>{duracaoAtual} dias</strong>.
+                </>
+              )}
+            </span>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <LabelComAjuda ajuda="Data em que começa a contagem de pontos da fase de classificação.">
@@ -205,6 +301,14 @@ export default function EditorInformacoesBasicas() {
           começar <strong>depois</strong> do fim da Fase 1, e o fim precisa ser
           depois do início.
         </p>
+        <div className="flex items-start gap-1.5 rounded-sm bg-primary/10 p-2 text-[11px] leading-snug text-foreground/80">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>
+            O Mata-mata começa automaticamente <strong>após o fim da
+            Classificação</strong>. Você pode estender a data final, mas não
+            antecipá-la.
+          </span>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <LabelComAjuda ajuda="Início dos confrontos eliminatórios. Deve ser após o fim da fase de classificação.">

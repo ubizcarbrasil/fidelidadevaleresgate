@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { POSICOES_PREMIAVEIS } from "../constants/constantes_templates";
+import {
+  calcularDuracaoMinimaClassificacao,
+  diferencaEmDiasInclusiva,
+} from "../utils/utilitarios_campeonato";
 
 const NOME_SERIE_REGEX = /^[A-Za-z0-9 ]{1,10}$/;
 
@@ -107,6 +111,31 @@ export const schemaCriarTemporada = z
         });
       }
     });
+
+    // 4. Duração mínima da Classificação em função da maior série e do modo
+    const duracaoMinima = calcularDuracaoMinimaClassificacao(
+      val.series,
+      val.scoringMode,
+    );
+    const csIso = val.classificationStartsAt;
+    const ceIso = val.classificationEndsAt;
+    const csYmd = csIso ? csIso.slice(0, 10) : "";
+    const ceYmd = ceIso ? ceIso.slice(0, 10) : "";
+    if (csYmd && ceYmd) {
+      const dias = diferencaEmDiasInclusiva(csYmd, ceYmd);
+      if (dias < duracaoMinima) {
+        const maior = Math.max(...val.series.map((s) => s.size));
+        const motivo =
+          val.scoringMode === "daily_matchup"
+            ? `para que todos os ${maior} motoristas da maior série se enfrentem (Confronto diário)`
+            : `para uma corrida por pontos justa com ${maior} motoristas (Pontos corridos)`;
+        ctx.addIssue({
+          code: "custom",
+          message: `A Classificação precisa de no mínimo ${duracaoMinima} dias ${motivo}.`,
+          path: ["classificationEndsAt"],
+        });
+      }
+    }
   });
 
 export type FormCriarTemporadaInput = z.infer<typeof schemaCriarTemporada>;
