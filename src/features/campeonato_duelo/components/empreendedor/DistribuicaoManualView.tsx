@@ -196,7 +196,7 @@ export default function DistribuicaoManualView({
           </DialogHeader>
 
           {modoLeitura && (
-            <div className="flex items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-300">
+            <div className="flex items-center gap-2 rounded-md border border-warning/40 bg-warning/10 p-2 text-xs text-warning-foreground">
               <AlertCircle className="h-3.5 w-3.5 shrink-0" />
               A distribuição manual só está disponível durante a fase de
               classificação. A temporada está em modo somente leitura.

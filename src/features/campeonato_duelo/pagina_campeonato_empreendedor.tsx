@@ -123,6 +123,7 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
                     seasonId={ativa.id}
                     seasonName={ativa.name}
                     pausada={!!ativa.paused_at}
+                    fase={ativa.phase}
                     tiers={tiersResumo}
                   />
                   <Button
