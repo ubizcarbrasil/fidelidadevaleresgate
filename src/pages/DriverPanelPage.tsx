@@ -21,6 +21,7 @@ import DriverCityPartnersPage from "@/components/driver/DriverCityPartnersPage";
 import DriverCityRedemptionHistory from "@/components/driver/DriverCityRedemptionHistory";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 import DriverCategoryPage from "@/components/driver/DriverCategoryPage";
+import CampeonatoMotoristaPanel from "@/components/driver/campeonato/CampeonatoMotoristaPanel";
 
 function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, initialDealId, isAdminSession }: {
   brand: any;
@@ -63,6 +64,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
     | { type: "cityPartners" }
     | { type: "cityRedemptions" }
     | { type: "buyPoints" }
+    | { type: "campeonato" }
     | { type: "category"; cat: DealCategory }
     | { type: "deal"; deal: any }
     | { type: "redeemDeal"; deal: any }
@@ -132,6 +134,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             onOpenCityRedeem={() => marketplaceEnabled && setHubOverlay({ type: "cityPartners" })}
             onOpenCityRedemptions={() => setHubOverlay({ type: "cityRedemptions" })}
             onOpenBuyPoints={() => buyPointsEnabled && setHubOverlay({ type: "buyPoints" })}
+            onOpenCampeonato={() => setHubOverlay({ type: "campeonato" })}
             onActivateSearch={() => achadinhosEnabled && setShowHub(false)}
             achadinhosEnabled={achadinhosEnabled}
             marketplaceEnabled={marketplaceEnabled}
@@ -234,6 +237,13 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
           <DriverBuyPointsOverlay
             brandId={brand.id}
             branchId={effectiveBranch?.id}
+            fontHeading={fontHeading}
+            onBack={() => setHubOverlay(null)}
+          />
+        )}
+        {hubOverlay?.type === "campeonato" && (
+          <CampeonatoMotoristaPanel
+            brandId={brand.id}
             fontHeading={fontHeading}
             onBack={() => setHubOverlay(null)}
           />

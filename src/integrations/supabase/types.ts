@@ -820,6 +820,7 @@ export type Database = {
           business_model_id: string
           config_json: Json
           created_at: string
+          engagement_format: string
           ganha_ganha_margin_pct: number | null
           id: string
           is_enabled: boolean
@@ -831,6 +832,7 @@ export type Database = {
           business_model_id: string
           config_json?: Json
           created_at?: string
+          engagement_format?: string
           ganha_ganha_margin_pct?: number | null
           id?: string
           is_enabled?: boolean
@@ -842,6 +844,7 @@ export type Database = {
           business_model_id?: string
           config_json?: Json
           created_at?: string
+          engagement_format?: string
           ganha_ganha_margin_pct?: number | null
           id?: string
           is_enabled?: boolean
@@ -10060,12 +10063,44 @@ export type Database = {
         Args: { p_amount: number; p_branch_id: string; p_description?: string }
         Returns: Json
       }
+      driver_belongs_to_brand: {
+        Args: { p_brand_id: string; p_driver_id: string }
+        Returns: boolean
+      }
+      driver_get_active_season: {
+        Args: { p_brand_id: string; p_driver_id: string }
+        Returns: Json
+      }
+      driver_get_centered_ranking: {
+        Args: { p_driver_id: string; p_range?: number; p_season_id: string }
+        Returns: Json
+      }
+      driver_get_current_match: {
+        Args: { p_driver_id: string; p_season_id: string }
+        Returns: Json
+      }
+      driver_get_full_bracket: {
+        Args: { p_driver_id: string; p_season_id: string }
+        Returns: Json
+      }
+      driver_get_full_tier_table: {
+        Args: { p_driver_id: string; p_season_id: string }
+        Returns: Json
+      }
+      driver_get_history: {
+        Args: { p_brand_id: string; p_driver_id: string; p_limit?: number }
+        Returns: Json
+      }
       duelo_advance_phases: { Args: never; Returns: Json }
       duelo_apply_promotion_relegation: {
         Args: { p_season_id: string }
         Returns: Json
       }
       duelo_backfill_standings: { Args: { p_season_id: string }; Returns: Json }
+      duelo_change_engagement_format: {
+        Args: { p_brand_id: string; p_new_format: string }
+        Returns: Json
+      }
       duelo_create_brackets_within_tier: {
         Args: {
           p_ends_at: string
@@ -10078,6 +10113,10 @@ export type Database = {
         Returns: number
       }
       duelo_gerar_chaveamento: { Args: { p_season_id: string }; Returns: Json }
+      duelo_get_engagement_format: {
+        Args: { p_brand_id: string }
+        Returns: string
+      }
       duelo_is_weekend_at: {
         Args: { p_branch_id: string; p_finalized_at: string }
         Returns: boolean
