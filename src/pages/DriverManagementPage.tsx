@@ -46,6 +46,8 @@ export default function DriverManagementPage() {
     porPagina: POR_PAGINA,
   });
 
+  const { exportar, exportando, progresso } = useExportarMotoristas();
+
   const motoristas = resultado?.motoristas ?? [];
   const total = resultado?.total ?? 0;
   const totalPaginas = resultado?.totalPaginas ?? 1;
@@ -71,28 +73,14 @@ export default function DriverManagementPage() {
   };
 
   const handleExportCsv = () => {
-    if (motoristas.length === 0) return;
-    const header = "Nome,CPF,Telefone,Email,Saldo Pontos,Pontos Corridas,Tier,Pontuação Ativa";
-    const rows = motoristas.map((c: DriverRow) =>
-      [
-        `"${cleanName(c.name).replace(/"/g, '""')}"`,
-        c.cpf || "",
-        c.phone || "",
-        c.email || "",
-        c.points_balance,
-        c.total_ride_points,
-        c.customer_tier || "",
-        c.scoring_disabled ? "Não" : "Sim",
-      ].join(","),
-    );
-    const csv = [header, ...rows].join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `motoristas-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    if (!currentBrandId || total === 0 || exportando) return;
+    exportar({
+      brandId: currentBrandId,
+      branchId: currentBranchId,
+      isBranchScope,
+      busca: buscaDebounced,
+      statusFiltro: status,
+    });
   };
 
   return (
