@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Truck, Eye, Gift, Download, Users } from "lucide-react";
+import { Truck, Eye, Gift, Download, Users, Loader2 } from "lucide-react";
 import DriverDetailSheet from "@/components/driver-management/DriverDetailSheet";
 import ManualDriverScoringDialog from "@/components/machine-integration/ManualDriverScoringDialog";
 import ModalImportarMotoristas from "@/features/importacao_motoristas/components/modal_importar_motoristas";
@@ -16,6 +16,7 @@ import {
   useListagemMotoristas,
   type StatusFiltro,
 } from "@/features/gestao_motoristas/hooks/hook_listagem_motoristas";
+import { useExportarMotoristas } from "@/features/gestao_motoristas/hooks/hook_exportar_motoristas";
 import BarraBuscaMotoristas from "@/features/gestao_motoristas/components/barra_busca_motoristas";
 import PaginacaoMotoristas from "@/features/gestao_motoristas/components/paginacao_motoristas";
 
