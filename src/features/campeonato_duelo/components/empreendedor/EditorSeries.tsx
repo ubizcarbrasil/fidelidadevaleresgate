@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import type { FormCriarTemporadaInput } from "../../schemas/schema_criar_temporada";
+import LabelComAjuda from "./LabelComAjuda";
 
 export default function EditorSeries() {
   const form = useFormContext<FormCriarTemporadaInput>();
@@ -48,14 +49,18 @@ export default function EditorSeries() {
             </div>
             <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
               <div className="space-y-1">
-                <Label className="text-xs">Nome</Label>
+                <LabelComAjuda ajuda="Identificador da série (ex: A, B, C). Use letras ou números, máximo 10 caracteres. A primeira é sempre a divisão mais alta.">
+                  Nome
+                </LabelComAjuda>
                 <Input
                   {...form.register(`series.${idx}.name`)}
                   placeholder="A"
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Tamanho</Label>
+                <LabelComAjuda ajuda="Quantos motoristas cabem nessa série (entre 2 e 64). Define o tamanho da chave do mata-mata.">
+                  Tamanho
+                </LabelComAjuda>
                 <Input
                   type="number"
                   min={2}
@@ -64,9 +69,11 @@ export default function EditorSeries() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="flex items-center gap-1 text-xs">
-                  <ArrowUpCircle className="h-3 w-3 text-emerald-500" /> Sobem
-                </Label>
+                <LabelComAjuda ajuda="Quantos motoristas no topo desta série sobem para a divisão de cima na próxima temporada. A primeira série (mais alta) não tem promoção.">
+                  <span className="flex items-center gap-1">
+                    <ArrowUpCircle className="h-3 w-3 text-emerald-500" /> Sobem
+                  </span>
+                </LabelComAjuda>
                 <Input
                   type="number"
                   min={0}
@@ -74,9 +81,11 @@ export default function EditorSeries() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="flex items-center gap-1 text-xs">
-                  <ArrowDownCircle className="h-3 w-3 text-destructive" /> Descem
-                </Label>
+                <LabelComAjuda ajuda="Quantos motoristas no fim desta série caem para a divisão de baixo. A última série (mais baixa) não tem rebaixamento. Sobem + Descem não pode passar do tamanho.">
+                  <span className="flex items-center gap-1">
+                    <ArrowDownCircle className="h-3 w-3 text-destructive" /> Descem
+                  </span>
+                </LabelComAjuda>
                 <Input
                   type="number"
                   min={0}

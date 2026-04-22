@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { NOMES_MESES } from "../../constants/constantes_campeonato";
 import type { FormCriarTemporadaInput } from "../../schemas/schema_criar_temporada";
+import LabelComAjuda from "./LabelComAjuda";
 
 export default function EditorInformacoesBasicas() {
   const form = useFormContext<FormCriarTemporadaInput>();
@@ -20,7 +21,12 @@ export default function EditorInformacoesBasicas() {
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="nome-temporada">Nome da temporada</Label>
+        <LabelComAjuda
+          htmlFor="nome-temporada"
+          ajuda="Nome de exibição da temporada (ex: 'Brasileirão Janeiro/2026'). Aparece para os motoristas e nos rankings."
+        >
+          Nome da temporada
+        </LabelComAjuda>
         <Input id="nome-temporada" {...form.register("name")} />
         {errors.name && (
           <p className="text-xs text-destructive">{errors.name.message}</p>
@@ -29,7 +35,9 @@ export default function EditorInformacoesBasicas() {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label>Mês</Label>
+          <LabelComAjuda ajuda="Mês de referência da temporada. Cada cidade só pode ter uma temporada ativa por mês.">
+            Mês
+          </LabelComAjuda>
           <Select
             value={String(form.watch("month"))}
             onValueChange={(v) => form.setValue("month", Number(v))}
@@ -47,7 +55,7 @@ export default function EditorInformacoesBasicas() {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Ano</Label>
+          <LabelComAjuda ajuda="Ano de referência da temporada.">Ano</LabelComAjuda>
           <Select
             value={String(form.watch("year"))}
             onValueChange={(v) => form.setValue("year", Number(v))}
@@ -67,16 +75,26 @@ export default function EditorInformacoesBasicas() {
       </div>
 
       <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Fase 1 — Classificação
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Fase 1 — Classificação
+          </p>
+        </div>
+        <p className="text-[11px] leading-snug text-muted-foreground">
+          Período de pontos corridos. Os motoristas acumulam pontos pelas
+          corridas concluídas para definir a colocação inicial em cada série.
         </p>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label className="text-xs">Início</Label>
+            <LabelComAjuda ajuda="Data em que começa a contagem de pontos da fase de classificação.">
+              Início
+            </LabelComAjuda>
             <Input type="date" {...form.register("classificationStartsAt")} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Fim</Label>
+            <LabelComAjuda ajuda="Último dia válido para acumular pontos. Após essa data o ranking da série é congelado e o mata-mata começa.">
+              Fim
+            </LabelComAjuda>
             <Input type="date" {...form.register("classificationEndsAt")} />
           </div>
         </div>
@@ -91,13 +109,21 @@ export default function EditorInformacoesBasicas() {
         <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
           Fase 2 — Mata-mata
         </p>
+        <p className="text-[11px] leading-snug text-muted-foreground">
+          Confrontos eliminatórios entre os classificados de cada série. Precisa
+          começar depois do fim da Fase 1.
+        </p>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label className="text-xs">Início</Label>
+            <LabelComAjuda ajuda="Início dos confrontos eliminatórios. Deve ser após o fim da fase de classificação.">
+              Início
+            </LabelComAjuda>
             <Input type="date" {...form.register("knockoutStartsAt")} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Fim</Label>
+            <LabelComAjuda ajuda="Data limite para concluir o mata-mata e encerrar a temporada. Os prêmios são distribuídos automaticamente após essa data.">
+              Fim
+            </LabelComAjuda>
             <Input type="date" {...form.register("knockoutEndsAt")} />
           </div>
         </div>

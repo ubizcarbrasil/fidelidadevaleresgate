@@ -9,6 +9,15 @@ import {
   ROTULOS_POSICAO_PREMIO,
 } from "../../constants/constantes_templates";
 import type { FormCriarTemporadaInput } from "../../schemas/schema_criar_temporada";
+import LabelComAjuda from "./LabelComAjuda";
+
+const AJUDA_POR_POSICAO: Record<string, string> = {
+  champion: "Pontos creditados ao motorista campeão da série (1º lugar do mata-mata).",
+  runner_up: "Pontos para o vice-campeão (perde a final).",
+  semifinal: "Pontos para os 2 motoristas eliminados na semifinal.",
+  quarter: "Pontos para os 4 motoristas eliminados nas quartas de final.",
+  round_of_16: "Pontos para os 8 motoristas eliminados nas oitavas de final.",
+};
 
 export default function EditorPremios() {
   const form = useFormContext<FormCriarTemporadaInput>();
@@ -63,7 +72,14 @@ export default function EditorPremios() {
             <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
               {POSICOES_PREMIAVEIS.map((pos, posIdx) => (
                 <div key={pos} className="space-y-1">
-                  <Label className="text-xs">{ROTULOS_POSICAO_PREMIO[pos]}</Label>
+                  <LabelComAjuda
+                    ajuda={
+                      AJUDA_POR_POSICAO[pos] ??
+                      "Pontos creditados ao motorista que terminar nesta posição."
+                    }
+                  >
+                    {ROTULOS_POSICAO_PREMIO[pos]}
+                  </LabelComAjuda>
                   <Input
                     type="number"
                     min={0}
