@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trophy, Calendar } from "lucide-react";
 import { useDashboardCampeonato } from "./hooks/hook_campeonato_empreendedor";
 import { useFormatoEngajamento } from "./hooks/hook_formato_engajamento";
+import { useDueloCampeonatoHabilitado } from "@/compartilhados/hooks/hook_duelo_campeonato_habilitado";
 import { CORES_FASE, ROTULOS_FASE } from "./constants/constantes_campeonato";
 import { formatarPeriodo } from "./utils/utilitarios_campeonato";
 import SeletorFormatoEngajamento from "./components/empreendedor/SeletorFormatoEngajamento";
@@ -16,6 +17,7 @@ import BannerStatusTemporada from "./components/empreendedor/BannerStatusTempora
 import ListaTemporadasAnteriores from "./components/empreendedor/ListaTemporadasAnteriores";
 import DetalheSerieView from "./components/empreendedor/DetalheSerieView";
 import CardPremiosADistribuir from "./components/empreendedor/CardPremiosADistribuir";
+import CardAtivarCampeonato from "./components/empreendedor/CardAtivarCampeonato";
 
 interface Props {
   brandId: string;
@@ -23,6 +25,8 @@ interface Props {
 }
 
 export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Props) {
+  const { campeonatoHabilitado, isLoading: loadingHabilitacao } =
+    useDueloCampeonatoHabilitado(brandId);
   const { isCampeonato, isLoading: loadingFormato } = useFormatoEngajamento(brandId);
   const { data: dashboard, isLoading } = useDashboardCampeonato(brandId);
   const [modalCriar, setModalCriar] = useState(false);
@@ -31,8 +35,17 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
     tier_name: string;
   } | null>(null);
 
-  if (loadingFormato || isLoading) {
+  if (loadingHabilitacao || loadingFormato || isLoading) {
     return <Skeleton className="h-64 w-full rounded-lg" />;
+  }
+
+  // Camada 2 OFF: marca ainda não ativou o campeonato. Mostra só o card de ativação.
+  if (!campeonatoHabilitado) {
+    return (
+      <div className="space-y-4 p-1">
+        <CardAtivarCampeonato brandId={brandId} />
+      </div>
+    );
   }
 
   const ativa = dashboard?.active_season ?? null;
@@ -44,6 +57,7 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
 
   return (
     <div className="space-y-4 p-1">
+      <CardAtivarCampeonato brandId={brandId} />
       <SeletorFormatoEngajamento brandId={brandId} />
 
       {!isCampeonato ? (
