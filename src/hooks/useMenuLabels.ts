@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MENU_REGISTRY } from "@/compartilhados/constants/constantes_menu_sidebar";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
 
 export interface LabelGroup {
   groupLabel: string;
@@ -262,6 +263,7 @@ export function getContextForTab(tab: "brand" | "branch" | "customer_app"): Menu
 
 export function useMenuLabels(context: MenuLabelContext) {
   const { currentBrandId } = useBrandGuard();
+  const { isCampeonato } = useFormatoEngajamento(currentBrandId);
 
   const { data: customLabels } = useQuery({
     queryKey: ["menu-labels", currentBrandId, context],
@@ -286,6 +288,9 @@ export function useMenuLabels(context: MenuLabelContext) {
   const getLabel = (key: string): string => {
     const custom = customLabels?.find((l) => l.key === key);
     if (custom) return custom.custom_label;
+    // Quando a marca opera no formato Campeonato, renomeamos o item de
+    // gamificação para refletir o foco do produto.
+    if (isCampeonato && key === "sidebar.gamificacao") return "Campeonato";
     return allDefaults[key] || MENU_REGISTRY[key]?.defaultTitle || key;
   };
 

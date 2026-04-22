@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, Smartphone, Swords } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
+import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
 import { useStoreOwnerRedirect } from "@/hooks/useStoreOwnerRedirect";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -219,6 +220,7 @@ export default function Dashboard() {
   const { isRedirecting } = useStoreOwnerRedirect();
   const { consoleScope, currentBrandId, currentBranchId } = useBrandGuard();
   const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
+  const { isCampeonato } = useFormatoEngajamento(currentBrandId);
 
   // Allow BRAND/TENANT/ROOT admins to view a specific branch dashboard via URL param
   const urlBranchId = searchParams.get("branchId");
@@ -443,14 +445,20 @@ export default function Dashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <h3 className="font-semibold text-sm">Duelos & Ranking</h3>
-                      <Badge variant="destructive" className="text-[10px] px-2 py-0">Ao Vivo</Badge>
+                      <h3 className="font-semibold text-sm">{isCampeonato ? "Campeonato" : "Duelos & Ranking"}</h3>
+                      {!isCampeonato && (
+                        <Badge variant="destructive" className="text-[10px] px-2 py-0">Ao Vivo</Badge>
+                      )}
                     </div>
-                    <p className="text-xs text-muted-foreground">Acompanhe duelos ao vivo, crie desafios e impulsione apostas.</p>
+                    <p className="text-xs text-muted-foreground">
+                      {isCampeonato
+                        ? "Crie temporadas, gerencie séries e premie os melhores motoristas."
+                        : "Acompanhe duelos ao vivo, crie desafios e impulsione apostas."}
+                    </p>
                   </div>
                 </div>
                 <Button size="sm" className="shrink-0 gap-1.5 w-full sm:w-auto" onClick={() => navigate("/gamificacao-admin")}>
-                  <Swords className="h-3.5 w-3.5" /> Abrir Gamificação
+                  <Swords className="h-3.5 w-3.5" /> {isCampeonato ? "Abrir Campeonato" : "Abrir Gamificação"}
                 </Button>
               </CardContent>
             </Card>
