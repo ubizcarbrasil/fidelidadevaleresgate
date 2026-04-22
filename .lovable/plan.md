@@ -1,103 +1,92 @@
 
 
-# Alternativas para baixar o CSV de motoristas no iPhone/PWA
+# Registrar "Campeonato Motorista" como Modelo de Negócio + Módulo
 
-## Diagnóstico rápido
+## Diagnóstico
 
-Hoje o download tem 2 toques:
+O Campeonato Duelo Motorista (Brasileirão dos motoristas — temporadas mensais, séries A/B/C, mata-mata, premiações) está 100% implementado em código (tabelas `duelo_seasons`, `duelo_brackets`, `duelo_champions`, `duelo_season_tiers`, fluxo completo em `src/features/campeonato_duelo/`), mas **nunca foi cadastrado nos catálogos da plataforma**:
 
-1. **Exportar CSV** → edge function gera o arquivo, sobe no bucket `exportacoes-motoristas`, devolve URL assinada (HTTPS, 1h).
-2. **Abrir CSV** → o app tenta `navigator.share({ files })` e, se falhar, cai pra `window.open(url)`.
-
-No iPhone PWA standalone:
-- `navigator.share({ files })` falha em ~30% dos modelos.
-- `window.open()` em PWA standalone às vezes abre tela branca (Safari não tem aba pra direcionar).
-- Resultado: usuário fica preso no 2º toque.
-
-## Solução: 4 caminhos paralelos de download (o usuário escolhe)
-
-Ao concluir a exportação, em vez de um único botão "Abrir CSV", mostrar um **menu com 4 opções**, todos usando a mesma URL HTTPS assinada já gerada:
-
-### Opção 1 — Abrir em nova aba do Safari (padrão recomendado iPhone)
-
-- `<a href={url} target="_blank" rel="noopener" download="motoristas.csv">`
-- Funciona em **PWA standalone** porque o Safari intercepta `target="_blank"` e abre o Safari real, fora da PWA.
-- O Safari mostra preview do CSV e oferece "Compartilhar → Salvar em Arquivos".
-
-### Opção 2 — Copiar link de download
-
-- Botão "Copiar link" que coloca a URL assinada (válida por 1h) na área de transferência via `navigator.clipboard.writeText`.
-- Usuário cola no Safari, no Mail pra si mesmo, ou no WhatsApp Web no desktop.
-- Funciona 100% em qualquer PWA, qualquer iOS.
-
-### Opção 3 — Enviar por e-mail (link `mailto:`)
-
-- `<a href="mailto:?subject=Motoristas&body={url}">`
-- iPhone abre o app de Mail com o link já preenchido.
-- Usuário envia pra si mesmo e baixa do desktop ou de outro dispositivo.
-- Não depende de share API nem de blob.
-
-### Opção 4 — QR Code do link
-
-- Gerar QR Code do `signed_url` direto no modal (lib `qrcode` já presente em outras telas, ou inline SVG via `qrcode.react`).
-- Usuário escaneia com outro celular/desktop e baixa lá.
-- Útil quando o iPhone do empreendedor não consegue salvar mas ele tem outro dispositivo à mão.
-
-### (Mantém também) Opção fallback — Compartilhar nativo
-
-- Botão "Compartilhar via iPhone" continua existindo, agora rotulado claramente como "pode falhar em alguns modelos".
-- Tenta `navigator.share({ files })` → se falhar, mostra toast "Use uma das outras opções acima".
-
-## Mudanças na UI
-
-Trocar o botão único "Abrir CSV" por um **bottom sheet** (no mobile) ou **dropdown** (no desktop) com:
-
-```text
-✅ Exportação concluída — 2.566 motoristas
-
-Como você quer baixar?
-┌──────────────────────────────────┐
-│ 🌐 Abrir no Safari (recomendado) │
-│ 📋 Copiar link de download       │
-│ 📧 Enviar por e-mail             │
-│ 📱 Mostrar QR Code               │
-│ ⋯  Compartilhar nativo (iPhone)  │
-└──────────────────────────────────┘
-
-🔒 Link válido por 1 hora
-```
-
-## Detalhes técnicos
-
-- **Sem nova edge function**: a exportação atual já gera a `signed_url` válida por 1h. Os 4 caminhos só consomem essa URL.
-- **Sem mudança de bucket**: `exportacoes-motoristas` já está pronto, RLS por `auth.uid()`.
-- **QR Code**: usar `qrcode` (npm) — leve (~12KB), gera SVG inline, sem dependência de canvas.
-- **Detecção de plataforma**: reutilizar o helper `ehIos()` que já existe em `etapa_upload.tsx` para destacar a opção mais provável de funcionar no dispositivo atual.
-
-### Arquivos impactados
-
-**Editados (2):**
-- `src/features/exportacao_motoristas/components/modal_exportar_motoristas.tsx` — substituir botão único por menu de opções pós-exportação
-- `src/features/exportacao_motoristas/hooks/hook_exportar_motoristas.ts` — expor `arquivoPendente.signedUrl` separado de `blobUrl` pra alimentar as 4 opções
-
-**Novos (1):**
-- `src/features/exportacao_motoristas/components/menu_download_csv.tsx` — componente do bottom sheet/dropdown com as 4 alternativas + QR Code
-
-**Sem migration, sem mudança em RLS, sem mudança no edge function de exportação.**
-
-## Resultado esperado no iPhone PWA
-
-| Situação | Antes | Depois |
+| Catálogo | Esperado | Hoje |
 |---|---|---|
-| `navigator.share` falha | Tela branca, usuário preso | 3 alternativas visíveis na hora |
-| Quer mandar pro contador | Precisava abrir e salvar manualmente | Toca "Enviar por e-mail" |
-| Está em PWA standalone sem aba | `window.open` mostra branco | "Abrir no Safari" abre o navegador real |
-| Tem outro dispositivo à mão | Não tinha caminho | "Mostrar QR Code" → escaneia |
-| Quer salvar pra usar em planilha | Precisava do share API | "Copiar link" → cola onde quiser |
+| `business_models` | linha `campeonato_motorista` | **não existe** |
+| `business_model_modules` | módulos pré-requisito vinculados | **não existe** |
+| `plan_business_models` | incluído em Free/Starter/Pro/Enterprise | **não existe** |
+| `module_definitions` | módulo `campeonato_motorista` (engajamento, audiência motorista) | **não existe** |
+
+Por isso, na imagem 1 (lista de modelos do empreendedor) só aparecem Duelo, Cinturão, Aposta e Ranking — **não há "Campeonato"**. O empreendedor não consegue ativar o produto, e ninguém consegue criar ofertas/produtos vinculados a ele.
+
+A ativação hoje só acontece via uma flag escondida (`brand_settings_json.duelo_campeonato_enabled`) acessível pelo card dentro da página do Campeonato — fora do fluxo padrão de Modelos × Planos.
+
+## Solução
+
+### Migration (única) — popula os catálogos
+
+1. **`business_models`**: inserir 1 linha
+   - `key = 'campeonato_motorista'`
+   - `name = 'Campeonato Motorista'`
+   - `description = 'Temporadas mensais com séries hierárquicas (A, B, C…), mata-mata e premiações para motoristas — o "Brasileirão" da cidade'`
+   - `audience = 'motorista'`
+   - `icon = 'Trophy'`, `color = '#F59E0B'`, `sort_order = 95` (entre Cinturão e Resgate por Pontos Motorista)
+   - `pricing_model = 'included'`, `is_sellable_addon = true`
+
+2. **`module_definitions`**: inserir 1 linha
+   - `key = 'campeonato_motorista'`, `name = 'Campeonato Motorista'`
+   - `category = 'engajamento'`, `customer_facing = true`, `is_active = true`, `is_core = false`
+
+3. **`business_model_modules`**: vincular o novo modelo a seus pré-requisitos (mesmo padrão dos demais motorista-models):
+   - `points`, `notifications`, `driver_hub`, `machine_integration`, `achadinhos_motorista`
+   - + o novo módulo `campeonato_motorista` (autoligado)
+
+4. **`plan_business_models`**: incluir o modelo nos 4 planos padrão (`free`, `starter`, `profissional`, `enterprise`) seguindo o mesmo padrão dos outros modelos motorista.
+
+5. **`plan_module_templates`**: incluir o módulo `campeonato_motorista` em todos os planos com `is_enabled = true` (igual aos demais módulos motorista hoje).
+
+6. **Backfill da flag por marca**: para toda `brand` cujo `subscription_plan` esteja em `('starter','profissional','enterprise')`, popular `brand_settings_json.duelo_campeonato_enabled = true` somente se ainda não estiver definido — para que marcas existentes não percam o estado atual nem sejam ativadas sem querer.
+
+### Reaproveitamento da flag existente (sem quebrar nada)
+
+O hook `useDueloCampeonatoHabilitado` continua sendo a fonte da verdade em runtime — ele já lê `brand_settings_json.duelo_campeonato_enabled`. Vamos:
+
+- **Sincronizar bidirecionalmente** o toggle do módulo `campeonato_motorista` em `brand_modules` com a flag `duelo_campeonato_enabled`:
+  - quando o root admin (Central de Módulos → Empreendedores) ativa o módulo `campeonato_motorista` para uma marca → também grava `brand_settings_json.duelo_campeonato_enabled = true`
+  - quando desativa → grava `false`
+  - feito num trigger SQL `AFTER INSERT/UPDATE ON brand_modules` que cuida só desse module key específico
+
+Isso garante que o card "Ativar Campeonato" dentro da página do empreendedor e o toggle na Central de Módulos contam a mesma história, sem precisar alterar nenhum componente React.
+
+### Catálogo de produtos (criar produtos vinculados ao Campeonato)
+
+Hoje o seletor de audiência em ofertas/produtos usa a tabela `business_models` (audiência `motorista`) para listar opções. Como o novo modelo já estará em `business_models`, ele passa a aparecer **automaticamente** no criador de produtos como uma opção de audiência válida — sem mexer em código.
+
+Verificação adicional: confirmar que a página de criação de produtos lê os modelos via `business_models WHERE audience='motorista' AND is_active=true`. Se ainda houver lista hardcoded em algum lugar de Achadinhos/Resgates, ajustar para também considerar o novo modelo.
+
+### Resultado esperado
+
+Depois da migration, no console do Root Admin:
+
+- **Aba Catálogo**: aparece o módulo "Campeonato Motorista" (categoria Engajamento)
+- **Aba Modelos**: aparece o card "Campeonato Motorista" no grupo Motorista
+- **Aba Modelos × Planos**: aparece como linha selecionável em Free/Starter/Pro/Enterprise
+- **Aba Empreendedores**: ao abrir uma marca, aparece o toggle "Campeonato Motorista" na seção Engajamento, ligado por padrão se o plano da marca o inclui
+- **Aba Cidades** (override por cidade): aparece como módulo disponível para forçar ON/OFF por cidade
+- **Página do Campeonato (empreendedor)**: o card "Ativar Campeonato" continua funcionando — ele agora reflete o mesmo estado do toggle global
+
+E no fluxo de produtos:
+
+- **Criador de produto/oferta**: surge "Campeonato Motorista" como audiência selecionável, permitindo criar premiações, vouchers e ofertas vinculadas ao campeonato
+
+## Arquivos impactados
+
+**Migration (1 nova):**
+- `supabase/migrations/<timestamp>_registrar_campeonato_motorista.sql` — todos os inserts + trigger de sincronização da flag legada
+
+**Edição (0 ou 1):**
+- Se a verificação confirmar lista hardcoded de modelos motorista em algum criador de produto, ajustar 1 arquivo para usar a tabela `business_models` como fonte. Caso contrário, **zero arquivos editados** — só migration.
 
 ## Risco e rollback
 
-- Mudança puramente de UI cliente. Sem efeito em dados.
-- A URL assinada já existe e é a mesma usada hoje — só consumida de mais formas.
-- Rollback: reverter os 3 arquivos.
+- **Risco baixo**: migration apenas adiciona linhas em catálogos e cria 1 trigger pontual.
+- Marcas existentes não mudam de estado: o backfill respeita `duelo_campeonato_enabled` já definido.
+- Flags em código (`USE_DUELO_CAMPEONATO`) ficam inalteradas — continuam servindo de "kill switch" global.
+- **Rollback**: down migration remove o trigger, as 2 linhas de `business_models`/`module_definitions` e suas FKs em cascade limpam o resto.
 
