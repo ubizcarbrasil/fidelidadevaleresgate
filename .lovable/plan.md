@@ -1,108 +1,99 @@
 
 
-# Tela de Distribuição Manual de Motoristas nas Séries
+# Modo de pontuação configurável: confronto diário (V/E/D) na fase de classificação
 
-Adicionar uma tela dedicada onde o empreendedor vê **todos os motoristas da marca** e **todas as séries (A, B, C, D…)** da temporada ativa lado a lado, podendo mover qualquer motorista entre séries ou removê-lo da temporada.
+## Diagnóstico
 
-## Como vai funcionar (UX)
+Hoje a pontuação da fase de classificação (`duelo_update_standings_from_ride`) **soma 1 ponto por corrida finalizada**. Não dá pra escolher outro modelo; tudo é "pontos corridos".
 
-Acessada por um novo botão **"Distribuir motoristas"** no menu **Ações** da temporada ativa (ao lado de _Incluir motorista_).
+A demanda é poder escolher, por temporada, um segundo modo: **Confronto Diário (Round-robin diário)** — todos da série jogam contra todos no mesmo dia, e ao fim do dia cada motorista soma pontos por **vitória / empate / derrota** (configuráveis pelo empreendedor) com base na **quantidade de corridas finalizadas naquele dia**.
 
-Layout em **kanban horizontal** (responsivo: vira abas em mobile):
+## Arquitetura
 
-```text
-┌─────────────────┬─────────────┬─────────────┬─────────────┬─────────────┐
-│ Disponíveis (n) │ Série A (n) │ Série B (n) │ Série C (n) │ Série D (n) │
-├─────────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-│ □ João Silva    │ ☰ Pedro     │ ☰ Carlos    │ ☰ Ana       │ ☰ Marcos    │
-│ □ Maria Costa   │ ☰ José      │ ☰ Lucas     │ ☰ Júlia     │ ...         │
-│ □ ...           │ ...         │ ...         │ ...         │             │
-│                 │  [3/16]     │  [5/16]     │  [2/8]      │  [1/8]      │
-└─────────────────┴─────────────┴─────────────┴─────────────┴─────────────┘
-   [Ações em lote]   ↑ contador  ↑ contador    ↑ contador    ↑ contador
-                       atual/máx
+### 1) Backend — colunas novas em `duelo_seasons`
+
+```sql
+ALTER TABLE public.duelo_seasons
+  ADD COLUMN scoring_mode text NOT NULL DEFAULT 'total_points'
+    CHECK (scoring_mode IN ('total_points','daily_matchup')),
+  ADD COLUMN scoring_config_json jsonb NOT NULL DEFAULT
+    jsonb_build_object('win',3,'draw',1,'loss',0);
 ```
 
-### Interações principais
+- `total_points`: comportamento atual (1 ponto por corrida).
+- `daily_matchup`: novo modo. `scoring_config_json` = `{ win, draw, loss }`.
 
-- **Drag & drop**: arrastar motorista entre colunas (incluindo coluna "Disponíveis" para tirar da temporada).
-- **Mobile/touch**: cada cartão tem botão `Mover para…` que abre um pequeno popover com a lista de séries.
-- **Seleção múltipla** na coluna "Disponíveis": checkboxes + botão **"Mover X selecionados para Série [A/B/C/D]"** (ação em lote).
-- **Busca** no topo da coluna "Disponíveis" (filtra por nome/telefone).
-- **Indicador de capacidade** em cada série: `[3/16]` em verde, `[16/16]` em amarelo, `[17/16]` em vermelho com aviso "Acima do tamanho configurado — permitido, mas será refletido no chaveamento".
-- **Estado de origem**: badge `Manual` aparece em quem foi adicionado/movido manualmente; `Seed` em quem veio do seeding inicial.
+### 2) Backend — nova função `duelo_recalc_daily_matchup(p_season_id, p_day)`
 
-### Confirmações e bloqueios
+`SECURITY DEFINER`, chamada por **cron diário** (1× por dia, 03:00 do fuso da branch) e pode ser executada manualmente pelo empreendedor pra reprocessar um dia.
 
-- Mover motorista → confirma silenciosamente, mostra toast `Motorista movido para Série B`.
-- Remover (jogar na coluna Disponíveis) → `AlertDialog`: _"Remover João da temporada? Os pontos acumulados serão perdidos."_
-- Bloqueios duros (mensagem clara):
-  - Temporada **finalizada** ou **cancelada** → tela em modo somente-leitura.
-  - Temporada já em **fase mata-mata** → bloqueia mover/remover de quem já está em chave.
+Lógica:
+1. Para cada **série** ativa da temporada.
+2. Para cada par `(driver_a, driver_b)` da série, somar quantas corridas cada um finalizou em `[day 00:00, day 23:59:59]` no `branch_id` da temporada.
+3. Se `rides_a > rides_b` → A vence (soma `win`), B perde (soma `loss`). Se `=` → ambos somam `draw`.
+4. Aplicar o delta no `duelo_season_standings.points` (idempotente: armazena resumo do dia em `duelo_daily_matchup_log` para evitar dupla-contagem).
 
-## Arquitetura (técnica)
-
-### 1. Backend — 2 RPCs novas (`SECURITY DEFINER`)
-
-Migration nova: `supabase/migrations/<timestamp>_distribuicao_manual_series.sql`
-
-#### `duelo_move_driver_to_tier(p_season_id, p_driver_id, p_target_tier_id, p_reason)`
-- Valida `duelo_admin_can_manage(brand_id)` da temporada.
-- Bloqueia se temporada não está em fase **classification**.
-- Faz `UPDATE duelo_tier_memberships SET tier_id = p_target_tier_id, source = 'manual_move' WHERE season_id AND driver_id` — com `.select()` defensivo.
-- Loga em `duelo_driver_tier_history` (outcome `'manual_moved'`).
-- Atualiza `duelo_season_standings.tier_id` correspondente.
-
-#### `duelo_remove_driver_from_season(p_season_id, p_driver_id, p_reason)`
-- Mesmas validações.
-- Bloqueia se motorista já tem partida no `duelo_brackets`.
-- `DELETE FROM duelo_tier_memberships`, `DELETE FROM duelo_season_standings`.
-- Loga em `duelo_driver_tier_history` (outcome `'manual_removed'`).
-
-Ambas com `GRANT EXECUTE ... TO authenticated` e `REVOKE FROM public`.
-
-### 2. Frontend — nova feature interna
-
-```text
-src/features/campeonato_duelo/
-├── components/empreendedor/
-│   ├── DistribuicaoManualView.tsx        ← container principal (Dialog full-screen)
-│   ├── ColunaMotoristasDisponiveis.tsx   ← coluna esquerda + busca + checkboxes
-│   ├── ColunaSerie.tsx                   ← coluna por série + contador
-│   ├── CardMotoristaArrastavel.tsx       ← card com dnd + popover "mover para"
-│   ├── BarraAcoesEmLote.tsx              ← botão "mover X selecionados"
-│   └── ConfirmRemoverMotorista.tsx       ← AlertDialog de confirmação
-├── hooks/
-│   └── hook_distribuicao_manual.ts       ← mutations: useMoverMotorista, useRemoverMotorista
-├── services/  (estende o existente)
-│   └── servico_campeonato_empreendedor.ts ← +2 funções RPC
-└── types/    (estende)
-    └── tipos_empreendedor.ts             ← +2 inputs
+Tabela auxiliar:
+```sql
+CREATE TABLE duelo_daily_matchup_log (
+  id uuid PK, season_id uuid, tier_id uuid, day date,
+  driver_id uuid, rides int, wins int, draws int, losses int,
+  points_awarded int, created_at timestamptz,
+  UNIQUE(season_id, tier_id, driver_id, day)
+);
 ```
 
-### 3. Pontos de integração
+Idempotência: se já existe linha para `(season, tier, driver, day)`, recalcula o delta e atualiza standings com a diferença.
 
-- **`AcoesTemporadaAtiva.tsx`**: adicionar item `Distribuir motoristas` no dropdown (ícone `Users`).
-- **`pagina_campeonato_empreendedor.tsx`**: estado `modalDistribuir` + render do `DistribuicaoManualView` (full-screen Dialog para aproveitar o espaço).
-- **`servico_campeonato_empreendedor.ts`**: + `moverMotoristaParaSerie(input)` e `removerMotoristaDaSeason(input)`.
-- **Invalidações**: ao mover/remover, invalidar `empreendedor-dashboard-campeonato`, `empreendedor-series-detail`, `empreendedor-drivers-available`.
+### 3) Backend — adaptar `duelo_update_standings_from_ride`
 
-### 4. Drag & drop
+No início, se `scoring_mode = 'daily_matchup'`, **não soma pontos por corrida** (apenas `weekend_rides_count` e `last_ride_at`). O cálculo de pontos passa a vir só do recalc diário.
 
-Usar **`@dnd-kit/core` + `@dnd-kit/sortable`** (leve, acessível, suporta touch). Se não estiver instalado, adicionar como dep.
+### 4) Backend — cron job
 
-Fallback sem DnD em telas <768px: cards mostram botão `Mover para ▾` direto.
+Entrada via `pg_cron`:
+```sql
+SELECT cron.schedule('duelo_daily_matchup_recalc', '0 3 * * *',
+  'SELECT public.duelo_recalc_all_daily_matchup_seasons();');
+```
 
-## Resultado esperado
+`duelo_recalc_all_daily_matchup_seasons()`: itera todas as seasons em `phase='classification'` com `scoring_mode='daily_matchup'` e chama `duelo_recalc_daily_matchup(season_id, ontem)`.
 
-- Empreendedor abre temporada → menu Ações → "Distribuir motoristas" → vê tudo em uma tela só.
-- Pode arrastar 1 a 1, ou selecionar vários na coluna "Disponíveis" e jogar em massa numa série.
-- Pode tirar motorista da temporada arrastando pra "Disponíveis" (com confirmação).
-- Tudo respeita as regras de fase (só funciona durante **classification**) e isolamento por marca.
+### 5) Frontend
 
-## Risco e rollback
+#### a) Schema + serviço de criação (`schema_criar_temporada.ts` / `servico_campeonato_empreendedor.ts`)
+- Adicionar `scoringMode: 'total_points' | 'daily_matchup'` e `scoringConfig: { win, draw, loss }` ao `CriarTemporadaCompletaInput`.
+- Persistir na criação (`insert duelo_seasons`).
 
-- **Risco baixo**: as duas RPCs novas são aditivas; nenhuma estrutura existente muda.
-- Tela nova vive em modal — não afeta navegação atual.
-- **Rollback**: down trivial dropando as duas funções; remover o item do dropdown e os arquivos novos.
+#### b) Novo bloco no `EditorInformacoesBasicas.tsx`
+- Card **"Modo de pontuação da Classificação"** com 2 opções (RadioCards):
+  - **Pontos corridos** (default): "+1 ponto por corrida finalizada".
+  - **Confronto diário (round-robin)**: "Todos contra todos por dia. V/E/D configuráveis."
+- Quando `daily_matchup` selecionado → 3 inputs numéricos: **Vitória**, **Empate**, **Derrota** (defaults 3/1/0).
+
+#### c) Revisão (`RevisaoCriacao.tsx`) mostra o modo escolhido.
+
+### 6) Pontos fora de escopo (decisões conscientes)
+
+- Não vamos mudar o **modo de uma temporada já criada** — decidido na criação. (Mais simples, evita inconsistências de log).
+- A regra "todos contra todos" considera **todos os membros atuais da série naquele dia**. Se motorista entrar/sair no meio, o cálculo do dia leva em conta quem estava na série às 23:59 daquele dia.
+- Mata-mata segue **inalterado** (continua usando contagem de corridas no período do confronto).
+
+## Arquivos a criar/editar
+
+**Backend (1 migration):**
+- Tabela `duelo_daily_matchup_log`, colunas `scoring_mode/scoring_config_json` em `duelo_seasons`, função `duelo_recalc_daily_matchup`, função `duelo_recalc_all_daily_matchup_seasons`, atualização do trigger `duelo_update_standings_from_ride`, cron job.
+
+**Frontend:**
+- `schemas/schema_criar_temporada.ts` (+ campos `scoringMode/scoringConfig`)
+- `types/tipos_empreendedor.ts` (+ campos no `CriarTemporadaCompletaInput`)
+- `services/servico_campeonato_empreendedor.ts` (persistir na insert)
+- `constants/constantes_templates.ts` (default no template)
+- `components/empreendedor/EditorInformacoesBasicas.tsx` (novo bloco)
+- `components/empreendedor/RevisaoCriacao.tsx` (mostrar modo)
+- `components/empreendedor/FormCriarTemporada.tsx` (passar valores iniciais)
+
+## Risco
+
+- **Baixo**: `scoring_mode` default `'total_points'` mantém comportamento atual. Trigger só desvia quando explicitamente `daily_matchup`. Recalc é idempotente.
 
