@@ -123,3 +123,11 @@ export interface ResultadoImportacao {
   error_count: number;
   errors_json: Array<{ linha: number; nome?: string; motivo: string }>;
 }
+
+/** Erro recuperável retornado pelo polling quando o servidor não responde a tempo. */
+export class ImportacaoTimeoutError extends Error {
+  constructor(public readonly jobId: string, message = "Sem resposta do servidor") {
+    super(message);
+    this.name = "ImportacaoTimeoutError";
+  }
+}
