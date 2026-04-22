@@ -1014,15 +1014,17 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Gerenciar carteira de pontos",
-        summary: "Controle o saldo de pontos disponíveis para distribuição na sua cidade.",
+        summary: "A cidade opera com carteira pré-paga: pontos são debitados conforme motoristas/clientes são pontuados. Saldos negativos ficam registrados como dívida operacional.",
         steps: [
-          "Visualize o saldo atual, total distribuído e total carregado no topo da página.",
-          "Consulte o extrato de transações da carteira (cargas e distribuições).",
-          "Solicite recarga de pontos quando o saldo estiver baixo.",
+          "Visualize saldo atual, total distribuído e total carregado no topo.",
+          "Consulte o extrato completo (carregamentos, distribuições, ajustes).",
+          "Compre pacotes de pontos em 'Loja de Pacotes' para reabastecer.",
+          "Configure o alerta de saldo baixo para ser avisado antes de zerar.",
         ],
         tips: [
-          "Configure o alerta de saldo baixo para ser notificado antes de ficar sem pontos.",
-          "Cada distribuição de pontos é registrada automaticamente no extrato.",
+          "Saldo negativo é permitido — o sistema continua pontuando, mas registra a dívida para acerto futuro.",
+          "Cada operação fica registrada em branch_wallet_transactions com tipo (LOAD/DISTRIBUTE/ADJUST).",
+          "Tudo é processado por Edge Function para manter integridade transacional.",
         ],
       },
     ],
@@ -1333,12 +1335,17 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Personalizar o painel do motorista",
-        summary: "Configure o que os motoristas veem e podem fazer no painel deles.",
+        summary: "Centraliza opções de layout e funcionalidade do app do motorista (Home Inteligente, ofertas exclusivas, hub de navegação).",
         steps: [
-          "Defina quais seções são visíveis no painel do motorista.",
-          "Configure textos e labels personalizados.",
-          "Ative ou desative funcionalidades específicas (extrato, ofertas, ranking).",
-          "Salve para aplicar.",
+          "Habilite a 'Home Inteligente' (driver_hub) para o motorista cair em uma central de navegação ao entrar.",
+          "Configure quais seções aparecem: Achadinhos, Compre com Pontos, Histórico de Resgates Locais, Ranking, Cinturão.",
+          "Ative 'Compra de Pontos' para liberar a aquisição de pontos pelo motorista (preço definido em Pacotes de Pontos).",
+          "Marque 'Ofertas restritas a motoristas' para usar o campo driver_only nas ofertas.",
+          "Personalize textos e labels da interface do motorista.",
+        ],
+        tips: [
+          "A vinculação automática por CPF associa o motorista a registros existentes no primeiro acesso.",
+          "Ofertas com driver_only=true só aparecem no painel do motorista.",
         ],
       },
     ],
@@ -1898,16 +1905,17 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Usar o painel do motorista",
-        summary: "Acesse seu saldo, ofertas exclusivas e ranking como motorista.",
+        summary: "Hub central do motorista: saldo, achadinhos, compra de pontos, histórico de resgates locais e gamificação.",
         steps: [
-          "Visualize seu saldo de pontos no topo da tela.",
-          "Navegue pelas ofertas disponíveis para motoristas.",
-          "Consulte seu ranking e posição na cidade.",
-          "Resgate pontos por prêmios ou produtos disponíveis.",
+          "A 'Home Inteligente' é o ponto de entrada — escolha entre Achadinhos, Compre com Pontos, Resgates Locais ou Ranking.",
+          "O saldo de pontos aparece sempre no topo, atualizado em tempo real.",
+          "Use 'Comprar pontos' (se habilitado) para adquirir pacotes diretamente pelo app.",
+          "Resgate em parceiros locais via fluxo OTP → confirmação → PIN.",
+          "Acompanhe duelos, ranking mensal e cinturão da cidade.",
         ],
         tips: [
-          "Complete mais corridas para subir no ranking.",
-          "Fique atento a ofertas exclusivas para motoristas.",
+          "Ofertas com driver_only=true são exclusivas — não aparecem para clientes comuns.",
+          "O CPF vincula automaticamente o motorista a registros existentes na marca.",
         ],
       },
     ],
