@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { NOMES_MESES } from "../constants/constantes_campeonato";
 import {
   ajustarPremio,
   calcularPremiosManualmente,
@@ -63,7 +64,23 @@ export function useCriarTemporadaCompleta() {
       toast.success("Temporada criada com sucesso");
       invalidarTudo(qc, vars.brandId);
     },
-    onError: (err: any) => {
+    onError: (err: any, vars) => {
+      const code = err?.code ?? err?.cause?.code;
+      const detalhes: string =
+        err?.details ?? err?.cause?.details ?? err?.message ?? "";
+      const ehDuplicidadeMesAno =
+        code === "23505" &&
+        (detalhes.includes("duelo_seasons_brand_id_branch_id_year_month_key") ||
+          detalhes.includes("year") ||
+          detalhes.includes("month"));
+      if (ehDuplicidadeMesAno) {
+        const mes = NOMES_MESES[(vars?.month ?? 1) - 1] ?? `${vars?.month}`;
+        const ano = vars?.year ?? "";
+        toast.error(
+          `Já existe uma temporada para ${mes}/${ano} nesta cidade. Escolha outro mês ou cancele/exclua a temporada existente antes de criar uma nova.`,
+        );
+        return;
+      }
       toast.error(err?.message ?? "Erro ao criar temporada");
     },
   });

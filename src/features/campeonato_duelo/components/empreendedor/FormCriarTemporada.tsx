@@ -1,6 +1,14 @@
 import { useState, useMemo } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
@@ -96,6 +104,29 @@ export default function FormCriarTemporada({
     !!knockStartWatch &&
     new Date(knockStartWatch) <= new Date(classEndWatch);
 
+  // Checagem prévia: já existe temporada em (brand, branch, year, month)?
+  // Mesma queryKey de EditorInformacoesBasicas → React Query desduplica.
+  const yearWatch = form.watch("year");
+  const monthWatch = form.watch("month");
+  const { data: temporadaConflitante } = useQuery({
+    queryKey: ["check-season-conflict", brandId, branchId, yearWatch, monthWatch],
+    enabled: !!brandId && !!branchId && !!yearWatch && !!monthWatch,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("duelo_seasons")
+        .select("id, name, phase, paused_at, cancelled_at")
+        .eq("brand_id", brandId)
+        .eq("branch_id", branchId)
+        .eq("year", yearWatch as number)
+        .eq("month", monthWatch as number)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 10_000,
+  });
+  const temConflitoMesAno = !!temporadaConflitante;
+
   function aoSubmeter(values: FormCriarTemporadaInput) {
     const prizesObj = values.prizesPerTier.reduce<
       Record<string, { position: any; points: number }[]>
@@ -175,7 +206,7 @@ export default function FormCriarTemporada({
                     </span>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <EditorInformacoesBasicas />
+                    <EditorInformacoesBasicas brandId={brandId} branchId={branchId} />
                   </AccordionContent>
                 </AccordionItem>
 
@@ -211,12 +242,28 @@ export default function FormCriarTemporada({
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={isPending || conflitoFases}>
-                  {isPending && (
-                    <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                  )}
-                  Criar temporada
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <Button
+                          type="submit"
+                          disabled={isPending || conflitoFases || temConflitoMesAno}
+                        >
+                          {isPending && (
+                            <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                          )}
+                          Criar temporada
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    {temConflitoMesAno && (
+                      <TooltipContent>
+                        Já existe uma temporada para este mês/ano nesta cidade.
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
               </DialogFooter>
             </form>
           </FormProvider>
