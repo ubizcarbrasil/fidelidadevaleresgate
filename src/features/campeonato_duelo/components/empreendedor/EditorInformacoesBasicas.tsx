@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFormContext } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -9,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlertCircle, Info, Trophy, Swords } from "lucide-react";
+import { AlertCircle, AlertTriangle, Info, Trophy, Swords } from "lucide-react";
 import { NOMES_MESES } from "../../constants/constantes_campeonato";
 import type { FormCriarTemporadaInput } from "../../schemas/schema_criar_temporada";
 import {
@@ -21,11 +23,45 @@ import {
 } from "../../utils/utilitarios_campeonato";
 import LabelComAjuda from "./LabelComAjuda";
 
-export default function EditorInformacoesBasicas() {
+interface Props {
+  brandId?: string;
+  branchId?: string;
+}
+
+export default function EditorInformacoesBasicas({ brandId, branchId }: Props = {}) {
   const form = useFormContext<FormCriarTemporadaInput>();
   const errors = form.formState.errors;
   const anoAtual = new Date().getFullYear();
   const anos = [anoAtual - 1, anoAtual, anoAtual + 1];
+
+  const mesAtual = form.watch("month");
+  const anoSelecionado = form.watch("year");
+
+  // Checagem prévia: já existe temporada para (brand, branch, year, month)?
+  const { data: temporadaExistente } = useQuery({
+    queryKey: [
+      "check-season-conflict",
+      brandId,
+      branchId,
+      anoSelecionado,
+      mesAtual,
+    ],
+    enabled: !!brandId && !!branchId && !!anoSelecionado && !!mesAtual,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("duelo_seasons")
+        .select("id, name, status")
+        .eq("brand_id", brandId!)
+        .eq("branch_id", branchId!)
+        .eq("year", anoSelecionado as number)
+        .eq("month", mesAtual as number)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 10_000,
+  });
+  const temConflitoMesAno = !!temporadaExistente;
 
   // Datas atuais para encadear limites e validar conflitos reativos.
   const classStart = form.watch("classificationStartsAt") ?? "";
@@ -197,6 +233,24 @@ export default function EditorInformacoesBasicas() {
           </Select>
         </div>
       </div>
+
+      {temConflitoMesAno && temporadaExistente && (
+        <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <div className="space-y-1">
+            <p>
+              Já existe a temporada{" "}
+              <strong>"{temporadaExistente.name}"</strong> ({temporadaExistente.status}){" "}
+              em <strong>{NOMES_MESES[(mesAtual ?? 1) - 1]}/{anoSelecionado}</strong>{" "}
+              nesta cidade.
+            </p>
+            <p className="text-[11px] opacity-80">
+              Para criar uma nova, escolha outro mês ou remova a existente em
+              "Temporadas Anteriores".
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
         <div className="flex items-center justify-between">
