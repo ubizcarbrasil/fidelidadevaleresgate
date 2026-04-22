@@ -1,59 +1,44 @@
 
 
-# Corrigir erro "scoring_config_json column not found" ao criar temporada
+# Corrigir vazamento das sub-abas de Duelo dentro da Configuração do Campeonato
 
 ## Diagnóstico
 
-O frontend (`servico_campeonato_empreendedor.ts` + `schema_criar_temporada.ts`) já envia dois campos novos no INSERT em `duelo_seasons`:
-- `scoring_mode` (`total_points` ou `daily_matchup`)
-- `scoring_config_json` (`{ win, draw, loss }`)
+As sub-abas mostradas nas screenshots (**Geral, Limites, Ciclo & Reset, Prêmios, Corridas**) pertencem 100% ao produto **Duelo Motorista** — todas falam de aposta, saldo de duelo, ranking, cinturão e campanhas de prêmio independentes da temporada. **Nenhuma faz sentido para o produto Campeonato**, que tem suas próprias configurações dentro da aba "Campeonato" (temporadas, séries, prêmios por classificação).
 
-Mas a tabela `duelo_seasons` no banco **não tem essas colunas**. Verificado via `information_schema`: as colunas existentes são apenas `id, brand_id, branch_id, name, year, month, phase, classification_*, knockout_*, tiers_count, tiers_config_json, ...`. Por isso o PostgREST devolve "Could not find the 'scoring_config_json' column ... in the schema cache" e o botão "Criar temporada" falha.
-
-Nenhuma RPC ou trigger atual usa esses campos, então a correção é puramente aditiva.
+O componente `pagina_configuracoes_duelo.tsx` **já tem a guarda implementada**: quando `engagementFormat === "campeonato"`, ele oculta as 5 sub-abas e exibe um card explicativo "Modo Campeonato ativo". O problema é apenas que `GamificacaoAdminPage` chama o componente **sem passar o prop `engagementFormat`** — então a guarda nunca dispara e tudo vaza para a tela.
 
 ## O que vou fazer
 
-### 1) Migration: adicionar as colunas em `duelo_seasons`
+**1 arquivo, 1 linha de mudança real.**
 
-```sql
-ALTER TABLE public.duelo_seasons
-  ADD COLUMN IF NOT EXISTS scoring_mode text NOT NULL DEFAULT 'total_points',
-  ADD COLUMN IF NOT EXISTS scoring_config_json jsonb NOT NULL DEFAULT '{"win":3,"draw":1,"loss":0}'::jsonb;
+### `src/pages/GamificacaoAdminPage.tsx`
 
--- Validação leve (modo conhecido)
-ALTER TABLE public.duelo_seasons
-  ADD CONSTRAINT duelo_seasons_scoring_mode_chk
-  CHECK (scoring_mode IN ('total_points','daily_matchup'));
+Já existe a constante `formato` vinda de `useFormatoEngajamento(currentBrandId)`. Basta propagá-la:
+
+```tsx
+const { isCampeonato, formato } = useFormatoEngajamento(currentBrandId);
+
+// ...
+
+<TabsContent value="configuracao">
+  <PaginaConfiguracoesDuelo
+    branchId={branch.id}
+    brandId={branch.brand_id}
+    settings={settings}
+    engagementFormat={formato}   // ← propagar
+  />
+</TabsContent>
 ```
-
-- `IF NOT EXISTS` → idempotente.
-- `DEFAULT` cobre temporadas já existentes sem precisar de backfill manual.
-- O CHECK é estático (não usa `now()`), então é seguro como constraint.
-
-### 2) Hardening defensivo no serviço
-
-Em `servico_campeonato_empreendedor.ts`, hoje o INSERT usa `.single()`. Quando o PostgREST falha com "schema cache", o erro mostrado já é claro, mas vou:
-- Trocar `.single()` por `.maybeSingle()` no retorno do INSERT, e validar `if (!season) throw new Error("Não foi possível criar a temporada")` para evitar crash silencioso em qualquer cenário futuro de RLS.
-
-Sem outras mudanças. O fluxo do formulário e a validação Zod permanecem intactos.
 
 ## Resultado esperado
 
-- Botão "Criar temporada" passa a funcionar para a marca Meu Mototáxi (e qualquer outra em modo campeonato).
-- Temporadas pré-existentes continuam válidas com defaults `total_points` + `{win:3,draw:1,loss:0}`.
-- Nenhum impacto em RPCs/cron — eles não leem esses campos ainda.
+Para a marca **Meu Mototáxi** (modo `campeonato`), a aba **Configuração** passa a mostrar **apenas** o card:
 
-## Arquivos
+> **Modo Campeonato ativo** — Esta marca opera no formato Campeonato. As configurações de duelos 1v1, apostas paralelas, ranking e cinturão estão desativadas e ocultas. Toda a gestão competitiva acontece pela aba Campeonato.
 
-**Backend (1 migration nova):**
-- `supabase/migrations/<timestamp>_add_scoring_to_duelo_seasons.sql`
-
-**Frontend (1 arquivo):**
-- `src/features/campeonato_duelo/services/servico_campeonato_empreendedor.ts` — `.single()` → `.maybeSingle()` + guard de retorno vazio
+As 5 sub-abas (Geral, Limites, Ciclo & Reset, Prêmios, Corridas) **somem completamente**, ficando disponíveis apenas para marcas em modo `duelo` / `mass_duel`. Nada muda para essas outras marcas.
 
 ## Risco e rollback
 
-- **Risco mínimo**: ALTER TABLE aditivo com defaults; não quebra nenhum SELECT existente.
-- **Rollback**: `ALTER TABLE public.duelo_seasons DROP COLUMN scoring_mode, DROP COLUMN scoring_config_json;`
-
+- **Risco zero**: passa um prop que o componente já espera; default perm
