@@ -46,7 +46,7 @@ export default function DriverManagementPage() {
     porPagina: POR_PAGINA,
   });
 
-  const { exportar, exportando, progresso } = useExportarMotoristas();
+  const { exportar, exportando, progresso, arquivoPendente } = useExportarMotoristas();
 
   const motoristas = resultado?.motoristas ?? [];
   const total = resultado?.total ?? 0;
@@ -117,7 +117,7 @@ export default function DriverManagementPage() {
             variant="outline"
             size="sm"
             onClick={handleExportCsv}
-            disabled={total === 0 || exportando}
+            disabled={(total === 0 && !arquivoPendente) || exportando}
             className="flex-1 sm:flex-none"
           >
             {exportando ? (
@@ -131,6 +131,11 @@ export default function DriverManagementPage() {
                   ? `${progresso.atual.toLocaleString("pt-BR")} / ${progresso.total.toLocaleString("pt-BR")}`
                   : "Exportando…"}
               </span>
+            ) : arquivoPendente ? (
+              <>
+                <Download className="h-4 w-4 mr-1" />
+                Salvar CSV
+              </>
             ) : (
               <>
                 <span className="hidden sm:inline">Exportar </span>CSV
