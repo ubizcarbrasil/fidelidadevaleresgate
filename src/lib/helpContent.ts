@@ -188,16 +188,20 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Gerenciar cidades",
-        summary: "Cidades representam as regiões onde a sua marca opera.",
+        summary: "Cidades (filiais) representam as regiões onde a sua marca opera. Cada cidade tem seus próprios módulos, parceiros e configurações.",
         steps: [
           "Clique em 'Nova cidade' para criar.",
-          "Preencha: nome, apelido (usado no endereço web), cidade, estado e localização geográfica.",
-          "Selecione o fuso horário correto.",
-          "Ative ou desative cidades conforme necessário.",
+          "Preencha: nome, apelido (slug usado no endereço web), cidade, estado, latitude/longitude e fuso horário.",
+          "Escolha o Modelo de Pontuação: DRIVER_ONLY (só motoristas), PASSENGER_ONLY (só clientes) ou BOTH (ambos).",
+          "Em 'Módulos de Negócio', ative/desative o que vale para esta cidade — herda da marca, mas pode sobrescrever.",
+          "Em 'Gamificação', configure Duelos, Ranking e Cinturão (depende do módulo achadinhos_motorista).",
+          "Use 'Resetar pontos' para zerar saldos em massa quando precisar (processado por Edge Function).",
+          "A exclusão de cidade é hard-delete via Edge Function — confirme antes de remover.",
         ],
         tips: [
-          "A localização é usada para mostrar parceiros e ofertas mais próximas do cliente no aplicativo.",
-          "Cada cidade pode ter suas próprias regras de pontos e configurações.",
+          "Slug deve ser único, sem espaços, com hífens.",
+          "Cidades inativas somem para o usuário final.",
+          "Atalho 'Criar Franqueado' está disponível em cada card de cidade.",
         ],
       },
     ],
