@@ -1,88 +1,141 @@
+`.
 
+---
 
-# Habilitar/desabilitar formatos de engajamento (Duelo 1v1, Desafio em Massa, Campeonato) por marca
+# Como configurar o Campeonato
 
-## Diagnóstico
+Tudo é feito no **Painel do Empreendedor → Campeonato Motorista**. O fluxo tem **3 camadas** que precisam estar OK na ordem:
 
-Hoje o seletor de **Formato de engajamento** mostra os 3 cards fixos (`duelo`, `mass_duel`, `campeonato`) e qualquer um pode ser ativado. Não há controle de:
+## 1. Liberação (Root Admin)
+Antes de tudo, na **Central de Módulos → Empreendedores**, abra o card do modelo **Duelo Motorista** da marca e no bloco **"Formatos disponíveis"** deixe **Campeonato** ligado. Sem isso, o card no painel do empreendedor aparece com cadeado 🔒.
 
-- **Root**: quais formatos cada marca tem disponíveis no plano dela
-- **Empreendedor**: visualização de quais formatos estão liberados pra ele
+## 2. Ativar e escolher o formato
+Na tela do campeonato:
+1. **Card "Ativar Campeonato"** — clica para ligar o módulo na marca.
+2. **Seletor "Formato de engajamento"** — escolhe **Campeonato** (alternativa a *Duelo 1v1* e *Desafio em Massa*). Se houver temporada ativa rolando, o sistema bloqueia a troca.
 
-A flag `engagement_format` em `brand_business_models` guarda **qual** formato está ativo, mas não **quais** podem ser escolhidos.
+## 3. Criar a temporada (botão **+ Nova / Criar temporada**)
+O modal abre em 4 passos:
 
-## Solução
+### Passo A — Template
+Escolhe um dos 3 pré-prontos (depois pode editar tudo):
+- **Simples** — 2 séries (A, B), 16 motoristas cada
+- **Padrão** — 3 séries (A, B, C) ⭐ recomendado
+- **Completo** — 5 séries (A a E), operações grandes
 
-Modelo em 2 camadas (Root libera → Empreendedor escolhe entre liberados, mantendo 1 ativo por vez):
+### Passo B — Informações básicas
+- **Nome** da temporada (ex: "Brasileirão Janeiro/2026")
+- **Mês** e **Ano**
+- **Fase 1 — Classificação**: data de início e fim (pontos corridos)
+- **Fase 2 — Mata-mata**: data de início e fim (precisa começar **depois** do fim da classificação)
 
-### Camada 1 — Config no banco (1 migration)
+### Passo C — Séries (hierarquia A, B, C…)
+Para cada série configure:
+- **Nome** (A, B, C…) — só letras/números, máx 10 caracteres
+- **Tamanho** — quantos motoristas cabem (2 a 64)
+- **Sobem** — quantos da série vão para a divisão de cima no fim
+- **Descem** — quantos vão para a divisão de baixo
 
-Adicionar campo `allowed_engagement_formats text[]` em `brand_business_models`:
+Regras:
+- Mínimo 2 séries, máximo 8
+- A **primeira série (A)** não tem promoção (já é a mais alta)
+- A **última série** não tem rebaixamento
+- *Sobem + Descem* não pode passar do **Tamanho**
 
-- Default: `ARRAY['duelo','mass_duel','campeonato']` (todas liberadas)
-- Somente Root pode editar (RLS já bloqueia escrita do empreendedor por padrão; reforçar via política se necessário)
-- Validar que `engagement_format` ativo está sempre dentro de `allowed_engagement_formats` (constraint via trigger)
-- Backfill: marcar todas as linhas existentes com as 3 formas liberadas
+### Passo D — Prêmios em pontos
+Para **cada série**, define quantos pontos o motorista ganha por posição final no mata-mata:
+- 🥇 Campeão
+- 🥈 Vice-campeão
+- Semifinalista
+- Quartas
+- Oitavas
 
-Atualizar a função `duelo_change_engagement_format` para também rejeitar troca se o novo formato não estiver na lista permitida da marca, com mensagem clara: _"Formato 'Campeonato' não está liberado para esta marca."_.
+Os pontos são creditados automaticamente no encerramento da temporada.
 
-### Camada 2 — UI Root Admin (Central de Módulos → Empreendedores)
+### Revisão e criação
+Última tela mostra resumo de tudo. Confirmar cria a temporada — o sistema faz o **seeding inicial** das séries (distribui motoristas) automaticamente.
 
-Quando o root abrir o card do modelo `duelo_motorista` de uma marca, expor um novo bloco **"Formatos disponíveis"** com 3 switches (Duelo 1v1 / Desafio em Massa / Campeonato). 
+## Depois de criada — operação contínua
 
-- Pelo menos 1 deve permanecer ligado (validação client + server)
-- Se o root desligar o formato que está atualmente ativo na marca, mostra confirmação: _"Isso vai desativar o formato atual. A marca precisará escolher outro."_ → ao confirmar, troca o `engagement_format` para o primeiro disponível restante
-- Hook novo `useFormatosPermitidos(brandId)` busca/atualiza o array via Supabase
+Na tela principal aparecem:
+- **Card da temporada ativa** com fase atual (Classificação / Mata-mata / Encerrada)
+- **Ações da temporada**: Pausar, Cancelar, Incluir motorista manualmente
+- **Cards por série**: ranking ao vivo, pode abrir cada uma para ver tabela completa e o chaveamento
+- **Prêmios a distribuir**: aparece quando a temporada termina, para você confirmar a distribuição
+- **Histórico**: lista de temporadas anteriores
 
-### Camada 3 — UI Empreendedor (`SeletorFormatoEngajamento.tsx`)
+## Quer que eu te leve direto na tela?
+Me diz qual marca você está testando e eu posso:
+1. Verificar se o **Campeonato está liberado pelo Root** para essa marca
+2. Confirmar se já existe uma **temporada criada** ou se precisa criar a primeira
+3. Te mostrar exatamente onde clicar com base no estado atual
 
-Reaproveitar o componente atual com 1 mudança visual:
+Se preferir, também posso ajustar **textos de ajuda dentro do próprio modal** (tooltips em cada campo) para ficar autoexplicativo no produto — é só pedir.Esse `plan--create` foi engano — vou só responder como mensagem normal.
 
-```text
-┌─────────────────────────────────┐
-│ ⚔ Duelo 1v1          [✓ Ativo] │ ← liberado + selecionado
-├─────────────────────────────────┤
-│ ⚡ Desafio em Massa             │ ← liberado, clicável pra trocar
-├─────────────────────────────────┤
-│ 🔒 Campeonato       [Bloqueado] │ ← cinza, cadeado, tooltip
-└─────────────────────────────────┘
-```
+---
 
-- Hook `useFormatosPermitidos(brandId)` no componente
-- Card desabilitado: `opacity-60`, ícone `Lock` no canto, badge "Não disponível no seu plano", `disabled` no botão, `cursor-not-allowed`, tooltip "Fale com o suporte para liberar este formato"
-- Confirmação de troca (`AlertDialog`) só dispara para formatos liberados — comportamento atual preservado
+# Como configurar o Campeonato
 
-### Camada 4 — Aproveitamento na criação de produtos/ofertas
+Tudo é feito no **Painel do Empreendedor → Campeonato Motorista**. O fluxo tem **3 camadas** que precisam estar OK na ordem:
 
-Como o seletor de produtos hoje lista modelos via `business_models` (auto-incluindo `campeonato_motorista` após o registro anterior), o filtro adicional fica simples: ao montar a lista de audiências/modelos no criador de produtos, esconder/bloquear os modelos cujo `engagement_format` correspondente não esteja nos `allowed_engagement_formats` da marca. Isso mantém a regra "1 produto = 1 formato" e respeita a configuração do root.
+## 1. Liberação (Root Admin)
+Antes de tudo, na **Central de Módulos → Empreendedores**, abre o card do modelo **Duelo Motorista** da marca e no bloco **"Formatos disponíveis"** deixa **Campeonato** ligado. Sem isso, o card no painel do empreendedor aparece com cadeado 🔒.
 
-### Resultado esperado
+## 2. Ativar e escolher o formato
+Na tela do campeonato:
+1. **Card "Ativar Campeonato"** — clica para ligar o módulo na marca.
+2. **Seletor "Formato de engajamento"** — escolhe **Campeonato** (alternativa a *Duelo 1v1* e *Desafio em Massa*). Se já houver temporada ativa rolando, o sistema bloqueia a troca.
 
-| Persona | Antes | Depois |
-|---|---|---|
-| Root Admin | Sem controle por marca | Toggles "Quais formatos esta marca pode usar" no card do modelo Duelo Motorista |
-| Empreendedor | Vê 3 cards iguais | Vê 3 cards: liberados clicáveis + bloqueados com cadeado |
-| Criador de produtos | Lista todos os modelos motorista | Esconde/bloqueia modelos cujo formato não está liberado pra marca |
+## 3. Criar a temporada (botão **+ Criar temporada / Nova**)
+O modal abre em 4 passos:
 
-## Arquivos impactados
+### Passo A — Template
+Escolhe um dos 3 pré-prontos (depois pode editar tudo):
+- **Simples** — 2 séries (A, B), 16 motoristas cada
+- **Padrão** — 3 séries (A, B, C) ⭐ recomendado
+- **Completo** — 5 séries (A a E), operações grandes
 
-**Migration nova (1):**
-- `supabase/migrations/<timestamp>_allowed_engagement_formats.sql` — coluna nova + default + backfill + trigger de validação + atualiza RPC `duelo_change_engagement_format`
+### Passo B — Informações básicas
+- **Nome** da temporada (ex: "Brasileirão Janeiro/2026")
+- **Mês** e **Ano**
+- **Fase 1 — Classificação**: data de início e fim (pontos corridos)
+- **Fase 2 — Mata-mata**: data de início e fim (precisa começar **depois** do fim da classificação)
 
-**Hooks novos (1):**
-- `src/compartilhados/hooks/hook_formatos_permitidos.ts` — read + mutation (escrita só funciona pra root)
+### Passo C — Séries (hierarquia A, B, C…)
+Para cada série configure:
+- **Nome** (A, B, C…) — só letras/números, máx 10 caracteres
+- **Tamanho** — quantos motoristas cabem (2 a 64)
+- **Sobem** — quantos vão para a divisão de cima no fim
+- **Descem** — quantos vão para a divisão de baixo
 
-**Componentes novos (1):**
-- `src/features/painel_modelos_negocio/components/configurador_formatos_duelo.tsx` — bloco com 3 switches usado dentro do CardModeloBrand quando `def.key === 'duelo_motorista'`
+Regras:
+- Mínimo 2 séries, máximo 8
+- A **primeira série (A)** não tem promoção (já é a mais alta)
+- A **última série** não tem rebaixamento
+- *Sobem + Descem* não pode passar do **Tamanho**
 
-**Edição (3):**
-- `src/features/painel_modelos_negocio/components/card_modelo_brand.tsx` — montar o configurador quando key for duelo_motorista (visível só pra root)
-- `src/features/campeonato_duelo/components/empreendedor/SeletorFormatoEngajamento.tsx` — consumir `useFormatosPermitidos` e renderizar estado bloqueado
-- 1 arquivo do criador de produtos (a confirmar entre `passo_modelos.tsx` ou similar) — filtrar modelos por formatos liberados
+### Passo D — Prêmios em pontos
+Para **cada série**, define quantos pontos o motorista ganha por posição final no mata-mata:
+- 🥇 Campeão
+- 🥈 Vice-campeão
+- Semifinalista
+- Quartas
+- Oitavas
 
-## Risco e rollback
+Os pontos são creditados automaticamente no encerramento da temporada.
 
-- **Risco baixo**: nova coluna com default cobre marcas existentes (todas as 3 liberadas → comportamento atual).
-- Trigger de validação rejeita estados inválidos antes do commit.
-- **Rollback**: down migration remove coluna e trigger, restaura a versão anterior da RPC. UI volta a mostrar os 3 cards sem cadeado naturalmente (hook devolve default).
+### Revisão e criação
+A última tela mostra o resumo de tudo. Confirmar cria a temporada — o sistema faz o **seeding inicial** das séries (distribui motoristas) automaticamente.
 
+## Depois de criada — operação contínua
+
+Na tela principal aparecem:
+- **Card da temporada ativa** com fase atual (Classificação / Mata-mata / Encerrada)
+- **Ações da temporada**: Pausar, Cancelar, Incluir motorista manualmente
+- **Cards por série**: ranking ao vivo; pode abrir cada uma pra ver tabela completa e o chaveamento
+- **Prêmios a distribuir**: aparece quando a temporada termina, para você confirmar a distribuição
+- **Histórico**: lista de temporadas anteriores
+
+---
+
+Quer que eu **adicione tooltips de ajuda dentro do próprio modal** (uma frase explicando cada campo) pra ficar autoexplicativo no produto? Se sim, eu monto o plano e a gente já implementa.
