@@ -65,7 +65,14 @@ export default function EditorSeries() {
                   type="number"
                   min={2}
                   max={64}
-                  {...form.register(`series.${idx}.size`)}
+                  {...form.register(`series.${idx}.size`, {
+                    valueAsNumber: true,
+                    onChange: () =>
+                      form.trigger([
+                        "series",
+                        "classificationEndsAt",
+                      ] as any),
+                  })}
                 />
               </div>
               <div className="space-y-1">

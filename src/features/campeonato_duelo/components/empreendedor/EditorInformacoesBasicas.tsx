@@ -208,6 +208,40 @@ export default function EditorInformacoesBasicas() {
           Período de pontos corridos. Os motoristas acumulam pontos pelas
           corridas concluídas para definir a colocação inicial em cada série.
         </p>
+        {maiorSerie > 0 && (
+          <div
+            className={`flex items-start gap-1.5 rounded-sm p-2 text-[11px] leading-snug ${
+              duracaoSuficiente
+                ? "bg-primary/10 text-foreground/80"
+                : "bg-destructive/10 text-destructive"
+            }`}
+          >
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>
+              {scoringMode === "daily_matchup" ? (
+                <>
+                  Esta temporada precisa de no mínimo{" "}
+                  <strong>{duracaoMinima} dias</strong> de classificação para que
+                  todos os <strong>{maiorSerie} motoristas</strong> da maior
+                  série se enfrentem (Confronto diário).
+                </>
+              ) : (
+                <>
+                  Recomenda-se no mínimo{" "}
+                  <strong>{duracaoMinima} dias</strong> de classificação para
+                  uma corrida por pontos justa com{" "}
+                  <strong>{maiorSerie} motoristas</strong> na maior série.
+                </>
+              )}
+              {classStart && classEnd && (
+                <>
+                  {" "}
+                  Janela atual: <strong>{duracaoAtual} dias</strong>.
+                </>
+              )}
+            </span>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <LabelComAjuda ajuda="Data em que começa a contagem de pontos da fase de classificação.">
@@ -267,6 +301,14 @@ export default function EditorInformacoesBasicas() {
           começar <strong>depois</strong> do fim da Fase 1, e o fim precisa ser
           depois do início.
         </p>
+        <div className="flex items-start gap-1.5 rounded-sm bg-primary/10 p-2 text-[11px] leading-snug text-foreground/80">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>
+            O Mata-mata começa automaticamente <strong>após o fim da
+            Classificação</strong>. Você pode estender a data final, mas não
+            antecipá-la.
+          </span>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <LabelComAjuda ajuda="Início dos confrontos eliminatórios. Deve ser após o fim da fase de classificação.">
