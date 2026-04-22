@@ -1,141 +1,108 @@
-`.
 
----
 
-# Como configurar o Campeonato
+# Tela de Distribuição Manual de Motoristas nas Séries
 
-Tudo é feito no **Painel do Empreendedor → Campeonato Motorista**. O fluxo tem **3 camadas** que precisam estar OK na ordem:
+Adicionar uma tela dedicada onde o empreendedor vê **todos os motoristas da marca** e **todas as séries (A, B, C, D…)** da temporada ativa lado a lado, podendo mover qualquer motorista entre séries ou removê-lo da temporada.
 
-## 1. Liberação (Root Admin)
-Antes de tudo, na **Central de Módulos → Empreendedores**, abra o card do modelo **Duelo Motorista** da marca e no bloco **"Formatos disponíveis"** deixe **Campeonato** ligado. Sem isso, o card no painel do empreendedor aparece com cadeado 🔒.
+## Como vai funcionar (UX)
 
-## 2. Ativar e escolher o formato
-Na tela do campeonato:
-1. **Card "Ativar Campeonato"** — clica para ligar o módulo na marca.
-2. **Seletor "Formato de engajamento"** — escolhe **Campeonato** (alternativa a *Duelo 1v1* e *Desafio em Massa*). Se houver temporada ativa rolando, o sistema bloqueia a troca.
+Acessada por um novo botão **"Distribuir motoristas"** no menu **Ações** da temporada ativa (ao lado de _Incluir motorista_).
 
-## 3. Criar a temporada (botão **+ Nova / Criar temporada**)
-O modal abre em 4 passos:
+Layout em **kanban horizontal** (responsivo: vira abas em mobile):
 
-### Passo A — Template
-Escolhe um dos 3 pré-prontos (depois pode editar tudo):
-- **Simples** — 2 séries (A, B), 16 motoristas cada
-- **Padrão** — 3 séries (A, B, C) ⭐ recomendado
-- **Completo** — 5 séries (A a E), operações grandes
+```text
+┌─────────────────┬─────────────┬─────────────┬─────────────┬─────────────┐
+│ Disponíveis (n) │ Série A (n) │ Série B (n) │ Série C (n) │ Série D (n) │
+├─────────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+│ □ João Silva    │ ☰ Pedro     │ ☰ Carlos    │ ☰ Ana       │ ☰ Marcos    │
+│ □ Maria Costa   │ ☰ José      │ ☰ Lucas     │ ☰ Júlia     │ ...         │
+│ □ ...           │ ...         │ ...         │ ...         │             │
+│                 │  [3/16]     │  [5/16]     │  [2/8]      │  [1/8]      │
+└─────────────────┴─────────────┴─────────────┴─────────────┴─────────────┘
+   [Ações em lote]   ↑ contador  ↑ contador    ↑ contador    ↑ contador
+                       atual/máx
+```
 
-### Passo B — Informações básicas
-- **Nome** da temporada (ex: "Brasileirão Janeiro/2026")
-- **Mês** e **Ano**
-- **Fase 1 — Classificação**: data de início e fim (pontos corridos)
-- **Fase 2 — Mata-mata**: data de início e fim (precisa começar **depois** do fim da classificação)
+### Interações principais
 
-### Passo C — Séries (hierarquia A, B, C…)
-Para cada série configure:
-- **Nome** (A, B, C…) — só letras/números, máx 10 caracteres
-- **Tamanho** — quantos motoristas cabem (2 a 64)
-- **Sobem** — quantos da série vão para a divisão de cima no fim
-- **Descem** — quantos vão para a divisão de baixo
+- **Drag & drop**: arrastar motorista entre colunas (incluindo coluna "Disponíveis" para tirar da temporada).
+- **Mobile/touch**: cada cartão tem botão `Mover para…` que abre um pequeno popover com a lista de séries.
+- **Seleção múltipla** na coluna "Disponíveis": checkboxes + botão **"Mover X selecionados para Série [A/B/C/D]"** (ação em lote).
+- **Busca** no topo da coluna "Disponíveis" (filtra por nome/telefone).
+- **Indicador de capacidade** em cada série: `[3/16]` em verde, `[16/16]` em amarelo, `[17/16]` em vermelho com aviso "Acima do tamanho configurado — permitido, mas será refletido no chaveamento".
+- **Estado de origem**: badge `Manual` aparece em quem foi adicionado/movido manualmente; `Seed` em quem veio do seeding inicial.
 
-Regras:
-- Mínimo 2 séries, máximo 8
-- A **primeira série (A)** não tem promoção (já é a mais alta)
-- A **última série** não tem rebaixamento
-- *Sobem + Descem* não pode passar do **Tamanho**
+### Confirmações e bloqueios
 
-### Passo D — Prêmios em pontos
-Para **cada série**, define quantos pontos o motorista ganha por posição final no mata-mata:
-- 🥇 Campeão
-- 🥈 Vice-campeão
-- Semifinalista
-- Quartas
-- Oitavas
+- Mover motorista → confirma silenciosamente, mostra toast `Motorista movido para Série B`.
+- Remover (jogar na coluna Disponíveis) → `AlertDialog`: _"Remover João da temporada? Os pontos acumulados serão perdidos."_
+- Bloqueios duros (mensagem clara):
+  - Temporada **finalizada** ou **cancelada** → tela em modo somente-leitura.
+  - Temporada já em **fase mata-mata** → bloqueia mover/remover de quem já está em chave.
 
-Os pontos são creditados automaticamente no encerramento da temporada.
+## Arquitetura (técnica)
 
-### Revisão e criação
-Última tela mostra resumo de tudo. Confirmar cria a temporada — o sistema faz o **seeding inicial** das séries (distribui motoristas) automaticamente.
+### 1. Backend — 2 RPCs novas (`SECURITY DEFINER`)
 
-## Depois de criada — operação contínua
+Migration nova: `supabase/migrations/<timestamp>_distribuicao_manual_series.sql`
 
-Na tela principal aparecem:
-- **Card da temporada ativa** com fase atual (Classificação / Mata-mata / Encerrada)
-- **Ações da temporada**: Pausar, Cancelar, Incluir motorista manualmente
-- **Cards por série**: ranking ao vivo, pode abrir cada uma para ver tabela completa e o chaveamento
-- **Prêmios a distribuir**: aparece quando a temporada termina, para você confirmar a distribuição
-- **Histórico**: lista de temporadas anteriores
+#### `duelo_move_driver_to_tier(p_season_id, p_driver_id, p_target_tier_id, p_reason)`
+- Valida `duelo_admin_can_manage(brand_id)` da temporada.
+- Bloqueia se temporada não está em fase **classification**.
+- Faz `UPDATE duelo_tier_memberships SET tier_id = p_target_tier_id, source = 'manual_move' WHERE season_id AND driver_id` — com `.select()` defensivo.
+- Loga em `duelo_driver_tier_history` (outcome `'manual_moved'`).
+- Atualiza `duelo_season_standings.tier_id` correspondente.
 
-## Quer que eu te leve direto na tela?
-Me diz qual marca você está testando e eu posso:
-1. Verificar se o **Campeonato está liberado pelo Root** para essa marca
-2. Confirmar se já existe uma **temporada criada** ou se precisa criar a primeira
-3. Te mostrar exatamente onde clicar com base no estado atual
+#### `duelo_remove_driver_from_season(p_season_id, p_driver_id, p_reason)`
+- Mesmas validações.
+- Bloqueia se motorista já tem partida no `duelo_brackets`.
+- `DELETE FROM duelo_tier_memberships`, `DELETE FROM duelo_season_standings`.
+- Loga em `duelo_driver_tier_history` (outcome `'manual_removed'`).
 
-Se preferir, também posso ajustar **textos de ajuda dentro do próprio modal** (tooltips em cada campo) para ficar autoexplicativo no produto — é só pedir.Esse `plan--create` foi engano — vou só responder como mensagem normal.
+Ambas com `GRANT EXECUTE ... TO authenticated` e `REVOKE FROM public`.
 
----
+### 2. Frontend — nova feature interna
 
-# Como configurar o Campeonato
+```text
+src/features/campeonato_duelo/
+├── components/empreendedor/
+│   ├── DistribuicaoManualView.tsx        ← container principal (Dialog full-screen)
+│   ├── ColunaMotoristasDisponiveis.tsx   ← coluna esquerda + busca + checkboxes
+│   ├── ColunaSerie.tsx                   ← coluna por série + contador
+│   ├── CardMotoristaArrastavel.tsx       ← card com dnd + popover "mover para"
+│   ├── BarraAcoesEmLote.tsx              ← botão "mover X selecionados"
+│   └── ConfirmRemoverMotorista.tsx       ← AlertDialog de confirmação
+├── hooks/
+│   └── hook_distribuicao_manual.ts       ← mutations: useMoverMotorista, useRemoverMotorista
+├── services/  (estende o existente)
+│   └── servico_campeonato_empreendedor.ts ← +2 funções RPC
+└── types/    (estende)
+    └── tipos_empreendedor.ts             ← +2 inputs
+```
 
-Tudo é feito no **Painel do Empreendedor → Campeonato Motorista**. O fluxo tem **3 camadas** que precisam estar OK na ordem:
+### 3. Pontos de integração
 
-## 1. Liberação (Root Admin)
-Antes de tudo, na **Central de Módulos → Empreendedores**, abre o card do modelo **Duelo Motorista** da marca e no bloco **"Formatos disponíveis"** deixa **Campeonato** ligado. Sem isso, o card no painel do empreendedor aparece com cadeado 🔒.
+- **`AcoesTemporadaAtiva.tsx`**: adicionar item `Distribuir motoristas` no dropdown (ícone `Users`).
+- **`pagina_campeonato_empreendedor.tsx`**: estado `modalDistribuir` + render do `DistribuicaoManualView` (full-screen Dialog para aproveitar o espaço).
+- **`servico_campeonato_empreendedor.ts`**: + `moverMotoristaParaSerie(input)` e `removerMotoristaDaSeason(input)`.
+- **Invalidações**: ao mover/remover, invalidar `empreendedor-dashboard-campeonato`, `empreendedor-series-detail`, `empreendedor-drivers-available`.
 
-## 2. Ativar e escolher o formato
-Na tela do campeonato:
-1. **Card "Ativar Campeonato"** — clica para ligar o módulo na marca.
-2. **Seletor "Formato de engajamento"** — escolhe **Campeonato** (alternativa a *Duelo 1v1* e *Desafio em Massa*). Se já houver temporada ativa rolando, o sistema bloqueia a troca.
+### 4. Drag & drop
 
-## 3. Criar a temporada (botão **+ Criar temporada / Nova**)
-O modal abre em 4 passos:
+Usar **`@dnd-kit/core` + `@dnd-kit/sortable`** (leve, acessível, suporta touch). Se não estiver instalado, adicionar como dep.
 
-### Passo A — Template
-Escolhe um dos 3 pré-prontos (depois pode editar tudo):
-- **Simples** — 2 séries (A, B), 16 motoristas cada
-- **Padrão** — 3 séries (A, B, C) ⭐ recomendado
-- **Completo** — 5 séries (A a E), operações grandes
+Fallback sem DnD em telas <768px: cards mostram botão `Mover para ▾` direto.
 
-### Passo B — Informações básicas
-- **Nome** da temporada (ex: "Brasileirão Janeiro/2026")
-- **Mês** e **Ano**
-- **Fase 1 — Classificação**: data de início e fim (pontos corridos)
-- **Fase 2 — Mata-mata**: data de início e fim (precisa começar **depois** do fim da classificação)
+## Resultado esperado
 
-### Passo C — Séries (hierarquia A, B, C…)
-Para cada série configure:
-- **Nome** (A, B, C…) — só letras/números, máx 10 caracteres
-- **Tamanho** — quantos motoristas cabem (2 a 64)
-- **Sobem** — quantos vão para a divisão de cima no fim
-- **Descem** — quantos vão para a divisão de baixo
+- Empreendedor abre temporada → menu Ações → "Distribuir motoristas" → vê tudo em uma tela só.
+- Pode arrastar 1 a 1, ou selecionar vários na coluna "Disponíveis" e jogar em massa numa série.
+- Pode tirar motorista da temporada arrastando pra "Disponíveis" (com confirmação).
+- Tudo respeita as regras de fase (só funciona durante **classification**) e isolamento por marca.
 
-Regras:
-- Mínimo 2 séries, máximo 8
-- A **primeira série (A)** não tem promoção (já é a mais alta)
-- A **última série** não tem rebaixamento
-- *Sobem + Descem* não pode passar do **Tamanho**
+## Risco e rollback
 
-### Passo D — Prêmios em pontos
-Para **cada série**, define quantos pontos o motorista ganha por posição final no mata-mata:
-- 🥇 Campeão
-- 🥈 Vice-campeão
-- Semifinalista
-- Quartas
-- Oitavas
+- **Risco baixo**: as duas RPCs novas são aditivas; nenhuma estrutura existente muda.
+- Tela nova vive em modal — não afeta navegação atual.
+- **Rollback**: down trivial dropando as duas funções; remover o item do dropdown e os arquivos novos.
 
-Os pontos são creditados automaticamente no encerramento da temporada.
-
-### Revisão e criação
-A última tela mostra o resumo de tudo. Confirmar cria a temporada — o sistema faz o **seeding inicial** das séries (distribui motoristas) automaticamente.
-
-## Depois de criada — operação contínua
-
-Na tela principal aparecem:
-- **Card da temporada ativa** com fase atual (Classificação / Mata-mata / Encerrada)
-- **Ações da temporada**: Pausar, Cancelar, Incluir motorista manualmente
-- **Cards por série**: ranking ao vivo; pode abrir cada uma pra ver tabela completa e o chaveamento
-- **Prêmios a distribuir**: aparece quando a temporada termina, para você confirmar a distribuição
-- **Histórico**: lista de temporadas anteriores
-
----
-
-Quer que eu **adicione tooltips de ajuda dentro do próprio modal** (uma frase explicando cada campo) pra ficar autoexplicativo no produto? Se sim, eu monto o plano e a gente já implementa.
