@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
-import { HelpCircle, BookOpen, Lightbulb, ChevronRight } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { HelpCircle, BookOpen, Lightbulb, ChevronRight, ExternalLink } from "lucide-react";
 import { getHelpForRoute, type HelpSection } from "@/lib/helpContent";
 import {
   Drawer,
@@ -65,10 +65,16 @@ function SectionCard({ section, index }: { section: HelpSection; index: number }
 
 export function ContextualHelpDrawer() {
   const location = useLocation();
+  const navigate = useNavigate();
   const help = getHelpForRoute(location.pathname);
   const [open, setOpen] = useState(false);
 
   if (!help) return null;
+
+  const handleOpenManuais = () => {
+    setOpen(false);
+    navigate("/manuais");
+  };
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
@@ -89,13 +95,24 @@ export function ContextualHelpDrawer() {
             {help.pageTitle} — Manual de instruções
           </DrawerTitle>
         </DrawerHeader>
-        <ScrollArea className="px-4 pb-6" style={{ maxHeight: "calc(85vh - 80px)" }}>
+        <ScrollArea className="px-4 pb-2" style={{ maxHeight: "calc(85vh - 140px)" }}>
           <Accordion type="multiple" defaultValue={["section-0"]} className="space-y-2">
             {help.sections.map((section, i) => (
               <SectionCard key={i} section={section} index={i} />
             ))}
           </Accordion>
         </ScrollArea>
+        <div className="px-4 pb-4 pt-2 border-t bg-muted/20">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full gap-2 text-xs text-muted-foreground hover:text-primary"
+            onClick={handleOpenManuais}
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Ver manual completo em /manuais
+          </Button>
+        </div>
       </DrawerContent>
     </Drawer>
   );
