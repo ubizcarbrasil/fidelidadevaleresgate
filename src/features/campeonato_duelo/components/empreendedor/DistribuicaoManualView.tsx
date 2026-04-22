@@ -229,7 +229,7 @@ export default function DistribuicaoManualView({
           ) : (
             <DndContext sensors={sensors} onDragEnd={aoArrastarTermino}>
               <div className="flex flex-1 gap-3 overflow-x-auto pb-2">
-                <div className="w-[280px] shrink-0">
+                <div className="w-[280px] shrink-0" data-tour="coluna-disponiveis">
                   <ColunaMotoristasDisponiveis
                     motoristas={motoristas ?? []}
                     selecionados={selecionados}
@@ -239,28 +239,30 @@ export default function DistribuicaoManualView({
                   />
                 </div>
 
-                {tiers.map((t, idx) => {
-                  const q = queriesSeries[idx];
-                  return (
-                    <div key={t.tier_id} className="w-[260px] shrink-0">
-                      <ColunaSerie
-                        tierId={t.tier_id}
-                        tierName={t.tier_name}
-                        capacidade={capacidadePorTier.get(t.tier_id) ?? null}
-                        membros={q.data ?? []}
-                        carregando={q.isLoading}
-                        series={seriesAlvo}
-                        modoLeitura={modoLeitura}
-                        aoMoverPara={(driverId, targetTierId) =>
-                          moverParaSerie(driverId, targetTierId)
-                        }
-                        aoRemover={(driverId, driverName) =>
-                          setConfirmRemover({ driverId, driverName })
-                        }
-                      />
-                    </div>
-                  );
-                })}
+                <div className="flex gap-3" data-tour="colunas-series">
+                  {tiers.map((t, idx) => {
+                    const q = queriesSeries[idx];
+                    return (
+                      <div key={t.tier_id} className="w-[260px] shrink-0">
+                        <ColunaSerie
+                          tierId={t.tier_id}
+                          tierName={t.tier_name}
+                          capacidade={capacidadePorTier.get(t.tier_id) ?? null}
+                          membros={q.data ?? []}
+                          carregando={q.isLoading}
+                          series={seriesAlvo}
+                          modoLeitura={modoLeitura}
+                          aoMoverPara={(driverId, targetTierId) =>
+                            moverParaSerie(driverId, targetTierId)
+                          }
+                          aoRemover={(driverId, driverName) =>
+                            setConfirmRemover({ driverId, driverName })
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
 
                 {tiers.length === 0 && (
                   <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
@@ -272,6 +274,11 @@ export default function DistribuicaoManualView({
           )}
         </DialogContent>
       </Dialog>
+
+      <TourGuiadoDistribuicao
+        ativo={tourAtivo && open}
+        aoEncerrar={() => setTourAtivo(false)}
+      />
 
       <ConfirmRemoverMotorista
         open={!!confirmRemover}
