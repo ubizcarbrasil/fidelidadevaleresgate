@@ -14,6 +14,8 @@ import {
   useToggleBrandBusinessModel,
 } from "@/compartilhados/hooks/hook_brand_business_models";
 import type { ResolvedBusinessModel } from "@/compartilhados/hooks/hook_brand_plan_business_models";
+import { useBrandGuard } from "@/hooks/useBrandGuard";
+import ConfiguradorFormatosDuelo from "./configurador_formatos_duelo";
 
 interface Props {
   brandId: string;
@@ -30,12 +32,14 @@ function pickIcon(name: string | null): React.ComponentType<{ className?: string
 export default function CardModeloBrand({ brandId, resolved }: Props) {
   const navigate = useNavigate();
   const toggle = useToggleBrandBusinessModel();
+  const { isRootAdmin } = useBrandGuard();
   const { def, state, row } = resolved;
   const Icon = pickIcon(def.icon);
   const color = def.color ?? "hsl(var(--primary))";
   const isActive = state === "active";
   const isLocked = state === "locked";
   const isGG = def.key === "ganha_ganha";
+  const isDueloMotorista = def.key === "duelo_motorista";
 
   const handleToggle = (checked: boolean) => {
     if (isLocked) return;
@@ -147,6 +151,11 @@ export default function CardModeloBrand({ brandId, resolved }: Props) {
             </>
           )}
         </div>
+
+        {/* Bloco Root-only: formatos de engajamento liberados para a marca */}
+        {isRootAdmin && isDueloMotorista && !isLocked && (
+          <ConfiguradorFormatosDuelo brandId={brandId} />
+        )}
       </CardContent>
     </Card>
   );

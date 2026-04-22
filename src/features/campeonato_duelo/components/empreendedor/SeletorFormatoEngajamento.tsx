@@ -20,6 +20,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Lock } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useFormatosPermitidos } from "@/compartilhados/hooks/hook_formatos_permitidos";
 
 interface Props {
   brandId: string;
@@ -33,6 +41,8 @@ const ICONES: Record<FormatoEngajamento, typeof Trophy> = {
 
 export default function SeletorFormatoEngajamento({ brandId }: Props) {
   const { formato, isLoading } = useFormatoEngajamento(brandId);
+  const { formatos: permitidos, isLoading: carregandoPermitidos } =
+    useFormatosPermitidos(brandId);
   const { mutate, isPending } = useTrocarFormato();
   const [pendente, setPendente] = useState<FormatoEngajamento | null>(null);
 
@@ -51,38 +61,77 @@ export default function SeletorFormatoEngajamento({ brandId }: Props) {
           <CardTitle className="text-base">Formato de engajamento</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isLoading || carregandoPermitidos ? (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           ) : (
             <div className="grid gap-2 md:grid-cols-3">
               {(["duelo", "mass_duel", "campeonato"] as FormatoEngajamento[]).map((f) => {
                 const ativo = f === formato;
                 const Icone = ICONES[f];
-                return (
+                const liberado = permitidos.includes(f);
+                const bloqueado = !liberado;
+
+                const cardEl = (
                   <button
                     key={f}
                     type="button"
-                    onClick={() => !ativo && setPendente(f)}
-                    disabled={isPending}
-                    className={`group relative rounded-lg border p-3 text-left transition-all ${
+                    onClick={() => !ativo && !bloqueado && setPendente(f)}
+                    disabled={isPending || bloqueado}
+                    className={`group relative rounded-lg border p-3 text-left transition-all w-full ${
                       ativo
                         ? "border-primary bg-primary/5"
+                        : bloqueado
+                        ? "border-border opacity-60 cursor-not-allowed"
                         : "border-border hover:border-primary/50"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Icone className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium">{ROTULOS_FORMATO[f]}</span>
-                      {ativo && (
+                      <Icone
+                        className={`h-4 w-4 ${
+                          bloqueado ? "text-muted-foreground" : "text-primary"
+                        }`}
+                      />
+                      <span className="text-sm font-medium">
+                        {ROTULOS_FORMATO[f]}
+                      </span>
+                      {ativo && !bloqueado && (
                         <Badge variant="secondary" className="ml-auto h-5 gap-1">
                           <Check className="h-3 w-3" /> Ativo
+                        </Badge>
+                      )}
+                      {bloqueado && (
+                        <Badge
+                          variant="outline"
+                          className="ml-auto h-5 gap-1 text-[10px]"
+                        >
+                          <Lock className="h-3 w-3" /> Bloqueado
                         </Badge>
                       )}
                     </div>
                     <p className="mt-1.5 text-xs leading-snug text-muted-foreground">
                       {DESCRICOES_FORMATO[f]}
                     </p>
+                    {bloqueado && (
+                      <p className="mt-1 text-[10px] text-muted-foreground italic">
+                        Não disponível no seu plano
+                      </p>
+                    )}
                   </button>
+                );
+
+                if (!bloqueado) return <div key={f}>{cardEl}</div>;
+
+                return (
+                  <TooltipProvider key={f} delayDuration={150}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div>{cardEl}</div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        Fale com o suporte para liberar este formato.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 );
               })}
             </div>
