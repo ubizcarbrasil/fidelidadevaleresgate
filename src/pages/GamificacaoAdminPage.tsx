@@ -18,6 +18,7 @@ import ModalCriarDueloAdmin from "@/components/admin/gamificacao/ModalCriarDuelo
 import ApostasAdminView from "@/components/admin/gamificacao/ApostasAdminView";
 import PaginaCampeonatoEmpreendedor from "@/features/campeonato_duelo/pagina_campeonato_empreendedor";
 import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
+import AlertaModoCampeonato from "@/features/campeonato_duelo/components/alerta_modo_campeonato";
 
 export default function GamificacaoAdminPage() {
   const { currentBranchId, currentBrandId, consoleScope } = useBrandGuard();
@@ -216,7 +217,10 @@ export default function GamificacaoAdminPage() {
           </>
         )}
         <TabsContent value="campeonato">
-          <PaginaCampeonatoEmpreendedor brandId={branch.brand_id} branchId={branch.id} />
+          <div className="space-y-4">
+            {isCampeonato && <AlertaModoCampeonato />}
+            <PaginaCampeonatoEmpreendedor brandId={branch.brand_id} branchId={branch.id} />
+          </div>
         </TabsContent>
         {!isCampeonato && (
           <>
