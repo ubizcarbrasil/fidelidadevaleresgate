@@ -74,18 +74,25 @@ const ehStandalonePWA = (): boolean => {
   return matchStandalone || iosStandalone;
 };
 
+const ehIOS = (): boolean => {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+};
+
+export const exigeGestoDoUsuarioParaSalvar = (): boolean => ehIOS() || ehStandalonePWA();
+
 export async function baixarCsvMotoristas(
   blob: Blob,
   nomeArquivo: string,
 ): Promise<ModoDownload> {
   // Estratégia 1: Web Share API com arquivo (preferida em mobile/PWA)
   try {
-    const file = new File([blob], nomeArquivo, { type: "text/csv" });
+    const file = new File([blob], nomeArquivo, { type: blob.type || "text/csv;charset=utf-8;" });
     const navAny = navigator as any;
     const podeCompartilharArquivo =
       typeof navAny.share === "function" &&
-      typeof navAny.canShare === "function" &&
-      navAny.canShare({ files: [file] });
+      (typeof navAny.canShare !== "function" || navAny.canShare({ files: [file] }));
 
     if (podeCompartilharArquivo) {
       await navAny.share({
@@ -100,7 +107,11 @@ export async function baixarCsvMotoristas(
     // Outros erros: cai para próxima estratégia.
   }
 
-  // Em PWA standalone iOS, <a download> não funciona — pula direto para nova aba.
+  // Em iOS/PWA, os fallbacks com blob URL costumam abrir uma tela branca.
+  if (exigeGestoDoUsuarioParaSalvar()) {
+    throw new Error('Não foi possível abrir o compartilhamento nativo. Toque em CSV novamente para salvar o arquivo.');
+  }
+
   const url = URL.createObjectURL(blob);
 
   if (!ehStandalonePWA()) {

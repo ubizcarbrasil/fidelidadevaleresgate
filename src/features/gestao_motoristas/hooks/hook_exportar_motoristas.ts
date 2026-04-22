@@ -7,11 +7,19 @@ import {
 import {
   gerarCsvMotoristas,
   baixarCsvMotoristas,
+  exigeGestoDoUsuarioParaSalvar,
 } from "../utils/utilitarios_export_motoristas";
 
 export interface ProgressoExportacao {
   atual: number;
   total: number;
+}
+
+interface ArquivoPendente {
+  blob: Blob;
+  nomeArquivo: string;
+  totalMotoristas: number;
+  excedeuLimite: boolean;
 }
 
 export type ParametrosUseExportar = Omit<ParametrosExportacao, "onProgresso">;
@@ -23,8 +31,47 @@ export type ParametrosUseExportar = Omit<ParametrosExportacao, "onProgresso">;
 export function useExportarMotoristas() {
   const [exportando, setExportando] = useState(false);
   const [progresso, setProgresso] = useState<ProgressoExportacao | null>(null);
+  const [arquivoPendente, setArquivoPendente] = useState<ArquivoPendente | null>(null);
+
+  const notificarConclusao = useCallback(
+    (totalMotoristas: number, excedeuLimite: boolean, modo: "share" | "download" | "nova-aba") => {
+      const totalFmt = totalMotoristas.toLocaleString("pt-BR");
+
+      if (excedeuLimite) {
+        toast.warning(
+          `Limite de 20.000 atingido. Exportados ${totalFmt} motoristas. Refine a busca para exportar o restante.`,
+        );
+        return;
+      }
+
+      if (modo === "share") {
+        toast.success(`${totalFmt} motoristas prontos. Toque em "Salvar em Arquivos" para guardar.`);
+        return;
+      }
+
+      if (modo === "nova-aba") {
+        toast.success(`${totalFmt} motoristas exportados. Use o menu do navegador para salvar o arquivo.`);
+        return;
+      }
+
+      toast.success(`${totalFmt} motoristas exportados`);
+    },
+    [],
+  );
 
   const exportar = useCallback(async (params: ParametrosUseExportar) => {
+    if (arquivoPendente) {
+      try {
+        const modo = await baixarCsvMotoristas(arquivoPendente.blob, arquivoPendente.nomeArquivo);
+        setArquivoPendente(null);
+        notificarConclusao(arquivoPendente.totalMotoristas, arquivoPendente.excedeuLimite, modo);
+      } catch (err: any) {
+        if (err?.name === "AbortError") return;
+        toast.error(err?.message || "Erro ao salvar o arquivo CSV");
+      }
+      return;
+    }
+
     if (exportando) return;
     if (!params.brandId) {
       toast.error("Marca não identificada");
@@ -55,26 +102,25 @@ export function useExportarMotoristas() {
 
       const blob = gerarCsvMotoristas(resultado.motoristas);
       const data = new Date().toISOString().slice(0, 10);
-      const modo = await baixarCsvMotoristas(blob, `motoristas-${data}.csv`);
+      const nomeArquivo = `motoristas-${data}.csv`;
 
       toast.dismiss(toastId);
-      const totalFmt = resultado.motoristas.length.toLocaleString("pt-BR");
 
-      if (resultado.excedeuLimite) {
-        toast.warning(
-          `Limite de 20.000 atingido. Exportados ${totalFmt} motoristas. Refine a busca para exportar o restante.`,
-        );
-      } else if (modo === "share") {
+      if (exigeGestoDoUsuarioParaSalvar()) {
+        setArquivoPendente({
+          blob,
+          nomeArquivo,
+          totalMotoristas: resultado.motoristas.length,
+          excedeuLimite: resultado.excedeuLimite,
+        });
         toast.success(
-          `${totalFmt} motoristas prontos. Toque em "Salvar em Arquivos" para guardar.`,
+          `${resultado.motoristas.length.toLocaleString("pt-BR")} motoristas prontos. Toque em CSV novamente para salvar.`,
         );
-      } else if (modo === "nova-aba") {
-        toast.success(
-          `${totalFmt} motoristas exportados. Use o menu do navegador para salvar o arquivo.`,
-        );
-      } else {
-        toast.success(`${totalFmt} motoristas exportados`);
+        return;
       }
+
+      const modo = await baixarCsvMotoristas(blob, nomeArquivo);
+      notificarConclusao(resultado.motoristas.length, resultado.excedeuLimite, modo);
     } catch (err: any) {
       toast.dismiss(toastId);
       // Usuário cancelou o share sheet — não mostrar erro.
@@ -86,7 +132,7 @@ export function useExportarMotoristas() {
       setExportando(false);
       setProgresso(null);
     }
-  }, [exportando]);
+  }, [arquivoPendente, exportando, notificarConclusao]);
 
-  return { exportar, exportando, progresso };
+  return { exportar, exportando, progresso, arquivoPendente: !!arquivoPendente };
 }
