@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef } from "react";
 import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,11 +9,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlertCircle, Trophy, Swords } from "lucide-react";
+import { AlertCircle, Info, Trophy, Swords } from "lucide-react";
 import { NOMES_MESES } from "../../constants/constantes_campeonato";
 import type { FormCriarTemporadaInput } from "../../schemas/schema_criar_temporada";
 import {
+  calcularDuracaoMinimaClassificacao,
+  calcularFimMinimoClassificacao,
   compararInputDate,
+  diferencaEmDiasInclusiva,
   somarDiasInputDate,
 } from "../../utils/utilitarios_campeonato";
 import LabelComAjuda from "./LabelComAjuda";
