@@ -1,178 +1,121 @@
 
 
-# Esclarecimentos antes da execução — Tarefa B
+# Processo de configuração do Campeonato Duelo
 
-## 1. Rollback completo
+## Diagnóstico
 
-Bloco de rollback completo, executável em ordem, dentro de uma única transação:
+Hoje o módulo tem **3 chaves** que precisam estar ligadas. Apenas 1 tem UI:
 
-```sql
-BEGIN;
+| # | Chave | Onde mora | Tem UI? | Estado atual |
+|---|---|---|---|---|
+| 1 | `USE_DUELO_CAMPEONATO` | `src/compartilhados/constants/constantes_features.ts` | ❌ Código | `false` |
+| 2 | `brand_settings_json.duelo_campeonato_enabled` | tabela `brands` | ❌ Só banco | `null` |
+| 3 | `brand_business_models.engagement_format` | tabela `brand_business_models` | ✅ Aba Campeonato (seletor) | `duelo` |
 
--- 1) Recriar coluna antiga
-ALTER TABLE public.duelo_season_standings
-  ADD COLUMN IF NOT EXISTS five_star_count int NOT NULL DEFAULT 0;
+**Resultado**: o empreendedor abre `/gamificacao` → aba **Campeonato** e vê só o seletor de formato. Mesmo trocando para "Campeonato", nada funciona porque as camadas 1 e 2 estão OFF.
 
--- 2) Recriar índice antigo
-DROP INDEX IF EXISTS idx_duelo_standings_ranking;
-CREATE INDEX idx_duelo_standings_ranking
-  ON public.duelo_season_standings
-     (season_id, points DESC, five_star_count DESC, last_ride_at ASC);
+## Onde configurar HOJE (caminho manual)
 
--- 3) Reverter trigger duelo_update_standings_from_ride
---    Restaurar versão da migration 20260421230612 (sem weekend_rides_count)
-CREATE OR REPLACE FUNCTION public.duelo_update_standings_from_ride()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_season_id uuid;
-  v_tier_id uuid;
-  v_finalized_at timestamptz;
-BEGIN
-  IF NEW.ride_status <> 'FINALIZED' THEN RETURN NEW; END IF;
-  IF TG_OP = 'UPDATE' AND OLD.ride_status = 'FINALIZED' THEN RETURN NEW; END IF;
-  IF NEW.driver_customer_id IS NULL OR NEW.branch_id IS NULL THEN RETURN NEW; END IF;
+**Console do empreendedor:**
+1. Acessar **Gamificação** (sidebar) → escolher cidade → aba **Campeonato**
+2. No seletor superior, trocar formato para **Campeonato**
 
-  v_finalized_at := COALESCE(NEW.finalized_at, now());
+Mas isso **não funciona em produção** sem antes ligar as camadas 1 e 2 (que exigem alteração de código + migration). É o gargalo que vamos resolver.
 
-  SELECT s.id INTO v_season_id
-    FROM public.duelo_seasons s
-   WHERE s.branch_id = NEW.branch_id
-     AND s.phase = 'classification'
-     AND v_finalized_at >= s.classification_starts_at
-     AND v_finalized_at <  s.classification_ends_at
-   ORDER BY s.created_at DESC LIMIT 1;
-  IF v_season_id IS NULL THEN RETURN NEW; END IF;
+## Proposta de processo correto (3 commits)
 
-  SELECT tm.tier_id INTO v_tier_id
-    FROM public.duelo_tier_memberships tm
-   WHERE tm.season_id = v_season_id AND tm.driver_id = NEW.driver_customer_id
-   LIMIT 1;
-  IF v_tier_id IS NULL THEN
-    INSERT INTO public.duelo_attempts_log(code, season_id, driver_id, payload)
-      VALUES ('no_membership', v_season_id, NEW.driver_customer_id, jsonb_build_object('ride_id', NEW.id));
-    RETURN NEW;
-  END IF;
+### Commit 1 — Ligar a flag global (1 linha)
 
-  INSERT INTO public.duelo_season_standings(
-    season_id, driver_id, tier_id, points, last_ride_at, qualified, relegated_auto)
-  VALUES (v_season_id, NEW.driver_customer_id, v_tier_id, 1, v_finalized_at, false, false)
-  ON CONFLICT (season_id, driver_id) DO UPDATE
-     SET points = public.duelo_season_standings.points + 1,
-         last_ride_at = GREATEST(
-           COALESCE(public.duelo_season_standings.last_ride_at, EXCLUDED.last_ride_at),
-           EXCLUDED.last_ride_at),
-         tier_id = COALESCE(public.duelo_season_standings.tier_id, EXCLUDED.tier_id);
-  RETURN NEW;
-END;
-$$;
-
--- 4) Reverter duelo_reconcile_standings (sem weekend_rides_count)
---    Reaplicar versão da migration 20260421230612
-CREATE OR REPLACE FUNCTION public.duelo_reconcile_standings(p_hours int DEFAULT 48)
-RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE
-  v_rec record; v_expected int; v_expected_last timestamptz;
-  v_checked int := 0; v_fixed int := 0;
-BEGIN
-  FOR v_rec IN
-    SELECT DISTINCT st.season_id, st.driver_id
-      FROM public.duelo_season_standings st
-      JOIN public.duelo_seasons s ON s.id = st.season_id
-     WHERE s.phase IN ('classification','knockout_r16','knockout_qf','knockout_sf','knockout_final')
-       AND EXISTS (SELECT 1 FROM public.machine_rides mr
-                    WHERE mr.driver_customer_id = st.driver_id
-                      AND mr.branch_id = s.branch_id
-                      AND mr.ride_status = 'FINALIZED'
-                      AND mr.finalized_at >= now() - (p_hours||' hours')::interval)
-  LOOP
-    v_checked := v_checked + 1;
-    SELECT COUNT(*)::int, MAX(mr.finalized_at)
-      INTO v_expected, v_expected_last
-      FROM public.machine_rides mr
-      JOIN public.duelo_seasons s ON s.id = v_rec.season_id
-     WHERE mr.driver_customer_id = v_rec.driver_id
-       AND mr.branch_id = s.branch_id
-       AND mr.ride_status = 'FINALIZED'
-       AND mr.finalized_at >= s.classification_starts_at
-       AND mr.finalized_at <  s.classification_ends_at;
-    UPDATE public.duelo_season_standings st
-       SET points = v_expected, last_ride_at = v_expected_last
-     WHERE st.season_id = v_rec.season_id AND st.driver_id = v_rec.driver_id
-       AND (st.points <> v_expected OR st.last_ride_at IS DISTINCT FROM v_expected_last);
-    IF FOUND THEN v_fixed := v_fixed + 1; END IF;
-  END LOOP;
-  RETURN jsonb_build_object('checked', v_checked, 'fixed', v_fixed, 'window_hours', p_hours);
-END; $$;
-
--- 5) Reverter duelo_backfill_standings (versão sem weekend_rides_count) → restaurar da migration 20260421230612
--- 6) Reverter duelo_create_brackets_within_tier (ORDER BY sem weekend_rides_count) → restaurar da migration 20260421230750
--- 7) Reverter duelo_apply_promotion_relegation (ORDER BY sem weekend_rides_count) → restaurar da migration 20260421230850
--- (corpos completos copiados das migrations originais — incluídos no arquivo final de rollback)
-
--- 8) Dropar helper
-DROP FUNCTION IF EXISTS public.duelo_is_weekend_at(timestamptz, uuid);
-
--- 9) Dropar coluna nova
-ALTER TABLE public.duelo_season_standings DROP COLUMN IF EXISTS weekend_rides_count;
-
-COMMIT;
-
--- Reverter código TS: git revert do commit (volta tipos_campeonato.ts, servico_campeonato.ts, tabela_classificacao.tsx)
+`src/compartilhados/constants/constantes_features.ts`:
+```ts
+export const USE_DUELO_CAMPEONATO = true;  // era false
 ```
 
-O bloco de rollback completo (com corpos integrais das funções 5/6/7) será embutido como comentário no final do arquivo de migration para referência rápida em produção.
+Justificativa: Bloco C inteiro (C.1–C.5) está concluído, validado e em produção. A flag de código existia para rollback rápido durante rollout — agora pode ser ligada por padrão. Mantém-se desligada por marca (camada 2) para controle gradual.
 
-## 2. Estimativa
+### Commit 2 — Criar UI de ativação por marca (camada 2)
 
-- **SQL**: ~280 linhas (1 ALTER+ADD, 1 ALTER+DROP, 1 DROP/CREATE INDEX, 1 helper, 5 funções `CREATE OR REPLACE`, 1 bloco de backfill, comentário de rollback)
-- **TypeScript**: ~12 linhas alteradas em 3 arquivos (`tipos_campeonato.ts`, `servico_campeonato.ts`, `tabela_classificacao.tsx`)
-- **Tempo de execução em produção**: ~3–7 segundos (volumetria atual de `duelo_season_standings` e `machine_rides` em beta é mínima)
-- **Tempo total da entrega** (codificação + verificação): **~5 minutos**
+**Local certo**: na aba **Campeonato** do `/gamificacao`, **antes** do `SeletorFormatoEngajamento`, adicionar um **card de ativação** que persiste `brand_settings_json.duelo_campeonato_enabled`.
 
-## 3. Impacto em ranking atual
+**Novo componente**: `src/features/campeonato_duelo/components/empreendedor/CardAtivarCampeonato.tsx`
 
-**Cenário**: 2 motoristas empatados em `points` no mesmo tier de uma temporada em `phase='classification'`.
-
-**Após execução**:
-1. `weekend_rides_count` é populado pelo backfill com base no histórico real de `machine_rides`.
-2. `position_in_tier` **não é gravado durante classification** — só é cristalizado no momento em que `duelo_advance_phases` transiciona para mata-mata.
-3. Listagens via `servico_campeonato.listarClassificacao` passam imediatamente a ordenar por `points DESC, weekend_rides_count DESC, last_ride_at ASC`. Os 2 motoristas trocam de posição se um tiver mais corridas em sex/sáb/dom.
-4. Próxima execução do `duelo_advance_phases` (no fim do período de classificação) usará a nova ordem para criar brackets — quem tiver mais corridas de fim de semana vira seed melhor.
-
-**Mata-mata em andamento**: brackets já criados ficam intactos. A mudança só afeta temporadas que ainda não saíram de `classification`.
-
-**Temporadas finalizadas**: backfill exclui via `WHERE s.phase IN ('classification','knockout_*')`, preservando o histórico em `duelo_driver_tier_history`.
-
-## 4. `SECURITY DEFINER` no helper — concordo, não precisa
-
-Análise correta. `branches` tem RLS pública (todo authenticated lê), e o helper é chamado:
-- de dentro de funções `SECURITY DEFINER` (trigger, reconcile, backfill, advance) — herdam contexto suficiente
-- potencialmente em queries ad-hoc — qualquer authenticated já lê `branches.timezone`
-
-**Decisão**: criar como `STABLE LANGUAGE sql` simples, sem `SECURITY DEFINER`:
-
-```sql
-CREATE OR REPLACE FUNCTION public.duelo_is_weekend_at(
-  p_finalized_at timestamptz, p_branch_id uuid
-) RETURNS boolean
-LANGUAGE sql STABLE SET search_path = public AS $$
-  SELECT EXTRACT(DOW FROM p_finalized_at AT TIME ZONE
-           COALESCE((SELECT timezone FROM public.branches WHERE id = p_branch_id),
-                    'America/Sao_Paulo'))::int IN (5, 6, 0);
-$$;
+```text
+┌─────────────────────────────────────────────────┐
+│  🏆  Campeonato Duelo Motorista                  │
+│                                                  │
+│  Sistema de temporadas mensais com séries       │
+│  hierárquicas (A, B, C…), classificação,        │
+│  mata-mata, hall da fama público e prêmios.     │
+│                                                  │
+│  Status: ⚪ Desativado para esta marca          │
+│                                                  │
+│  [ Ativar Campeonato ]                          │
+└─────────────────────────────────────────────────┘
 ```
 
-Vantagens: menor superfície de risco, menos ruído no linter de segurança, e o `STABLE` permite que o planner reuse o resultado dentro da mesma query (importante no backfill agregado).
+Quando ativado, o card colapsa e mostra apenas:
+```text
+🏆 Campeonato ativo • [Desativar]
+```
 
-Caso o linter futuro reclame de `search_path mutable` em função não-`SECURITY DEFINER`, removemos o `SET search_path` (qualificação `public.branches` já está explícita).
+**Comportamento**:
+- Toggle escreve em `brands.brand_settings_json` via update padrão (com `.select()` por causa do Supabase Update Hardening)
+- Invalidação cruzada de `useDueloCampeonatoHabilitado`, `useFormatoEngajamento`, `useDashboardCampeonato`
+- Audit log em `duelo_attempts_log` (code: `brand_campeonato_toggled`)
+- Confirmação via `AlertDialog` ao desativar (avisa que pausa temporadas em curso, sem cancelá-las)
 
-## Confirmação
+**Renderização condicional** em `pagina_campeonato_empreendedor.tsx`:
+- Se `!campeonatoHabilitado` → mostra **só** o `CardAtivarCampeonato`
+- Se `campeonatoHabilitado && !isCampeonato` → mostra `CardAtivarCampeonato` (modo compacto) + `SeletorFormatoEngajamento` + card "Selecione formato Campeonato"
+- Se `campeonatoHabilitado && isCampeonato` → fluxo atual (seletor + dashboard)
 
-Mantém o rótulo da coluna na UI como **"Fim de Semana"** (versão completa) ou prefere **"FDS"** (compacto, melhor em mobile 430px)? Se não responder, executo com **"Fim de Semana"** abreviando para **"FDS"** apenas em viewports `< sm`.
+### Commit 3 — Documentar o processo (Manual + Memory)
 
-Aguardando aprovação final para executar.
+**3.1** Adicionar entrada na **Central de Módulos → Manual** (`src/features/central_modulos/components/aba_manual.tsx`):
+> **Como ativar o Campeonato Duelo Motorista**  
+> Passo 1: Console do empreendedor → Gamificação → cidade → aba Campeonato  
+> Passo 2: Clicar em "Ativar Campeonato" no card de ativação  
+> Passo 3: No seletor de formato, escolher "Campeonato"  
+> Passo 4: Clicar em "Criar temporada" e preencher o formulário (template Padrão recomendado)
+
+**3.2** Atualizar memória `mem://modules/gamification/comprehensive-governance` com a nova UI de ativação.
+
+## Arquivos impactados
+
+**Editados:**
+- `src/compartilhados/constants/constantes_features.ts` (1 linha)
+- `src/features/campeonato_duelo/pagina_campeonato_empreendedor.tsx` (renderização condicional)
+- `src/features/central_modulos/components/aba_manual.tsx` (adiciona seção)
+
+**Criados:**
+- `src/features/campeonato_duelo/components/empreendedor/CardAtivarCampeonato.tsx`
+- `src/features/campeonato_duelo/hooks/hook_ativar_campeonato.ts` (mutation toggle)
+- `src/features/campeonato_duelo/services/servico_ativar_campeonato.ts` (update em `brands`)
+
+**Sem migration**: usa coluna `brand_settings_json` já existente. Sem nova RPC: update direto na tabela `brands` já tem RLS para `brand_admin`.
+
+## Fluxo final do empreendedor (depois dos 3 commits)
+
+```text
+1. Sidebar → Gamificação
+2. Selecionar cidade
+3. Aba "Campeonato"
+4. [ Ativar Campeonato ]  ← NOVO botão claro
+5. Seletor: trocar para "Campeonato"
+6. [ + Criar temporada ]  ← já existe, abre Accordion 4 seções
+7. Pronto — cron horário começa a operar
+```
+
+## Riscos & rollback
+
+- **Commit 1** (flag global): rollback = trocar de volta para `false` e redeploy. Zero impacto em dados.
+- **Commit 2** (UI de toggle): toggle nunca apaga dados. Desativar só esconde a UI; temporadas em curso ficam intactas no banco e podem ser retomadas ao reativar.
+- **Commit 3** (docs): cosmético.
+
+## Aprovação
+
+Confirmar se posso executar os 3 commits sequencialmente, ou se prefere:
+- **(a)** Apenas Commit 1 + Commit 2 agora; manual em commit separado depois
+- **(b)** Os 3 commits de uma vez
+- **(c)** Apenas o Commit 2 (UI), mantendo flag global em `false` para rollout controlado por código
 
