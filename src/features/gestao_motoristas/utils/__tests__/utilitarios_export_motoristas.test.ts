@@ -189,14 +189,19 @@ describe("gerarCsvMotoristas", () => {
         scoring_disabled: false,
       } as any,
     ]);
-    // jsdom não implementa Blob.text() de forma confiável; usamos FileReader.
-    const texto = await new Promise<string>((resolve, reject) => {
+    // Lê os bytes brutos: o BOM (EF BB BF) precisa ser o primeiro do arquivo
+    // para o Excel reconhecer UTF-8 corretamente.
+    const bytes = await new Promise<Uint8Array>((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
+      reader.onload = () => resolve(new Uint8Array(reader.result as ArrayBuffer));
       reader.onerror = () => reject(reader.error);
-      reader.readAsText(blob, "utf-8");
+      reader.readAsArrayBuffer(blob);
     });
-    expect(texto.charCodeAt(0)).toBe(0xfeff); // BOM
+    expect(bytes[0]).toBe(0xef);
+    expect(bytes[1]).toBe(0xbb);
+    expect(bytes[2]).toBe(0xbf);
+
+    const texto = new TextDecoder("utf-8").decode(bytes);
     expect(texto).toContain('"Nome"');
     expect(texto).toContain('"João"');
     expect(texto).toContain('"123.456.789-01"');
