@@ -1,63 +1,92 @@
 
 
-# Tratar erro "temporada duplicada no mesmo mês" com mensagem clara e checagem prévia
+# Diagnóstico: por que o motorista não vê nada do Campeonato
 
-## O que está acontecendo
+Verifiquei o banco e o código. A temporada **"Abril 2026"** foi criada para a marca *Meu Mototáxi* na cidade alvo, mas ela está **vazia** — sem séries materializadas e sem motoristas distribuídos. Por isso o painel do motorista mostra "nenhum campeonato ativo".
 
-O banco tem uma regra de unicidade: **só pode existir uma temporada por mês para cada cidade** (constraint `duelo_seasons_brand_id_branch_id_year_month_key`).
+## O que encontrei
 
-Quando você tenta criar uma temporada no mesmo Ano/Mês de outra que já existe (ativa, finalizada ou cancelada), o backend rejeita e o erro técnico aparece bruto na tela:
+**Estado atual da temporada `Abril 2026`:**
+| Item | Valor |
+|---|---|
+| `phase` | `classification` (correto) |
+| `tier_seeding_completed_at` | **NULL** — seeding nunca rodou |
+| Séries materializadas (`duelo_season_tiers`) | **0** |
+| Motoristas distribuídos (`duelo_tier_memberships`) | **0** |
+| Standings (`duelo_season_standings`) | **0** |
+| Motoristas elegíveis na marca | 4.257 |
+| `engagement_format` em `brand_business_models` | **`campeonato`** ✅ |
 
-> `duplicate key value violates unique constraint "duelo_seasons_brand_id_branch_id_year_month_key"`
+**Causa raiz**: a função `criarTemporadaCompleta` (em `servico_campeonato_empreendedor.ts`) só faz o `INSERT` em `duelo_seasons` e grava os prêmios. **Ela não chama** a RPC `duelo_seed_initial_tier_memberships`, que é quem:
+1. Cria as séries reais (`duelo_season_tiers`) a partir do `tiers_config_json`
+2. Aloca os motoristas elegíveis nas séries (`duelo_tier_memberships`)
+3. Cria os standings zerados
+4. Marca `tier_seeding_completed_at = now()`
 
-Ou seja, **não é um bug**, é uma regra de negócio que está sendo comunicada de forma ruim. E falta um aviso preventivo antes do clique em "Criar temporada".
+Sem esse passo, o motorista cai no `JOIN` vazio dentro de `driver_get_active_season` e a RPC retorna `NULL` → o painel mostra "nenhum campeonato ativo".
 
 ## O que vou ajustar
 
-### 1. Mensagem de erro amigável no submit
-No `useCriarTemporadaCompleta` (mutation), interceptar o código de erro `23505` (violação de unique do Postgres) e exibir um toast claro em português:
+### 1. Disparar o seeding logo após criar a temporada
+No `criarTemporadaCompleta`, depois do insert da temporada e dos prêmios, chamar a RPC `duelo_seed_initial_tier_memberships(p_season_id)`. Se ela falhar, mostrar mensagem clara ao empreendedor com o motivo (ex.: nenhum motorista elegível na cidade) e oferecer a opção de tentar novamente sem precisar recriar a temporada.
 
-> "Já existe uma temporada para **{Mês}/{Ano}** nesta cidade. Escolha outro mês ou cancele/exclua a temporada existente antes de criar uma nova."
+### 2. Botão "Distribuir motoristas agora" para temporadas órfãs
+Na página `pagina_campeonato_empreendedor.tsx`, quando uma temporada estiver criada mas com `tier_seeding_completed_at IS NULL`, exibir um banner amarelo no card da temporada ativa:
 
-Em vez do texto técnico atual.
+> ⚠️ Temporada criada, mas os motoristas ainda não foram distribuídos nas séries. Clique em **"Distribuir motoristas agora"** para iniciar.
 
-### 2. Checagem prévia no formulário (preventivo)
-No `EditorInformacoesBasicas.tsx`, ao escolher **Ano** e **Mês**, fazer uma consulta leve (`select id, name, status` em `duelo_seasons` filtrando por `brand_id`, `branch_id`, `year`, `month`).
+Isso resolve o caso da temporada de Abril/2026 que já existe **sem precisar excluí-la e recriar**.
 
-Se já existir uma temporada nesse período, exibir um banner amarelo logo abaixo dos seletores:
+### 3. Indicador visual no painel do motorista
+No `CampeonatoMotoristaPanel`, refinar o estado vazio para diferenciar dois casos:
+- **Não há temporada ativa**: mensagem atual ("Aguarde o próximo período…")
+- **Há temporada mas o motorista ainda não foi distribuído**: mensagem nova ("A temporada *X* começa em breve. Você será adicionado automaticamente quando o empreendedor concluir a distribuição das séries.")
 
-> ⚠️ Já existe a temporada **"{nome}"** ({status}) em {Mês}/{Ano} nesta cidade. Para criar uma nova, escolha outro mês ou remova a existente em "Temporadas Anteriores".
+Para isso, vou criar uma RPC leve `driver_get_pending_season(p_brand_id)` que retorna apenas nome/datas da próxima temporada (sem exigir tier membership), ou ajustar `driver_get_active_season` para retornar o registro mesmo sem `tier_id`, com `driver_position = null`.
 
-E desabilitar o botão "Criar temporada" enquanto o conflito persistir, evitando o erro no submit.
-
-### 3. Atalho para resolver o conflito
-No mesmo banner, incluir um botão secundário **"Ver temporada existente"** que rola/abre a aba de temporadas anteriores, facilitando a resolução (cancelar/excluir antes de tentar de novo).
+### 4. Realtime no painel do motorista
+Hoje o `useTemporadaAtivaDoMotorista` tem `refetchInterval: 5min`. Vou adicionar **subscription Realtime** em `duelo_tier_memberships` filtrada por `driver_id = me`, para que assim que o seeding rodar no servidor, o painel do motorista se atualize sozinho sem precisar recarregar.
 
 ## Arquivos que serão ajustados
 
+- `src/features/campeonato_duelo/services/servico_campeonato_empreendedor.ts`
+  - após o insert em `duelo_seasons`, chamar `supabase.rpc("duelo_seed_initial_tier_memberships", { p_season_id: season.id })`
+  - tratar erros do seeding sem perder a temporada criada
+
 - `src/features/campeonato_duelo/hooks/hook_mutations_campeonato.ts`
-  - tratar `error.code === "23505"` no `onError`, retornando mensagem amigável com Mês/Ano formatados
-- `src/features/campeonato_duelo/components/empreendedor/EditorInformacoesBasicas.tsx`
-  - adicionar `useQuery` que consulta `duelo_seasons` por `(brand_id, branch_id, year, month)`
-  - exibir banner de conflito quando houver match
-  - expor flag `temConflitoMesAno` via contexto/state para travar o submit
-- `src/features/campeonato_duelo/components/empreendedor/FormCriarTemporada.tsx`
-  - desabilitar o botão "Criar temporada" se a checagem prévia detectar conflito
-  - exibir tooltip explicando o motivo do bloqueio
+  - novo hook `useExecutarSeedingTemporada(seasonId)` para o botão "Distribuir motoristas agora"
+
+- `src/features/campeonato_duelo/pagina_campeonato_empreendedor.tsx`
+  - banner amarelo + botão de seeding manual quando `tier_seeding_completed_at IS NULL`
+
+- `src/features/campeonato_duelo/services/servico_campeonato_motorista.ts` + `hook_campeonato_motorista.ts`
+  - melhorar mensagem do estado "temporada existe mas motorista ainda não distribuído"
+  - adicionar Realtime channel em `duelo_tier_memberships`
+
+- `src/components/driver/campeonato/CampeonatoMotoristaPanel.tsx`
+  - texto de estado vazio mais informativo
+
+### Migration nova (Supabase)
+- Criar RPC `driver_get_pending_or_active_season(p_brand_id, p_driver_id)` que retorna a temporada vigente mesmo quando o motorista ainda não foi distribuído (com flag `is_pending_seeding: true`). Isso permite a UI explicar o que está acontecendo em vez de mostrar "nenhum campeonato ativo".
+
+## O que você precisa fazer agora (resposta direta à sua pergunta)
+
+Para a temporada **Abril 2026** que já está criada e vazia, depois que eu aplicar essas mudanças:
+
+1. Acessar **Gamificação → Campeonato** no painel do empreendedor
+2. Clicar no novo botão **"Distribuir motoristas agora"** que aparecerá no banner amarelo da temporada
+3. Aguardar o seeding distribuir os motoristas elegíveis nas séries
+4. A partir daí, todo motorista da cidade verá o card **"Campeonato"** na home e poderá acessar ranking, série, confronto, etc.
 
 ## Resultado esperado
 
-- O usuário **percebe o conflito antes de clicar** em criar, ao escolher Ano/Mês.
-- Se ainda assim tentar submeter (ou em race condition), recebe um toast em português claro, sem texto técnico de constraint.
-- Caminho óbvio para resolver: trocar o mês ou ir para "Temporadas Anteriores" remover a existente.
-
-## Detalhes técnicos
-
-- Postgres devolve `code: "23505"` para violação de UNIQUE; o detail traz o nome da constraint. Vou casar pelo nome `duelo_seasons_brand_id_branch_id_year_month_key` para garantir que só essa constraint específica gere a mensagem de "mês duplicado" (outras unique constraints permanecem com mensagem genérica).
-- A checagem prévia usa `maybeSingle()` e fica gated por `enabled: !!brandId && !!branchId && !!year && !!month` para evitar requisições desnecessárias.
+- **Toda temporada nova já nasce com motoristas distribuídos**, sem passo manual.
+- **Temporadas órfãs (como a atual Abril 2026)** podem ser corrigidas com um clique, sem recriar.
+- O painel do motorista deixa de mostrar "nenhum campeonato ativo" quando há uma temporada em andamento — explica claramente o estado real (aguardando distribuição, em classificação, em mata-mata, etc.).
+- Atualização em tempo real: assim que o seeding roda, o motorista vê o conteúdo aparecer sem refresh.
 
 ## Risco e rollback
 
-- **Risco baixo**: lógica concentrada em UX e tratamento de erro.
-- **Rollback**: remover o `useQuery` de checagem e o handler específico do código 23505.
+- **Risco baixo**: o seeding é uma RPC `SECURITY DEFINER` já existente e testada no banco; apenas não estava sendo chamada pelo frontend.
+- **Rollback**: remover a chamada da RPC no `criarTemporadaCompleta` e o botão manual; nada do banco é alterado destrutivamente.
 
