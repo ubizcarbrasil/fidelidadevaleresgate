@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, Smartphone, Swords } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
+import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
 import { useStoreOwnerRedirect } from "@/hooks/useStoreOwnerRedirect";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
