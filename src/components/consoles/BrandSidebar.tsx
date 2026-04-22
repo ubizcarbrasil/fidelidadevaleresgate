@@ -12,6 +12,7 @@ import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useResolvedModules } from "@/compartilhados/hooks/hook_modulos_resolvidos";
 import { USE_RESOLVED_MODULES } from "@/compartilhados/constants/constantes_features";
 import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
+import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
 import { useProductScope } from "@/features/city_onboarding/hooks/hook_escopo_produto";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,19 +34,16 @@ import {
   type DefinicaoGrupoSidebar,
 } from "@/compartilhados/constants/constantes_menu_sidebar";
 
-const dashboardItem = MENU_REGISTRY["sidebar.dashboard"];
-
 const brandGroupDefs: DefinicaoGrupoSidebar[] = [
   {
-    label: "Guias Inteligentes",
+    label: "Painel",
+    items: ["sidebar.dashboard"],
+  },
+  {
+    label: "Guias & Manuais",
     items: [
       "sidebar.jornada", "sidebar.jornada_emissor",
       { key: "sidebar.modulos", overrides: { defaultTitle: "Módulos" } },
-    ],
-  },
-  {
-    label: "Manuais",
-    items: [
       { key: "sidebar.manuais", overrides: { defaultTitle: "Manuais da Plataforma", moduleKey: undefined } },
     ],
   },
