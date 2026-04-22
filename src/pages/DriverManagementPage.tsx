@@ -114,11 +114,25 @@ export default function DriverManagementPage() {
             variant="outline"
             size="sm"
             onClick={handleExportCsv}
-            disabled={motoristas.length === 0}
+            disabled={total === 0 || exportando}
             className="flex-1 sm:flex-none"
           >
-            <Download className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">Exportar </span>CSV
+            {exportando ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-1" />
+            )}
+            {exportando ? (
+              <span>
+                {progresso && progresso.total > 0
+                  ? `${progresso.atual.toLocaleString("pt-BR")} / ${progresso.total.toLocaleString("pt-BR")}`
+                  : "Exportando…"}
+              </span>
+            ) : (
+              <>
+                <span className="hidden sm:inline">Exportar </span>CSV
+              </>
+            )}
           </Button>
           {currentBrandId && (
             <ModalImportarMotoristas
