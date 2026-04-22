@@ -60,6 +60,35 @@ export async function alterarStatusAtivacao(
     );
   }
 
+  // Quando habilitado, garante a base completa: cria/atualiza o registro
+  // em brand_business_models com Campeonato como formato ativo (default
+  // sensato para novas marcas — evita que o seletor fique travado depois).
+  if (habilitado) {
+    try {
+      const { data: modelo } = await supabase
+        .from("business_models")
+        .select("id")
+        .eq("key", "duelo_motorista")
+        .maybeSingle();
+
+      if (modelo?.id) {
+        await supabase.from("brand_business_models").upsert(
+          {
+            brand_id: brandId,
+            business_model_id: modelo.id,
+            is_enabled: true,
+            engagement_format: "campeonato",
+            allowed_engagement_formats: ["campeonato"],
+            activated_at: new Date().toISOString(),
+          },
+          { onConflict: "brand_id,business_model_id" },
+        );
+      }
+    } catch {
+      // Best-effort: a flag principal já foi salva.
+    }
+  }
+
   // Best-effort audit trail (não bloqueia em caso de falha).
   try {
     const { data: userData } = await supabase.auth.getUser();
