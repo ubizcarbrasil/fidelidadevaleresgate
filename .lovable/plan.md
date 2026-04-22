@@ -1,83 +1,81 @@
 
 
-# Corrigir download CSV em mobile/PWA (iOS)
+# Corrigir filtros da página de Motoristas
 
-## Problema
+## Diagnóstico (3 bugs)
 
-O export agora busca corretamente os 4.257 motoristas (visível no toast "Exportando 4.000 / 4.257"), mas **nenhum arquivo é salvo no celular**.
+Investiguei a base de Ipatinga (4.256 motoristas) e os logs de rede da sessão. Os filtros estão quebrados por três motivos sobrepostos:
 
-**Causa raiz**: `baixarCsvMotoristas` usa o truque clássico `<a href={blobUrl} download="...">.click()`. Esse padrão **não funciona em iOS Safari nem em PWAs em modo standalone** (que é o caso do print — ícone de bateria + 5G + barra de status sugerem app instalado/PWA). O navegador iOS:
-
-- Ignora o atributo `download` em `<a>`
-- Bloqueia abertura programática de blob URLs em modo standalone
-- Não tem "pasta de Downloads" acessível para arquivos via `<a download>`
-
-Por isso o toast termina com sucesso, mas nenhum arquivo aparece.
-
-## Solução: 3 estratégias em cascata
-
-Refatorar `baixarCsvMotoristas` para detectar o ambiente e usar a melhor estratégia disponível:
-
-### Estratégia 1 — Web Share API (preferida em mobile)
-
-Se `navigator.share` e `navigator.canShare({ files })` existirem (iOS 15+, Android Chrome), usar:
-
+### Bug 1 — Busca por nome é tratada como busca por placa
+Em `hook_listagem_motoristas.ts` (linha 48):
 ```ts
-const file = new File([blob], nomeArquivo, { type: "text/csv" });
-if (navigator.canShare?.({ files: [file] })) {
-  await navigator.share({ files: [file], title: nomeArquivo });
-  return;
-}
+const buscaPareceComPlaca = /[a-zA-Z]/.test(termo) && termo.length >= 3;
 ```
+Qualquer texto com letras e ≥ 3 caracteres é interpretado como **placa**. Buscar "Pedro" dispara `vehicle1_plate.ilike.%PEDRO%` em `driver_profiles` — confirmado nos logs: retornou `[]` e a tela ficou vazia.
 
-→ Abre o sheet nativo de compartilhar do iOS, permitindo "Salvar em Arquivos", enviar por email, WhatsApp, AirDrop, etc. **Esse é o fluxo natural do iOS**.
+Pior: na base de Ipatinga, **0 motoristas têm placa cadastrada** em `driver_profiles`. A heurística é 100% destrutiva.
 
-### Estratégia 2 — `<a download>` clássico (desktop)
+### Bug 2 — Filtro de status quebra a listagem
+A coluna `driver_profiles.registration_status` tem hoje em Ipatinga:
+- `Ativo` → 311 motoristas
+- `NULL` → 3.945 motoristas
+- `Inativo` / `Bloqueado` → 0 motoristas
 
-Se Web Share não existir mas estivermos em desktop, manter o fluxo atual.
+Selecionar **Ativo** mostra só 311 (parece "filtro funcionando" mas esconde 92% da base, que está com status `NULL`). Selecionar **Inativo** ou **Bloqueado** mostra **zero**.
 
-### Estratégia 3 — Fallback: abrir em nova aba
+A regra de negócio real do sistema é: **todo motorista cadastrado é ativo por padrão**; "Inativo" e "Bloqueado" não estão sendo usados na operação atual da cidade.
 
-Se nada funcionar (caso raro), `window.open(blobUrl, "_blank")` para o usuário ver o conteúdo no navegador e salvar manualmente.
+### Bug 3 — Filtros não compõem corretamente com paginação
+Quando o filtro `customerIdsFiltrados` retorna mais de 1.000 IDs, o `.in('id', ...)` no Postgrest pode silenciosamente truncar; e o `count: exact` da query principal sempre vai dar 311 mesmo quando o usuário só quer "Todos status" + busca.
 
-### Detecção de iOS standalone
+## Solução
 
-Adicionar helper:
-```ts
-const isStandalonePWA = () =>
-  window.matchMedia?.("(display-mode: standalone)").matches ||
-  (window.navigator as any).standalone === true;
-```
+### 1. Remover heurística destrutiva de placa
+- Apagar `buscaPareceComPlaca`
+- **Toda busca textual** vai sempre para `customers` (nome, cpf, telefone, e-mail) via `.or()`
+- Busca por placa volta como **opcional explícito**: só é feita em `driver_profiles` se a busca tiver formato de placa Mercosul ou tradicional (regex `^[A-Z]{3}-?[0-9][A-Z0-9][0-9]{2}$` após normalização). Se não tiver formato de placa, **nem tenta** — evita o sequestro.
 
-Em PWA standalone iOS, **forçar Web Share** (pular tentativa de `<a download>` que sempre falha).
+### 2. Corrigir filtro de Status
+Tratar `NULL` como `ATIVO` (regra de negócio real):
+- **ATIVO**: `registration_status IS NULL OR registration_status ILIKE 'Ativo'`
+- **INATIVO**: `registration_status ILIKE 'Inativo'`
+- **BLOQUEADO**: `registration_status ILIKE 'Bloqueado'`
 
-## Melhorias adicionais
+Na prática: ao escolher "Ativo", o usuário verá os 4.256 motoristas (não 311). "Inativo"/"Bloqueado" mostrarão vazio quando não houver dados, com mensagem clara.
 
-- **Toast de sucesso atualizado**: em mobile mostrar "Toque em 'Salvar em Arquivos' para guardar" em vez de "X motoristas exportados" (que sugere arquivo já salvo).
-- **Tratamento de cancelamento**: se o usuário fechar o share sheet (`AbortError`), não mostrar toast de erro — apenas dismiss silencioso.
-- **Type do blob**: já está `text/csv;charset=utf-8;` — manter.
+### 3. Robustez da composição de filtros
+- Quando `customerIdsFiltrados` excede 1.000, particionar em chunks e fazer `Promise.all` de queries `.in()` — depois unir resultados na memória respeitando paginação.
+- Garantir que `count: exact` reflete o total **após** todos os filtros aplicados (validar com `total === motoristas.length` quando última página).
+
+### 4. Refinar a UX dos filtros
+- **Placeholder atualizado**: "Buscar por nome, CPF, telefone ou e-mail..." (remove "placa" para não confundir, já que a base não usa)
+- **Contador "X de Y"**: mostrar `311 de 4.256` quando há filtro ativo, em vez de só `311 motoristas`. Ajuda o usuário a entender o que está sendo escondido.
+- **Botão "Limpar filtros"** ao lado do select de status quando `busca !== '' || status !== 'ALL'`, para reset rápido.
 
 ## Arquivos impactados
 
-**Editado (1):**
-- `src/features/gestao_motoristas/utils/utilitarios_export_motoristas.ts` — refatora `baixarCsvMotoristas` com cascata Web Share → `<a download>` → `window.open` + detecção iOS PWA
+**Editado (2):**
+- `src/features/gestao_motoristas/hooks/hook_listagem_motoristas.ts` — remove heurística de placa, corrige filtro de status com `NULL`, adiciona chunking para `.in()`, mesma correção replicada no service de exportação
+- `src/features/gestao_motoristas/services/servico_exportacao_motoristas.ts` — aplica as mesmas regras corrigidas (status + busca) para que a exportação CSV continue consistente com a tela
+- `src/features/gestao_motoristas/components/barra_busca_motoristas.tsx` — placeholder atualizado + botão "Limpar filtros"
+- `src/pages/DriverManagementPage.tsx` — contador "X de Y" no badge
 
-**Editado (1):**
-- `src/features/gestao_motoristas/hooks/hook_exportar_motoristas.ts` — captura `AbortError` (cancelamento de share) e ajusta mensagem de sucesso para mobile
-
-**Sem alteração no serviço de busca** (que já está correto e exportando os 4.257). Sem migration.
+**Sem migration. Sem nova RPC. Sem mudança em RLS.**
 
 ## Resultado esperado
 
-**iPhone (PWA)**: clica CSV → aguarda "Exportando 4.257/4.257" → **abre o share sheet do iOS** → escolhe "Salvar em Arquivos" → arquivo `motoristas-2026-04-22.csv` salvo no app Arquivos.
-
-**Android Chrome**: mesma coisa via Web Share.
-
-**Desktop (Chrome/Firefox/Safari)**: download direto na pasta de Downloads (comportamento atual preservado).
+| Ação | Antes | Depois |
+|---|---|---|
+| Buscar "Pedro" | Lista vazia (sequestrada para placa) | Lista todos os motoristas com "Pedro" no nome |
+| Filtro "Ativo" | 311 motoristas (esconde 92%) | 4.256 motoristas (NULL = ativo) |
+| Filtro "Inativo" | 0 motoristas (sem aviso) | 0 motoristas (com mensagem clara) |
+| Buscar "ABC1D23" | Funciona (era o único caso ok) | Funciona (regex de placa) |
+| Buscar "031.555.444-22" | Funciona | Funciona |
+| Limpar filtros | Tem que apagar tudo manualmente | Botão único reset |
 
 ## Risco e rollback
 
-- Zero risco de dados (só muda o método de entrega do blob já gerado)
-- Rollback trivial: reverter `utilitarios_export_motoristas.ts`
-- Sem efeito em outras funcionalidades
+- **Zero impacto em escrita** (apenas leitura)
+- Rollback trivial: reverter os 4 arquivos
+- Sem efeito colateral em outras telas (`useListagemMotoristas` é exclusivo desta página)
 
