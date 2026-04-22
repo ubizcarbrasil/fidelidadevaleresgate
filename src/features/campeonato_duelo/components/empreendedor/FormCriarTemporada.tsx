@@ -207,7 +207,6 @@ export default function FormCriarTemporada({
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={isPending}>
                 <Button type="submit" disabled={isPending || conflitoFases}>
                   {isPending && (
                     <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
