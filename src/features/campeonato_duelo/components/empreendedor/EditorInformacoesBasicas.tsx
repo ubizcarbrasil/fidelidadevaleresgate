@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AlertCircle } from "lucide-react";
 import { NOMES_MESES } from "../../constants/constantes_campeonato";
 import type { FormCriarTemporadaInput } from "../../schemas/schema_criar_temporada";
 import LabelComAjuda from "./LabelComAjuda";
@@ -17,6 +18,14 @@ export default function EditorInformacoesBasicas() {
   const errors = form.formState.errors;
   const anoAtual = new Date().getFullYear();
   const anos = [anoAtual - 1, anoAtual, anoAtual + 1];
+
+  // Validação reativa de coerência entre fim da Classificação e início do Mata-mata.
+  const classEnd = form.watch("classificationEndsAt");
+  const knockStart = form.watch("knockoutStartsAt");
+  const conflitoFases =
+    !!classEnd &&
+    !!knockStart &&
+    new Date(knockStart) <= new Date(classEnd);
 
   return (
     <div className="space-y-4">
@@ -118,7 +127,16 @@ export default function EditorInformacoesBasicas() {
             <LabelComAjuda ajuda="Início dos confrontos eliminatórios. Deve ser após o fim da fase de classificação.">
               Início
             </LabelComAjuda>
-            <Input type="date" {...form.register("knockoutStartsAt")} />
+            <Input
+              type="date"
+              aria-invalid={conflitoFases || undefined}
+              className={
+                conflitoFases
+                  ? "border-destructive focus-visible:ring-destructive"
+                  : undefined
+              }
+              {...form.register("knockoutStartsAt")}
+            />
           </div>
           <div className="space-y-1">
             <LabelComAjuda ajuda="Data limite para concluir o mata-mata e encerrar a temporada. Os prêmios são distribuídos automaticamente após essa data.">
@@ -127,6 +145,15 @@ export default function EditorInformacoesBasicas() {
             <Input type="date" {...form.register("knockoutEndsAt")} />
           </div>
         </div>
+        {conflitoFases && (
+          <div className="flex items-start gap-1.5 rounded-sm bg-destructive/10 p-2 text-xs text-destructive">
+            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>
+              O início do Mata-mata precisa ser <strong>após</strong> o fim da
+              Classificação. Ajuste uma das datas para continuar.
+            </span>
+          </div>
+        )}
         {errors.knockoutStartsAt && (
           <p className="text-xs text-destructive">
             {errors.knockoutStartsAt.message as string}
