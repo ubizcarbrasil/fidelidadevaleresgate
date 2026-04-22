@@ -2,7 +2,14 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { LinhaPlanilha, LinhaMapeada, ResumoMapeamento, ResultadoImportacao } from "../types/tipos_importacao";
+import { ImportacaoTimeoutError } from "../types/tipos_importacao";
 import { mapearLinha, calcularResumoMapeamento } from "../utils/mapeador_taximachine";
+
+const POLLING_INTERVAL_MS = 1500;
+/** Tempo máximo absoluto de polling: 20 minutos. */
+const POLLING_MAX_MS = 20 * 60 * 1000;
+/** Tempo sem evolução em processed_rows antes de avisar o usuário: 60s. */
+const POLLING_STALE_MS = 60 * 1000;
 
 interface Args {
   brandId: string;
@@ -57,29 +64,84 @@ export function useImportarMotoristas({ brandId, branchId }: Args) {
     }
   };
 
-  /** Faz polling no job até concluir. Retorna estado final. */
-  const acompanharJob = async (id: string, onUpdate?: (r: ResultadoImportacao) => void): Promise<ResultadoImportacao> => {
+  /** Consulta um job uma única vez (sem polling) — burlando cache do SW. */
+  const consultarJob = async (id: string): Promise<ResultadoImportacao | null> => {
+    // Usar fetch direto com cache-busting (?_t=...) garante que o Service Worker
+    // não devolve resposta antiga. Mesmo com NetworkOnly no SW novo, mantemos
+    // a defesa para clientes que ainda têm o SW v6 ativo.
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/driver_import_jobs?id=eq.${id}&select=*&_t=${Date.now()}`;
+    const apiKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token ?? apiKey;
+
+    const resp = await fetch(url, {
+      method: "GET",
+      cache: "no-store",
+      headers: {
+        apikey: apiKey,
+        Authorization: `Bearer ${token}`,
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Accept: "application/json",
+      },
+    });
+    if (!resp.ok) return null;
+    const arr = (await resp.json()) as any[];
+    const data = arr?.[0];
+    if (!data) return null;
+
+    return {
+      job_id: data.id,
+      status: data.status,
+      total_rows: data.total_rows,
+      processed_rows: data.processed_rows,
+      created_count: data.created_count,
+      updated_count: data.updated_count,
+      skipped_count: data.skipped_count,
+      error_count: data.error_count,
+      errors_json: data.errors_json || [],
+    };
+  };
+
+  /**
+   * Faz polling no job até concluir.
+   * - Lança ImportacaoTimeoutError após 20min ou se ficar 60s sem evolução.
+   * - Sempre busca via fetch com cache-busting para evitar SW cache.
+   */
+  const acompanharJob = async (
+    id: string,
+    onUpdate?: (r: ResultadoImportacao) => void
+  ): Promise<ResultadoImportacao> => {
+    const inicioAbsoluto = Date.now();
+    let ultimaMudancaEm = Date.now();
+    let ultimoProcessed = -1;
+
     while (true) {
-      await new Promise((r) => setTimeout(r, 1500));
-      const { data } = await (supabase as any)
-        .from("driver_import_jobs")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
+      await new Promise((r) => setTimeout(r, POLLING_INTERVAL_MS));
 
-      if (!data) continue;
+      const agora = Date.now();
+      if (agora - inicioAbsoluto > POLLING_MAX_MS) {
+        throw new ImportacaoTimeoutError(id, "Tempo máximo de acompanhamento atingido (20min)");
+      }
 
-      const r: ResultadoImportacao = {
-        job_id: data.id,
-        status: data.status,
-        total_rows: data.total_rows,
-        processed_rows: data.processed_rows,
-        created_count: data.created_count,
-        updated_count: data.updated_count,
-        skipped_count: data.skipped_count,
-        error_count: data.error_count,
-        errors_json: data.errors_json || [],
-      };
+      const r = await consultarJob(id);
+      if (!r) {
+        // Ainda sem registro: verifica se ficamos muito tempo sem nenhum dado
+        if (agora - ultimaMudancaEm > POLLING_STALE_MS) {
+          throw new ImportacaoTimeoutError(id, "Sem resposta do servidor há mais de 60s");
+        }
+        continue;
+      }
+
+      // Detecta evolução real
+      if (r.processed_rows !== ultimoProcessed || r.status !== "running") {
+        ultimoProcessed = r.processed_rows;
+        ultimaMudancaEm = agora;
+      } else if (agora - ultimaMudancaEm > POLLING_STALE_MS) {
+        // Sem evolução por mais de 60s — provável cache ou stall
+        throw new ImportacaoTimeoutError(id, "Sem evolução do servidor há mais de 60s");
+      }
+
       onUpdate?.(r);
       setResultado(r);
 
@@ -88,6 +150,13 @@ export function useImportarMotoristas({ brandId, branchId }: Args) {
         return r;
       }
     }
+  };
+
+  /** Anexa o estado a um job já existente (recuperação após reload/perda de modal). */
+  const anexarJobExistente = (id: string) => {
+    setJobId(id);
+    setErro(null);
+    setResultado(null);
   };
 
   return {
@@ -100,6 +169,8 @@ export function useImportarMotoristas({ brandId, branchId }: Args) {
     carregarPlanilha,
     iniciarImportacao,
     acompanharJob,
+    consultarJob,
+    anexarJobExistente,
     reset,
   };
 }
