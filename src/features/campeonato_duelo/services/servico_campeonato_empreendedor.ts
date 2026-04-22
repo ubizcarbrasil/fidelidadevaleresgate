@@ -201,8 +201,13 @@ export async function criarTemporadaCompleta(
           : { win: 3, draw: 1, loss: 0 },
     } as any)
     .select()
-    .single();
+    .maybeSingle();
   if (seasonErr) throw seasonErr;
+  if (!season) {
+    throw new Error(
+      "Não foi possível criar a temporada. Verifique as permissões ou os dados informados.",
+    );
+  }
 
   // Persistir prêmios por (tier_name, position) — usa upsert direto
   const prizesRows = Object.entries(input.prizesPerTier).flatMap(
