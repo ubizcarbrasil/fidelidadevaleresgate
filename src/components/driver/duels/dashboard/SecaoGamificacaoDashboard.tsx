@@ -23,7 +23,7 @@ import DuelsHub from "../DuelsHub";
 import type { Duel } from "../hook_duelos";
 
 interface Props {
-  branch: { id: string; branch_settings_json?: any } | null;
+  branch: { id: string; brand_id?: string; branch_settings_json?: any } | null;
   customerId: string | undefined;
   fontHeading?: string;
 }
