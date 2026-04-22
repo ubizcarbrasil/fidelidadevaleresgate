@@ -1,71 +1,59 @@
 
 
-# Modo "Apenas Campeonato" para a marca Meu Mototáxi
+# Corrigir erro "scoring_config_json column not found" ao criar temporada
 
-## Diagnóstico — por que ainda aparece Duelos/Apostas/Ranking/Cinturão
+## Diagnóstico
 
-A última correção arrumou só a **Camada 2** (registro em `brand_business_models`), mas a tela de Gamificação **ignora completamente** o `engagement_format`. A `GamificacaoAdminPage` renderiza **fixamente** 7 abas (Configuração, Duelos, Apostas, Campeonato, Ranking, Cinturão, Moderação) e a "Configuração do Módulo" mostra **todos os toggles** (Duelos DvD, Patrocinados, Apostas paralelas, Ranking, Cinturão…) — independente do formato escolhido.
+O frontend (`servico_campeonato_empreendedor.ts` + `schema_criar_temporada.ts`) já envia dois campos novos no INSERT em `duelo_seasons`:
+- `scoring_mode` (`total_points` ou `daily_matchup`)
+- `scoring_config_json` (`{ win, draw, loss }`)
 
-E na cidade Ipatinga - MG, as flags `enable_city_ranking` e `enable_city_belt` ainda estão `true`, então no app do motorista também aparecem Ranking e Cinturão.
+Mas a tabela `duelo_seasons` no banco **não tem essas colunas**. Verificado via `information_schema`: as colunas existentes são apenas `id, brand_id, branch_id, name, year, month, phase, classification_*, knockout_*, tiers_count, tiers_config_json, ...`. Por isso o PostgREST devolve "Could not find the 'scoring_config_json' column ... in the schema cache" e o botão "Criar temporada" falha.
+
+Nenhuma RPC ou trigger atual usa esses campos, então a correção é puramente aditiva.
 
 ## O que vou fazer
 
-### 1) Filtrar abas da Gamificação pelo formato de engajamento
+### 1) Migration: adicionar as colunas em `duelo_seasons`
 
-Em `src/pages/GamificacaoAdminPage.tsx`:
-- Ler `useFormatoEngajamento(brand.brand_id)`.
-- Quando `engagement_format === 'campeonato'`:
-  - Mostrar **apenas 3 abas**: `Configuração` (modo enxuto), `Campeonato`, `Moderação`.
-  - **Esconder**: `Duelos`, `Apostas`, `Ranking`, `Cinturão`.
-- `defaultValue` passa para `"campeonato"` quando o formato é campeonato (cai direto na tela útil).
+```sql
+ALTER TABLE public.duelo_seasons
+  ADD COLUMN IF NOT EXISTS scoring_mode text NOT NULL DEFAULT 'total_points',
+  ADD COLUMN IF NOT EXISTS scoring_config_json jsonb NOT NULL DEFAULT '{"win":3,"draw":1,"loss":0}'::jsonb;
 
-### 2) Modo "Apenas Campeonato" na Configuração do Módulo
+-- Validação leve (modo conhecido)
+ALTER TABLE public.duelo_seasons
+  ADD CONSTRAINT duelo_seasons_scoring_mode_chk
+  CHECK (scoring_mode IN ('total_points','daily_matchup'));
+```
 
-Em `src/components/admin/gamificacao/ConfiguracaoModulo.tsx`:
-- Receber `engagementFormat` como prop.
-- Quando `'campeonato'`:
-  - Esconder toggles: Duelos DvD, Duelos Patrocinados, Apostas paralelas, Visualização pública, Palpites, Avaliações pós-duelo, Modo de adesão, Durações, Métricas de ranking/cinturão.
-  - Mostrar **apenas**: aviso destacado *"Esta marca opera no formato Campeonato. Configurações de duelos, apostas, ranking e cinturão estão desativadas e ocultas."* + link para a aba Campeonato.
-- Idem para sub-abas Limites / Ciclo & Reset / Prêmios / Corridas em `pagina_configuracoes_duelo.tsx`: ocultas no formato campeonato.
+- `IF NOT EXISTS` → idempotente.
+- `DEFAULT` cobre temporadas já existentes sem precisar de backfill manual.
+- O CHECK é estático (não usa `now()`), então é seguro como constraint.
 
-### 3) Esconder Ranking e Cinturão no app do motorista
+### 2) Hardening defensivo no serviço
 
-No app do motorista (`SecaoGamificacaoDashboard`, `DriverMarketplace`), a visibilidade de Ranking, Cinturão e Duelos já é gated por `branch_settings_json` (`enable_city_ranking`, `enable_city_belt`, `duelosAtivos`).
+Em `servico_campeonato_empreendedor.ts`, hoje o INSERT usa `.single()`. Quando o PostgREST falha com "schema cache", o erro mostrado já é claro, mas vou:
+- Trocar `.single()` por `.maybeSingle()` no retorno do INSERT, e validar `if (!season) throw new Error("Não foi possível criar a temporada")` para evitar crash silencioso em qualquer cenário futuro de RLS.
 
-Vou:
-- Adicionar uma checagem do **engagement_format da marca** no resolver `useGamificacaoConfig` (ou equivalente). Se `'campeonato'` → forçar `duelosAtivos=false`, `rankingAtivo=false`, `cinturaoAtivo=false` independente do que está no `branch_settings_json`. Os toggles do empreendedor não afetam mais essa marca — o formato manda.
-- Adicionar uma seção "Campeonato Motorista" no Driver Hub que aparece **somente** quando o formato é campeonato (link pra tela já existente do campeonato motorista).
-
-### 4) Migration de limpeza de dados (defensivo)
-
-Migration que, **só para a marca Meu Mototáxi**, faz `UPDATE branches SET branch_settings_json = settings || jsonb_build_object('enable_city_ranking', false, 'enable_city_belt', false, 'enable_driver_duels', false, 'enable_duel_driver_vs_driver', false, 'enable_duel_sponsored_by_brand', false, 'enable_duel_side_bets', false, 'enable_duel_guesses', false)` em **todas** as branches. Mesmo que a UI ignore, mantém o estado consistente.
+Sem outras mudanças. O fluxo do formulário e a validação Zod permanecem intactos.
 
 ## Resultado esperado
 
-**Painel do empreendedor** → Gamificação → Ipatinga:
-- Só aparecem 3 abas: **Configuração** (vazia, com aviso), **🏆 Campeonato**, **Moderação**.
-- A aba Campeonato abre direto no fluxo de criação de temporada.
+- Botão "Criar temporada" passa a funcionar para a marca Meu Mototáxi (e qualquer outra em modo campeonato).
+- Temporadas pré-existentes continuam válidas com defaults `total_points` + `{win:3,draw:1,loss:0}`.
+- Nenhum impacto em RPCs/cron — eles não leem esses campos ainda.
 
-**App do motorista (Meu Mototáxi)**:
-- **Não aparece** card de Duelos, Ranking ou Cinturão.
-- **Aparece** apenas a seção "Campeonato Motorista" com séries/posição/prêmios.
+## Arquivos
 
-**Outras marcas**: nada muda — continuam vendo todas as abas e todos os toggles.
+**Backend (1 migration nova):**
+- `supabase/migrations/<timestamp>_add_scoring_to_duelo_seasons.sql`
 
-## Arquivos a editar
-
-**Frontend (5 arquivos):**
-- `src/pages/GamificacaoAdminPage.tsx` — esconder abas conforme formato
-- `src/components/admin/gamificacao/ConfiguracaoModulo.tsx` — modo enxuto quando campeonato
-- `src/features/duelo_configuracoes/pagina_configuracoes_duelo.tsx` — esconder sub-abas
-- `src/components/driver/duels/dashboard/SecaoGamificacaoDashboard.tsx` — gating por formato
-- Hook de configuração de gamificação do motorista (provavelmente `useGamificacaoConfig` ou equivalente) — incluir `engagement_format` no retorno
-
-**Backend (1 migration):**
-- Limpeza idempotente das flags de duelo/ranking/cinturão nas branches da marca Meu Mototáxi.
+**Frontend (1 arquivo):**
+- `src/features/campeonato_duelo/services/servico_campeonato_empreendedor.ts` — `.single()` → `.maybeSingle()` + guard de retorno vazio
 
 ## Risco e rollback
 
-- **Risco baixo**: tudo é gated por `engagement_format === 'campeonato'`. Marcas em `'duelo'` ou `'mass_duel'` não veem diferença.
-- **Rollback trivial**: reverter os 5 arquivos e a migration restaura a UI completa.
+- **Risco mínimo**: ALTER TABLE aditivo com defaults; não quebra nenhum SELECT existente.
+- **Rollback**: `ALTER TABLE public.duelo_seasons DROP COLUMN scoring_mode, DROP COLUMN scoring_config_json;`
 
