@@ -140,7 +140,7 @@ export default function EditorInformacoesBasicas() {
 
     ultimaPropagacaoRef.current = chave;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classStart, duracaoMinima]);
+  }, [classStart, duracaoMinima, maiorSerie]);
 
   return (
     <div className="space-y-4">

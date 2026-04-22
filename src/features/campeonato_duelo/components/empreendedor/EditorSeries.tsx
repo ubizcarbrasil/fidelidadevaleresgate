@@ -84,7 +84,14 @@ export default function EditorSeries() {
                 <Input
                   type="number"
                   min={0}
-                  {...form.register(`series.${idx}.promote_count`)}
+                  {...form.register(`series.${idx}.promote_count`, {
+                    valueAsNumber: true,
+                    onChange: () =>
+                      form.trigger([
+                        "series",
+                        "classificationEndsAt",
+                      ] as any),
+                  })}
                 />
               </div>
               <div className="space-y-1">
@@ -96,7 +103,14 @@ export default function EditorSeries() {
                 <Input
                   type="number"
                   min={0}
-                  {...form.register(`series.${idx}.relegate_count`)}
+                  {...form.register(`series.${idx}.relegate_count`, {
+                    valueAsNumber: true,
+                    onChange: () =>
+                      form.trigger([
+                        "series",
+                        "classificationEndsAt",
+                      ] as any),
+                  })}
                 />
               </div>
             </div>
