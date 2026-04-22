@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutDashboard, LogOut, ChevronRight, FileText } from "lucide-react";
+import { LogOut, ChevronRight, FileText } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
