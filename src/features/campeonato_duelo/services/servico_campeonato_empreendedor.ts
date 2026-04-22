@@ -194,7 +194,12 @@ export async function criarTemporadaCompleta(
       tiers_count: input.series.length,
       tiers_config_json: tiersConfig,
       created_by: userData.user?.id ?? null,
-    })
+      scoring_mode: input.scoringMode ?? "total_points",
+      scoring_config_json:
+        input.scoringMode === "daily_matchup"
+          ? (input.scoringConfig ?? { win: 3, draw: 1, loss: 0 })
+          : { win: 3, draw: 1, loss: 0 },
+    } as any)
     .select()
     .single();
   if (seasonErr) throw seasonErr;

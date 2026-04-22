@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Trophy, Swords } from "lucide-react";
 import { NOMES_MESES } from "../../constants/constantes_campeonato";
 import type { FormCriarTemporadaInput } from "../../schemas/schema_criar_temporada";
 import LabelComAjuda from "./LabelComAjuda";
@@ -26,6 +26,8 @@ export default function EditorInformacoesBasicas() {
     !!classEnd &&
     !!knockStart &&
     new Date(knockStart) <= new Date(classEnd);
+
+  const scoringMode = form.watch("scoringMode");
 
   return (
     <div className="space-y-4">
