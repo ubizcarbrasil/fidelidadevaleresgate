@@ -4948,6 +4948,120 @@ export type Database = {
           },
         ]
       }
+      duelo_prize_distributions: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          cancelled_reason: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          driver_id: string
+          id: string
+          points_awarded: number
+          points_ledger_id: string | null
+          position: string
+          season_id: string
+          status: string
+          tier_id: string
+          tier_name: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          cancelled_reason?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          points_awarded: number
+          points_ledger_id?: string | null
+          position: string
+          season_id: string
+          status?: string
+          tier_id: string
+          tier_name: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          cancelled_reason?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          points_awarded?: number
+          points_ledger_id?: string | null
+          position?: string
+          season_id?: string
+          status?: string
+          tier_id?: string
+          tier_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duelo_prize_distributions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_prize_distributions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_prize_distributions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_prize_distributions_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_prize_distributions_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_prize_distributions_points_ledger_id_fkey"
+            columns: ["points_ledger_id"]
+            isOneToOne: false
+            referencedRelation: "points_ledger"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_prize_distributions_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_prize_distributions_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_season_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       duelo_season_standings: {
         Row: {
           driver_id: string
@@ -10130,17 +10244,30 @@ export type Database = {
       }
       duelo_admin_can_manage: { Args: { p_brand_id: string }; Returns: boolean }
       duelo_advance_phases: { Args: never; Returns: Json }
+      duelo_advance_single_season: {
+        Args: { p_season_id: string }
+        Returns: undefined
+      }
       duelo_apply_promotion_relegation: {
         Args: { p_season_id: string }
         Returns: Json
       }
       duelo_backfill_standings: { Args: { p_season_id: string }; Returns: Json }
+      duelo_calculate_prizes: { Args: { p_season_id: string }; Returns: Json }
+      duelo_cancel_prize: {
+        Args: { p_distribution_id: string; p_reason: string }
+        Returns: Json
+      }
       duelo_cancel_season: {
         Args: { p_reason: string; p_season_id: string }
         Returns: Json
       }
       duelo_change_engagement_format: {
         Args: { p_brand_id: string; p_new_format: string }
+        Returns: Json
+      }
+      duelo_confirm_prize_distribution: {
+        Args: { p_season_id: string }
         Returns: Json
       }
       duelo_create_brackets_within_tier: {
@@ -10462,6 +10589,7 @@ export type Database = {
         }
         Returns: string
       }
+      public_get_hall_fama: { Args: { p_brand_slug: string }; Returns: Json }
       rate_limit_cleanup: { Args: never; Returns: undefined }
       redeem_city_offer_driver: {
         Args: {
@@ -10682,6 +10810,7 @@ export type Database = {
         | "BRANCH_RESET"
         | "PRIZE_CAMPAIGN"
         | "CYCLE_RESET"
+        | "CAMPEONATO_PRIZE"
       offer_purpose: "EARN" | "REDEEM" | "BOTH"
       offer_status: "DRAFT" | "PENDING" | "APPROVED" | "ACTIVE" | "EXPIRED"
       points_rule_type: "PER_REAL" | "FIXED" | "TIERED"
@@ -10871,6 +11000,7 @@ export const Constants = {
         "BRANCH_RESET",
         "PRIZE_CAMPAIGN",
         "CYCLE_RESET",
+        "CAMPEONATO_PRIZE",
       ],
       offer_purpose: ["EARN", "REDEEM", "BOTH"],
       offer_status: ["DRAFT", "PENDING", "APPROVED", "ACTIVE", "EXPIRED"],

@@ -68,6 +68,7 @@ const ApproveStoreRulesPage = lazyWithRetry(() => import("@/pages/ApproveStoreRu
 const CustomerPreviewPage = lazyWithRetry(() => import("@/pages/CustomerPreviewPage"));
 const PaginaLinks = lazyWithRetry(() => import("@/features/pagina_links/pagina_links"));
 const StoreRegistrationWizard = lazyWithRetry(() => import("@/pages/StoreRegistrationWizard"));
+const PaginaHallDaFama = lazyWithRetry(() => import("@/features/hall_da_fama/pagina_hall_da_fama"));
 
 const StoreOwnerPanel = lazyWithRetry(() => import("@/pages/StoreOwnerPanel"));
 const AffiliateDealsPage = lazyWithRetry(() => import("@/pages/AffiliateDealsPage"));
@@ -191,6 +192,7 @@ function AnimatedRoutes() {
             <Route path="/:slug/parceiro" element={<PartnerLandingPage />} />
             <Route path="/register-store" element={<StoreRegistrationWizard />} />
             <Route path="/loja/:slug" element={<PaginaLojaPublica />} />
+            <Route path="/campeonato/:brandSlug/hall-da-fama" element={<PaginaHallDaFama />} />
             <Route path="/install" element={<InstallPwaPage />} />
             <Route path="/store-panel" element={<ProtectedRoute><StoreOwnerPanel /></ProtectedRoute>} />
             <Route
@@ -397,7 +399,7 @@ function AppContent() {
   }
 
   // Public paths that don't need brand resolution
-  const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store", "/p/", "/driver", "/loja/"];
+  const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store", "/p/", "/driver", "/loja/", "/campeonato/"];
   const isPublicPath = publicPaths.some(p => location.pathname.startsWith(p));
 
   // Portal domain: redirect unauthenticated users to /auth immediately (before loading guard)

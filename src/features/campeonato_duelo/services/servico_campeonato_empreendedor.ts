@@ -2,12 +2,15 @@ import { supabase } from "@/integrations/supabase/client";
 import type {
   AjustarPremioInput,
   BracketAdminLinha,
+  CancelarPremioInput,
   CancelarTemporadaInput,
   CriarTemporadaCompletaInput,
   DashboardCampeonatoData,
+  DistribuicaoPremio,
   IncluirMotoristaInput,
   LinhaSerieDetalhe,
   MotoristaDisponivel,
+  ResumoDistribuicaoConfirmada,
   ResumoTemporadaAdmin,
   SeasonListItem,
   StatusFiltroSeason,
@@ -214,4 +217,69 @@ export async function criarTemporadaCompleta(
   }
 
   return season;
+}
+
+/* ============== Distribuição de prêmios (C.5) ============== */
+
+/**
+ * Lista distribuições pendentes de uma temporada (com nome do motorista).
+ * Faz join com customers para obter o nome.
+ */
+export async function listarDistribuicoesPendentes(
+  seasonId: string,
+): Promise<DistribuicaoPremio[]> {
+  const { data, error } = await supabase
+    .from("duelo_prize_distributions")
+    .select(
+      "id, season_id, driver_id, brand_id, branch_id, tier_id, tier_name, position, points_awarded, status, confirmed_at, cancelled_reason, created_at, customers!duelo_prize_distributions_driver_id_fkey(name)",
+    )
+    .eq("season_id", seasonId)
+    .order("tier_name", { ascending: true })
+    .order("points_awarded", { ascending: false });
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    season_id: row.season_id,
+    driver_id: row.driver_id,
+    driver_name: row.customers?.name ?? null,
+    brand_id: row.brand_id,
+    branch_id: row.branch_id,
+    tier_id: row.tier_id,
+    tier_name: row.tier_name,
+    position: row.position,
+    points_awarded: row.points_awarded,
+    status: row.status,
+    confirmed_at: row.confirmed_at,
+    cancelled_reason: row.cancelled_reason,
+    created_at: row.created_at,
+  }));
+}
+
+export async function confirmarDistribuicaoPremios(
+  seasonId: string,
+): Promise<ResumoDistribuicaoConfirmada> {
+  const { data, error } = await supabase.rpc(
+    "duelo_confirm_prize_distribution",
+    { p_season_id: seasonId },
+  );
+  if (error) throw error;
+  return data as unknown as ResumoDistribuicaoConfirmada;
+}
+
+export async function cancelarPremio(input: CancelarPremioInput) {
+  const { data, error } = await supabase.rpc("duelo_cancel_prize", {
+    p_distribution_id: input.distributionId,
+    p_reason: input.reason,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function calcularPremiosManualmente(seasonId: string) {
+  const { data, error } = await supabase.rpc("duelo_calculate_prizes", {
+    p_season_id: seasonId,
+  });
+  if (error) throw error;
+  return data;
 }

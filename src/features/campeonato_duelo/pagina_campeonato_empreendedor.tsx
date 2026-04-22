@@ -15,6 +15,7 @@ import AcoesTemporadaAtiva from "./components/empreendedor/AcoesTemporadaAtiva";
 import BannerStatusTemporada from "./components/empreendedor/BannerStatusTemporada";
 import ListaTemporadasAnteriores from "./components/empreendedor/ListaTemporadasAnteriores";
 import DetalheSerieView from "./components/empreendedor/DetalheSerieView";
+import CardPremiosADistribuir from "./components/empreendedor/CardPremiosADistribuir";
 
 interface Props {
   brandId: string;
@@ -129,6 +130,13 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
               />
             </CardContent>
           </Card>
+
+          <CardPremiosADistribuir
+            brandId={brandId}
+            seasonId={ativa.id}
+            seasonName={ativa.name}
+            isFinished={ativa.phase === "finished"}
+          />
 
           {tiers.length === 0 ? (
             <Card>
