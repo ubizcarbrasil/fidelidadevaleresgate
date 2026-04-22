@@ -12,6 +12,7 @@ import ManualDriverScoringDialog from "@/components/machine-integration/ManualDr
 import ModalImportarMotoristas from "@/features/importacao_motoristas/components/modal_importar_motoristas";
 import { useJobEmAndamento } from "@/features/importacao_motoristas/hooks/hook_job_em_andamento";
 import DriverNotificationConfig from "@/components/driver-management/DriverNotificationConfig";
+import MenuDownloadCsv from "@/features/gestao_motoristas/components/menu_download_csv";
 import { formatPoints } from "@/lib/formatPoints";
 import {
   useListagemMotoristas,
@@ -51,7 +52,15 @@ export default function DriverManagementPage() {
     porPagina: POR_PAGINA,
   });
 
-  const { exportar, exportando, progresso, arquivoPendente } = useExportarMotoristas();
+  const {
+    exportar,
+    exportando,
+    progresso,
+    arquivoPendente,
+    arquivoPendenteDetalhes,
+    limparArquivoPendente,
+  } = useExportarMotoristas();
+  const [menuDownloadAberto, setMenuDownloadAberto] = useState(false);
 
   const motoristas = resultado?.motoristas ?? [];
   const total = resultado?.total ?? 0;
@@ -79,13 +88,22 @@ export default function DriverManagementPage() {
   };
 
   const handleExportCsv = () => {
-    if (!currentBrandId || total === 0 || exportando) return;
+    if (exportando) return;
+    // Se já existe arquivo pendente, apenas reabre o menu de alternativas.
+    if (arquivoPendente) {
+      setMenuDownloadAberto(true);
+      return;
+    }
+    if (!currentBrandId || total === 0) return;
     exportar({
       brandId: currentBrandId,
       branchId: currentBranchId,
       isBranchScope,
       busca: buscaDebounced,
       statusFiltro: status,
+    }).then(() => {
+      // Após o 1º toque concluir o upload, abre o menu de alternativas.
+      setMenuDownloadAberto(true);
     });
   };
 
@@ -301,6 +319,18 @@ export default function DriverManagementPage() {
         }
         brandId={currentBrandId || ""}
       />
+
+      {arquivoPendenteDetalhes && (
+        <MenuDownloadCsv
+          aberto={menuDownloadAberto}
+          onFechar={() => setMenuDownloadAberto(false)}
+          url={arquivoPendenteDetalhes.url}
+          nomeArquivo={arquivoPendenteDetalhes.nomeArquivo}
+          totalMotoristas={arquivoPendenteDetalhes.totalMotoristas}
+          excedeuLimite={arquivoPendenteDetalhes.excedeuLimite}
+          onSucesso={() => limparArquivoPendente()}
+        />
+      )}
     </div>
   );
 }
