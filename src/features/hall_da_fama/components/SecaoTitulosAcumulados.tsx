@@ -12,7 +12,7 @@ export default function SecaoTitulosAcumulados({ ranking }: Props) {
   return (
     <section className="space-y-3">
       <div className="flex items-center gap-2">
-        <Trophy className="h-5 w-5 text-yellow-500" />
+        <Trophy className="h-5 w-5 text-primary" />
         <h2 className="text-base font-bold">Títulos Acumulados</h2>
       </div>
       <Card>

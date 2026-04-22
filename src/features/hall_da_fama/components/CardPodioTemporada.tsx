@@ -20,7 +20,7 @@ export default function CardPodioTemporada({ podio }: Props) {
 
         <div className="space-y-2 rounded-lg bg-muted/30 p-3">
           <div className="flex items-center gap-2">
-            <Crown className="h-4 w-4 text-yellow-500" />
+            <Crown className="h-4 w-4 text-primary" />
             <span className="text-sm font-semibold">
               {inicialOuTraco(podio.champion)}
             </span>
@@ -31,7 +31,7 @@ export default function CardPodioTemporada({ podio }: Props) {
 
           {podio.runner_up && (
             <div className="flex items-center gap-2">
-              <Medal className="h-4 w-4 text-slate-400" />
+              <Medal className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">{inicialOuTraco(podio.runner_up)}</span>
               <span className="ml-auto text-xs text-muted-foreground">Vice</span>
             </div>
@@ -39,7 +39,7 @@ export default function CardPodioTemporada({ podio }: Props) {
 
           {podio.semifinalists.length > 0 && (
             <div className="flex flex-wrap items-center gap-2 pt-1">
-              <Medal className="h-4 w-4 text-amber-700" />
+              <Medal className="h-4 w-4 text-muted-foreground/70" />
               {podio.semifinalists.map((nome, idx) => (
                 <span
                   key={`${podio.season_id}-sf-${idx}`}
