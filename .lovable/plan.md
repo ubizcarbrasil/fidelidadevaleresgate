@@ -1,111 +1,105 @@
 
 
-# Atualização completa de Manuais e Ajuda Contextual (?)
+# Corrigir importação de planilha no iPhone/PWA + endurecer fluxo
 
-## Objetivo
+## Diagnóstico
 
-1. **Atualizar todos os manuais** (`/manuais` e o ícone "?" no canto inferior direito) para refletir as mudanças recentes da plataforma.
-2. **Conferir cada manual** contra a prática real das telas para garantir alinhamento.
-3. **Adicionar o botão "?" de ajuda contextual** em todas as páginas administrativas que ainda não têm.
+A importação de planilha não está com bug no servidor — os dois últimos jobs no banco terminaram com sucesso (2.566 e 1.706 linhas, 0 erros). O problema é **na camada do app no iPhone PWA standalone**, e tem 3 causas combinadas:
 
-## Diagnóstico atual
+### 1. Service Worker está sequestrando o polling do job (causa principal)
 
-- **Manuais (`/manuais`)**: 94 manuais em `src/components/manuais/dados_manuais.ts` (2.137 linhas).
-- **Help contextual (?)**: 88 rotas cadastradas em `src/lib/helpContent.ts` (1.895 linhas), exibidas pelo `ContextualHelpDrawer` que já é injetado automaticamente no `AppLayout` (todas as rotas administrativas internas). Páginas fora do AppLayout (`StoreOwnerPanel`, `DriverPanelPage`, `CustomerPreviewPage`, `Auth`, etc.) precisam tratamento individual.
-- **Lacunas detectadas (rotas SEM help)**: 33 rotas, entre elas `/conversao-resgate`, `/relatorio-corridas`, `/leads-comerciais`, `/admin/central-modulos`, `/admin/produtos-comerciais`, `/admin/auditoria-duplicacoes`, `/configuracao-cidade`, `/configuracao-modulos-cidade`, `/brand-modules/ganha-ganha`, `/ganha-ganha-reports`, `/store/ganha-ganha`, `/driver-points-purchase`, `/affiliate-deals/import-mobile`, `/public-vouchers`, `/vouchers/redeem`, `/brand-journey`, `/root-journey`, `/emitter-journey`, `/branch-business-models`, `/brand-domains`.
-- **Mudanças recentes a refletir** (últimas semanas, baseado em memória do projeto e histórico):
-  - **Gestão de Motoristas** — exportação CSV em duas etapas (Exportar → Abrir CSV), comportamento iOS/PWA via URL HTTPS assinada, filtros corrigidos (status NULL = Ativo, busca por nome/CPF/telefone/e-mail, regex específico para placa, botão "Limpar filtros", contador "X de Y").
-  - **Cidades** — modelos de pontuação (DRIVER_ONLY/PASSENGER_ONLY/BOTH), ativação granular de módulos por cidade, carteira pré-paga de pontos com saldo negativo, reset de pontos via Edge Function, exclusão hard-delete via Edge Function.
-  - **Gamificação** — Duelos, Ranking e Cinturão regidos por `achadinhos_motorista`.
-  - **Painel do Motorista** — Hub inteligente, compra de pontos, histórico de resgates locais, ofertas restritas a motoristas, vinculação automática por CPF.
-  - **CRM** — segmentação de audiências, Pareto, clientes em risco/potenciais, jornadas.
-  - **Ganha-Ganha** — fechamentos, billing, relatórios, dashboard root, resumo por loja.
-  - **Plano e assinatura** — restrições por plano (Free/Starter/Pro/Enterprise), comercialização e recarga de pontos, renovação manual.
-  - **Page Builder V2** — segmentação por audiência em blocos.
-  - **Permissões hierárquicas** — engine de 4 níveis com herança e override por cidade.
-  - **Mobilidade (TaxiMachine)** — credenciais centralizadas, mensageria unificada, identificação manual de passageiros, pontuação automática.
-  - **Personalização** — rótulos de menu (3 abas), reordenação de sidebar e seções da Home, tema por cidade.
-  - **Achadinhos / Resgate na Cidade** — fluxo OTP → confirmação → PIN, sempre driver-only.
-  - **Análise** — uso obrigatório de `finalized_at`, isolamento por `branch_id`, drilldown na Central de Acessos.
+`vite.config.ts` configura `runtimeCaching` para **todas** as chamadas Supabase como `NetworkFirst` com cache de 5 minutos:
 
-## O que será feito
+```text
+urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i
+handler: "NetworkFirst"
+networkTimeoutSeconds: 10
+maxAgeSeconds: 60 * 5
+```
 
-### 1. Atualizar conteúdo de manuais existentes (`dados_manuais.ts`)
+O loop `acompanharJob()` faz polling em `/rest/v1/driver_import_jobs?id=eq.<jobId>` a cada 1,5s. No iPhone PWA:
 
-Revisar e reescrever os 94 manuais existentes para refletir a prática real, com foco prioritário em:
+- Primeiro polling → SW armazena resposta `{status:"running", processed_rows:0}` no cache `supabase-api`
+- Próximos pollings → SW devolve a **mesma resposta cacheada** por até 5 minutos (NetworkFirst com timeout de 10s frequentemente cai pro cache em rede móvel)
+- Resultado: barra de progresso fica em 0%, status nunca muda de "running" → usuário acha que travou e fecha
 
-- **Gestão de Motoristas** (`/motoristas`): novo fluxo CSV em 2 toques (mobile/iOS), explicação dos filtros (status NULL = Ativo), busca por nome/CPF/telefone/e-mail/placa, botão "Limpar filtros", importação CSV.
-- **Cidades** (`/branches`, `/brand-branches`): modelos de pontuação, módulos granulares por cidade, gamificação por cidade, exclusão segura.
-- **Carteira da Cidade** (`/branch-wallet`): saldos pré-pagos e negativos, recargas, histórico.
-- **Pacotes de Pontos** (`/points-packages`, `/points-packages-store`): comercialização, criação de pacotes, fluxo de compra pelo motorista.
-- **Painel do Motorista** (`/driver`, `/driver-config`): Home inteligente, compra de pontos, ofertas exclusivas, histórico de resgates locais.
-- **Gamificação** (`/gamificacao-admin`): Duelos, Ranking, Cinturão, dependência do módulo `achadinhos_motorista`.
-- **Regras de Pontos** (`/points-rules`, `/driver-points-rules`, `/tier-points-rules`, `/store-points-rule`): regras por parceiro, por motorista, por faixa, anti-fraude.
-- **CRM** (`/crm`, jornadas): explicação completa dos novos painéis (Pareto, audiências, perdidos, potenciais, oportunidades, tier).
-- **Ganha-Ganha** (config/billing/closing/reports/dashboard/store-summary): ecossistema compartilhado.
-- **Resgates e Cupons** (`/redemptions`, `/vouchers`, `/regras-resgate`, `/approve-store-rules`, `/conversao-resgate`): ciclo de 12 etapas.
-- **Mobilidade** (`/machine-integration`, `/machine-webhook-test`, `/mirror-sync`): integração TaxiMachine, identificação manual.
-- **Personalização** (`/menu-labels`, `/home-templates`, `/banner-manager`, `/page-builder-v2`, `/sponsored-placements`, `/welcome-tour`, `/profile-links`): visão geral atualizada.
-- **Plano e assinatura** (`/subscription`, `/plan-templates`): restrições por plano, módulos liberados.
-- **Permissões e usuários** (`/permissions`, `/brand-permissions`, `/users`, `/audit`).
-- **Relatórios** (`/reports`, `/branch-reports`, `/relatorio-corridas`): consistência com `finalized_at`.
+Na imagem do usuário "deu o mesmo" — é o mesmo padrão visual do export anterior: app fica travado, sem feedback claro.
 
-### 2. Conferência prática
+### 2. Falta de feedback quando o picker do iOS retorna nada
 
-Para cada manual atualizado:
-- Ler o componente da página correspondente (e seus principais subcomponentes).
-- Garantir que **título**, **passos** e **dicas** correspondam a botões, abas e fluxos visíveis na tela.
-- Corrigir nomes de botões/abas que mudaram (ex.: "Exportar CSV" → "Exportar CSV / Abrir CSV", "Aparência da Marca", "Cidades", "Parceiros", etc.).
-- Padronizar terminologia oficial: Empresa, Marca, Cidade, Parceiro, Motorista (conforme memória `mem://business/terminologia-e-nomenclatura-padrao`).
+`etapa_upload.tsx` resetar `e.target.value = ""` ANTES do `if (!file)` — se o usuário cancela o picker no iOS PWA, não acontece nada visível. Soma com o item 1 dá sensação de "não funciona".
 
-### 3. Atualizar/expandir help contextual (`helpContent.ts`)
+### 3. Sem botão "Voltar / Atualizar status" na etapa de progresso
 
-- **Atualizar** os 88 helps já existentes para refletir as mesmas mudanças listadas acima (versão resumida do manual completo).
-- **Adicionar 33 novas entradas** para as rotas que hoje não têm help, com prioridade nas operacionais:
-  - `/conversao-resgate`, `/relatorio-corridas`, `/leads-comerciais`
-  - `/admin/central-modulos`, `/admin/produtos-comerciais`, `/admin/auditoria-duplicacoes`
-  - `/configuracao-cidade`, `/configuracao-modulos-cidade`, `/branch-business-models`
-  - `/brand-modules/ganha-ganha`, `/ganha-ganha-reports`, `/store/ganha-ganha`
-  - `/driver-points-purchase`, `/affiliate-deals/import-mobile`
-  - `/public-vouchers`, `/vouchers/redeem`, `/vouchers/new`, `/vouchers/:id`
-  - `/brand-journey`, `/root-journey`, `/emitter-journey`, `/brand-domains`
-  - Demais rotas auxiliares (formulários `/branches/new`, `/brands/new`, `/tenants/new` etc. herdarão do path base via `getHelpForRoute`).
+Se o polling realmente travar (cache, perda de rede, app em background), o usuário não tem como destravar. `etapa_progresso.tsx` só tem spinner.
 
-### 4. Garantir presença do "?" em todas as páginas
+## Solução
 
-- **AppLayout** já injeta o `ContextualHelpDrawer` em todas as rotas internas — nenhuma ação necessária para essas.
-- **StoreOwnerPanel** já tem — manter.
-- **DriverPanelPage**: adicionar `<ContextualHelpDrawer />` (motorista também merece manual contextual).
-- **CustomerPreviewPage**: adicionar `<ContextualHelpDrawer />`.
-- **Auth, ResetPassword, LandingPage, TrialSignupPage, InstallPwaPage, públicas (/loja/:slug, /p/:slug, /webview, /links, /campeonato, /produtos)**: NÃO adicionar (são páginas públicas/onboarding sem contexto administrativo).
-- **Hall da Fama, PartnerLandingPage**: NÃO adicionar.
+### 1. Excluir Edge Functions e tabela de jobs do cache do Service Worker
 
-### 5. Pequenas melhorias no drawer de ajuda
+Em `vite.config.ts`, separar regras de cache:
 
-- Adicionar botão "Ver manual completo" no rodapé do `ContextualHelpDrawer` que leva para `/manuais` (quando o usuário tiver acesso) com âncora para o manual relacionado.
-- No `ManualRenderer`, garantir que o link "Ir para a página" funcione corretamente para todas as rotas atualizadas.
+- `/functions/v1/*` → **NetworkOnly** (nunca cachear, nunca timeout — invocações de edge function)
+- `/rest/v1/driver_import_jobs*` → **NetworkOnly** (polling de jobs precisa ser sempre fresco)
+- `/storage/v1/object/sign/*` e `/storage/v1/object/upload/*` → **NetworkOnly** (uploads e URLs assinadas)
+- Demais rotas Supabase → manter `NetworkFirst` mas reduzir cache para 60s e remover `networkTimeoutSeconds` agressivo (15s ou sem timeout)
+- Bump do `cacheId` para `vale-resgate-v7` para invalidar SW antigo no iPhone
+
+### 2. Endurecer o hook `useImportarMotoristas.acompanharJob`
+
+- Adicionar `cache: "no-store"` e `headers: { "Cache-Control": "no-cache, no-store" }` na query de polling
+- Trocar query Supabase pelo cliente direto com `.select(...).eq(...).single()` mais um parâmetro `?_t=Date.now()` para forçar bypass de cache até em proxies legados
+- Adicionar timeout de segurança: se 60s passarem sem evolução em `processed_rows`, mostrar aviso "Sem resposta do servidor — atualize a página". Não cancela o job (ele continua no servidor) mas avisa o usuário
+- Adicionar tentativa máxima de 20 minutos absoluta antes de desistir do polling
+
+### 3. Melhorar UX de erro/recuperação na importação
+
+- `etapa_upload.tsx`:
+  - Reset do `value` só DEPOIS de tratar o arquivo
+  - Toast informativo se o iOS retornar arquivo vazio (`size === 0`)
+  - Validar `file.size > 0` antes de tentar parsear
+  - Mensagem específica para iPhone: "No iPhone, escolha o arquivo em **Arquivos** → **iCloud Drive** ou **No meu iPhone**"
+  
+- `etapa_progresso.tsx`:
+  - Adicionar botão "Atualizar status" (consulta o job manualmente)
+  - Adicionar botão "Fechar e continuar em segundo plano" — fecha o modal mas mostra um toast persistente "Importação em andamento" com link para conferir depois
+  - Mostrar `job_id` curto para rastreabilidade
+
+- `modal_importar_motoristas.tsx`:
+  - Capturar erro do `acompanharJob` e voltar para etapa "resultado" com mensagem amigável em vez de spinner infinito
+
+### 4. Acrescentar botão "Conferir última importação" na página
+
+Em `DriverManagementPage.tsx`, ao lado de "Importar planilha", adicionar um pequeno indicador discreto que aparece quando há um `driver_import_jobs` recente do usuário com status `running`. Clicar abre o modal direto na etapa de progresso com aquele `jobId` — recupera importação que travou no celular.
 
 ## Arquivos impactados
 
-**Editados:**
-- `src/components/manuais/dados_manuais.ts` — revisão completa dos 94 manuais + adição de manuais novos para módulos sem manual (relatório de corridas, conversão de resgate, leads comerciais, central de módulos, produtos comerciais, jornada de marca/root/emissor, configuração de cidade granular, ganha-ganha reports, compra de pontos pelo motorista).
-- `src/lib/helpContent.ts` — atualização dos 88 helps existentes + adição de ~25 novos.
-- `src/components/ContextualHelpDrawer.tsx` — adicionar link "Ver manual completo" no rodapé.
-- `src/pages/DriverPanelPage.tsx` — montar `<ContextualHelpDrawer />`.
-- `src/pages/CustomerPreviewPage.tsx` — montar `<ContextualHelpDrawer />`.
+**Editados (4):**
 
-**Sem migration. Sem alteração em RLS, edge functions ou schema.**
+- `vite.config.ts` — separar regras de cache do SW para edge functions / driver_import_jobs / storage; bump `cacheId` v6 → v7
+- `src/features/importacao_motoristas/hooks/hook_importar_motoristas.ts` — polling resistente a cache, timeout de 20min, retorno de erro recuperável, suporte a "anexar a job existente"
+- `src/features/importacao_motoristas/components/etapa_upload.tsx` — validação `file.size > 0`, dica iOS, reset correto do input
+- `src/features/importacao_motoristas/components/etapa_progresso.tsx` — botões "Atualizar" e "Continuar em segundo plano"
+- `src/features/importacao_motoristas/components/modal_importar_motoristas.tsx` — fluxo de erro amigável, suporte a reabrir modal em job existente
+- `src/pages/DriverManagementPage.tsx` — indicador "importação em andamento" + atalho para retomar
+
+**Sem migration. Sem mudança em RLS. Sem mudança no edge function `import-drivers-bulk` (que já funciona).**
 
 ## Resultado esperado
 
-- **`/manuais`** mostra catálogo atualizado com 100+ manuais alinhados à prática real, organizados por categoria, com filtro por cidade/scoring quando aplicável.
-- **Botão "?"** aparece em **todas** as páginas administrativas (incluindo Painel do Motorista e Pré-visualização do Cliente), com conteúdo específico para a tela atual.
-- **Conteúdo verificado**: cada passo descrito existe na interface real; nomes de botões, abas e campos batem; terminologia padronizada (Empresa/Marca/Cidade/Parceiro/Motorista).
-- **Sem regressões** — apenas conteúdo e dois pontos novos de montagem do drawer.
+| Ação no iPhone PWA | Antes | Depois |
+|---|---|---|
+| Tocar "Importar planilha" → escolher CSV | Picker abre | Igual |
+| Confirmar importação | Spinner trava em 0% por causa do SW cache | Barra avança em tempo real |
+| Sair do app durante importação | Volta e vê 0% (cache) | Volta e vê progresso real ou "concluído" |
+| Cancelar picker do iOS | Nada acontece (parece bug) | Modal continua aberto, sem erro |
+| Polling demora ou trava | Spinner infinito | Botão "Atualizar status" + "Continuar em segundo plano" |
+| Página recarregada com job em curso | Perde referência | Indicador "Importação em andamento — toque para acompanhar" |
 
 ## Risco e rollback
 
-- **Zero impacto em dados** (apenas conteúdo textual e dois imports de componente).
-- Rollback trivial: reverter os 5 arquivos editados.
-- Sem efeito em performance (drawer já é lazy-loaded).
+- **Cache do SW**: bump de `cacheId` força todos os usuários a baixarem novo bundle uma vez. Sem efeito em dados.
+- **Polling**: mudança é puramente de cliente; servidor continua igual.
+- Rollback: reverter os 5 arquivos.
+- Sem efeito em outras features (cache do SW para Supabase em geral fica mais permissivo, não restritivo — só removemos das rotas problemáticas).
 
