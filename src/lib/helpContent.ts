@@ -1048,16 +1048,45 @@ const helpContent: Record<string, HelpEntry> = {
     sections: [
       {
         title: "Gerenciar motoristas",
-        summary: "Visualize e gerencie os motoristas cadastrados na sua cidade.",
+        summary: "Visualize e gerencie os motoristas da sua marca/cidade. A lista é paginada (50 por página) e suporta bases com milhares de registros.",
         steps: [
-          "Use a busca para encontrar motoristas por nome, telefone ou ID externo.",
-          "Clique em um motorista para ver detalhes: saldo, histórico e corridas.",
-          "Ative ou desative motoristas conforme necessário.",
-          "Use filtros para segmentar por tier ou status.",
+          "Use o campo de busca para encontrar por nome, CPF, telefone, e-mail ou placa (a placa é detectada automaticamente pelo formato Mercosul/antigo).",
+          "Filtre por status: 'Ativo' inclui motoristas sem status definido (status NULL conta como Ativo). 'Inativo' mostra apenas quem foi desativado manualmente.",
+          "O contador no topo mostra 'X de Y' (resultados filtrados de total).",
+          "Use 'Limpar filtros' para resetar busca e status de uma só vez.",
+          "Clique em um motorista para abrir a ficha completa (saldo, corridas, badges de origem).",
         ],
         tips: [
-          "Motoristas inativos não acumulam pontos automaticamente.",
-          "O ID externo vincula o motorista ao sistema de corridas.",
+          "Buscas com letras + números são tratadas como nome; o regex específico só dispara para placas válidas (ABC1D23 ou ABC-1234).",
+          "Badges na ficha indicam origem: 🟢 CSV, 🔵 1ª corrida (auto-cadastro), ⚪ aguardando dados completos.",
+          "Motoristas com status NULL aparecem como 'Ativo' por padrão — só mude para Inativo quem realmente saiu.",
+        ],
+      },
+      {
+        title: "Exportar lista em CSV",
+        summary: "A exportação ocorre em duas etapas para funcionar bem em iPhone e PWA instalado.",
+        steps: [
+          "Toque em 'Exportar CSV' — o sistema busca todos os motoristas e prepara o arquivo no servidor.",
+          "Quando o botão mudar para 'Abrir CSV', toque novamente para baixar.",
+          "No iPhone/PWA, o segundo toque abre o arquivo via URL HTTPS assinada (válida por 30 minutos), evitando tela branca.",
+          "No desktop, o download é direto pelo navegador.",
+        ],
+        tips: [
+          "Se aparecer erro durante a preparação, basta tocar de novo em 'Exportar CSV'.",
+          "O arquivo gerado fica disponível por 30 minutos antes de expirar.",
+        ],
+      },
+      {
+        title: "Importar CSV em massa",
+        summary: "Suba a base completa de motoristas (até 10 mil linhas, 100+ campos por linha).",
+        steps: [
+          "Clique em 'Importar CSV' e baixe o template oficial.",
+          "Preencha os dados (CPF, telefone e nome ajudam o sistema a casar com motoristas que já existem).",
+          "Faça upload — o sistema deduplica por external_id, CPF, telefone ou nome.",
+          "Subir CSV antes da primeira corrida = motorista visível imediatamente. Depois da primeira corrida = enriquece o registro existente sem duplicar.",
+        ],
+        tips: [
+          "O auto-cadastro continua ativo: motoristas novos sem CSV são criados na primeira corrida com dados básicos da TaxiMachine.",
         ],
       },
     ],
