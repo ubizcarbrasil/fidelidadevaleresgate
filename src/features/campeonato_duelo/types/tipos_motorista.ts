@@ -20,14 +20,16 @@ export interface TemporadaAtivaMotorista {
   classification_ends_at: string;
   knockout_starts_at: string;
   knockout_ends_at: string;
-  tier_id: string;
-  tier_name: string;
-  tier_order: number;
+  tier_id: string | null;
+  tier_name: string | null;
+  tier_order: number | null;
   driver_points: number;
   driver_weekend_rides: number;
   driver_position: number | null;
   driver_qualified: boolean;
   driver_relegated_auto: boolean;
+  /** True quando a temporada existe mas o motorista ainda não foi distribuído. */
+  is_pending_seeding?: boolean;
 }
 
 export interface LinhaRankingCentrado {

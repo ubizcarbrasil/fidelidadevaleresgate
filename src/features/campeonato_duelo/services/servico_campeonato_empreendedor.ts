@@ -228,7 +228,33 @@ export async function criarTemporadaCompleta(
     if (prizeErr) throw prizeErr;
   }
 
+  // Materializa as séries e distribui automaticamente os motoristas elegíveis.
+  // Se falhar (ex.: nenhum motorista elegível), a temporada permanece criada
+  // e o empreendedor pode disparar manualmente em "Distribuir motoristas agora".
+  try {
+    await supabase.rpc("duelo_materialize_and_seed_season" as any, {
+      p_season_id: (season as any).id,
+    });
+  } catch (seedErr) {
+    // Não propaga: a temporada já foi criada com sucesso.
+    console.warn("[criarTemporadaCompleta] seed inicial falhou:", seedErr);
+  }
+
   return season;
+}
+
+/**
+ * Materializa séries (se necessário) e distribui motoristas elegíveis para
+ * uma temporada que foi criada sem seeding (órfã). Idempotente em relação
+ * aos tiers já materializados.
+ */
+export async function executarSeedingTemporada(seasonId: string) {
+  const { data, error } = await supabase.rpc(
+    "duelo_materialize_and_seed_season" as any,
+    { p_season_id: seasonId },
+  );
+  if (error) throw error;
+  return data;
 }
 
 /* ============== Distribuição de prêmios (C.5) ============== */
