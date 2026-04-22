@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Swords, MapPin } from "lucide-react";
+import { Loader2, Swords, MapPin, Trophy } from "lucide-react";
 import EstatisticasGamificacao from "@/components/admin/gamificacao/EstatisticasGamificacao";
 import PaginaConfiguracoesDuelo from "@/features/duelo_configuracoes/pagina_configuracoes_duelo";
 import ListaDuelosAdmin from "@/components/admin/gamificacao/ListaDuelosAdmin";
@@ -16,7 +16,7 @@ import DuelosAoVivoAdmin from "@/components/admin/gamificacao/DuelosAoVivoAdmin"
 import ModalCriarDueloAdmin from "@/components/admin/gamificacao/ModalCriarDueloAdmin";
 import ApostasAdminView from "@/components/admin/gamificacao/ApostasAdminView";
 import PaginaCampeonatoEmpreendedor from "@/features/campeonato_duelo/pagina_campeonato_empreendedor";
-import { Trophy } from "lucide-react";
+import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
 
 export default function GamificacaoAdminPage() {
   const { currentBranchId, currentBrandId, consoleScope } = useBrandGuard();
@@ -25,6 +25,8 @@ export default function GamificacaoAdminPage() {
 
   const isBrandScope = consoleScope === "BRAND" || consoleScope === "ROOT";
   const effectiveBranchId = isBrandScope ? selectedBranchId : currentBranchId;
+
+  const { isCampeonato } = useFormatoEngajamento(currentBrandId);
 
   // Fetch branches for brand-scoped users
   const { data: branches, isLoading: loadingBranches } = useQuery({
@@ -69,10 +71,12 @@ export default function GamificacaoAdminPage() {
     return (
       <div className="space-y-6 p-4 md:p-6">
         <div className="flex items-center gap-3">
-          <Swords className="h-6 w-6 text-primary" />
+          {isCampeonato ? <Trophy className="h-6 w-6 text-primary" /> : <Swords className="h-6 w-6 text-primary" />}
           <div>
-            <h1 className="text-xl font-bold">Gamificação</h1>
-            <p className="text-sm text-muted-foreground">Duelos, Ranking e Cinturão</p>
+            <h1 className="text-xl font-bold">{isCampeonato ? "Campeonato" : "Gamificação"}</h1>
+            <p className="text-sm text-muted-foreground">
+              {isCampeonato ? "Temporadas, séries e prêmios" : "Duelos, Ranking e Cinturão"}
+            </p>
           </div>
         </div>
 
