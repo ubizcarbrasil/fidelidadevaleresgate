@@ -7,6 +7,7 @@ import {
   CheckSquare,
   ArrowRightLeft,
   Trash2,
+  Sparkles,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,40 +26,44 @@ const PASSOS: PassoTutorial[] = [
     numero: 1,
     titulo: "Localize os motoristas disponíveis",
     descricao:
-      "A primeira coluna (azul) lista todos os motoristas elegíveis que ainda não estão em nenhuma série da temporada.",
+      "A primeira coluna lista todos os motoristas elegíveis que ainda não estão em nenhuma série da temporada.",
     icone: MousePointerClick,
   },
   {
     numero: 2,
     titulo: "Selecione um ou vários motoristas",
     descricao:
-      "Toque no checkbox de cada motorista na coluna 'Disponíveis' para escolher quem será movido. Use a busca para filtrar por nome.",
+      "Toque no checkbox de cada motorista na coluna 'Disponíveis'. Use a busca para filtrar por nome.",
     icone: CheckSquare,
   },
   {
     numero: 3,
     titulo: "Mova para a Série A, B, C, D ou E",
     descricao:
-      "Com motoristas selecionados, aparece uma barra no topo com botões 'Mover para Série A', 'B', 'C'… Toque na série de destino para enviar todos de uma vez.",
+      "Com motoristas selecionados, aparece uma barra com seletor 'Mover para…'. Escolha a série destino e confirme.",
     icone: ArrowRightLeft,
   },
   {
     numero: 4,
     titulo: "Mover apenas 1 motorista (alternativa)",
     descricao:
-      "Em qualquer cartão de motorista, use o botão 'Mover para…' para enviar individualmente. No desktop, você também pode arrastar e soltar entre as colunas.",
+      "Em qualquer cartão, use o botão 'Mover para…' para enviar individualmente. No desktop, arraste e solte entre colunas.",
     icone: ArrowRightLeft,
   },
   {
     numero: 5,
     titulo: "Remover de uma série",
     descricao:
-      "Para tirar um motorista da temporada, abra o cartão dele dentro da série e toque em 'Remover'. Ele volta para 'Disponíveis'.",
+      "Para tirar alguém da temporada, abra o cartão dentro da série e toque em 'Remover'. Ele volta para 'Disponíveis'.",
     icone: Trash2,
   },
 ];
 
-export default function TutorialDistribuicaoMotoristas() {
+interface Props {
+  aoIniciarTour?: () => void;
+}
+
+export default function TutorialDistribuicaoMotoristas({ aoIniciarTour }: Props) {
   const [dispensado, setDispensado] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(STORAGE_KEY) === "1";
@@ -74,20 +79,32 @@ export default function TutorialDistribuicaoMotoristas() {
 
   if (dispensado) {
     return (
-      <button
-        type="button"
-        onClick={() => {
-          if (typeof window !== "undefined") {
-            window.localStorage.removeItem(STORAGE_KEY);
-          }
-          setDispensado(false);
-          setAberto(true);
-        }}
-        className="flex items-center gap-1.5 self-start rounded-md border border-border bg-muted/40 px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      >
-        <GraduationCap className="h-3.5 w-3.5" />
-        Ver tutorial novamente
-      </button>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              window.localStorage.removeItem(STORAGE_KEY);
+            }
+            setDispensado(false);
+            setAberto(true);
+          }}
+          className="flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <GraduationCap className="h-3.5 w-3.5" />
+          Ver tutorial novamente
+        </button>
+        {aoIniciarTour && (
+          <button
+            type="button"
+            onClick={aoIniciarTour}
+            className="flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary transition-colors hover:bg-primary/20"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Iniciar tour guiado
+          </button>
+        )}
+      </div>
     );
   }
 
@@ -134,41 +151,52 @@ export default function TutorialDistribuicaoMotoristas() {
       </div>
 
       {aberto && (
-        <ol className="space-y-1.5 border-t border-primary/20 px-3 py-2.5">
-          {PASSOS.map((passo) => {
-            const Icone = passo.icone;
-            return (
-              <li key={passo.numero} className="flex gap-2.5">
-                <div className="relative flex shrink-0 flex-col items-center">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
+        <div className="border-t border-primary/20">
+          <ol className="space-y-1.5 px-3 py-2.5">
+            {PASSOS.map((passo) => {
+              const Icone = passo.icone;
+              return (
+                <li key={passo.numero} className="flex gap-2.5">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
                     {passo.numero}
                   </div>
-                </div>
-                <div className="flex-1 pb-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <Icone className="h-3.5 w-3.5 text-primary" />
-                    <p className="text-xs font-medium text-foreground">
-                      {passo.titulo}
+                  <div className="flex-1 pb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <Icone className="h-3.5 w-3.5 text-primary" />
+                      <p className="text-xs font-medium text-foreground">
+                        {passo.titulo}
+                      </p>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      {passo.descricao}
                     </p>
                   </div>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    {passo.descricao}
-                  </p>
-                </div>
-              </li>
-            );
-          })}
-          <li className="flex justify-end pt-1">
+                </li>
+              );
+            })}
+          </ol>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-primary/20 px-3 py-2">
+            {aoIniciarTour ? (
+              <Button
+                size="sm"
+                className="h-7 text-[11px]"
+                onClick={aoIniciarTour}
+              >
+                <Sparkles className="mr-1 h-3 w-3" /> Iniciar tour guiado
+              </Button>
+            ) : (
+              <span />
+            )}
             <Button
               variant="ghost"
               size="sm"
               className="h-7 text-[11px] text-muted-foreground hover:text-foreground"
               onClick={dispensarPermanente}
             >
-              Entendi, não mostrar novamente
+              Não mostrar novamente
             </Button>
-          </li>
-        </ol>
+          </div>
+        </div>
       )}
     </div>
   );

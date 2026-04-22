@@ -32,6 +32,7 @@ import ColunaSerie from "./ColunaSerie";
 import BarraAcoesEmLote from "./BarraAcoesEmLote";
 import ConfirmRemoverMotorista from "./ConfirmRemoverMotorista";
 import TutorialDistribuicaoMotoristas from "./TutorialDistribuicaoMotoristas";
+import TourGuiadoDistribuicao from "./TourGuiadoDistribuicao";
 
 interface Props {
   open: boolean;
@@ -93,6 +94,7 @@ export default function DistribuicaoManualView({
 
   const mover = useMoverMotorista(brandId);
   const remover = useRemoverMotorista(brandId);
+  const [tourAtivo, setTourAtivo] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -196,7 +198,9 @@ export default function DistribuicaoManualView({
             </DialogDescription>
           </DialogHeader>
 
-          <TutorialDistribuicaoMotoristas />
+          <TutorialDistribuicaoMotoristas
+            aoIniciarTour={() => setTourAtivo(true)}
+          />
 
           {modoLeitura && (
             <div className="flex items-center gap-2 rounded-md border border-warning/40 bg-warning/10 p-2 text-xs text-warning-foreground">
@@ -207,13 +211,15 @@ export default function DistribuicaoManualView({
           )}
 
           {!modoLeitura && (
-            <BarraAcoesEmLote
-              total={selecionados.size}
-              series={seriesAlvo}
-              desabilitado={mover.isPending}
-              aoMover={moverEmLote}
-              aoLimpar={limparSelecao}
-            />
+            <div data-tour="barra-acoes-lote">
+              <BarraAcoesEmLote
+                total={selecionados.size}
+                series={seriesAlvo}
+                desabilitado={mover.isPending}
+                aoMover={moverEmLote}
+                aoLimpar={limparSelecao}
+              />
+            </div>
           )}
 
           {carregando ? (
@@ -223,7 +229,7 @@ export default function DistribuicaoManualView({
           ) : (
             <DndContext sensors={sensors} onDragEnd={aoArrastarTermino}>
               <div className="flex flex-1 gap-3 overflow-x-auto pb-2">
-                <div className="w-[280px] shrink-0">
+                <div className="w-[280px] shrink-0" data-tour="coluna-disponiveis">
                   <ColunaMotoristasDisponiveis
                     motoristas={motoristas ?? []}
                     selecionados={selecionados}
@@ -233,28 +239,30 @@ export default function DistribuicaoManualView({
                   />
                 </div>
 
-                {tiers.map((t, idx) => {
-                  const q = queriesSeries[idx];
-                  return (
-                    <div key={t.tier_id} className="w-[260px] shrink-0">
-                      <ColunaSerie
-                        tierId={t.tier_id}
-                        tierName={t.tier_name}
-                        capacidade={capacidadePorTier.get(t.tier_id) ?? null}
-                        membros={q.data ?? []}
-                        carregando={q.isLoading}
-                        series={seriesAlvo}
-                        modoLeitura={modoLeitura}
-                        aoMoverPara={(driverId, targetTierId) =>
-                          moverParaSerie(driverId, targetTierId)
-                        }
-                        aoRemover={(driverId, driverName) =>
-                          setConfirmRemover({ driverId, driverName })
-                        }
-                      />
-                    </div>
-                  );
-                })}
+                <div className="flex gap-3" data-tour="colunas-series">
+                  {tiers.map((t, idx) => {
+                    const q = queriesSeries[idx];
+                    return (
+                      <div key={t.tier_id} className="w-[260px] shrink-0">
+                        <ColunaSerie
+                          tierId={t.tier_id}
+                          tierName={t.tier_name}
+                          capacidade={capacidadePorTier.get(t.tier_id) ?? null}
+                          membros={q.data ?? []}
+                          carregando={q.isLoading}
+                          series={seriesAlvo}
+                          modoLeitura={modoLeitura}
+                          aoMoverPara={(driverId, targetTierId) =>
+                            moverParaSerie(driverId, targetTierId)
+                          }
+                          aoRemover={(driverId, driverName) =>
+                            setConfirmRemover({ driverId, driverName })
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
 
                 {tiers.length === 0 && (
                   <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
@@ -266,6 +274,11 @@ export default function DistribuicaoManualView({
           )}
         </DialogContent>
       </Dialog>
+
+      <TourGuiadoDistribuicao
+        ativo={tourAtivo && open}
+        aoEncerrar={() => setTourAtivo(false)}
+      />
 
       <ConfirmRemoverMotorista
         open={!!confirmRemover}
