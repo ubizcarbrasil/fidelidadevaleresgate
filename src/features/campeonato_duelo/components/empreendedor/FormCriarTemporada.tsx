@@ -157,25 +157,25 @@ export default function FormCriarTemporada({
                 defaultValue={["basicas", "series", "premios", "revisao"]}
                 className="w-full"
               >
-                <AccordionItem value="basicas">
-                  <AccordionTrigger>
-                    <span className="flex items-center gap-2">
-                      <Settings className="h-4 w-4" /> 1. Informações básicas
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <EditorInformacoesBasicas />
-                  </AccordionContent>
-                </AccordionItem>
-
                 <AccordionItem value="series">
                   <AccordionTrigger>
                     <span className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4" /> 2. Séries
+                      <Sparkles className="h-4 w-4" /> 1. Séries
                     </span>
                   </AccordionTrigger>
                   <AccordionContent>
                     <EditorSeries />
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="basicas">
+                  <AccordionTrigger>
+                    <span className="flex items-center gap-2">
+                      <Settings className="h-4 w-4" /> 2. Informações básicas
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <EditorInformacoesBasicas />
                   </AccordionContent>
                 </AccordionItem>
 
