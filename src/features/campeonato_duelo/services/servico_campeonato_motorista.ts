@@ -28,10 +28,16 @@ export async function obterTemporadaAtivaMotorista(
   brandId: string,
   driverId: string,
 ): Promise<TemporadaAtivaMotorista | null> {
-  const { data, error } = await supabase.rpc("driver_get_active_season", {
-    p_brand_id: brandId,
-    p_driver_id: driverId,
-  });
+  // Usa a RPC que também retorna temporadas em estado "aguardando distribuição"
+  // para que o app possa mostrar uma mensagem informativa em vez de "nenhum
+  // campeonato ativo".
+  const { data, error } = await supabase.rpc(
+    "driver_get_pending_or_active_season" as any,
+    {
+      p_brand_id: brandId,
+      p_driver_id: driverId,
+    },
+  );
   if (error) throw error;
   return (data as unknown as TemporadaAtivaMotorista | null) ?? null;
 }

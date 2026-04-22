@@ -8,6 +8,7 @@ import {
   cancelarTemporada,
   confirmarDistribuicaoPremios,
   criarTemporadaCompleta,
+  executarSeedingTemporada,
   incluirMotoristaTemporada,
   pausarTemporada,
   retomarTemporada,
@@ -197,6 +198,27 @@ export function useCalcularPremios(brandId?: string) {
     },
     onError: (err: any) => {
       toast.error(err?.message ?? "Erro ao calcular prêmios");
+    },
+  });
+}
+
+export function useExecutarSeedingTemporada(brandId?: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (seasonId: string) => executarSeedingTemporada(seasonId),
+    onSuccess: (data: any) => {
+      const seeded =
+        (data && typeof data === "object" && (data.seeded_count ?? data.total_drivers)) ??
+        null;
+      toast.success(
+        seeded != null
+          ? `Distribuição concluída: ${seeded} motoristas alocados nas séries`
+          : "Distribuição concluída",
+      );
+      invalidarTudo(qc, brandId);
+    },
+    onError: (err: any) => {
+      toast.error(err?.message ?? "Erro ao distribuir motoristas");
     },
   });
 }

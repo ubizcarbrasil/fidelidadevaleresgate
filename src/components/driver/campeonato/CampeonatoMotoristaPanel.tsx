@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Trophy } from "lucide-react";
+import { ArrowLeft, Trophy, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
@@ -32,6 +32,8 @@ export default function CampeonatoMotoristaPanel({
   );
 
   const [overlay, setOverlay] = useState<SubOverlay>(null);
+  const isPendingSeeding = !!temporada?.is_pending_seeding;
+  const hasTier = !!temporada && !!temporada.tier_id && !!temporada.tier_name;
   const isClassification = temporada?.phase === "classification";
   const isFirstSeason = temporada !== null && temporada !== undefined;
 
@@ -80,6 +82,21 @@ export default function CampeonatoMotoristaPanel({
               será adicionado automaticamente.
             </p>
           </div>
+        ) : isPendingSeeding ? (
+          <div className="text-center py-12 space-y-2">
+            <Clock className="h-12 w-12 mx-auto text-primary/60" />
+            <p
+              className="font-bold text-base"
+              style={{ fontFamily: fontHeading }}
+            >
+              {temporada.season_name} começa em breve
+            </p>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+              A temporada foi criada e você será adicionado automaticamente
+              assim que o empreendedor concluir a distribuição das séries.
+              Esta tela atualiza sozinha quando isso acontecer.
+            </p>
+          </div>
         ) : (
           <>
             <CardTemporadaAtual
@@ -87,14 +104,16 @@ export default function CampeonatoMotoristaPanel({
               fontHeading={fontHeading}
             />
 
-            <RankingCentrado
-              seasonId={temporada.season_id}
-              driverId={driverId!}
-              fontHeading={fontHeading}
-              onVerTabelaCompleta={() => setOverlay("tabela")}
-            />
+            {hasTier && (
+              <RankingCentrado
+                seasonId={temporada.season_id}
+                driverId={driverId!}
+                fontHeading={fontHeading}
+                onVerTabelaCompleta={() => setOverlay("tabela")}
+              />
+            )}
 
-            {!isClassification && (
+            {hasTier && !isClassification && (
               <CardConfrontoAtual
                 seasonId={temporada.season_id}
                 driverId={driverId!}
@@ -133,7 +152,7 @@ export default function CampeonatoMotoristaPanel({
               Tabela · {temporada?.tier_name}
             </p>
           </div>
-          {temporada && driverId && (
+          {temporada && driverId && temporada.tier_name && (
             <TabelaCompletaSerie
               seasonId={temporada.season_id}
               driverId={driverId}
