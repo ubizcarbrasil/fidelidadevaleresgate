@@ -217,7 +217,10 @@ export default function GamificacaoAdminPage() {
           </>
         )}
         <TabsContent value="campeonato">
-          <PaginaCampeonatoEmpreendedor brandId={branch.brand_id} branchId={branch.id} />
+          <div className="space-y-4">
+            {isCampeonato && <AlertaModoCampeonato />}
+            <PaginaCampeonatoEmpreendedor brandId={branch.brand_id} branchId={branch.id} />
+          </div>
         </TabsContent>
         {!isCampeonato && (
           <>
