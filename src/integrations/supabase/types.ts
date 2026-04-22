@@ -5283,6 +5283,8 @@ export type Database = {
           phase: string
           promotion_applied_at: string | null
           relegation_policy: string
+          scoring_config_json: Json
+          scoring_mode: string
           tier_seeding_completed_at: string | null
           tiers_config_json: Json
           tiers_count: number
@@ -5307,6 +5309,8 @@ export type Database = {
           phase?: string
           promotion_applied_at?: string | null
           relegation_policy?: string
+          scoring_config_json?: Json
+          scoring_mode?: string
           tier_seeding_completed_at?: string | null
           tiers_config_json?: Json
           tiers_count?: number
@@ -5331,6 +5335,8 @@ export type Database = {
           phase?: string
           promotion_applied_at?: string | null
           relegation_policy?: string
+          scoring_config_json?: Json
+          scoring_mode?: string
           tier_seeding_completed_at?: string | null
           tiers_config_json?: Json
           tiers_count?: number
