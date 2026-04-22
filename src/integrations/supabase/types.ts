@@ -10244,10 +10244,6 @@ export type Database = {
       }
       duelo_admin_can_manage: { Args: { p_brand_id: string }; Returns: boolean }
       duelo_advance_phases: { Args: never; Returns: Json }
-      duelo_advance_single_season: {
-        Args: { p_season_id: string }
-        Returns: undefined
-      }
       duelo_apply_promotion_relegation: {
         Args: { p_season_id: string }
         Returns: Json
