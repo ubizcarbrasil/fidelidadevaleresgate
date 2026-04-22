@@ -1,6 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { DriverRow } from "@/types/driver";
+import {
+  apenasDigitos,
+  aplicarFiltroStatus,
+  ehBuscaPorPlaca,
+  precisaPreFiltrarPorProfiles,
+} from "../utils/utilitarios_filtros_motoristas";
 
 export type StatusFiltro = "ALL" | "ATIVO" | "INATIVO" | "BLOQUEADO";
 
@@ -22,14 +28,57 @@ export interface ResultadoListagem {
   totalPaginas: number;
 }
 
-const apenasDigitos = (s: string) => s.replace(/\D/g, "");
+const CHUNK_PROFILES = 5000;
+const CHUNK_IN = 800; // limite seguro para .in() em PostgREST
+
+/**
+ * Busca todos os customer_ids elegíveis em driver_profiles, em chunks de 5000,
+ * para suportar bases grandes sem truncamento silencioso.
+ */
+async function buscarIdsFiltradosPorProfiles(params: {
+  brandId: string;
+  branchId: string | null;
+  isBranchScope: boolean;
+  status: StatusFiltro;
+  buscaPorPlaca: boolean;
+  termoPlaca: string;
+}): Promise<string[]> {
+  const { brandId, branchId, isBranchScope, status, buscaPorPlaca, termoPlaca } = params;
+  const ids: string[] = [];
+  let offset = 0;
+
+  while (true) {
+    let q = (supabase as any)
+      .from("driver_profiles")
+      .select("customer_id")
+      .eq("brand_id", brandId);
+
+    if (isBranchScope && branchId) q = q.eq("branch_id", branchId);
+    q = aplicarFiltroStatus(q, status);
+
+    if (buscaPorPlaca) {
+      q = q.or(`vehicle1_plate.ilike.%${termoPlaca}%,vehicle2_plate.ilike.%${termoPlaca}%`);
+    }
+
+    const { data, error } = await q.range(offset, offset + CHUNK_PROFILES - 1);
+    if (error) throw error;
+
+    const lote = (data || []).map((p: any) => p.customer_id as string);
+    ids.push(...lote);
+
+    if (lote.length < CHUNK_PROFILES) break;
+    offset += CHUNK_PROFILES;
+  }
+
+  return ids;
+}
 
 /**
  * Listagem paginada de motoristas com busca server-side em:
  * - customers: nome, cpf, telefone, e-mail
- * - driver_profiles: placa do veículo (vehicle1_plate / vehicle2_plate)
+ * - driver_profiles: placa (somente quando busca tem formato de placa)
  *
- * Retorna até `porPagina` registros + total exato (count: 'exact').
+ * Status NULL é tratado como ATIVO (regra de negócio real).
  */
 export function useListagemMotoristas(params: ParametrosListagem) {
   const { brandId, branchId, isBranchScope, busca, statusFiltro, pagina, porPagina } = params;
@@ -40,46 +89,25 @@ export function useListagemMotoristas(params: ParametrosListagem) {
     queryFn: async (): Promise<ResultadoListagem> => {
       const termo = busca.trim();
       const digitos = apenasDigitos(termo);
+      const buscaPorPlaca = !!termo && ehBuscaPorPlaca(termo);
+      const termoPlaca = buscaPorPlaca
+        ? termo.toUpperCase().replace(/[^A-Z0-9]/g, "")
+        : "";
 
-      // ---------- 1. PRÉ-FILTROS por driver_profiles (placa + status) ----------
-      // Quando há busca por placa OU filtro de status, precisamos primeiro
-      // descobrir os customer_ids elegíveis em driver_profiles.
+      // ---------- 1. PRÉ-FILTROS por driver_profiles ----------
       let customerIdsFiltrados: string[] | null = null;
-      const buscaPareceComPlaca = /[a-zA-Z]/.test(termo) && termo.length >= 3;
 
-      if (statusFiltro !== "ALL" || buscaPareceComPlaca) {
-        let qProfiles = (supabase as any)
-          .from("driver_profiles")
-          .select("customer_id")
-          .eq("brand_id", brandId);
+      if (precisaPreFiltrarPorProfiles(statusFiltro, buscaPorPlaca)) {
+        customerIdsFiltrados = await buscarIdsFiltradosPorProfiles({
+          brandId: brandId!,
+          branchId,
+          isBranchScope,
+          status: statusFiltro,
+          buscaPorPlaca,
+          termoPlaca,
+        });
 
-        if (isBranchScope && branchId) {
-          qProfiles = qProfiles.eq("branch_id", branchId);
-        }
-
-        if (statusFiltro !== "ALL") {
-          const mapa: Record<Exclude<StatusFiltro, "ALL">, string> = {
-            ATIVO: "Ativo",
-            INATIVO: "Inativo",
-            BLOQUEADO: "Bloqueado",
-          };
-          qProfiles = qProfiles.ilike("registration_status", mapa[statusFiltro]);
-        }
-
-        if (buscaPareceComPlaca) {
-          const placa = termo.toUpperCase().replace(/[^A-Z0-9]/g, "");
-          qProfiles = qProfiles.or(
-            `vehicle1_plate.ilike.%${placa}%,vehicle2_plate.ilike.%${placa}%`,
-          );
-        }
-
-        // Limite alto para suportar bases grandes; aplicado apenas como pré-filtro
-        const { data: profilesIds, error: profErr } = await qProfiles.limit(10000);
-        if (profErr) throw profErr;
-        customerIdsFiltrados = (profilesIds || []).map((p: any) => p.customer_id as string);
-
-        // Se filtro retornou vazio, já podemos encerrar
-        if (customerIdsFiltrados!.length === 0) {
+        if (customerIdsFiltrados.length === 0) {
           return {
             motoristas: [],
             total: 0,
@@ -91,58 +119,95 @@ export function useListagemMotoristas(params: ParametrosListagem) {
       }
 
       // ---------- 2. QUERY PRINCIPAL (customers) ----------
+      const construirQuery = (idsChunk?: string[]) => {
+        let q = (supabase as any)
+          .from("customers")
+          .select(
+            "id, name, cpf, phone, email, points_balance, user_id, branch_id, customer_tier, scoring_disabled, driver_monthly_ride_count, updated_at",
+            { count: "exact" },
+          )
+          .eq("brand_id", brandId)
+          .ilike("name", "%[MOTORISTA]%")
+          .order("updated_at", { ascending: false });
+
+        if (isBranchScope && branchId) q = q.eq("branch_id", branchId);
+        if (idsChunk) q = q.in("id", idsChunk);
+
+        // Busca textual (nome/cpf/tel/email) — só quando NÃO é busca por placa
+        if (termo && !buscaPorPlaca) {
+          const cond: string[] = [`name.ilike.%${termo}%`];
+          if (digitos) {
+            cond.push(`cpf.ilike.%${digitos}%`);
+            cond.push(`phone.ilike.%${digitos}%`);
+          }
+          if (termo.includes("@")) cond.push(`email.ilike.%${termo}%`);
+          q = q.or(cond.join(","));
+        }
+
+        return q;
+      };
+
       const from = (pagina - 1) * porPagina;
       const to = from + porPagina - 1;
 
-      let q = (supabase as any)
-        .from("customers")
-        .select(
-          "id, name, cpf, phone, email, points_balance, user_id, branch_id, customer_tier, scoring_disabled, driver_monthly_ride_count",
-          { count: "exact" },
-        )
-        .eq("brand_id", brandId)
-        .ilike("name", "%[MOTORISTA]%")
-        .order("updated_at", { ascending: false });
+      let data: any[] = [];
+      let count = 0;
 
-      if (isBranchScope && branchId) {
-        q = q.eq("branch_id", branchId);
-      }
-
-      if (customerIdsFiltrados) {
-        q = q.in("id", customerIdsFiltrados);
-      }
-
-      // Busca textual em customers (nome, cpf, telefone, e-mail)
-      if (termo && !buscaPareceComPlaca) {
-        const cond: string[] = [`name.ilike.%${termo}%`];
-        if (digitos) {
-          cond.push(`cpf.ilike.%${digitos}%`);
-          cond.push(`phone.ilike.%${digitos}%`);
+      if (
+        customerIdsFiltrados &&
+        customerIdsFiltrados.length > CHUNK_IN
+      ) {
+        // Estratégia: buscar todos os IDs em chunks SEM range, depois ordenar e paginar em memória.
+        // Isso garante consistência quando o filtro excede o limite seguro do .in().
+        const chunks: string[][] = [];
+        for (let i = 0; i < customerIdsFiltrados.length; i += CHUNK_IN) {
+          chunks.push(customerIdsFiltrados.slice(i, i + CHUNK_IN));
         }
-        if (termo.includes("@")) {
-          cond.push(`email.ilike.%${termo}%`);
+
+        const resultados = await Promise.all(
+          chunks.map((chunk) => construirQuery(chunk).range(0, 9999)),
+        );
+
+        const todosIds = new Map<string, any>();
+        for (const res of resultados) {
+          if (res.error) throw res.error;
+          for (const row of res.data || []) {
+            todosIds.set(row.id, row);
+          }
         }
-        q = q.or(cond.join(","));
+
+        const todos = Array.from(todosIds.values()).sort((a, b) => {
+          // Postgres já ordenou cada chunk; ordenamos novamente por updated_at desc para consistência.
+          // Usamos id como tiebreaker estável.
+          if (a.updated_at && b.updated_at) {
+            return a.updated_at < b.updated_at ? 1 : -1;
+          }
+          return 0;
+        });
+
+        count = todos.length;
+        data = todos.slice(from, from + porPagina);
+      } else {
+        const q = construirQuery(customerIdsFiltrados ?? undefined).range(from, to);
+        const res = await q;
+        if (res.error) throw res.error;
+        data = res.data || [];
+        count = res.count || 0;
       }
-
-      q = q.range(from, to);
-
-      const { data, error, count } = await q;
-      if (error) throw error;
 
       if (!data || data.length === 0) {
         return {
           motoristas: [],
-          total: count || 0,
+          total: count,
           pagina,
           porPagina,
-          totalPaginas: Math.max(1, Math.ceil((count || 0) / porPagina)),
+          totalPaginas: Math.max(1, Math.ceil(count / porPagina)),
         };
       }
 
       const custIds = data.map((c: any) => c.id);
 
-      // ---------- 3. ENRIQUECIMENTO (stats, branches, profiles emails) ----------
+      // ---------- 3. ENRIQUECIMENTO ----------
       const [statsRes, branchesRes, emailsRes] = await Promise.all([
         supabase.rpc("get_driver_ride_stats", {
           p_brand_id: brandId!,
@@ -200,13 +265,12 @@ export function useListagemMotoristas(params: ParametrosListagem) {
         branch_name: c.branch_id ? branchMap[c.branch_id] || null : null,
       }));
 
-      const total = count || motoristas.length;
       return {
         motoristas,
-        total,
+        total: count,
         pagina,
         porPagina,
-        totalPaginas: Math.max(1, Math.ceil(total / porPagina)),
+        totalPaginas: Math.max(1, Math.ceil(count / porPagina)),
       };
     },
   });

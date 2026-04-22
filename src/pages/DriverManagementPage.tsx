@@ -51,6 +51,7 @@ export default function DriverManagementPage() {
   const motoristas = resultado?.motoristas ?? [];
   const total = resultado?.total ?? 0;
   const totalPaginas = resultado?.totalPaginas ?? 1;
+  const temFiltroAtivo = buscaDebounced.trim() !== "" || status !== "ALL";
 
   const handleBusca = (v: string) => {
     setBusca(v);
@@ -108,7 +109,9 @@ export default function DriverManagementPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Badge className="bg-blue-500/10 text-blue-400 border border-blue-400/30 text-xs whitespace-nowrap">
             <Users className="h-3 w-3 mr-1" />
-            {total.toLocaleString("pt-BR")} motoristas
+            {temFiltroAtivo
+              ? `${total.toLocaleString("pt-BR")} encontrados`
+              : `${total.toLocaleString("pt-BR")} motoristas`}
           </Badge>
           <Button
             variant="outline"
