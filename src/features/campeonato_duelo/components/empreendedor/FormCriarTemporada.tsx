@@ -85,6 +85,15 @@ export default function FormCriarTemporada({
 
   const { mutate, isPending } = useCriarTemporadaCompleta();
 
+  // Bloqueia o submit quando o início do mata-mata é anterior/igual ao fim
+  // da classificação — feedback imediato sem precisar tentar criar.
+  const classEndWatch = form.watch("classificationEndsAt");
+  const knockStartWatch = form.watch("knockoutStartsAt");
+  const conflitoFases =
+    !!classEndWatch &&
+    !!knockStartWatch &&
+    new Date(knockStartWatch) <= new Date(classEndWatch);
+
   function aoSubmeter(values: FormCriarTemporadaInput) {
     const prizesObj = values.prizesPerTier.reduce<
       Record<string, { position: any; points: number }[]>
@@ -199,6 +208,7 @@ export default function FormCriarTemporada({
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={isPending}>
+                <Button type="submit" disabled={isPending || conflitoFases}>
                   {isPending && (
                     <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
                   )}
