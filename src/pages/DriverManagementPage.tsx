@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Truck, Eye, Gift, Download, Users } from "lucide-react";
+import { Truck, Eye, Gift, Download, Users, Loader2 } from "lucide-react";
 import DriverDetailSheet from "@/components/driver-management/DriverDetailSheet";
 import ManualDriverScoringDialog from "@/components/machine-integration/ManualDriverScoringDialog";
 import ModalImportarMotoristas from "@/features/importacao_motoristas/components/modal_importar_motoristas";
@@ -16,6 +16,7 @@ import {
   useListagemMotoristas,
   type StatusFiltro,
 } from "@/features/gestao_motoristas/hooks/hook_listagem_motoristas";
+import { useExportarMotoristas } from "@/features/gestao_motoristas/hooks/hook_exportar_motoristas";
 import BarraBuscaMotoristas from "@/features/gestao_motoristas/components/barra_busca_motoristas";
 import PaginacaoMotoristas from "@/features/gestao_motoristas/components/paginacao_motoristas";
 
@@ -45,6 +46,8 @@ export default function DriverManagementPage() {
     porPagina: POR_PAGINA,
   });
 
+  const { exportar, exportando, progresso } = useExportarMotoristas();
+
   const motoristas = resultado?.motoristas ?? [];
   const total = resultado?.total ?? 0;
   const totalPaginas = resultado?.totalPaginas ?? 1;
@@ -70,28 +73,14 @@ export default function DriverManagementPage() {
   };
 
   const handleExportCsv = () => {
-    if (motoristas.length === 0) return;
-    const header = "Nome,CPF,Telefone,Email,Saldo Pontos,Pontos Corridas,Tier,Pontuação Ativa";
-    const rows = motoristas.map((c: DriverRow) =>
-      [
-        `"${cleanName(c.name).replace(/"/g, '""')}"`,
-        c.cpf || "",
-        c.phone || "",
-        c.email || "",
-        c.points_balance,
-        c.total_ride_points,
-        c.customer_tier || "",
-        c.scoring_disabled ? "Não" : "Sim",
-      ].join(","),
-    );
-    const csv = [header, ...rows].join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `motoristas-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    if (!currentBrandId || total === 0 || exportando) return;
+    exportar({
+      brandId: currentBrandId,
+      branchId: currentBranchId,
+      isBranchScope,
+      busca: buscaDebounced,
+      statusFiltro: status,
+    });
   };
 
   return (
@@ -125,11 +114,25 @@ export default function DriverManagementPage() {
             variant="outline"
             size="sm"
             onClick={handleExportCsv}
-            disabled={motoristas.length === 0}
+            disabled={total === 0 || exportando}
             className="flex-1 sm:flex-none"
           >
-            <Download className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">Exportar </span>CSV
+            {exportando ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-1" />
+            )}
+            {exportando ? (
+              <span>
+                {progresso && progresso.total > 0
+                  ? `${progresso.atual.toLocaleString("pt-BR")} / ${progresso.total.toLocaleString("pt-BR")}`
+                  : "Exportando…"}
+              </span>
+            ) : (
+              <>
+                <span className="hidden sm:inline">Exportar </span>CSV
+              </>
+            )}
           </Button>
           {currentBrandId && (
             <ModalImportarMotoristas
