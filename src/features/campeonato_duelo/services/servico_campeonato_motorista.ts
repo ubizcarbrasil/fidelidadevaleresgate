@@ -33,7 +33,7 @@ export async function obterTemporadaAtivaMotorista(
     p_driver_id: driverId,
   });
   if (error) throw error;
-  return (data as TemporadaAtivaMotorista | null) ?? null;
+  return (data as unknown as TemporadaAtivaMotorista | null) ?? null;
 }
 
 export async function obterRankingCentrado(
@@ -47,7 +47,7 @@ export async function obterRankingCentrado(
     p_range: range,
   });
   if (error) throw error;
-  return ((data as LinhaRankingCentrado[]) ?? []);
+  return ((data as unknown as LinhaRankingCentrado[]) ?? []);
 }
 
 export async function obterTabelaCompletaTier(
@@ -59,7 +59,7 @@ export async function obterTabelaCompletaTier(
     p_driver_id: driverId,
   });
   if (error) throw error;
-  return ((data as LinhaTabelaCompleta[]) ?? []);
+  return ((data as unknown as LinhaTabelaCompleta[]) ?? []);
 }
 
 export async function obterConfrontoAtual(
@@ -71,7 +71,7 @@ export async function obterConfrontoAtual(
     p_driver_id: driverId,
   });
   if (error) throw error;
-  return (data as ConfrontoAtualMotorista | null) ?? null;
+  return (data as unknown as ConfrontoAtualMotorista | null) ?? null;
 }
 
 export async function obterBracketCompleto(
@@ -83,7 +83,7 @@ export async function obterBracketCompleto(
     p_driver_id: driverId,
   });
   if (error) throw error;
-  return ((data as BracketCompletoLinha[]) ?? []);
+  return ((data as unknown as BracketCompletoLinha[]) ?? []);
 }
 
 export async function obterHistoricoMotorista(
@@ -97,5 +97,5 @@ export async function obterHistoricoMotorista(
     p_limit: limit,
   });
   if (error) throw error;
-  return ((data as HistoricoMotoristaItem[]) ?? []);
+  return ((data as unknown as HistoricoMotoristaItem[]) ?? []);
 }
