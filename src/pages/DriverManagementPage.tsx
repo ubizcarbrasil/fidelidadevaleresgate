@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Truck, Eye, Gift, Download, Users, Loader2, ExternalLink } from "lucide-react";
+import { Truck, Eye, Gift, Download, Users, Loader2, ExternalLink, RefreshCw } from "lucide-react";
 import DriverDetailSheet from "@/components/driver-management/DriverDetailSheet";
 import ManualDriverScoringDialog from "@/components/machine-integration/ManualDriverScoringDialog";
 import ModalImportarMotoristas from "@/features/importacao_motoristas/components/modal_importar_motoristas";
+import { useJobEmAndamento } from "@/features/importacao_motoristas/hooks/hook_job_em_andamento";
 import DriverNotificationConfig from "@/components/driver-management/DriverNotificationConfig";
 import { formatPoints } from "@/lib/formatPoints";
 import {
@@ -35,6 +36,10 @@ export default function DriverManagementPage() {
   const buscaDebounced = useDebounce(busca, 300);
 
   const isBranchScope = consoleScope === "BRANCH" && !!currentBranchId;
+
+  const { jobId: jobEmAndamento, recarregar: recarregarJob, limpar: limparJob } =
+    useJobEmAndamento({ brandId: currentBrandId, branchId: isBranchScope ? currentBranchId : null });
+  const [retomandoAberto, setRetomandoAberto] = useState(false);
 
   const { data: resultado, isLoading } = useListagemMotoristas({
     brandId: currentBrandId,
@@ -146,6 +151,34 @@ export default function DriverManagementPage() {
             <ModalImportarMotoristas
               brandId={currentBrandId}
               branchId={isBranchScope ? currentBranchId : null}
+            />
+          )}
+          {currentBrandId && jobEmAndamento && !retomandoAberto && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setRetomandoAberto(true)}
+              className="text-xs gap-1 text-primary"
+              title="Importação em andamento — toque para acompanhar"
+            >
+              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+              <span className="hidden sm:inline">Acompanhar importação</span>
+              <span className="sm:hidden">Em andamento</span>
+            </Button>
+          )}
+          {currentBrandId && jobEmAndamento && (
+            <ModalImportarMotoristas
+              brandId={currentBrandId}
+              branchId={isBranchScope ? currentBranchId : null}
+              jobIdParaAcompanhar={jobEmAndamento}
+              abertoExterno={retomandoAberto}
+              onAbertoChange={(o) => {
+                setRetomandoAberto(o);
+                if (!o) {
+                  limparJob();
+                  void recarregarJob();
+                }
+              }}
             />
           )}
         </div>

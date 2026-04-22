@@ -60,7 +60,10 @@ return ({
         // em landings com benefícios estruturados (motorista-premium / engajamento-motorista).
         // v6 (Landing defesa total) — sanitização completa de metrics/faq/testimonials/screenshots/
         // problems/solutions no ponto de consumo. Força bundle novo nas landings públicas.
-        cacheId: "vale-resgate-v6",
+        // v7 (Importação Motoristas iOS/PWA) — exclui Edge Functions, driver_import_jobs e
+        // operações de Storage do cache do SW. Polling de jobs precisa ser sempre fresco;
+        // antes ficava preso em respostas cacheadas (status=running, processed=0) por 5 min.
+        cacheId: "vale-resgate-v7",
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,jpg,jpeg,webp}"],
@@ -81,13 +84,37 @@ return ({
         skipWaiting: true,
         clientsClaim: true,
         runtimeCaching: [
+          // ==== Edge Functions: NUNCA cachear (invocações sempre frescas) ====
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/functions\/v1\/.*/i,
+            handler: "NetworkOnly",
+            options: {
+              cacheName: "supabase-functions-noop",
+            },
+          },
+          // ==== Polling de jobs de importação: NUNCA cachear ====
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/driver_import_jobs.*/i,
+            handler: "NetworkOnly",
+            options: {
+              cacheName: "supabase-driver-import-jobs-noop",
+            },
+          },
+          // ==== Storage (uploads e URLs assinadas): NUNCA cachear ====
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/v1\/object\/(sign|upload).*/i,
+            handler: "NetworkOnly",
+            options: {
+              cacheName: "supabase-storage-noop",
+            },
+          },
+          // ==== Demais rotas Supabase: cache curto (60s) ====
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
             handler: "NetworkFirst",
             options: {
               cacheName: "supabase-api",
-              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 5 },
-              networkTimeoutSeconds: 10,
+              expiration: { maxEntries: 50, maxAgeSeconds: 60 },
             },
           },
           {
