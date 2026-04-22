@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Truck, Eye, Gift, Download, Users, Loader2 } from "lucide-react";
+import { Truck, Eye, Gift, Download, Users, Loader2, ExternalLink } from "lucide-react";
 import DriverDetailSheet from "@/components/driver-management/DriverDetailSheet";
 import ManualDriverScoringDialog from "@/components/machine-integration/ManualDriverScoringDialog";
 import ModalImportarMotoristas from "@/features/importacao_motoristas/components/modal_importar_motoristas";
@@ -129,12 +129,12 @@ export default function DriverManagementPage() {
               <span>
                 {progresso && progresso.total > 0
                   ? `${progresso.atual.toLocaleString("pt-BR")} / ${progresso.total.toLocaleString("pt-BR")}`
-                  : "Exportando…"}
+                  : "Preparando CSV…"}
               </span>
             ) : arquivoPendente ? (
               <>
-                <Download className="h-4 w-4 mr-1" />
-                Salvar CSV
+                <ExternalLink className="h-4 w-4 mr-1" />
+                Abrir CSV
               </>
             ) : (
               <>
