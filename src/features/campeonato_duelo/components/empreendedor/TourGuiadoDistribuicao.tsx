@@ -1,7 +1,8 @@
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, ArrowRight, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface PassoTour {
   alvo: string; // seletor data-tour
@@ -54,29 +55,69 @@ interface Props {
 }
 
 const PADDING_HALO = 6;
+const MARGEM_VIEWPORT = 12;
+const ESPACO_MIN = 100;
+
+function clamp(valor: number, min: number, max: number) {
+  return Math.max(min, Math.min(valor, max));
+}
+
+function rolarAteAlvo(el: HTMLElement) {
+  // Encontra o container scrollável mais próximo (Dialog ou window)
+  let pai: HTMLElement | null = el.parentElement;
+  while (pai) {
+    const overflow = window.getComputedStyle(pai).overflow +
+      window.getComputedStyle(pai).overflowX +
+      window.getComputedStyle(pai).overflowY;
+    if (/(auto|scroll)/.test(overflow)) {
+      const r = el.getBoundingClientRect();
+      const rPai = pai.getBoundingClientRect();
+      // Centraliza horizontal no container (scroll-x das colunas)
+      const deltaX = r.left - rPai.left - (rPai.width - r.width) / 2;
+      pai.scrollBy({ left: deltaX, behavior: "smooth" });
+      break;
+    }
+    pai = pai.parentElement;
+  }
+  // Garante visibilidade vertical na janela
+  try {
+    el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+  } catch {
+    el.scrollIntoView();
+  }
+}
 
 export default function TourGuiadoDistribuicao({ ativo, aoEncerrar }: Props) {
   const [passoIndex, setPassoIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [tick, setTick] = useState(0);
+  const [tooltipSize, setTooltipSize] = useState({ w: 320, h: 200 });
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const isMobile = useIsMobile();
 
   const passo = PASSOS[passoIndex];
 
   // Recalcula a posição do alvo a cada passo, scroll, resize
   useLayoutEffect(() => {
     if (!ativo || !passo) return;
+    let tentativas = 0;
     function atualizar() {
       const el = document.querySelector(passo.alvo) as HTMLElement | null;
       if (!el) {
         setRect(null);
+        // Se o alvo não existe ainda (DOM ainda montando), tenta de novo
+        if (tentativas < 10) {
+          tentativas += 1;
+          window.setTimeout(atualizar, 150);
+        }
         return;
       }
-      el.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
-      // pequeno delay para o scroll suave
-      requestAnimationFrame(() => {
+      rolarAteAlvo(el);
+      // Espera scroll suave assentar antes de medir
+      window.setTimeout(() => {
         const r = el.getBoundingClientRect();
         setRect(r);
-      });
+      }, 350);
     }
     atualizar();
     window.addEventListener("resize", atualizar);
@@ -88,6 +129,20 @@ export default function TourGuiadoDistribuicao({ ativo, aoEncerrar }: Props) {
       window.clearInterval(id);
     };
   }, [ativo, passoIndex, passo, tick]);
+
+  // Mede o tamanho real do tooltip após render
+  useLayoutEffect(() => {
+    if (!ativo || !tooltipRef.current) return;
+    const r = tooltipRef.current.getBoundingClientRect();
+    if (r.width && r.height) {
+      setTooltipSize((prev) => {
+        if (Math.abs(prev.w - r.width) < 1 && Math.abs(prev.h - r.height) < 1) {
+          return prev;
+        }
+        return { w: r.width, h: r.height };
+      });
+    }
+  }, [ativo, passoIndex, rect, isMobile]);
 
   // Reset ao reativar
   useEffect(() => {
@@ -115,44 +170,75 @@ export default function TourGuiadoDistribuicao({ ativo, aoEncerrar }: Props) {
     if (!isPrimeiro) setPassoIndex((i) => i - 1);
   }
 
-  // Posicionamento do tooltip
+  // Dimensões da viewport
   const viewportW = window.innerWidth;
   const viewportH = window.innerHeight;
-  const TOOLTIP_W = Math.min(320, viewportW - 24);
-  const TOOLTIP_H_EST = 200;
 
-  let top = viewportH / 2 - TOOLTIP_H_EST / 2;
-  let left = viewportW / 2 - TOOLTIP_W / 2;
+  // Tooltip: em mobile vira "bottom sheet" ancorado embaixo
+  const TOOLTIP_W = isMobile
+    ? viewportW - MARGEM_VIEWPORT * 2
+    : Math.min(320, viewportW - MARGEM_VIEWPORT * 2);
+  const TOOLTIP_H = Math.min(tooltipSize.h, viewportH - MARGEM_VIEWPORT * 2);
 
-  if (rect) {
+  let top: number;
+  let left: number;
+
+  if (isMobile) {
+    // Bottom sheet: ancorado na parte inferior
+    left = MARGEM_VIEWPORT;
+    top = viewportH - TOOLTIP_H - MARGEM_VIEWPORT;
+
+    // Se o alvo cair atrás do tooltip, encosta o tooltip no topo
+    if (rect && rect.bottom > top - 8 && rect.top < top) {
+      const espacoCimaSeria = rect.top - MARGEM_VIEWPORT - 8;
+      if (espacoCimaSeria >= TOOLTIP_H) {
+        top = MARGEM_VIEWPORT;
+      }
+    }
+  } else if (rect) {
     const posicao = passo.posicao ?? "auto";
-    const espacoBaixo = viewportH - rect.bottom;
-    const espacoCima = rect.top;
+    const espacoBaixo = viewportH - rect.bottom - MARGEM_VIEWPORT;
+    const espacoCima = rect.top - MARGEM_VIEWPORT;
     const preferirBaixo =
       posicao === "bottom" ||
-      (posicao === "auto" && espacoBaixo >= TOOLTIP_H_EST);
+      (posicao === "auto" && espacoBaixo >= TOOLTIP_H);
 
-    if (preferirBaixo && espacoBaixo >= 120) {
+    if (preferirBaixo && espacoBaixo >= ESPACO_MIN) {
       top = rect.bottom + 12;
-    } else if (espacoCima >= 120) {
-      top = rect.top - TOOLTIP_H_EST - 12;
+    } else if (espacoCima >= ESPACO_MIN) {
+      top = rect.top - TOOLTIP_H - 12;
     } else {
-      top = Math.max(12, viewportH - TOOLTIP_H_EST - 12);
+      top = viewportH - TOOLTIP_H - MARGEM_VIEWPORT;
     }
     left = rect.left + rect.width / 2 - TOOLTIP_W / 2;
-    left = Math.max(12, Math.min(left, viewportW - TOOLTIP_W - 12));
-    top = Math.max(12, Math.min(top, viewportH - TOOLTIP_H_EST - 12));
+    left = clamp(left, MARGEM_VIEWPORT, viewportW - TOOLTIP_W - MARGEM_VIEWPORT);
+    top = clamp(top, MARGEM_VIEWPORT, viewportH - TOOLTIP_H - MARGEM_VIEWPORT);
+  } else {
+    // Sem alvo: centraliza
+    top = viewportH / 2 - TOOLTIP_H / 2;
+    left = viewportW / 2 - TOOLTIP_W / 2;
   }
 
-  // Halo / spotlight via box-shadow gigante (escurece o resto)
-  const halo = rect
-    ? {
-        top: rect.top - PADDING_HALO,
-        left: rect.left - PADDING_HALO,
-        width: rect.width + PADDING_HALO * 2,
-        height: rect.height + PADDING_HALO * 2,
-      }
-    : null;
+  // Halo / spotlight clamped à viewport para nunca "vazar"
+  let halo: { top: number; left: number; width: number; height: number } | null =
+    null;
+  if (rect) {
+    const haloTop = Math.max(rect.top - PADDING_HALO, MARGEM_VIEWPORT / 2);
+    const haloLeft = Math.max(rect.left - PADDING_HALO, MARGEM_VIEWPORT / 2);
+    const haloRight = Math.min(
+      rect.right + PADDING_HALO,
+      viewportW - MARGEM_VIEWPORT / 2,
+    );
+    const haloBottom = Math.min(
+      rect.bottom + PADDING_HALO,
+      viewportH - MARGEM_VIEWPORT / 2,
+    );
+    const w = haloRight - haloLeft;
+    const h = haloBottom - haloTop;
+    if (w > 0 && h > 0) {
+      halo = { top: haloTop, left: haloLeft, width: w, height: h };
+    }
+  }
 
   return createPortal(
     <div
@@ -187,11 +273,14 @@ export default function TourGuiadoDistribuicao({ ativo, aoEncerrar }: Props) {
 
       {/* Tooltip */}
       <div
+        ref={tooltipRef}
         className="absolute pointer-events-auto rounded-lg border border-primary/40 bg-card shadow-2xl"
         style={{
           top,
           left,
           width: TOOLTIP_W,
+          maxHeight: viewportH - MARGEM_VIEWPORT * 2,
+          overflowY: "auto",
         }}
       >
         <div className="flex items-start gap-2 p-3">
