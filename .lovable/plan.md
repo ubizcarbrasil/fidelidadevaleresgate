@@ -1,90 +1,95 @@
 
-# Tornar a escolha de datas do Campeonato clara e previsível no mobile
 
-## O que está acontecendo hoje
+# Calcular automaticamente a duração da Classificação e do Mata-mata em função das séries
 
-A tela não está “bloqueando uma data aleatória” por erro do calendário. O que acontece é que existe uma regra de validação entre as fases:
+## Por que isso é necessário
 
-- **Fim da Classificação** deve acontecer antes do **Início do Mata-mata**
-- **Fim do Mata-mata** deve acontecer depois do **Início do Mata-mata**
+Hoje o empreendedor escolhe livremente as datas de Classificação e Mata-mata, mas a Fase 1 (Classificação) precisa ter dias suficientes para que **todos os motoristas se enfrentem**:
 
-Na sua screenshot, o sistema está com esta combinação:
+- **Modo "Confronto diário"** (round-robin): em uma série de N motoristas, cada dia um motorista enfrenta um adversário diferente. Para todos cruzarem entre si, são necessários **N−1 dias** (ou N se N for ímpar, com folga).
+- **Modo "Pontos corridos"**: não há regra matemática de confronto, mas mantemos um mínimo razoável (igual ao maior tamanho de série) para que a corrida por pontos seja justa.
 
-- Classificação termina em **21/05/2026**
-- Mata-mata começa em **22/05/2026**
-- Mas o Mata-mata termina em **30/04/2026**
-
-Ou seja: o **fim do mata-mata ficou antes do início**, por isso aparece o erro em vermelho e o envio fica travado. Hoje a interface valida isso, mas **não explica bem nem guia a seleção**.
+Além disso, o **Mata-mata só pode começar depois** que a fase de grupos terminar — hoje isso é validado, mas não calculado automaticamente.
 
 ## O que vou ajustar
 
-### 1. Explicar a regra diretamente na tela
-No bloco de datas, vou deixar a orientação mais explícita:
+### 1. Calcular a duração mínima da Classificação
+Com base na **maior série** configurada (ex: A=16, B=12, C=8 → maior = 16):
 
-- Fase 1 precisa terminar antes da Fase 2 começar
-- A data final do mata-mata precisa ser depois da data inicial
-- Se a data ficar incoerente, mostrar mensagem simples em português claro
+- **Confronto diário**: duração mínima = `maior_serie − 1` dias
+- **Pontos corridos**: duração mínima = `maior_serie` dias (mínimo de 7)
 
-### 2. Restringir o calendário para evitar combinações inválidas
-Vou configurar os campos `type="date"` com limites dinâmicos:
+Exemplo: série A com 16 motoristas em modo round-robin → Classificação deve durar pelo menos **15 dias**.
 
-- **Fim da Classificação** não pode ser antes do **Início da Classificação**
-- **Início do Mata-mata** não pode ser no mesmo dia ou antes do **Fim da Classificação**
-- **Fim do Mata-mata** não pode ser antes do **Início do Mata-mata**
+### 2. Ajustar automaticamente o fim da Classificação
+Sempre que o usuário:
+- alterar o **tamanho de uma série**
+- alterar o **modo de pontuação** (pontos corridos ↔ confronto diário)
+- alterar o **início da Classificação**
 
-Assim, no mobile, o calendário já abre mais “guiado”, reduzindo erro antes mesmo da validação.
+…o sistema recalcula o `classificationEndsAt` para garantir a duração mínima, **só empurrando para frente** (nunca encurtando manualmente um período válido maior).
 
-### 3. Autoajustar datas quando uma dependência mudar
-Quando o usuário mudar uma data que quebra a sequência, a tela poderá ajustar o próximo campo automaticamente, por exemplo:
+### 3. Ajustar automaticamente o início e o fim do Mata-mata
+Quando o fim da Classificação for empurrado:
 
-- se mudar o **fim da classificação**, o **início do mata-mata** sobe para o dia seguinte, se necessário
-- se mudar o **início do mata-mata**, o **fim do mata-mata** sobe para a mesma data ou posterior, se necessário
+- `knockoutStartsAt` é movido para **o dia seguinte** ao novo fim da Classificação
+- `knockoutEndsAt` é empurrado para manter pelo menos o intervalo atual entre início e fim do mata-mata (ou um mínimo padrão, ex: 7 dias)
 
-Isso evita o estado confuso em que a pessoa escolhe uma data válida isoladamente, mas outra data antiga continua inválida.
+Isso elimina o estado "datas inconsistentes" que o usuário enfrentou.
 
-### 4. Melhorar o feedback visual no mobile
-Vou destacar melhor qual campo está causando o conflito e trocar mensagens genéricas por mensagens específicas, por exemplo:
+### 4. Mostrar a duração calculada na tela
+No bloco da Fase 1 vou exibir um aviso informativo:
 
-- “O mata-mata precisa começar depois do fim da classificação.”
-- “O fim do mata-mata precisa ser depois do início do mata-mata.”
+> "Esta temporada precisa de no mínimo **15 dias** de classificação para que todos os 16 motoristas da Série A se enfrentem (modo Confronto diário)."
 
-### 5. Revisar a mensagem final de bloqueio do botão
-Se ainda houver erro, o botão “Criar temporada” continua bloqueado, mas com feedback coerente com o problema atual — sem parecer que o calendário não funciona.
+E no bloco do Mata-mata:
+
+> "O Mata-mata começa automaticamente após o fim da Classificação. Você pode estender a data final, mas não antecipá-la."
+
+### 5. Bloquear "encurtamentos" inválidos no calendário
+Os atributos `min` dos inputs já impedem datas anteriores; vou reforçar com:
+
+- `min` dinâmico no `classificationEndsAt` = início da classificação + duração mínima calculada
+- `min` no `knockoutStartsAt` = fim da classificação + 1 dia (já existe, manter)
+- `min` no `knockoutEndsAt` = início do mata-mata + 1 dia (já existe, manter)
 
 ## Arquivos que serão ajustados
 
+- `src/features/campeonato_duelo/utils/utilitarios_campeonato.ts`
+  - novo helper `calcularDuracaoMinimaClassificacao(series, scoringMode): number` (em dias)
+  - novo helper `calcularFimMinimoClassificacao(inicio, dias): string`
+
 - `src/features/campeonato_duelo/components/empreendedor/EditorInformacoesBasicas.tsx`
-  - adicionar `min` / `max` dinâmicos nos campos de data
-  - melhorar mensagens e comportamento reativo entre campos
+  - ler `series` e `scoringMode` do formulário
+  - calcular duração mínima e aplicar como `min` no input do fim da Classificação
+  - autoajustar `classificationEndsAt`, `knockoutStartsAt` e `knockoutEndsAt` quando a duração mínima mudar (via `useEffect`)
+  - exibir banner informativo com a duração calculada e o motivo
+
+- `src/features/campeonato_duelo/components/empreendedor/EditorSeries.tsx`
+  - ao alterar `size` de uma série, disparar revalidação do formulário (já acontece via `register`, garantir `shouldValidate`)
 
 - `src/features/campeonato_duelo/schemas/schema_criar_temporada.ts`
-  - ajustar textos de validação para ficarem mais claros e específicos
-
-- `src/features/campeonato_duelo/utils/utilitarios_campeonato.ts`
-  - adicionar helpers de comparação/ajuste de datas, se necessário, para manter a lógica limpa
+  - adicionar validação no `superRefine` que checa se `classificationEndsAt − classificationStartsAt ≥ duração_mínima`, com mensagem clara em português
 
 ## Resultado esperado
 
-Na prática, você vai conseguir escolher as datas com muito mais clareza porque:
-
-- o calendário vai orientar melhor a ordem correta
-- a tela vai explicar por que uma combinação não pode
-- o formulário vai evitar estados quebrados
-- no mobile, a experiência deixa de parecer “travada” e passa a ser previsível
+- Ao definir o tamanho das séries, a tela já sugere automaticamente a janela mínima da Classificação.
+- Ao trocar o modo de pontuação para "Confronto diário", o fim da Classificação se ajusta sozinho se necessário.
+- O Mata-mata sempre começa **depois** da Classificação, sem que o usuário precise corrigir manualmente.
+- O empreendedor entende **por que** aquela duração mínima foi aplicada (banner explicativo).
 
 ## Detalhes técnicos
 
-Hoje a validação existe em dois níveis:
+Lógica do round-robin "1 confronto por dia":
+- N par → cada motorista joga N−1 dias (basta N−1 rodadas)
+- N ímpar → cada rodada um motorista folga; ainda são N−1 rodadas no mínimo
 
-- no componente `EditorInformacoesBasicas.tsx`, com aviso reativo entre **fim da classificação** e **início do mata-mata**
-- no `schema_criar_temporada.ts`, com validação final:
-  - `classificationStartsAt < classificationEndsAt`
-  - `classificationEndsAt < knockoutStartsAt`
-  - `knockoutStartsAt < knockoutEndsAt`
+Como simplificação operacional, vou usar **N−1 dias** para `daily_matchup` e **N dias (mínimo 7)** para `total_points`.
 
-O problema principal não é a regra de negócio, e sim a **UX da seleção**: os inputs de data ainda não usam limites encadeados, então a pessoa consegue montar uma combinação inconsistente sem perceber imediatamente.
+A propagação será feita com `useEffect` observando `[series, scoringMode, classificationStartsAt]`, sempre **empurrando para frente** (nunca puxando para trás), preservando configurações manuais maiores.
 
 ## Risco e rollback
 
-- **Risco baixo**: mudança concentrada em UX e validação do formulário
-- **Rollback**: remover os limites dinâmicos e voltar ao comportamento atual caso necessário
+- **Risco baixo**: lógica concentrada em UX e validação do formulário de criação.
+- **Rollback**: remover os `useEffect` de propagação e voltar à validação manual atual.
+
