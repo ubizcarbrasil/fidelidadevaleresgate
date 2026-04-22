@@ -15,7 +15,7 @@ import ModeracaoApelidos from "@/components/admin/gamificacao/ModeracaoApelidos"
 import DuelosAoVivoAdmin from "@/components/admin/gamificacao/DuelosAoVivoAdmin";
 import ModalCriarDueloAdmin from "@/components/admin/gamificacao/ModalCriarDueloAdmin";
 import ApostasAdminView from "@/components/admin/gamificacao/ApostasAdminView";
-import PaginaCampeonatoDuelo from "@/features/campeonato_duelo/pagina_campeonato_duelo";
+import PaginaCampeonatoEmpreendedor from "@/features/campeonato_duelo/pagina_campeonato_empreendedor";
 import { Trophy } from "lucide-react";
 
 export default function GamificacaoAdminPage() {
@@ -164,7 +164,7 @@ export default function GamificacaoAdminPage() {
           <ApostasAdminView branchId={branch.id} brandId={branch.brand_id} />
         </TabsContent>
         <TabsContent value="campeonato">
-          <PaginaCampeonatoDuelo branchId={branch.id} brandId={branch.brand_id} />
+          <PaginaCampeonatoEmpreendedor brandId={branch.brand_id} branchId={branch.id} />
         </TabsContent>
         <TabsContent value="ranking">
           <RankingAdminView branchId={branch.id} />
