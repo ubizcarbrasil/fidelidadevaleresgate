@@ -94,6 +94,7 @@ export default function DistribuicaoManualView({
 
   const mover = useMoverMotorista(brandId);
   const remover = useRemoverMotorista(brandId);
+  const [tourAtivo, setTourAtivo] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
