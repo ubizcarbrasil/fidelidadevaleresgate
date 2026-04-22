@@ -1,92 +1,61 @@
 
 
-# Registrar "Campeonato Motorista" como Modelo de Negócio + Módulo
+# Corrigir erro ao trocar formato para "Campeonato"
 
 ## Diagnóstico
 
-O Campeonato Duelo Motorista (Brasileirão dos motoristas — temporadas mensais, séries A/B/C, mata-mata, premiações) está 100% implementado em código (tabelas `duelo_seasons`, `duelo_brackets`, `duelo_champions`, `duelo_season_tiers`, fluxo completo em `src/features/campeonato_duelo/`), mas **nunca foi cadastrado nos catálogos da plataforma**:
+Ao clicar em **Campeonato** no seletor de Formato de engajamento, a UI dispara o RPC `duelo_change_engagement_format`, que falha com:
 
-| Catálogo | Esperado | Hoje |
-|---|---|---|
-| `business_models` | linha `campeonato_motorista` | **não existe** |
-| `business_model_modules` | módulos pré-requisito vinculados | **não existe** |
-| `plan_business_models` | incluído em Free/Starter/Pro/Enterprise | **não existe** |
-| `module_definitions` | módulo `campeonato_motorista` (engajamento, audiência motorista) | **não existe** |
+```
+op ANY/ALL (array) requires array on right side
+```
 
-Por isso, na imagem 1 (lista de modelos do empreendedor) só aparecem Duelo, Cinturão, Aposta e Ranking — **não há "Campeonato"**. O empreendedor não consegue ativar o produto, e ninguém consegue criar ofertas/produtos vinculados a ele.
+**Causa raiz** — bug na função SQL `public.duelo_change_engagement_format` (criada em `20260422002423_…sql`, linha 147):
 
-A ativação hoje só acontece via uma flag escondida (`brand_settings_json.duelo_campeonato_enabled`) acessível pelo card dentro da página do Campeonato — fora do fluxo padrão de Modelos × Planos.
+```sql
+IF NOT (has_role(auth.uid(),'root_admin')
+     OR (p_brand_id = ANY(get_user_brand_ids(auth.uid()))
+         AND has_role(auth.uid(),'brand_admin'))) THEN
+```
+
+A função `public.get_user_brand_ids(uuid)` retorna `SETOF uuid` (um conjunto de linhas), não `uuid[]` (array). O operador `= ANY(...)` exige um **array** do lado direito. Como o que vem é um SET, o Postgres lança o erro acima e o usuário fica preso na tela.
+
+Confirmado por inspeção:
+- `pg_proc` mostra `get_user_brand_ids` com `returns SETOF uuid`
+- Apenas **uma** função em todo o banco usa o padrão errado: `duelo_change_engagement_format` (verificado por `pg_proc.prosrc`)
+- O fluxo de UI funciona (toast de erro genérico aparece corretamente), o servidor é o único ponto a corrigir
 
 ## Solução
 
-### Migration (única) — popula os catálogos
+Migration única que recria `public.duelo_change_engagement_format` trocando o trecho do `ANY(...)` por uma das duas formas válidas com `SETOF`:
 
-1. **`business_models`**: inserir 1 linha
-   - `key = 'campeonato_motorista'`
-   - `name = 'Campeonato Motorista'`
-   - `description = 'Temporadas mensais com séries hierárquicas (A, B, C…), mata-mata e premiações para motoristas — o "Brasileirão" da cidade'`
-   - `audience = 'motorista'`
-   - `icon = 'Trophy'`, `color = '#F59E0B'`, `sort_order = 95` (entre Cinturão e Resgate por Pontos Motorista)
-   - `pricing_model = 'included'`, `is_sellable_addon = true`
+```sql
+-- Antes
+p_brand_id = ANY(get_user_brand_ids(auth.uid()))
 
-2. **`module_definitions`**: inserir 1 linha
-   - `key = 'campeonato_motorista'`, `name = 'Campeonato Motorista'`
-   - `category = 'engajamento'`, `customer_facing = true`, `is_active = true`, `is_core = false`
+-- Depois (usar IN com subquery — idiomático para SETOF)
+p_brand_id IN (SELECT public.get_user_brand_ids(auth.uid()))
+```
 
-3. **`business_model_modules`**: vincular o novo modelo a seus pré-requisitos (mesmo padrão dos demais motorista-models):
-   - `points`, `notifications`, `driver_hub`, `machine_integration`, `achadinhos_motorista`
-   - + o novo módulo `campeonato_motorista` (autoligado)
+Nada mais muda na função: mesmo nome, mesma assinatura, mesmas regras de negócio (validação de formato, bloqueio se houver temporada ativa, log em `duelo_attempts_log`, retorno JSON com `previous_format`/`new_format`/`changed_at`).
 
-4. **`plan_business_models`**: incluir o modelo nos 4 planos padrão (`free`, `starter`, `profissional`, `enterprise`) seguindo o mesmo padrão dos outros modelos motorista.
+### Verificação pós-aplicação
 
-5. **`plan_module_templates`**: incluir o módulo `campeonato_motorista` em todos os planos com `is_enabled = true` (igual aos demais módulos motorista hoje).
-
-6. **Backfill da flag por marca**: para toda `brand` cujo `subscription_plan` esteja em `('starter','profissional','enterprise')`, popular `brand_settings_json.duelo_campeonato_enabled = true` somente se ainda não estiver definido — para que marcas existentes não percam o estado atual nem sejam ativadas sem querer.
-
-### Reaproveitamento da flag existente (sem quebrar nada)
-
-O hook `useDueloCampeonatoHabilitado` continua sendo a fonte da verdade em runtime — ele já lê `brand_settings_json.duelo_campeonato_enabled`. Vamos:
-
-- **Sincronizar bidirecionalmente** o toggle do módulo `campeonato_motorista` em `brand_modules` com a flag `duelo_campeonato_enabled`:
-  - quando o root admin (Central de Módulos → Empreendedores) ativa o módulo `campeonato_motorista` para uma marca → também grava `brand_settings_json.duelo_campeonato_enabled = true`
-  - quando desativa → grava `false`
-  - feito num trigger SQL `AFTER INSERT/UPDATE ON brand_modules` que cuida só desse module key específico
-
-Isso garante que o card "Ativar Campeonato" dentro da página do empreendedor e o toggle na Central de Módulos contam a mesma história, sem precisar alterar nenhum componente React.
-
-### Catálogo de produtos (criar produtos vinculados ao Campeonato)
-
-Hoje o seletor de audiência em ofertas/produtos usa a tabela `business_models` (audiência `motorista`) para listar opções. Como o novo modelo já estará em `business_models`, ele passa a aparecer **automaticamente** no criador de produtos como uma opção de audiência válida — sem mexer em código.
-
-Verificação adicional: confirmar que a página de criação de produtos lê os modelos via `business_models WHERE audience='motorista' AND is_active=true`. Se ainda houver lista hardcoded em algum lugar de Achadinhos/Resgates, ajustar para também considerar o novo modelo.
-
-### Resultado esperado
-
-Depois da migration, no console do Root Admin:
-
-- **Aba Catálogo**: aparece o módulo "Campeonato Motorista" (categoria Engajamento)
-- **Aba Modelos**: aparece o card "Campeonato Motorista" no grupo Motorista
-- **Aba Modelos × Planos**: aparece como linha selecionável em Free/Starter/Pro/Enterprise
-- **Aba Empreendedores**: ao abrir uma marca, aparece o toggle "Campeonato Motorista" na seção Engajamento, ligado por padrão se o plano da marca o inclui
-- **Aba Cidades** (override por cidade): aparece como módulo disponível para forçar ON/OFF por cidade
-- **Página do Campeonato (empreendedor)**: o card "Ativar Campeonato" continua funcionando — ele agora reflete o mesmo estado do toggle global
-
-E no fluxo de produtos:
-
-- **Criador de produto/oferta**: surge "Campeonato Motorista" como audiência selecionável, permitindo criar premiações, vouchers e ofertas vinculadas ao campeonato
+1. Empreendedor abre **Painel → Campeonato → Formato de engajamento**
+2. Toca em **Campeonato** → toast verde "Formato alterado com sucesso"
+3. Card "Formato atual diferente de Campeonato" desaparece e aparece o painel de criação de temporada
+4. Tentativa de troca com temporada ativa continua dando o erro de negócio correto ("Não é possível trocar formato com temporada ativa")
 
 ## Arquivos impactados
 
-**Migration (1 nova):**
-- `supabase/migrations/<timestamp>_registrar_campeonato_motorista.sql` — todos os inserts + trigger de sincronização da flag legada
+**Migration nova (1):**
+- `supabase/migrations/<timestamp>_fix_duelo_change_engagement_format.sql` — recria a função com o `IN (SELECT ...)` corrigido
 
-**Edição (0 ou 1):**
-- Se a verificação confirmar lista hardcoded de modelos motorista em algum criador de produto, ajustar 1 arquivo para usar a tabela `business_models` como fonte. Caso contrário, **zero arquivos editados** — só migration.
+**Sem mudança em código TypeScript** — o hook `useTrocarFormatoEngajamento` e o serviço `trocarFormatoEngajamento` já estão corretos, só consomem o RPC.
 
 ## Risco e rollback
 
-- **Risco baixo**: migration apenas adiciona linhas em catálogos e cria 1 trigger pontual.
-- Marcas existentes não mudam de estado: o backfill respeita `duelo_campeonato_enabled` já definido.
-- Flags em código (`USE_DUELO_CAMPEONATO`) ficam inalteradas — continuam servindo de "kill switch" global.
-- **Rollback**: down migration remove o trigger, as 2 linhas de `business_models`/`module_definitions` e suas FKs em cascade limpam o resto.
+- **Risco zero**: a função é recriada via `CREATE OR REPLACE`, mantendo assinatura, permissões e dependentes intactos.
+- Lógica de autorização permanece idêntica — só muda a sintaxe de comparação com a lista de marcas do usuário.
+- **Rollback**: down trivial reaplicando o `CREATE OR REPLACE` antigo (preservado no histórico de migrations).
 
