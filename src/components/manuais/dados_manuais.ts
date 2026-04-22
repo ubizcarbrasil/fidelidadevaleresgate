@@ -1965,6 +1965,28 @@ export const gruposManuaisFranqueado: GrupoManual[] = [
     scoringFilter: "DRIVER" as const,
     manuais: [
       {
+        id: "gamif-campeonato-ativacao",
+        titulo: "Como ativar o Campeonato Duelo Motorista",
+        descricao: "Passo a passo completo para ligar o Campeonato (temporadas mensais com séries hierárquicas A, B, C…) na sua marca. O Campeonato é uma evolução do Duelo simples, com classificação, mata-mata, hall da fama e prêmios distribuídos automaticamente.",
+        comoAtivar: "Acesse 'Gamificação' no menu lateral, escolha a cidade e abra a aba 'Campeonato'.",
+        passos: [
+          "Acesse 'Gamificação' no menu lateral do painel do empreendedor.",
+          "Selecione a cidade na qual deseja operar o Campeonato.",
+          "Abra a aba 'Campeonato' no topo da página.",
+          "Clique em 'Ativar Campeonato' no card de ativação (aparece sempre que a marca ainda não está habilitada).",
+          "No seletor de formato logo abaixo, troque para 'Campeonato' (sem isso, o sistema continua operando em Duelo simples).",
+          "Clique em '+ Criar temporada' e preencha o Accordion de 4 seções: Informações básicas, Séries, Prêmios e Revisão. Use o template 'Padrão' para configuração automática de séries A/B/C/D.",
+          "Após criar, o cron horário do servidor cuida de tudo: avança fases, monta brackets, distribui prêmios, registra campeões e abre próxima temporada quando esta finalizar.",
+        ],
+        dicas: [
+          "A ativação por marca é independente do formato: você pode ativar o Campeonato e ainda manter Duelo simples como formato corrente até estar pronto para virar a chave.",
+          "Desativar o Campeonato no card de ativação NÃO cancela temporadas em curso — ele apenas esconde os menus para empreendedor e motoristas. Ao reativar, tudo volta exatamente como estava.",
+          "Para cancelar uma temporada (com refund de prêmios), use o botão 'Cancelar temporada' no painel de ações da temporada ativa, não o desativar do card.",
+          "Toda ativação/desativação fica registrada no log de auditoria do duelo (`brand_campeonato_toggled`).",
+        ],
+        rota: "/gamificacao",
+      },
+      {
         id: "gamif-ativacao-modulo",
         titulo: "Ativação do Módulo de Gamificação",
         descricao: "Aprenda a ativar e configurar o módulo de Duelos, Ranking e Cinturão na sua cidade. Cada funcionalidade pode ser ligada ou desligada individualmente.",
