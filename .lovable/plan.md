@@ -1,105 +1,101 @@
 
 
-# Corrigir importação de planilha no iPhone/PWA + endurecer fluxo
+# Importação de motoristas resiliente para iPhone/PWA
 
-## Diagnóstico
+## Diagnóstico (o que está acontecendo de verdade)
 
-A importação de planilha não está com bug no servidor — os dois últimos jobs no banco terminaram com sucesso (2.566 e 1.706 linhas, 0 erros). O problema é **na camada do app no iPhone PWA standalone**, e tem 3 causas combinadas:
+**O servidor está 100% funcional**: as duas últimas importações no banco terminaram com sucesso — 2.566 linhas em 17s e 1.706 linhas em 3min, ambas com `error_count = 0`.
 
-### 1. Service Worker está sequestrando o polling do job (causa principal)
+O problema é exclusivamente no caminho cliente → servidor no **iPhone em PWA standalone**:
 
-`vite.config.ts` configura `runtimeCaching` para **todas** as chamadas Supabase como `NetworkFirst` com cache de 5 minutos:
-
-```text
-urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i
-handler: "NetworkFirst"
-networkTimeoutSeconds: 10
-maxAgeSeconds: 60 * 5
-```
-
-O loop `acompanharJob()` faz polling em `/rest/v1/driver_import_jobs?id=eq.<jobId>` a cada 1,5s. No iPhone PWA:
-
-- Primeiro polling → SW armazena resposta `{status:"running", processed_rows:0}` no cache `supabase-api`
-- Próximos pollings → SW devolve a **mesma resposta cacheada** por até 5 minutos (NetworkFirst com timeout de 10s frequentemente cai pro cache em rede móvel)
-- Resultado: barra de progresso fica em 0%, status nunca muda de "running" → usuário acha que travou e fecha
-
-Na imagem do usuário "deu o mesmo" — é o mesmo padrão visual do export anterior: app fica travado, sem feedback claro.
-
-### 2. Falta de feedback quando o picker do iOS retorna nada
-
-`etapa_upload.tsx` resetar `e.target.value = ""` ANTES do `if (!file)` — se o usuário cancela o picker no iOS PWA, não acontece nada visível. Soma com o item 1 dá sensação de "não funciona".
-
-### 3. Sem botão "Voltar / Atualizar status" na etapa de progresso
-
-Se o polling realmente travar (cache, perda de rede, app em background), o usuário não tem como destravar. `etapa_progresso.tsx` só tem spinner.
+1. **Export antigo cacheado (imagem 1, "Não foi possível abrir o compartilhamento nativo")** — o iPhone do usuário ainda está rodando o bundle antigo (Service Worker v6) porque o novo SW (v7) só é ativado depois de fechar a PWA totalmente. Por isso a mensagem de erro mostrada é de uma versão de código que nem existe mais no projeto.
+2. **Import via `<input type=file>` + `functions.invoke()`** — o iOS PWA tem dois problemas:
+   - Pode aceitar a planilha pelo seletor mas devolver `file.size = 0` quando o arquivo vem do Mail/WhatsApp.
+   - O `supabase.functions.invoke()` envia o JSON inteiro com 5.000 linhas no body — em rede móvel, o Safari fecha a conexão silenciosamente em ~30s e o `await` nunca resolve. Para o usuário, "não acontece nada".
+3. **Sem feedback de "como tirar a versão velha do PWA"** — o usuário não sabe que precisa fechar a aba e reabrir.
 
 ## Solução
 
-### 1. Excluir Edge Functions e tabela de jobs do cache do Service Worker
+### 1. Forçar a saída do SW antigo no iPhone (efeito imediato)
 
-Em `vite.config.ts`, separar regras de cache:
+- Bump de `cacheId` para `vale-resgate-v8` em `vite.config.ts`.
+- Adicionar `clientsClaim: true` e `skipWaiting: true` no Workbox para que o SW novo assuma sem precisar fechar o app.
+- Adicionar pequeno banner discreto no topo da página de Motoristas dizendo "Nova versão pronta — toque para atualizar" quando detectar SW novo aguardando.
 
-- `/functions/v1/*` → **NetworkOnly** (nunca cachear, nunca timeout — invocações de edge function)
-- `/rest/v1/driver_import_jobs*` → **NetworkOnly** (polling de jobs precisa ser sempre fresco)
-- `/storage/v1/object/sign/*` e `/storage/v1/object/upload/*` → **NetworkOnly** (uploads e URLs assinadas)
-- Demais rotas Supabase → manter `NetworkFirst` mas reduzir cache para 60s e remover `networkTimeoutSeconds` agressivo (15s ou sem timeout)
-- Bump do `cacheId` para `vale-resgate-v7` para invalidar SW antigo no iPhone
+### 2. Trocar o caminho do upload de planilha (paralelo ao que fizemos no export)
 
-### 2. Endurecer o hook `useImportarMotoristas.acompanharJob`
+Hoje: `lê arquivo no browser → manda 5.000 linhas em JSON pra edge function → polling`.
+Novo: `lê arquivo → upload do arquivo bruto pro Storage → edge function lê do Storage → polling`.
 
-- Adicionar `cache: "no-store"` e `headers: { "Cache-Control": "no-cache, no-store" }` na query de polling
-- Trocar query Supabase pelo cliente direto com `.select(...).eq(...).single()` mais um parâmetro `?_t=Date.now()` para forçar bypass de cache até em proxies legados
-- Adicionar timeout de segurança: se 60s passarem sem evolução em `processed_rows`, mostrar aviso "Sem resposta do servidor — atualize a página". Não cancela o job (ele continua no servidor) mas avisa o usuário
-- Adicionar tentativa máxima de 20 minutos absoluta antes de desistir do polling
+**Por que resolve no iPhone:**
+- Upload pro Storage usa `fetch` chunked nativo do navegador — funciona em rede móvel mesmo com o app em background.
+- O JSON gigante deixa de trafegar pelo `functions.invoke()`, que é o passo frágil.
+- A edge function lê o arquivo já hospedado e processa do mesmo jeito que hoje (chunks de 500).
 
-### 3. Melhorar UX de erro/recuperação na importação
+**Implementação:**
+- Novo bucket privado `importacoes-motoristas` com RLS por `auth.uid()` (mesmo padrão de `exportacoes-motoristas`).
+- Front: depois do parse local, salvar a planilha como JSON normalizado (`linhas-mapeadas.json`) e fazer `upload()` pro Storage.
+- `iniciarImportacao()` chama a edge function passando apenas `{ brand_id, branch_id, storage_path }` — payload pequeno, não estoura timeout do invoke.
+- Edge function `import-drivers-bulk` ganha um caminho alternativo: se receber `storage_path` em vez de `rows`, baixa do Storage e processa. A lógica de chunk/match continua idêntica.
 
-- `etapa_upload.tsx`:
-  - Reset do `value` só DEPOIS de tratar o arquivo
-  - Toast informativo se o iOS retornar arquivo vazio (`size === 0`)
-  - Validar `file.size > 0` antes de tentar parsear
-  - Mensagem específica para iPhone: "No iPhone, escolha o arquivo em **Arquivos** → **iCloud Drive** ou **No meu iPhone**"
-  
-- `etapa_progresso.tsx`:
-  - Adicionar botão "Atualizar status" (consulta o job manualmente)
-  - Adicionar botão "Fechar e continuar em segundo plano" — fecha o modal mas mostra um toast persistente "Importação em andamento" com link para conferir depois
-  - Mostrar `job_id` curto para rastreabilidade
+### 3. Robustecer o seletor de arquivo no iPhone
 
-- `modal_importar_motoristas.tsx`:
-  - Capturar erro do `acompanharJob` e voltar para etapa "resultado" com mensagem amigável em vez de spinner infinito
+- Detectar `file.size === 0` e mostrar mensagem clara: "O iPhone devolveu arquivo vazio. Salve a planilha em **Arquivos → No meu iPhone** antes de importar."
+- Aceitar também `text/csv`, `text/plain` e `application/vnd.ms-excel` no atributo `accept` (alguns CSVs do Excel para Mac chegam com MIME `text/plain`).
+- Botão "Colar conteúdo CSV" como fallback: o usuário copia o CSV e cola num textarea — bypassa totalmente o seletor de arquivo do iOS quando ele falha.
 
-### 4. Acrescentar botão "Conferir última importação" na página
+### 4. Tornar o "Acompanhar importação" mais visível
 
-Em `DriverManagementPage.tsx`, ao lado de "Importar planilha", adicionar um pequeno indicador discreto que aparece quando há um `driver_import_jobs` recente do usuário com status `running`. Clicar abre o modal direto na etapa de progresso com aquele `jobId` — recupera importação que travou no celular.
+- Quando há job em `pending` ou `running` da última 1h, mostrar um card no topo da página (não só o botãozinho) com:
+  - Linhas processadas / total
+  - Botão "Atualizar status"
+  - Botão "Continuar em segundo plano"
+  - Aviso: "Você pode fechar o app — a importação continua no servidor."
+
+### 5. Cobertura por testes automáticos (regressão)
+
+- **Unit** em `parser_planilha.ts`: detecção de `file.size = 0`, MIME variantes, parse de XLSX/CSV.
+- **Hook** `useImportarMotoristas`: garantir que o `iniciarImportacao` chama upload de Storage e NUNCA envia `rows` no body quando o arquivo passa do limite de payload.
+- **E2E (vitest+jsdom simulando iPhone PWA)**:
+  - simula `navigator.standalone = true` + UA iPhone
+  - dispara importação com 1.000 linhas
+  - valida que houve `storage.upload()` e que o `functions.invoke` recebeu apenas `storage_path`, não `rows`
+  - valida que o estado evolui pra `progresso` e que o polling usa `cache:"no-store"`
 
 ## Arquivos impactados
 
-**Editados (4):**
+**Editados (6):**
+- `vite.config.ts` — `cacheId: vale-resgate-v8`, `clientsClaim`, `skipWaiting`.
+- `src/features/importacao_motoristas/hooks/hook_importar_motoristas.ts` — fluxo via Storage.
+- `src/features/importacao_motoristas/components/etapa_upload.tsx` — validação `file.size`, fallback "Colar CSV", MIMEs estendidos.
+- `src/features/importacao_motoristas/components/modal_importar_motoristas.tsx` — capturar erros do upload.
+- `src/pages/DriverManagementPage.tsx` — card "Importação em andamento" no topo + banner "atualizar versão" quando SW novo aguardando.
+- `supabase/functions/import-drivers-bulk/index.ts` — aceitar `storage_path` como entrada alternativa, baixando o JSON do bucket.
 
-- `vite.config.ts` — separar regras de cache do SW para edge functions / driver_import_jobs / storage; bump `cacheId` v6 → v7
-- `src/features/importacao_motoristas/hooks/hook_importar_motoristas.ts` — polling resistente a cache, timeout de 20min, retorno de erro recuperável, suporte a "anexar a job existente"
-- `src/features/importacao_motoristas/components/etapa_upload.tsx` — validação `file.size > 0`, dica iOS, reset correto do input
-- `src/features/importacao_motoristas/components/etapa_progresso.tsx` — botões "Atualizar" e "Continuar em segundo plano"
-- `src/features/importacao_motoristas/components/modal_importar_motoristas.tsx` — fluxo de erro amigável, suporte a reabrir modal em job existente
-- `src/pages/DriverManagementPage.tsx` — indicador "importação em andamento" + atalho para retomar
+**Novos (3):**
+- `src/features/importacao_motoristas/utils/upload_planilha_storage.ts` — wrapper para subir o JSON normalizado.
+- `src/features/importacao_motoristas/utils/__tests__/parser_planilha.test.ts` — testes do parser.
+- `src/features/importacao_motoristas/hooks/__tests__/hook_importar_motoristas.test.ts` — testes do hook + cenário iPhone PWA.
 
-**Sem migration. Sem mudança em RLS. Sem mudança no edge function `import-drivers-bulk` (que já funciona).**
+**Migration (1):**
+- Bucket privado `importacoes-motoristas` + RLS por `auth.uid()` (insert/select/delete só do dono, igual ao bucket de export).
 
-## Resultado esperado
+**Sem alteração em RLS de tabelas, sem mudança no schema dos jobs.**
 
-| Ação no iPhone PWA | Antes | Depois |
+## Resultado esperado no iPhone PWA
+
+| Ação | Antes | Depois |
 |---|---|---|
-| Tocar "Importar planilha" → escolher CSV | Picker abre | Igual |
-| Confirmar importação | Spinner trava em 0% por causa do SW cache | Barra avança em tempo real |
-| Sair do app durante importação | Volta e vê 0% (cache) | Volta e vê progresso real ou "concluído" |
-| Cancelar picker do iOS | Nada acontece (parece bug) | Modal continua aberto, sem erro |
-| Polling demora ou trava | Spinner infinito | Botão "Atualizar status" + "Continuar em segundo plano" |
-| Página recarregada com job em curso | Perde referência | Indicador "Importação em andamento — toque para acompanhar" |
+| Abrir app pela manhã | SW v6 cacheado, mensagem antiga "compartilhamento nativo" | SW v8 assume na hora; banner discreto se houver atualização |
+| Importar planilha 4.000 linhas | `invoke()` morre em 30s, nada acontece | Upload do JSON ao Storage (~3s) + edge processa em background |
+| Selecionar CSV vindo do WhatsApp | `file.size = 0`, sem erro | Toast claro: "salve em Arquivos antes" |
+| App vai pra background no meio | Perde polling | Edge segue processando; ao voltar, card mostra status real |
+| Polling trava | Spinner infinito | Botão "Atualizar status" + "Continuar em segundo plano" |
 
 ## Risco e rollback
 
-- **Cache do SW**: bump de `cacheId` força todos os usuários a baixarem novo bundle uma vez. Sem efeito em dados.
-- **Polling**: mudança é puramente de cliente; servidor continua igual.
-- Rollback: reverter os 5 arquivos.
-- Sem efeito em outras features (cache do SW para Supabase em geral fica mais permissivo, não restritivo — só removemos das rotas problemáticas).
+- **SW**: bump força recarregamento de bundle uma única vez por usuário. Sem efeito em dados.
+- **Edge function**: aceita os dois formatos (`rows` legado E `storage_path` novo) — zero regressão em quem ainda usa o caminho antigo.
+- **Bucket novo**: isolado por `auth.uid()` via RLS. Pode ser dropado sem afetar outros buckets.
+- Rollback trivial: reverter os 6 arquivos + remover bucket via migration.
 
