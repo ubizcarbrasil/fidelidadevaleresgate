@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Trophy, Swords } from "lucide-react";
 import { NOMES_MESES } from "../../constants/constantes_campeonato";
 import type { FormCriarTemporadaInput } from "../../schemas/schema_criar_temporada";
 import LabelComAjuda from "./LabelComAjuda";
@@ -26,6 +26,8 @@ export default function EditorInformacoesBasicas() {
     !!classEnd &&
     !!knockStart &&
     new Date(knockStart) <= new Date(classEnd);
+
+  const scoringMode = form.watch("scoringMode");
 
   return (
     <div className="space-y-4">
@@ -158,6 +160,99 @@ export default function EditorInformacoesBasicas() {
           <p className="text-xs text-destructive">
             {errors.knockoutStartsAt.message as string}
           </p>
+        )}
+      </div>
+
+      <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Modo de pontuação da Classificação
+          </p>
+          <p className="text-[11px] leading-snug text-muted-foreground mt-1">
+            Define como os motoristas acumulam pontos durante a fase de
+            classificação. Não pode ser alterado depois.
+          </p>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => form.setValue("scoringMode", "total_points")}
+            className={`text-left rounded-md border p-3 transition-colors ${
+              scoringMode === "total_points"
+                ? "border-primary bg-primary/10"
+                : "border-border bg-background hover:border-primary/40"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Trophy className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold">Pontos corridos</span>
+            </div>
+            <p className="text-[11px] leading-snug text-muted-foreground">
+              +1 ponto por corrida finalizada. Modelo padrão e simples.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => form.setValue("scoringMode", "daily_matchup")}
+            className={`text-left rounded-md border p-3 transition-colors ${
+              scoringMode === "daily_matchup"
+                ? "border-primary bg-primary/10"
+                : "border-border bg-background hover:border-primary/40"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Swords className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold">Confronto diário</span>
+            </div>
+            <p className="text-[11px] leading-snug text-muted-foreground">
+              Round-robin diário: todos contra todos da série. Vitória/Empate/Derrota
+              configuráveis.
+            </p>
+          </button>
+        </div>
+
+        {scoringMode === "daily_matchup" && (
+          <div className="space-y-2 pt-1">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              Pontos por resultado diário
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs">Vitória</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  {...form.register("scoringConfig.win", { valueAsNumber: true })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Empate</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  {...form.register("scoringConfig.draw", { valueAsNumber: true })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Derrota</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  {...form.register("scoringConfig.loss", { valueAsNumber: true })}
+                />
+              </div>
+            </div>
+            <p className="text-[11px] leading-snug text-muted-foreground">
+              No fim de cada dia, cada motorista da série é comparado com todos os
+              demais por número de corridas finalizadas. Ganha quem tiver mais
+              corridas; empata se for igual.
+            </p>
+          </div>
         )}
       </div>
     </div>

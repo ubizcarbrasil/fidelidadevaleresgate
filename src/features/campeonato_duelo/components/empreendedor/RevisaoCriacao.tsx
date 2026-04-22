@@ -26,6 +26,23 @@ export default function RevisaoCriacao() {
 
       <div>
         <p className="text-xs uppercase tracking-wider text-muted-foreground">
+          Modo de pontuação
+        </p>
+        {v.scoringMode === "daily_matchup" ? (
+          <p className="text-xs">
+            <span className="font-semibold">Confronto diário</span> · V{" "}
+            {v.scoringConfig?.win ?? 3} / E {v.scoringConfig?.draw ?? 1} / D{" "}
+            {v.scoringConfig?.loss ?? 0}
+          </p>
+        ) : (
+          <p className="text-xs">
+            <span className="font-semibold">Pontos corridos</span> · +1 por corrida
+          </p>
+        )}
+      </div>
+
+      <div>
+        <p className="text-xs uppercase tracking-wider text-muted-foreground">
           Séries ({v.series?.length ?? 0})
         </p>
         <div className="mt-1 flex flex-wrap gap-1">

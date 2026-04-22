@@ -46,6 +46,14 @@ export const schemaCriarTemporada = z
     knockoutEndsAt: z.string().min(1, "Obrigatório"),
     series: z.array(schemaSerie).min(2, "Mínimo 2 séries").max(8, "Máximo 8 séries"),
     prizesPerTier: z.array(schemaPremiosTier).min(1),
+    scoringMode: z.enum(["total_points", "daily_matchup"]).default("total_points"),
+    scoringConfig: z
+      .object({
+        win: z.coerce.number().int().min(0, "≥ 0").max(100, "≤ 100"),
+        draw: z.coerce.number().int().min(0, "≥ 0").max(100, "≤ 100"),
+        loss: z.coerce.number().int().min(0, "≥ 0").max(100, "≤ 100"),
+      })
+      .default({ win: 3, draw: 1, loss: 0 }),
   })
   .superRefine((val, ctx) => {
     // 1. Datas: classificação antes do mata-mata
