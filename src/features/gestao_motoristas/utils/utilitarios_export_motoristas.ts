@@ -58,14 +58,69 @@ export function gerarCsvMotoristas(motoristas: DriverRow[]): Blob {
 
 /**
  * Dispara download do CSV no navegador.
+ * Estratégia em cascata para máxima compatibilidade:
+ *   1. Web Share API (mobile / iOS PWA / Android) — abre share sheet nativo.
+ *   2. <a download> clássico — desktop.
+ *   3. window.open(blobUrl) — fallback final.
+ *
+ * Retorna o "modo" usado para o caller ajustar a mensagem de feedback.
  */
-export function baixarCsvMotoristas(blob: Blob, nomeArquivo: string): void {
+export type ModoDownload = "share" | "download" | "nova-aba";
+
+const ehStandalonePWA = (): boolean => {
+  if (typeof window === "undefined") return false;
+  const matchStandalone = window.matchMedia?.("(display-mode: standalone)").matches ?? false;
+  const iosStandalone = (window.navigator as any).standalone === true;
+  return matchStandalone || iosStandalone;
+};
+
+export async function baixarCsvMotoristas(
+  blob: Blob,
+  nomeArquivo: string,
+): Promise<ModoDownload> {
+  // Estratégia 1: Web Share API com arquivo (preferida em mobile/PWA)
+  try {
+    const file = new File([blob], nomeArquivo, { type: "text/csv" });
+    const navAny = navigator as any;
+    const podeCompartilharArquivo =
+      typeof navAny.share === "function" &&
+      typeof navAny.canShare === "function" &&
+      navAny.canShare({ files: [file] });
+
+    if (podeCompartilharArquivo) {
+      await navAny.share({
+        files: [file],
+        title: nomeArquivo,
+      });
+      return "share";
+    }
+  } catch (err: any) {
+    // AbortError = usuário cancelou o sheet → propaga para o hook tratar.
+    if (err?.name === "AbortError") throw err;
+    // Outros erros: cai para próxima estratégia.
+  }
+
+  // Em PWA standalone iOS, <a download> não funciona — pula direto para nova aba.
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = nomeArquivo;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+
+  if (!ehStandalonePWA()) {
+    // Estratégia 2: <a download> clássico (desktop e Android Chrome fora do PWA)
+    try {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = nomeArquivo;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      return "download";
+    } catch {
+      // cai para fallback
+    }
+  }
+
+  // Estratégia 3: abrir em nova aba para o usuário salvar manualmente
+  window.open(url, "_blank");
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  return "nova-aba";
 }
