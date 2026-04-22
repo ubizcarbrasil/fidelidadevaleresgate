@@ -8,15 +8,30 @@ import EtapaPreview from "./etapa_preview";
 import EtapaProgresso from "./etapa_progresso";
 import EtapaResultado from "./etapa_resultado";
 import { useImportarMotoristas } from "../hooks/hook_importar_motoristas";
-import type { EtapaImportacao } from "../types/tipos_importacao";
+import { ImportacaoTimeoutError, type EtapaImportacao, type ResultadoImportacao } from "../types/tipos_importacao";
 
 interface Props {
   brandId: string;
   branchId?: string | null;
+  /** Permite abrir o modal externamente já apontando para um job em andamento. */
+  jobIdParaAcompanhar?: string | null;
+  abertoExterno?: boolean;
+  onAbertoChange?: (aberto: boolean) => void;
 }
 
-export default function ModalImportarMotoristas({ brandId, branchId }: Props) {
-  const [aberto, setAberto] = useState(false);
+export default function ModalImportarMotoristas({
+  brandId,
+  branchId,
+  jobIdParaAcompanhar,
+  abertoExterno,
+  onAbertoChange,
+}: Props) {
+  const [abertoInterno, setAbertoInterno] = useState(false);
+  const aberto = abertoExterno ?? abertoInterno;
+  const setAberto = (v: boolean) => {
+    if (onAbertoChange) onAbertoChange(v);
+    else setAbertoInterno(v);
+  };
   const [etapa, setEtapa] = useState<EtapaImportacao>("upload");
   const importer = useImportarMotoristas({ brandId, branchId });
 
@@ -24,17 +39,73 @@ export default function ModalImportarMotoristas({ brandId, branchId }: Props) {
     if (importer.erro) toast.error(importer.erro);
   }, [importer.erro]);
 
+  /** Acompanha um job já existente (id), tratando timeout amigável. */
+  const acompanharComTratamento = async (id: string) => {
+    try {
+      const final = await importer.acompanharJob(id);
+      setEtapa("resultado");
+      if (final.status === "done") {
+        const sucesso = final.created_count + final.updated_count;
+        toast.success(`${sucesso} motorista(s) processados!`);
+      }
+    } catch (err) {
+      if (err instanceof ImportacaoTimeoutError) {
+        toast.error(
+          "Sem resposta do servidor. A importação pode estar continuando — toque em 'Atualizar status' ou recarregue a página.",
+          { duration: 8000 }
+        );
+        // Não fecha modal — usuário pode atualizar manualmente.
+      } else {
+        toast.error("Erro ao acompanhar importação.");
+        setEtapa("resultado");
+      }
+    }
+  };
+
   const handleConfirmar = async () => {
     const id = await importer.iniciarImportacao();
     if (!id) return;
     setEtapa("progresso");
-    const final = await importer.acompanharJob(id);
-    setEtapa("resultado");
-    if (final.status === "done") {
-      const sucesso = final.created_count + final.updated_count;
-      toast.success(`${sucesso} motorista(s) processados!`);
+    await acompanharComTratamento(id);
+  };
+
+  /** Consulta manual ao servidor (botão "Atualizar status"). */
+  const handleAtualizarStatus = async () => {
+    const id = importer.jobId ?? jobIdParaAcompanhar ?? null;
+    if (!id) return;
+    const r = await importer.consultarJob(id);
+    if (!r) {
+      toast.error("Não foi possível consultar o status agora.");
+      return;
+    }
+    if (r.status === "done" || r.status === "error") {
+      setEtapa("resultado");
+      if (r.status === "done") {
+        const sucesso = r.created_count + r.updated_count;
+        toast.success(`${sucesso} motorista(s) processados!`);
+      }
+    } else {
+      toast.message(`Em andamento: ${r.processed_rows} de ${r.total_rows} linhas`);
     }
   };
+
+  const handleSegundoPlano = () => {
+    toast.message("Importação continua em segundo plano.", {
+      description: "Toque em 'Importar planilha' depois para acompanhar.",
+      duration: 6000,
+    });
+    setAberto(false);
+  };
+
+  // Quando recebido um jobId externo, anexa e começa a acompanhar.
+  useEffect(() => {
+    if (aberto && jobIdParaAcompanhar && !importer.jobId) {
+      importer.anexarJobExistente(jobIdParaAcompanhar);
+      setEtapa("progresso");
+      void acompanharComTratamento(jobIdParaAcompanhar);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aberto, jobIdParaAcompanhar]);
 
   const fechar = () => {
     setAberto(false);
@@ -59,10 +130,13 @@ export default function ModalImportarMotoristas({ brandId, branchId }: Props) {
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setAberto(true)}>
-        <Upload className="h-4 w-4 mr-1" />
-        Importar planilha
-      </Button>
+      {/* Quando o componente é controlado externamente, não renderiza o botão. */}
+      {abertoExterno === undefined && (
+        <Button variant="outline" size="sm" onClick={() => setAberto(true)}>
+          <Upload className="h-4 w-4 mr-1" />
+          Importar planilha
+        </Button>
+      )}
 
       <Dialog open={aberto} onOpenChange={(open) => !open && etapa !== "progresso" && fechar()}>
         <DialogContent className="max-w-2xl w-[calc(100vw-1rem)] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
@@ -99,7 +173,13 @@ export default function ModalImportarMotoristas({ brandId, branchId }: Props) {
           )}
 
           {etapa === "progresso" && (
-            <EtapaProgresso resultado={importer.resultado} totalLinhas={importer.linhasBrutas.length} />
+            <EtapaProgresso
+              resultado={importer.resultado}
+              totalLinhas={importer.linhasBrutas.length}
+              jobId={importer.jobId}
+              onAtualizar={handleAtualizarStatus}
+              onContinuarSegundoPlano={handleSegundoPlano}
+            />
           )}
 
           {etapa === "resultado" && importer.resultado && (
