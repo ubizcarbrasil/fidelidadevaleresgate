@@ -116,11 +116,13 @@ export default function GamificacaoAdminPage() {
     <div className="space-y-6 p-4 md:p-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-center">
         <div className="flex items-center gap-3">
-          <Swords className="h-6 w-6 text-primary" />
+          {isCampeonato ? <Trophy className="h-6 w-6 text-primary" /> : <Swords className="h-6 w-6 text-primary" />}
           <div>
-            <h1 className="text-xl font-bold">Gamificação</h1>
+            <h1 className="text-xl font-bold">{isCampeonato ? "Campeonato" : "Gamificação"}</h1>
             <p className="text-sm text-muted-foreground">
-              Duelos, Ranking e Cinturão — {branch.name}
+              {isCampeonato
+                ? `Temporadas, séries e prêmios — ${branch.name}`
+                : `Duelos, Ranking e Cinturão — ${branch.name}`}
             </p>
           </div>
         </div>
@@ -138,56 +140,81 @@ export default function GamificacaoAdminPage() {
         )}
       </div>
 
-      <EstatisticasGamificacao branchId={branch.id} brandId={branch.brand_id} />
+      {!isCampeonato && (
+        <>
+          <EstatisticasGamificacao branchId={branch.id} brandId={branch.brand_id} />
+          <DuelosAoVivoAdmin branchId={branch.id} brandId={branch.brand_id} onCriarDuelo={() => setCriarDueloOpen(true)} />
+        </>
+      )}
 
-      <DuelosAoVivoAdmin branchId={branch.id} brandId={branch.brand_id} onCriarDuelo={() => setCriarDueloOpen(true)} />
-
-      <Tabs defaultValue="configuracao" className="w-full">
-        <TabsList className="w-full flex overflow-x-auto scrollbar-none md:grid md:grid-cols-7 pr-4">
+      <Tabs defaultValue={isCampeonato ? "campeonato" : "configuracao"} className="w-full">
+        <TabsList
+          className={`w-full flex overflow-x-auto scrollbar-none pr-4 ${
+            isCampeonato ? "md:grid md:grid-cols-3" : "md:grid md:grid-cols-7"
+          }`}
+        >
           <TabsTrigger value="configuracao" className="flex-1 whitespace-nowrap text-xs md:text-sm">Configuração</TabsTrigger>
-          <TabsTrigger value="duelos" className="flex-1 whitespace-nowrap text-xs md:text-sm">Duelos</TabsTrigger>
-          <TabsTrigger value="apostas" className="flex-1 whitespace-nowrap text-xs md:text-sm">Apostas</TabsTrigger>
+          {!isCampeonato && (
+            <>
+              <TabsTrigger value="duelos" className="flex-1 whitespace-nowrap text-xs md:text-sm">Duelos</TabsTrigger>
+              <TabsTrigger value="apostas" className="flex-1 whitespace-nowrap text-xs md:text-sm">Apostas</TabsTrigger>
+            </>
+          )}
           <TabsTrigger value="campeonato" className="flex-1 whitespace-nowrap text-xs md:text-sm flex items-center gap-1">
             <Trophy className="h-3 w-3" /> Campeonato
           </TabsTrigger>
-          <TabsTrigger value="ranking" className="flex-1 whitespace-nowrap text-xs md:text-sm">Ranking</TabsTrigger>
-          <TabsTrigger value="cinturao" className="flex-1 whitespace-nowrap text-xs md:text-sm">Cinturão</TabsTrigger>
+          {!isCampeonato && (
+            <>
+              <TabsTrigger value="ranking" className="flex-1 whitespace-nowrap text-xs md:text-sm">Ranking</TabsTrigger>
+              <TabsTrigger value="cinturao" className="flex-1 whitespace-nowrap text-xs md:text-sm">Cinturão</TabsTrigger>
+            </>
+          )}
           <TabsTrigger value="moderacao" className="flex-1 whitespace-nowrap text-xs md:text-sm">Moderação</TabsTrigger>
         </TabsList>
 
         <TabsContent value="configuracao">
           <PaginaConfiguracoesDuelo branchId={branch.id} brandId={branch.brand_id} settings={settings} />
         </TabsContent>
-        <TabsContent value="duelos">
-          <div className="space-y-4">
-            <PaginaDuelosMatching branchId={branch.id} brandId={branch.brand_id} />
-            <ListaDuelosAdmin branchId={branch.id} onCriarDuelo={() => setCriarDueloOpen(true)} />
-          </div>
-        </TabsContent>
-        <TabsContent value="apostas">
-          <ApostasAdminView branchId={branch.id} brandId={branch.brand_id} />
-        </TabsContent>
+        {!isCampeonato && (
+          <>
+            <TabsContent value="duelos">
+              <div className="space-y-4">
+                <PaginaDuelosMatching branchId={branch.id} brandId={branch.brand_id} />
+                <ListaDuelosAdmin branchId={branch.id} onCriarDuelo={() => setCriarDueloOpen(true)} />
+              </div>
+            </TabsContent>
+            <TabsContent value="apostas">
+              <ApostasAdminView branchId={branch.id} brandId={branch.brand_id} />
+            </TabsContent>
+          </>
+        )}
         <TabsContent value="campeonato">
           <PaginaCampeonatoEmpreendedor brandId={branch.brand_id} branchId={branch.id} />
         </TabsContent>
-        <TabsContent value="ranking">
-          <RankingAdminView branchId={branch.id} />
-        </TabsContent>
-        <TabsContent value="cinturao">
-          <CinturaoAdminView branchId={branch.id} brandId={branch.brand_id} />
-        </TabsContent>
+        {!isCampeonato && (
+          <>
+            <TabsContent value="ranking">
+              <RankingAdminView branchId={branch.id} />
+            </TabsContent>
+            <TabsContent value="cinturao">
+              <CinturaoAdminView branchId={branch.id} brandId={branch.brand_id} />
+            </TabsContent>
+          </>
+        )}
         <TabsContent value="moderacao">
           <ModeracaoApelidos branchId={branch.id} />
         </TabsContent>
       </Tabs>
 
-      <ModalCriarDueloAdmin
-        branchId={branch.id}
-        brandId={branch.brand_id}
-        open={criarDueloOpen}
-        onClose={() => setCriarDueloOpen(false)}
-        onSuccess={() => setCriarDueloOpen(false)}
-      />
+      {!isCampeonato && (
+        <ModalCriarDueloAdmin
+          branchId={branch.id}
+          brandId={branch.brand_id}
+          open={criarDueloOpen}
+          onClose={() => setCriarDueloOpen(false)}
+          onSuccess={() => setCriarDueloOpen(false)}
+        />
+      )}
     </div>
   );
 }
