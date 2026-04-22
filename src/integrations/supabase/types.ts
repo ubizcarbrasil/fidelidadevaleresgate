@@ -10369,7 +10369,6 @@ export type Database = {
         }
         Returns: number
       }
-      duelo_gerar_chaveamento: { Args: { p_season_id: string }; Returns: Json }
       duelo_get_engagement_format: {
         Args: { p_brand_id: string }
         Returns: string
