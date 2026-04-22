@@ -50,7 +50,7 @@ export default function EditorInformacoesBasicas({ brandId, branchId }: Props = 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("duelo_seasons")
-        .select("id, name, status")
+        .select("id, name, phase, paused_at, cancelled_at")
         .eq("brand_id", brandId!)
         .eq("branch_id", branchId!)
         .eq("year", anoSelecionado as number)
