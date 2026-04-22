@@ -1,4 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   obterBracketCompleto,
   obterConfrontoAtual,
@@ -15,13 +17,41 @@ export function useTemporadaAtivaDoMotorista(
   brandId?: string | null,
   driverId?: string | null,
 ) {
-  return useQuery({
+  const qc = useQueryClient();
+  const query = useQuery({
     queryKey: ["driver-active-season", brandId, driverId],
     enabled: !!brandId && !!driverId,
     staleTime: STALE_RANKING,
     refetchInterval: REFETCH_RANKING,
     queryFn: () => obterTemporadaAtivaMotorista(brandId!, driverId!),
   });
+
+  // Realtime: assim que o seeding distribuir o motorista, refetch imediato.
+  useEffect(() => {
+    if (!driverId) return;
+    const channel = supabase
+      .channel(`duelo-membership-${driverId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "duelo_tier_memberships",
+          filter: `driver_id=eq.${driverId}`,
+        },
+        () => {
+          qc.invalidateQueries({
+            queryKey: ["driver-active-season", brandId, driverId],
+          });
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [brandId, driverId, qc]);
+
+  return query;
 }
 
 export function useRankingCentrado(
