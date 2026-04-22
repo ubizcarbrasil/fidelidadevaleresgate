@@ -1,99 +1,70 @@
 
 
-# Modo de pontuação configurável: confronto diário (V/E/D) na fase de classificação
+# Configurar a marca **Meu Mototáxi** apenas com Campeonato + corrigir fluxo travado
 
-## Diagnóstico
+## Diagnóstico — por que o botão "Criar temporada" não aparece
 
-Hoje a pontuação da fase de classificação (`duelo_update_standings_from_ride`) **soma 1 ponto por corrida finalizada**. Não dá pra escolher outro modelo; tudo é "pontos corridos".
+A página `PaginaCampeonatoEmpreendedor` exige **3 camadas** OK em ordem:
 
-A demanda é poder escolher, por temporada, um segundo modo: **Confronto Diário (Round-robin diário)** — todos da série jogam contra todos no mesmo dia, e ao fim do dia cada motorista soma pontos por **vitória / empate / derrota** (configuráveis pelo empreendedor) com base na **quantidade de corridas finalizadas naquele dia**.
+1. **Camada 1** (Root) — `brand_settings_json.duelo_campeonato_enabled = true` ✅ **OK na sua marca**
+2. **Camada 2** (Modelo de negócio) — registro em `brand_business_models` para `duelo_motorista` com `engagement_format = 'campeonato'` ❌ **FALTANDO** — não existe nenhum registro, então a RPC devolve o default `'duelo'`
+3. **Camada 3** (Temporada) — só aparece o botão "Criar temporada" se a Camada 2 retornar `campeonato`
 
-## Arquitetura
+Como a Camada 2 está vazia, o componente cai no ramo `!isCampeonato` e mostra o card "Formato atual diferente de Campeonato. Selecione 'Campeonato' no seletor acima". O `SeletorFormatoEngajamento` aparece — mas trocar pra "Campeonato" também falha silenciosamente porque não há linha para fazer `UPDATE`, só insert via RPC.
 
-### 1) Backend — colunas novas em `duelo_seasons`
+## O que vou fazer
 
-```sql
-ALTER TABLE public.duelo_seasons
-  ADD COLUMN scoring_mode text NOT NULL DEFAULT 'total_points'
-    CHECK (scoring_mode IN ('total_points','daily_matchup')),
-  ADD COLUMN scoring_config_json jsonb NOT NULL DEFAULT
-    jsonb_build_object('win',3,'draw',1,'loss',0);
-```
+### 1) Corrigir a configuração da marca **Meu Mototáxi** (data fix via migration)
 
-- `total_points`: comportamento atual (1 ponto por corrida).
-- `daily_matchup`: novo modo. `scoring_config_json` = `{ win, draw, loss }`.
+Migration única que:
 
-### 2) Backend — nova função `duelo_recalc_daily_matchup(p_season_id, p_day)`
+- **Insere** o registro em `brand_business_models` para `brand_id = f6ca82ea-621c-4e97-8c20-326fc63a8fd0` × `business_model.key = 'duelo_motorista'` com:
+    - `is_enabled = true`
+    - `engagement_format = 'campeonato'`
+    - `allowed_engagement_formats = ARRAY['campeonato']` (só o Campeonato fica liberado, os outros ficam **bloqueados com cadeado** no seletor)
+- **Garante** `brand_settings_json.duelo_campeonato_enabled = true` (já está, mas reafirma idempotente).
+- **Garante** `brand_settings_json.duelo_series_enabled = true` para liberar séries A/B/C/D.
 
-`SECURITY DEFINER`, chamada por **cron diário** (1× por dia, 03:00 do fuso da branch) e pode ser executada manualmente pelo empreendedor pra reprocessar um dia.
+### 2) Hardening da RPC `duelo_change_engagement_format`
 
-Lógica:
-1. Para cada **série** ativa da temporada.
-2. Para cada par `(driver_a, driver_b)` da série, somar quantas corridas cada um finalizou em `[day 00:00, day 23:59:59]` no `branch_id` da temporada.
-3. Se `rides_a > rides_b` → A vence (soma `win`), B perde (soma `loss`). Se `=` → ambos somam `draw`.
-4. Aplicar o delta no `duelo_season_standings.points` (idempotente: armazena resumo do dia em `duelo_daily_matchup_log` para evitar dupla-contagem).
+Hoje, se a marca **não tem linha** em `brand_business_models`, a troca de formato falha em silêncio (UPDATE de zero linhas). Vou ajustar a RPC pra fazer **UPSERT** ao invés de UPDATE puro — assim qualquer marca futura que ative o campeonato pelo card "Ativar Campeonato" também ganha automaticamente a linha de modelo de negócio.
 
-Tabela auxiliar:
-```sql
-CREATE TABLE duelo_daily_matchup_log (
-  id uuid PK, season_id uuid, tier_id uuid, day date,
-  driver_id uuid, rides int, wins int, draws int, losses int,
-  points_awarded int, created_at timestamptz,
-  UNIQUE(season_id, tier_id, driver_id, day)
-);
-```
+### 3) Garantir que o card "Ativar Campeonato" cria a base completa
 
-Idempotência: se já existe linha para `(season, tier, driver, day)`, recalcula o delta e atualiza standings com a diferença.
+Atualizar a RPC/função `useAlterarAtivacaoCampeonato` (camada 1) para, ao ativar, **também** criar/atualizar o registro em `brand_business_models` com `engagement_format='campeonato'` + `allowed_engagement_formats=['campeonato']` (default sensato pra novas marcas). Hoje só seta a flag no settings_json e deixa metade do fluxo solto.
 
-### 3) Backend — adaptar `duelo_update_standings_from_ride`
+### 4) Mensagem de erro clara no `SeletorFormatoEngajamento`
 
-No início, se `scoring_mode = 'daily_matchup'`, **não soma pontos por corrida** (apenas `weekend_rides_count` e `last_ride_at`). O cálculo de pontos passa a vir só do recalc diário.
+Pra evitar que o problema se repita, quando a troca de formato falhar (`UPDATE 0`), exibir toast: _"Não foi possível trocar o formato. A configuração da marca está incompleta — fale com o suporte."_ (proteção defensiva).
 
-### 4) Backend — cron job
+## Resultado esperado após implementar
 
-Entrada via `pg_cron`:
-```sql
-SELECT cron.schedule('duelo_daily_matchup_recalc', '0 3 * * *',
-  'SELECT public.duelo_recalc_all_daily_matchup_seasons();');
-```
+Ao abrir **Gamificação → Cidade (Ipatinga - MG) → aba Campeonato**, você verá nesta ordem:
 
-`duelo_recalc_all_daily_matchup_seasons()`: itera todas as seasons em `phase='classification'` com `scoring_mode='daily_matchup'` e chama `duelo_recalc_daily_matchup(season_id, ontem)`.
+1. ✅ Card verde **"Campeonato ativo"** (já está)
+2. ✅ Card **"Formato de engajamento"** com **apenas "Campeonato"** liberado (Duelo 1v1 e Desafio em Massa aparecem com ícone de cadeado)
+3. ✅ Card central com botão **"Criar temporada"** habilitado → abre o wizard de 4 passos (Informações → Séries → Prêmios → Revisão)
+4. ✅ Após criar a primeira temporada: Banner de status, menu **Ações** (Pausar, Cancelar, Incluir motorista, **Distribuir motoristas nas séries**, Ajustar prêmio), cards de cada série A/B/C/D, prêmios a distribuir, histórico
 
-### 5) Frontend
+## Permissões
 
-#### a) Schema + serviço de criação (`schema_criar_temporada.ts` / `servico_campeonato_empreendedor.ts`)
-- Adicionar `scoringMode: 'total_points' | 'daily_matchup'` e `scoringConfig: { win, draw, loss }` ao `CriarTemporadaCompletaInput`.
-- Persistir na criação (`insert duelo_seasons`).
-
-#### b) Novo bloco no `EditorInformacoesBasicas.tsx`
-- Card **"Modo de pontuação da Classificação"** com 2 opções (RadioCards):
-  - **Pontos corridos** (default): "+1 ponto por corrida finalizada".
-  - **Confronto diário (round-robin)**: "Todos contra todos por dia. V/E/D configuráveis."
-- Quando `daily_matchup` selecionado → 3 inputs numéricos: **Vitória**, **Empate**, **Derrota** (defaults 3/1/0).
-
-#### c) Revisão (`RevisaoCriacao.tsx`) mostra o modo escolhido.
-
-### 6) Pontos fora de escopo (decisões conscientes)
-
-- Não vamos mudar o **modo de uma temporada já criada** — decidido na criação. (Mais simples, evita inconsistências de log).
-- A regra "todos contra todos" considera **todos os membros atuais da série naquele dia**. Se motorista entrar/sair no meio, o cálculo do dia leva em conta quem estava na série às 23:59 daquele dia.
-- Mata-mata segue **inalterado** (continua usando contagem de corridas no período do confronto).
+Não preciso mexer em `user_roles` — você já é Empreendedor da marca. Todas as ações do campeonato passam pela função `duelo_admin_can_manage(brand_id)` que valida `brand_admin` ou `root_admin` automaticamente.
 
 ## Arquivos a criar/editar
 
 **Backend (1 migration):**
-- Tabela `duelo_daily_matchup_log`, colunas `scoring_mode/scoring_config_json` em `duelo_seasons`, função `duelo_recalc_daily_matchup`, função `duelo_recalc_all_daily_matchup_seasons`, atualização do trigger `duelo_update_standings_from_ride`, cron job.
+- `supabase/migrations/<timestamp>_meu_mototaxi_campeonato_only.sql`
+    - Insert/upsert em `brand_business_models` para a marca alvo
+    - Update no `brand_settings_json` (defensivo)
+    - Hardening da função `duelo_change_engagement_format` (UPSERT em vez de UPDATE)
+    - Hardening do trigger/RPC de ativação do campeonato pra criar a linha de modelo
 
-**Frontend:**
-- `schemas/schema_criar_temporada.ts` (+ campos `scoringMode/scoringConfig`)
-- `types/tipos_empreendedor.ts` (+ campos no `CriarTemporadaCompletaInput`)
-- `services/servico_campeonato_empreendedor.ts` (persistir na insert)
-- `constants/constantes_templates.ts` (default no template)
-- `components/empreendedor/EditorInformacoesBasicas.tsx` (novo bloco)
-- `components/empreendedor/RevisaoCriacao.tsx` (mostrar modo)
-- `components/empreendedor/FormCriarTemporada.tsx` (passar valores iniciais)
+**Frontend (1 arquivo):**
+- `src/features/campeonato_duelo/hooks/hook_mutations_campeonato.ts` (ou onde estiver `useTrocarFormato`) — adicionar tratamento defensivo de erro quando a RPC retorna 0 linhas
 
-## Risco
+## Risco e rollback
 
-- **Baixo**: `scoring_mode` default `'total_points'` mantém comportamento atual. Trigger só desvia quando explicitamente `daily_matchup`. Recalc é idempotente.
+- **Risco baixo**: a migration é idempotente (`ON CONFLICT DO UPDATE`) e afeta só a marca Meu Mototáxi explicitamente nomeada.
+- **Rollback trivial**: `DELETE FROM brand_business_models WHERE brand_id = 'f6ca82ea-...' AND business_model_id = ...` restaura ao estado atual.
+- O hardening das RPCs é aditivo — qualquer marca com config correta segue funcionando igual.
 
