@@ -1,4 +1,5 @@
 import type { DriverRow } from "@/types/driver";
+import { supabase } from "@/integrations/supabase/client";
 
 const limparNome = (nome: string | null) =>
   nome?.replace(/\[MOTORISTA\]\s*/i, "").trim() || "Sem nome";
@@ -14,7 +15,6 @@ const formatarCpf = (cpf: string | null) => {
 
 const escaparCampo = (valor: string | number | null | undefined): string => {
   const str = valor == null ? "" : String(valor);
-  // Sempre envolve em aspas e escapa aspas internas (mais seguro p/ Excel)
   return `"${str.replace(/"/g, '""')}"`;
 };
 
@@ -56,82 +56,121 @@ export function gerarCsvMotoristas(motoristas: DriverRow[]): Blob {
   return new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
 }
 
-/**
- * Dispara download do CSV no navegador.
- * Estratégia em cascata para máxima compatibilidade:
- *   1. Web Share API (mobile / iOS PWA / Android) — abre share sheet nativo.
- *   2. <a download> clássico — desktop.
- *   3. window.open(blobUrl) — fallback final.
- *
- * Retorna o "modo" usado para o caller ajustar a mensagem de feedback.
- */
-export type ModoDownload = "share" | "download" | "nova-aba";
+// ============================================================================
+// Detecção de plataforma
+// ============================================================================
 
-const ehStandalonePWA = (): boolean => {
+export const ehStandalonePWA = (): boolean => {
   if (typeof window === "undefined") return false;
   const matchStandalone = window.matchMedia?.("(display-mode: standalone)").matches ?? false;
-  const iosStandalone = (window.navigator as any).standalone === true;
+  const iosStandalone = (window.navigator as any)?.standalone === true;
   return matchStandalone || iosStandalone;
 };
 
-const ehIOS = (): boolean => {
+export const ehIOS = (): boolean => {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent || "";
-  return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  return (
+    /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === "MacIntel" && (navigator as any).maxTouchPoints > 1)
+  );
 };
 
-export const exigeGestoDoUsuarioParaSalvar = (): boolean => ehIOS() || ehStandalonePWA();
+/**
+ * Plataformas onde `blob:` URLs e `<a download>` falham (tela branca / nada acontece).
+ * Nesses casos, precisamos sempre entregar uma URL HTTPS real.
+ */
+export const exigeUrlHttps = (): boolean => ehIOS() || ehStandalonePWA();
 
-export async function baixarCsvMotoristas(
+// ============================================================================
+// Upload do CSV para Storage e geração de URL assinada
+// ============================================================================
+
+export const BUCKET_EXPORTACOES = "exportacoes-motoristas";
+const TTL_URL_ASSINADA_SEGUNDOS = 60 * 30; // 30 minutos
+
+export interface ResultadoUploadExport {
+  url: string;
+  caminhoStorage: string;
+  expiraEm: Date;
+}
+
+/**
+ * Faz upload do CSV para o Supabase Storage (bucket privado) e retorna URL HTTPS assinada.
+ * O caminho é prefixado pelo `auth.uid()` para isolamento por usuário (RLS).
+ */
+export async function uploadCsvParaStorage(
   blob: Blob,
   nomeArquivo: string,
-): Promise<ModoDownload> {
-  // Estratégia 1: Web Share API com arquivo (preferida em mobile/PWA)
+): Promise<ResultadoUploadExport> {
+  const { data: sessao, error: erroSessao } = await supabase.auth.getUser();
+  if (erroSessao || !sessao?.user?.id) {
+    throw new Error("Sessão expirada. Faça login novamente para exportar.");
+  }
+  const userId = sessao.user.id;
+  const timestamp = Date.now();
+  const caminhoStorage = `${userId}/${timestamp}-${nomeArquivo}`;
+
+  const { error: erroUpload } = await supabase.storage
+    .from(BUCKET_EXPORTACOES)
+    .upload(caminhoStorage, blob, {
+      contentType: "text/csv;charset=utf-8;",
+      upsert: true,
+      cacheControl: "60",
+    });
+
+  if (erroUpload) {
+    throw new Error(`Falha ao enviar CSV para o servidor: ${erroUpload.message}`);
+  }
+
+  const { data: dadosUrl, error: erroUrl } = await supabase.storage
+    .from(BUCKET_EXPORTACOES)
+    .createSignedUrl(caminhoStorage, TTL_URL_ASSINADA_SEGUNDOS, {
+      download: nomeArquivo,
+    });
+
+  if (erroUrl || !dadosUrl?.signedUrl) {
+    throw new Error("Não foi possível gerar a URL de download.");
+  }
+
+  return {
+    url: dadosUrl.signedUrl,
+    caminhoStorage,
+    expiraEm: new Date(Date.now() + TTL_URL_ASSINADA_SEGUNDOS * 1000),
+  };
+}
+
+// ============================================================================
+// Abertura do CSV (entrega real ao usuário)
+// ============================================================================
+
+export type ModoEntrega = "url-https" | "download-direto";
+
+/**
+ * Abre o CSV para o usuário a partir de uma URL HTTPS real.
+ *
+ * - **iOS / PWA standalone**: `window.location.assign(url)` — substitui a aba/janela
+ *   pela URL real, sem `blob:` e sem tela branca. O Safari oferece "Abrir em..." /
+ *   "Baixar arquivo" nativamente.
+ * - **Desktop / Android**: cria `<a href download>` e dispara click — download direto.
+ */
+export async function abrirCsvPorUrl(url: string, nomeArquivo: string): Promise<ModoEntrega> {
+  if (exigeUrlHttps()) {
+    window.location.assign(url);
+    return "url-https";
+  }
+
   try {
-    const file = new File([blob], nomeArquivo, { type: blob.type || "text/csv;charset=utf-8;" });
-    const navAny = navigator as any;
-    const podeCompartilharArquivo =
-      typeof navAny.share === "function" &&
-      (typeof navAny.canShare !== "function" || navAny.canShare({ files: [file] }));
-
-    if (podeCompartilharArquivo) {
-      await navAny.share({
-        files: [file],
-        title: nomeArquivo,
-      });
-      return "share";
-    }
-  } catch (err: any) {
-    // AbortError = usuário cancelou o sheet → propaga para o hook tratar.
-    if (err?.name === "AbortError") throw err;
-    // Outros erros: cai para próxima estratégia.
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nomeArquivo;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    return "download-direto";
+  } catch {
+    window.open(url, "_blank", "noopener");
+    return "url-https";
   }
-
-  // Em iOS/PWA, os fallbacks com blob URL costumam abrir uma tela branca.
-  if (exigeGestoDoUsuarioParaSalvar()) {
-    throw new Error('Não foi possível abrir o compartilhamento nativo. Toque em CSV novamente para salvar o arquivo.');
-  }
-
-  const url = URL.createObjectURL(blob);
-
-  if (!ehStandalonePWA()) {
-    // Estratégia 2: <a download> clássico (desktop e Android Chrome fora do PWA)
-    try {
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = nomeArquivo;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      return "download";
-    } catch {
-      // cai para fallback
-    }
-  }
-
-  // Estratégia 3: abrir em nova aba para o usuário salvar manualmente
-  window.open(url, "_blank");
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-  return "nova-aba";
 }
