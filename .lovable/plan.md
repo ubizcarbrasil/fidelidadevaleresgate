@@ -1,70 +1,71 @@
 
 
-# Configurar a marca **Meu Mototáxi** apenas com Campeonato + corrigir fluxo travado
+# Modo "Apenas Campeonato" para a marca Meu Mototáxi
 
-## Diagnóstico — por que o botão "Criar temporada" não aparece
+## Diagnóstico — por que ainda aparece Duelos/Apostas/Ranking/Cinturão
 
-A página `PaginaCampeonatoEmpreendedor` exige **3 camadas** OK em ordem:
+A última correção arrumou só a **Camada 2** (registro em `brand_business_models`), mas a tela de Gamificação **ignora completamente** o `engagement_format`. A `GamificacaoAdminPage` renderiza **fixamente** 7 abas (Configuração, Duelos, Apostas, Campeonato, Ranking, Cinturão, Moderação) e a "Configuração do Módulo" mostra **todos os toggles** (Duelos DvD, Patrocinados, Apostas paralelas, Ranking, Cinturão…) — independente do formato escolhido.
 
-1. **Camada 1** (Root) — `brand_settings_json.duelo_campeonato_enabled = true` ✅ **OK na sua marca**
-2. **Camada 2** (Modelo de negócio) — registro em `brand_business_models` para `duelo_motorista` com `engagement_format = 'campeonato'` ❌ **FALTANDO** — não existe nenhum registro, então a RPC devolve o default `'duelo'`
-3. **Camada 3** (Temporada) — só aparece o botão "Criar temporada" se a Camada 2 retornar `campeonato`
-
-Como a Camada 2 está vazia, o componente cai no ramo `!isCampeonato` e mostra o card "Formato atual diferente de Campeonato. Selecione 'Campeonato' no seletor acima". O `SeletorFormatoEngajamento` aparece — mas trocar pra "Campeonato" também falha silenciosamente porque não há linha para fazer `UPDATE`, só insert via RPC.
+E na cidade Ipatinga - MG, as flags `enable_city_ranking` e `enable_city_belt` ainda estão `true`, então no app do motorista também aparecem Ranking e Cinturão.
 
 ## O que vou fazer
 
-### 1) Corrigir a configuração da marca **Meu Mototáxi** (data fix via migration)
+### 1) Filtrar abas da Gamificação pelo formato de engajamento
 
-Migration única que:
+Em `src/pages/GamificacaoAdminPage.tsx`:
+- Ler `useFormatoEngajamento(brand.brand_id)`.
+- Quando `engagement_format === 'campeonato'`:
+  - Mostrar **apenas 3 abas**: `Configuração` (modo enxuto), `Campeonato`, `Moderação`.
+  - **Esconder**: `Duelos`, `Apostas`, `Ranking`, `Cinturão`.
+- `defaultValue` passa para `"campeonato"` quando o formato é campeonato (cai direto na tela útil).
 
-- **Insere** o registro em `brand_business_models` para `brand_id = f6ca82ea-621c-4e97-8c20-326fc63a8fd0` × `business_model.key = 'duelo_motorista'` com:
-    - `is_enabled = true`
-    - `engagement_format = 'campeonato'`
-    - `allowed_engagement_formats = ARRAY['campeonato']` (só o Campeonato fica liberado, os outros ficam **bloqueados com cadeado** no seletor)
-- **Garante** `brand_settings_json.duelo_campeonato_enabled = true` (já está, mas reafirma idempotente).
-- **Garante** `brand_settings_json.duelo_series_enabled = true` para liberar séries A/B/C/D.
+### 2) Modo "Apenas Campeonato" na Configuração do Módulo
 
-### 2) Hardening da RPC `duelo_change_engagement_format`
+Em `src/components/admin/gamificacao/ConfiguracaoModulo.tsx`:
+- Receber `engagementFormat` como prop.
+- Quando `'campeonato'`:
+  - Esconder toggles: Duelos DvD, Duelos Patrocinados, Apostas paralelas, Visualização pública, Palpites, Avaliações pós-duelo, Modo de adesão, Durações, Métricas de ranking/cinturão.
+  - Mostrar **apenas**: aviso destacado *"Esta marca opera no formato Campeonato. Configurações de duelos, apostas, ranking e cinturão estão desativadas e ocultas."* + link para a aba Campeonato.
+- Idem para sub-abas Limites / Ciclo & Reset / Prêmios / Corridas em `pagina_configuracoes_duelo.tsx`: ocultas no formato campeonato.
 
-Hoje, se a marca **não tem linha** em `brand_business_models`, a troca de formato falha em silêncio (UPDATE de zero linhas). Vou ajustar a RPC pra fazer **UPSERT** ao invés de UPDATE puro — assim qualquer marca futura que ative o campeonato pelo card "Ativar Campeonato" também ganha automaticamente a linha de modelo de negócio.
+### 3) Esconder Ranking e Cinturão no app do motorista
 
-### 3) Garantir que o card "Ativar Campeonato" cria a base completa
+No app do motorista (`SecaoGamificacaoDashboard`, `DriverMarketplace`), a visibilidade de Ranking, Cinturão e Duelos já é gated por `branch_settings_json` (`enable_city_ranking`, `enable_city_belt`, `duelosAtivos`).
 
-Atualizar a RPC/função `useAlterarAtivacaoCampeonato` (camada 1) para, ao ativar, **também** criar/atualizar o registro em `brand_business_models` com `engagement_format='campeonato'` + `allowed_engagement_formats=['campeonato']` (default sensato pra novas marcas). Hoje só seta a flag no settings_json e deixa metade do fluxo solto.
+Vou:
+- Adicionar uma checagem do **engagement_format da marca** no resolver `useGamificacaoConfig` (ou equivalente). Se `'campeonato'` → forçar `duelosAtivos=false`, `rankingAtivo=false`, `cinturaoAtivo=false` independente do que está no `branch_settings_json`. Os toggles do empreendedor não afetam mais essa marca — o formato manda.
+- Adicionar uma seção "Campeonato Motorista" no Driver Hub que aparece **somente** quando o formato é campeonato (link pra tela já existente do campeonato motorista).
 
-### 4) Mensagem de erro clara no `SeletorFormatoEngajamento`
+### 4) Migration de limpeza de dados (defensivo)
 
-Pra evitar que o problema se repita, quando a troca de formato falhar (`UPDATE 0`), exibir toast: _"Não foi possível trocar o formato. A configuração da marca está incompleta — fale com o suporte."_ (proteção defensiva).
+Migration que, **só para a marca Meu Mototáxi**, faz `UPDATE branches SET branch_settings_json = settings || jsonb_build_object('enable_city_ranking', false, 'enable_city_belt', false, 'enable_driver_duels', false, 'enable_duel_driver_vs_driver', false, 'enable_duel_sponsored_by_brand', false, 'enable_duel_side_bets', false, 'enable_duel_guesses', false)` em **todas** as branches. Mesmo que a UI ignore, mantém o estado consistente.
 
-## Resultado esperado após implementar
+## Resultado esperado
 
-Ao abrir **Gamificação → Cidade (Ipatinga - MG) → aba Campeonato**, você verá nesta ordem:
+**Painel do empreendedor** → Gamificação → Ipatinga:
+- Só aparecem 3 abas: **Configuração** (vazia, com aviso), **🏆 Campeonato**, **Moderação**.
+- A aba Campeonato abre direto no fluxo de criação de temporada.
 
-1. ✅ Card verde **"Campeonato ativo"** (já está)
-2. ✅ Card **"Formato de engajamento"** com **apenas "Campeonato"** liberado (Duelo 1v1 e Desafio em Massa aparecem com ícone de cadeado)
-3. ✅ Card central com botão **"Criar temporada"** habilitado → abre o wizard de 4 passos (Informações → Séries → Prêmios → Revisão)
-4. ✅ Após criar a primeira temporada: Banner de status, menu **Ações** (Pausar, Cancelar, Incluir motorista, **Distribuir motoristas nas séries**, Ajustar prêmio), cards de cada série A/B/C/D, prêmios a distribuir, histórico
+**App do motorista (Meu Mototáxi)**:
+- **Não aparece** card de Duelos, Ranking ou Cinturão.
+- **Aparece** apenas a seção "Campeonato Motorista" com séries/posição/prêmios.
 
-## Permissões
+**Outras marcas**: nada muda — continuam vendo todas as abas e todos os toggles.
 
-Não preciso mexer em `user_roles` — você já é Empreendedor da marca. Todas as ações do campeonato passam pela função `duelo_admin_can_manage(brand_id)` que valida `brand_admin` ou `root_admin` automaticamente.
+## Arquivos a editar
 
-## Arquivos a criar/editar
+**Frontend (5 arquivos):**
+- `src/pages/GamificacaoAdminPage.tsx` — esconder abas conforme formato
+- `src/components/admin/gamificacao/ConfiguracaoModulo.tsx` — modo enxuto quando campeonato
+- `src/features/duelo_configuracoes/pagina_configuracoes_duelo.tsx` — esconder sub-abas
+- `src/components/driver/duels/dashboard/SecaoGamificacaoDashboard.tsx` — gating por formato
+- Hook de configuração de gamificação do motorista (provavelmente `useGamificacaoConfig` ou equivalente) — incluir `engagement_format` no retorno
 
 **Backend (1 migration):**
-- `supabase/migrations/<timestamp>_meu_mototaxi_campeonato_only.sql`
-    - Insert/upsert em `brand_business_models` para a marca alvo
-    - Update no `brand_settings_json` (defensivo)
-    - Hardening da função `duelo_change_engagement_format` (UPSERT em vez de UPDATE)
-    - Hardening do trigger/RPC de ativação do campeonato pra criar a linha de modelo
-
-**Frontend (1 arquivo):**
-- `src/features/campeonato_duelo/hooks/hook_mutations_campeonato.ts` (ou onde estiver `useTrocarFormato`) — adicionar tratamento defensivo de erro quando a RPC retorna 0 linhas
+- Limpeza idempotente das flags de duelo/ranking/cinturão nas branches da marca Meu Mototáxi.
 
 ## Risco e rollback
 
-- **Risco baixo**: a migration é idempotente (`ON CONFLICT DO UPDATE`) e afeta só a marca Meu Mototáxi explicitamente nomeada.
-- **Rollback trivial**: `DELETE FROM brand_business_models WHERE brand_id = 'f6ca82ea-...' AND business_model_id = ...` restaura ao estado atual.
-- O hardening das RPCs é aditivo — qualquer marca com config correta segue funcionando igual.
+- **Risco baixo**: tudo é gated por `engagement_format === 'campeonato'`. Marcas em `'duelo'` ou `'mass_duel'` não veem diferença.
+- **Rollback trivial**: reverter os 5 arquivos e a migration restaura a UI completa.
 
