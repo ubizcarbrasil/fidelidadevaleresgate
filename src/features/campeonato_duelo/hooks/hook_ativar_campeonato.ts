@@ -29,8 +29,12 @@ export function useAlterarAtivacaoCampeonato() {
       qc.invalidateQueries({
         queryKey: ["duelo-campeonato-habilitado", vars.brandId],
       });
-      qc.invalidateQueries({ queryKey: ["formato-engajamento", vars.brandId] });
-      qc.invalidateQueries({ queryKey: ["dashboard-campeonato", vars.brandId] });
+      qc.invalidateQueries({
+        queryKey: ["duelo-engagement-format", vars.brandId],
+      });
+      qc.invalidateQueries({
+        queryKey: ["empreendedor-dashboard-campeonato", vars.brandId],
+      });
     },
     onError: (err: any) => {
       toast.error(err?.message ?? "Erro ao alterar ativação do campeonato");
