@@ -30,7 +30,7 @@ export type DueloBrandFeature = "cinturao" | "aposta" | "ranking";
 
 export function useBrandFeature(
   brandId: string | null | undefined,
-  feature: DueloFeature
+  feature: DueloBrandFeature
 ) {
   return useQuery({
     queryKey: ["brand-feature", brandId, feature] as const,
