@@ -127,7 +127,6 @@ export function useSetBranchFeature() {
     },
     onSuccess: ({ input, result }) => {
       qc.invalidateQueries({ queryKey: ["branch-feature", input.branchId] });
-      qc.invalidateQueries({ queryKey: ["branch-duelo-raw", input.branchId] });
       qc.invalidateQueries({ queryKey: ["branch-detail-gamificacao", input.branchId] });
 
       const cascaded = result.cascaded ?? [];
