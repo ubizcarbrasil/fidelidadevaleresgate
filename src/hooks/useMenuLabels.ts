@@ -148,7 +148,7 @@ const BRAND_SIDEBAR_GROUPS: LabelGroup[] = [
     items: [
       { key: "sidebar.dominios_marca", defaultLabel: "Meus Domínios" },
       { key: "sidebar.configuracoes", defaultLabel: "Configurações" },
-      { key: "sidebar.painel_motorista", defaultLabel: "Painel do Motorista" },
+      { key: "sidebar.painel_motorista", defaultLabel: "Configurar Painel do Motorista" },
       { key: "sidebar.subscription", defaultLabel: "Meu Plano" },
     ],
   },
