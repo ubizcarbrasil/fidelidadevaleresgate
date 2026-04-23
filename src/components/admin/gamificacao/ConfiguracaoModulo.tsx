@@ -203,12 +203,39 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
             />
             <ToggleRow
               label="Apostas paralelas em duelos"
-              checked={enableDuelSideBets}
-              onChange={setEnableDuelSideBets}
-              hint="Outros motoristas podem apostar pontos no resultado de um duelo."
+              checked={apostasAtivas}
+              onChange={(v) =>
+                setFeature.mutate({ branchId, feature: "aposta", enabled: v })
+              }
+              hint={
+                !dueloAtivo
+                  ? "Requer Duelo ativo na cidade."
+                  : "Outros motoristas podem apostar pontos no resultado de um duelo."
+              }
+              disabled={
+                apostaQ.isLoading ||
+                setFeature.isPending ||
+                (!apostasAtivas && !dueloAtivo)
+              }
             />
-            <ToggleRow label="Ranking da cidade" checked={enableRanking} onChange={setEnableRanking} hint="Exibe uma classificação mensal dos motoristas mais ativos." />
-            <ToggleRow label="Cinturão da cidade" checked={enableBelt} onChange={setEnableBelt} hint="Concede o título de campeão ao motorista com melhor desempenho." />
+            <ToggleRow
+              label="Ranking da cidade"
+              checked={rankingAtivo}
+              onChange={(v) =>
+                setFeature.mutate({ branchId, feature: "ranking", enabled: v })
+              }
+              hint="Exibe uma classificação mensal dos motoristas mais ativos."
+              disabled={rankingQ.isLoading || setFeature.isPending}
+            />
+            <ToggleRow
+              label="Cinturão da cidade"
+              checked={cinturaoAtivo}
+              onChange={(v) =>
+                setFeature.mutate({ branchId, feature: "cinturao", enabled: v })
+              }
+              hint="Concede o título de campeão ao motorista com melhor desempenho."
+              disabled={cinturaoQ.isLoading || setFeature.isPending}
+            />
             <ToggleRow label="Visualização pública de duelos" checked={publicViewing} onChange={setPublicViewing} hint="Permite que todos os motoristas vejam os duelos em andamento." />
             <ToggleRow label="Palpites em duelos" checked={enableGuesses} onChange={setEnableGuesses} hint="Permite que outros motoristas façam palpites sobre o resultado dos duelos." />
             <ToggleRow label="Avaliações pós-duelo" checked={enableRatings} onChange={setEnableRatings} hint="Permite que os participantes se avaliem mutuamente após o duelo." />
