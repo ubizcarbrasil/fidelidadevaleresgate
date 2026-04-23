@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { formatPoints } from "@/lib/formatPoints";
-import { Wallet, ArrowUpCircle, ArrowDownCircle, Plus, TrendingUp, TrendingDown, Coins, AlertTriangle } from "lucide-react";
+import { Wallet, ArrowUpCircle, ArrowDownCircle, Plus, TrendingUp, TrendingDown, Coins, AlertTriangle, MapPin, ArrowRight } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose,
 } from "@/components/ui/dialog";
@@ -79,6 +79,7 @@ function ListaTransacoes({ transactions, filterType }: { transactions: any[]; fi
 
 export default function BranchWalletPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const urlBranchId = searchParams.get("branchId");
   const { currentBranchId, currentBrandId, consoleScope } = useBrandGuard();
   const queryClient = useQueryClient();
@@ -170,7 +171,27 @@ export default function BranchWalletPage() {
   });
 
   if (!effectiveBranchId) {
-    return <div className="p-6 text-center text-muted-foreground">Nenhuma cidade vinculada ao seu perfil.</div>;
+    return (
+      <div className="p-6 max-w-xl mx-auto">
+        <Card>
+          <CardContent className="pt-8 pb-8 text-center space-y-4">
+            <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <MapPin className="h-6 w-6 text-primary" />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold">Selecione uma cidade primeiro</h2>
+              <p className="text-sm text-muted-foreground">
+                A Carteira de Pontos é gerenciada por cidade. Vá em <strong>Minhas Cidades</strong>,
+                escolha uma cidade e abra a Carteira pelo painel dela.
+              </p>
+            </div>
+            <Button onClick={() => navigate("/brand-branches")} className="gap-2">
+              Ir para Minhas Cidades <ArrowRight className="h-4 w-4" />
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const lowThreshold = Number((wallet as any)?.low_balance_threshold ?? 1000);

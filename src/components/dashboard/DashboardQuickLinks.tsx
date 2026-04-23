@@ -18,11 +18,12 @@ import DemoStoresToggle from "@/components/DemoStoresToggle";
 import DemoAccessCard from "@/components/dashboard/DemoAccessCard";
 import { CACHE } from "@/config/constants";
 import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
+import { useBrandGuard as useBrandGuardScope } from "@/hooks/useBrandGuard";
 
 /* ── Brand Quick Links ── */
 function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: { isDriverEnabled?: boolean; isPassengerEnabled?: boolean }) {
   const navigate = useNavigate();
-  const { currentBrandId } = useBrandGuard();
+  const { currentBrandId, consoleScope } = useBrandGuard();
   const { isCampeonato } = useFormatoEngajamento(currentBrandId);
   // Reaproveita o cache do useBrandInfo (já carregado no AppLayout) — evita query duplicada
   const brandInfo = useBrandInfo();
@@ -102,8 +103,11 @@ function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: 
   });
 
   // Internal links — admin panel routes (SPA navigation)
+  const isBranchScope = consoleScope === "BRANCH";
   const linksInternos = [
-    { label: "Painel Franqueado", path: "/branch-wallet", icon: Building2, description: "Painel do gestor da cidade" },
+    isBranchScope
+      ? { label: "Painel Franqueado", path: "/branch-wallet", icon: Building2, description: "Painel do gestor da cidade" }
+      : { label: "Minhas Cidades", path: "/brand-branches", icon: Building2, description: "Selecione uma cidade para abrir suas ferramentas" },
     {
       label: isCampeonato ? "Campeonato" : "Gamificação",
       path: "/gamificacao-admin",
