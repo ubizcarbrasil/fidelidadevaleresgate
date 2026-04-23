@@ -118,6 +118,7 @@ export default function BrandForm() {
         });
         setIsActive(data.is_active);
         setSubscriptionPlan(data.subscription_plan || "free");
+        setInitialPlan(data.subscription_plan || "free");
         if (data.brand_settings_json && typeof data.brand_settings_json === "object" && !Array.isArray(data.brand_settings_json)) {
           const settings = data.brand_settings_json as Record<string, any>;
           setExistingSettings(settings);
