@@ -66,6 +66,14 @@ export default function TelaCarregamento({
   const [travado, setTravado] = useState(false);
   const [faseBoot, setFaseBoot] = useState<BootPhase>(() => getBootPhase());
   const [mostrarTextoDetalhado, setMostrarTextoDetalhado] = useState(false);
+  // Adia a renderização visual em 250ms — se o boot terminar antes
+  // (caso comum em conexões boas), o usuário não vê o loader piscar.
+  const [visivel, setVisivel] = useState(false);
+
+  useEffect(() => {
+    const id = setTimeout(() => setVisivel(true), 250);
+    return () => clearTimeout(id);
+  }, []);
 
   // Inscreve no boot state machine para atualizar a etapa em tempo real.
   useEffect(() => {
@@ -119,6 +127,19 @@ export default function TelaCarregamento({
   // pré-BRAND_READY após o threshold. Suspense de rota não aciona o botão.
   const fasesPreBoot: BootPhase[] = ["BOOTSTRAP", "AUTH_LOADING", "AUTH_READY", "BRAND_LOADING"];
   const bootRealmenteTravado = travado && bootAtivo && fasesPreBoot.includes(faseBoot);
+
+  // Antes de 250ms, renderiza apenas um placeholder invisível para evitar
+  // flash do loader em boots rápidos. Mantém o nó no DOM para a transição.
+  if (!visivel) {
+    return (
+      <div
+        role="status"
+        aria-live="polite"
+        aria-label="Carregando aplicação"
+        className="fixed inset-0 z-[9999] bg-background"
+      />
+    );
+  }
 
   return (
     <div
