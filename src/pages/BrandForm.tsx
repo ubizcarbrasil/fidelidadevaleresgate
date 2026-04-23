@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectSeparator } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Key, Trash2, Save } from "lucide-react";
+import { ArrowLeft, Loader2, Key, Trash2, Save, Check, Package } from "lucide-react";
 import BrandThemeEditor from "@/components/BrandThemeEditor";
 import BrandSectionsManager from "@/components/BrandSectionsManager";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
@@ -22,6 +22,14 @@ import type { OfferCardConfig } from "@/hooks/useOfferCardConfig";
 import { DEFAULT_CONFIG } from "@/hooks/useOfferCardConfig";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBrandModules } from "@/hooks/useBrandModules";
+
+// Planos padrão (legado interno) — mantidos para compatibilidade.
+const LEGACY_PLAN_OPTIONS = [
+  { key: "free", label: "Free" },
+  { key: "starter", label: "Starter" },
+  { key: "profissional", label: "Profissional" },
+];
+const LEGACY_PLAN_KEYS = new Set(LEGACY_PLAN_OPTIONS.map((p) => p.key));
 
 export default function BrandForm() {
   const { id } = useParams();
