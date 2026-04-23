@@ -43,6 +43,12 @@ interface PropsTelaCarregamento {
    * já terminou e a fase fica "APP_MOUNTED" travada.
    */
   acompanharBoot?: boolean;
+  /**
+   * Tempo em segundos até considerar o boot "travado" e exibir o
+   * botão de emergência. Padrão: 20s — só aparece em casos extremos,
+   * jamais em rede móvel lenta normal.
+   */
+  segundosAteBotaoEmergencia?: number;
 }
 
 // Lazy: só carrega o botão/dialog se o fallback aparecer após 8s.
@@ -54,10 +60,12 @@ export default function TelaCarregamento({
   logoUrl,
   mostrarBotaoEmergencia = true,
   acompanharBoot = true,
+  segundosAteBotaoEmergencia = 20,
 }: PropsTelaCarregamento) {
   const [indiceEtapa, setIndiceEtapa] = useState(0);
   const [travado, setTravado] = useState(false);
   const [faseBoot, setFaseBoot] = useState<BootPhase>(() => getBootPhase());
+  const [mostrarTextoDetalhado, setMostrarTextoDetalhado] = useState(false);
 
   // Inscreve no boot state machine para atualizar a etapa em tempo real.
   useEffect(() => {
@@ -73,6 +81,14 @@ export default function TelaCarregamento({
   const bootAtivo =
     acompanharBoot && faseBoot !== "APP_MOUNTED" && faseBoot !== "FAILED";
 
+  // Só mostramos o texto detalhado da fase depois de 2s no mesmo loader,
+  // evitando "cascata" de mensagens piscando em boots rápidos (<2s).
+  useEffect(() => {
+    setMostrarTextoDetalhado(false);
+    const id = setTimeout(() => setMostrarTextoDetalhado(true), 2000);
+    return () => clearTimeout(id);
+  }, []);
+
   // Rotaciona a mensagem de etapa (apenas quando não há mensagem fixa
   // e o boot machine não está controlando a etapa).
   useEffect(() => {
@@ -83,16 +99,26 @@ export default function TelaCarregamento({
     return () => clearInterval(id);
   }, [mensagem, etapas, bootAtivo]);
 
-  // Após 8s sem destravar, oferece botão de emergência.
+  // Após N segundos sem destravar, marcamos como possível travamento.
+  // O botão só será exibido se o boot ainda estiver em fase pré-BRAND_READY
+  // (travado de verdade). Em Suspense de rota o botão fica oculto.
   useEffect(() => {
     if (!mostrarBotaoEmergencia) return;
-    const id = setTimeout(() => setTravado(true), 8000);
+    const id = setTimeout(() => setTravado(true), segundosAteBotaoEmergencia * 1000);
     return () => clearTimeout(id);
-  }, [mostrarBotaoEmergencia]);
+  }, [mostrarBotaoEmergencia, segundosAteBotaoEmergencia]);
 
-  const textoEtapa =
-    mensagem ??
-    (bootAtivo ? MENSAGENS_POR_FASE[faseBoot] : etapas[indiceEtapa]);
+  // Texto exibido: durante os primeiros 2s sempre "Carregando…"; depois,
+  // mostra a mensagem detalhada da fase (se boot ativo) ou rotação de etapas.
+  const textoEtapa = mensagem
+    ?? (mostrarTextoDetalhado
+      ? (bootAtivo ? MENSAGENS_POR_FASE[faseBoot] : etapas[indiceEtapa])
+      : "Carregando…");
+
+  // Só consideramos o boot "realmente travado" se ainda estamos em fase
+  // pré-BRAND_READY após o threshold. Suspense de rota não aciona o botão.
+  const fasesPreBoot: BootPhase[] = ["BOOTSTRAP", "AUTH_LOADING", "AUTH_READY", "BRAND_LOADING"];
+  const bootRealmenteTravado = travado && bootAtivo && fasesPreBoot.includes(faseBoot);
 
   return (
     <div
@@ -115,10 +141,10 @@ export default function TelaCarregamento({
         {textoEtapa}
       </p>
 
-      {travado && (
+      {bootRealmenteTravado && (
         <div className="mt-4 flex flex-col items-center gap-2 animate-loader-fade">
           <p className="text-xs text-muted-foreground/80">
-            Demorando mais que o normal?
+            Conexão lenta? Você pode tentar atualizar.
           </p>
           <Suspense fallback={null}>
             <BotaoAtualizarApp label="Atualizar agora" />

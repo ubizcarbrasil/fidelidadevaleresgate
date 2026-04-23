@@ -113,42 +113,44 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const resolve = async () => {
-      // Safety timeout curto: portal universal não tem domain match, então
-      // se a query de brand_domains demorar (ou falhar silenciosamente),
-      // liberamos o boot rapidamente. Caminho feliz nem chega a disparar.
+      const hostname = window.location.hostname;
+      const params = new URLSearchParams(window.location.search);
+      const brandIdParam = params.get("brandId");
+
+      // Detecta domínios que NÃO resolvem brand por hostname (portal universal,
+      // preview, localhost, root). Nesses casos, pulamos a fase BRAND_LOADING
+      // por completo e marcamos BRAND_READY no mesmo tick — sem texto extra
+      // piscando no loader e sem ciclo de render desnecessário.
+      const PORTAL_HOSTNAMES = ["app.valeresgate.com.br"];
+      const isLocal = hostname === "localhost"
+        || hostname.includes("lovable.app")
+        || hostname.includes("lovableproject.com")
+        || hostname.startsWith("root.")
+        || PORTAL_HOSTNAMES.includes(hostname);
+
+      // Caminho rápido: domínio sem resolução por hostname E sem ?brandId=
+      // → libera o boot imediatamente, sem entrar em BRAND_LOADING.
+      if (isLocal && !brandIdParam) {
+        setLoading(false);
+        setBootPhase("BRAND_READY", "skip-local");
+        return;
+      }
+
+      // Safety timeout reduzido: 800ms é suficiente porque o caminho lento
+      // é apenas a query a brand_domains (1 SELECT indexado).
       const safetyTimeout = setTimeout(() => {
         setLoading(false);
         setBootPhase("BRAND_READY", "timeout");
-      }, 1500);
+      }, 800);
 
       setBootPhase("BRAND_LOADING");
       try {
-        const hostname = window.location.hostname;
-
         // 1) Check for ?brandId= URL parameter on ANY domain (root admin impersonation)
-        const params = new URLSearchParams(window.location.search);
-        const brandIdParam = params.get("brandId");
         if (brandIdParam) {
           const brandData = await fetchBrandById(brandIdParam);
           if (brandData) {
             setBrand(brandData);
           }
-          return;
-        }
-
-        // 2) Skip domain resolution for dev/preview/root/portal domains.
-        // Portal `app.valeresgate.com.br` is a UNIVERSAL login portal — it
-        // must NOT resolve to a specific brand by hostname (would leak data
-        // across tenants). The brand is derived from the user's roles via
-        // useBrandGuard for users logged in on the portal.
-        const PORTAL_HOSTNAMES = ["app.valeresgate.com.br"];
-        const isLocal = hostname === "localhost"
-          || hostname.includes("lovable.app")
-          || hostname.includes("lovableproject.com")
-          || hostname.startsWith("root.")
-          || PORTAL_HOSTNAMES.includes(hostname);
-
-        if (isLocal) {
           return;
         }
 
