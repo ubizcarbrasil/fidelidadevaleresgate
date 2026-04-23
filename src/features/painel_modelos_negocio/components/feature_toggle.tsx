@@ -7,12 +7,12 @@ import { Switch } from "@/components/ui/switch";
 import {
   useBrandFeature,
   useSetBrandDueloFeature,
-  type DueloFeature,
+  type DueloBrandFeature,
 } from "@/compartilhados/hooks/hook_brand_feature";
 
 interface Props {
   brandId: string;
-  feature: DueloFeature;
+  feature: DueloBrandFeature;
   label: string;
   description?: string;
 }
