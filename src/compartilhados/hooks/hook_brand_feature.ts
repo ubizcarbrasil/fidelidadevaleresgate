@@ -1,24 +1,32 @@
 /**
- * hook_brand_feature — Sprint 3
+ * hook_brand_feature — Sprint 3 + Sprint 4B
  * Hooks para leitura/escrita de features consolidadas no Duelo Motorista.
  *
- * Features cobertas: 'cinturao' | 'aposta' | 'ranking'
+ * Features cobertas: 'duelo' | 'cinturao' | 'aposta' | 'ranking'
  *
  * Defaults documentados (semântica das RPCs SQL):
+ *  - duelo    : default ON  por cidade (branch_settings_json.enable_driver_duels !== false)
  *  - cinturao : default ON  por cidade (branch_settings_json.enable_city_belt    !== false)
  *  - ranking  : default ON  por cidade (branch_settings_json.enable_city_ranking !== false)
- *  - aposta   : default OFF por cidade (branch_settings_json.enable_side_bets    === true)
+ *  - aposta   : default OFF por cidade (OR de enable_side_bets / enable_duel_side_bets === true)
  *
- * Sprint 4 (D9, fora de escopo):
- *  - Migrar useConfigDuelos para usar branch_has_feature.
- *  - Validação "apostas exige duelo na cidade".
- *  - UI por cidade para o admin marcar enable_side_bets.
+ * Sprint 4B (entregue):
+ *  - Validação D9 ("apostas exige duelo na cidade") aplicada na RPC `branch_set_feature`.
+ *  - Cascata: desligar duelo quando há apostas exige `cascadeSideBets=true`.
+ *  - Dual-write: ao gravar 'aposta', a RPC escreve em ambas
+ *    `enable_side_bets` e `enable_duel_side_bets` (compat com UI legada).
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export type DueloFeature = "cinturao" | "aposta" | "ranking";
+export type DueloFeature = "duelo" | "cinturao" | "aposta" | "ranking";
+
+/**
+ * Brand-level: 'duelo' não está no whitelist de `brand_has_feature` no SQL.
+ * Use este subtipo para hooks de marca.
+ */
+export type DueloBrandFeature = "cinturao" | "aposta" | "ranking";
 
 export function useBrandFeature(
   brandId: string | null | undefined,
