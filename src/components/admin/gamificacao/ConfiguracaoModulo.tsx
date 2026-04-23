@@ -83,15 +83,23 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
 
   const salvar = useMutation({
     mutationFn: async () => {
+      // Sprint 4B — D9: se DvD/Sponsored/SideBets vão deixar duelo OFF e há apostas,
+      // exigir confirmação antes de gravar. RPC já validou, mas evitamos UPDATE cru
+      // chegar antes da cascata.
+      const novoDueloComposto = enableDuelDvD || enableDuelSponsored || apostasAtivas;
+      if (!novoDueloComposto && apostasAtivas) {
+        // Caminho de cascata: pede confirmação
+        setConfirmDuelOff(true);
+        throw new Error("__pending_cascade__");
+      }
+
       const merged = {
         ...settings,
         enable_duel_driver_vs_driver: enableDuelDvD,
         enable_duel_sponsored_by_brand: enableDuelSponsored,
-        enable_duel_side_bets: enableDuelSideBets,
-        // Compat com telas antigas: enable_driver_duels = OR das três modalidades
-        enable_driver_duels: enableDuelDvD || enableDuelSponsored || enableDuelSideBets,
-        enable_city_ranking: enableRanking,
-        enable_city_belt: enableBelt,
+        // enable_driver_duels / enable_city_ranking / enable_city_belt /
+        // enable_side_bets / enable_duel_side_bets: agora controlados via RPC
+        // `branch_set_feature` (Sprint 4B). UPDATE cru não toca nessas chaves.
         allow_public_duel_viewing: publicViewing,
         enable_duel_guesses: enableGuesses,
         enable_duel_ratings: enableRatings,
@@ -113,7 +121,11 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
       toast.success("Configuração salva!");
       qc.invalidateQueries({ queryKey: ["branch-detail-gamificacao", branchId] });
     },
-    onError: () => toast.error("Erro ao salvar configuração"),
+    onError: (err: unknown) => {
+      // Cascata pendente: silencia erro e deixa o AlertDialog tomar conta
+      if (err instanceof Error && err.message === "__pending_cascade__") return;
+      toast.error("Erro ao salvar configuração");
+    },
   });
 
   const habilitarTodos = useMutation({
