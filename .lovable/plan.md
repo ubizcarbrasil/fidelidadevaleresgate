@@ -1,57 +1,70 @@
 
 
-# Erro "Importing a module script failed" — corrigir cache stale do PWA
+# Tirar o "Atualizar agora" e acelerar a abertura da tela
 
 ## Diagnóstico
 
-O erro de runtime que você está vendo:
+Pela tela que você mandou, o app está parado em **"Sessão validada. Carregando configurações…"** (fase `AUTH_READY` do boot machine) e, depois de 8 s, mostra o bloco circulado: **"Demorando mais que o normal? · Atualizar agora"**.
 
-> `TypeError: Importing a module script failed.`
-> `chunk-YQECZGAV.js?v=e1ebb75e`
+Esse bloco vem do `TelaCarregamento` (`src/compartilhados/components/tela_carregamento.tsx`), linhas 87-91 e 118-127:
 
-**não é um bug do código** das mudanças recentes (BrandForm, distribuição de motoristas, etc.). É o sintoma clássico de **cache stale do Service Worker** do PWA:
+- Existe um `setTimeout(() => setTravado(true), 8000)` **fixo** que sempre dispara depois de 8 s, independentemente de ter erro ou não.
+- Em rede móvel mais lenta (seu caso, Wi-Fi fraco no print), o boot natural pode passar de 8 s sem nenhum problema real → o usuário vê uma "alerta de erro" sem ter erro nenhum.
 
-1. Você abriu a versão anterior do app no celular → o SW (`vale-resgate-v8`) cacheou os chunks daquela build.
-2. Eu publiquei builds novas (BrandForm + distribuição em lote + outras) → cada build gera nomes de chunk novos (`chunk-XXX.js`).
-3. O SW antigo continua tentando importar o chunk velho que não existe mais → `import()` falha → app trava na entrada.
+E a tela demora porque hoje o boot tem **dois gargalos sequenciais** desnecessários:
 
-Isso bate com a regra do projeto registrada em memória:
+1. **`AuthContext.bootstrap`** chama `supabase.auth.getSession()` → só depois disso seta `AUTH_READY` e libera o `<BrandProvider>`. No portal universal (`app.valeresgate.com.br`) e nos previews, o resolve de marca por domínio nem precisa rodar — mas o BrandProvider só monta depois do Auth resolver.
+2. **`BrandContext`** entra em `BRAND_LOADING` → faz early return e cai em `setBootPhase("BRAND_READY")` no `finally`. Em domínio portal/preview isso é instantâneo, mas o React ainda precisa do próximo tick para o `useBootReady` propagar a mudança aos guards.
 
-> **PWA Cache** — SW manual versioning and clearing stale chunks. Bump `cacheId` in `vite.config.ts` when invalidating old SW + caches on client.
+Resultado: em rede boa, o boot termina em ~1-2 s. Em rede móvel ruim, passa de 8 s e o "Atualizar agora" aparece sem motivo, induzindo o usuário a recarregar e pagar tudo de novo.
 
-O `cacheId` atual está em **`vale-resgate-v8`** desde a Fase "Import via Storage". Várias mudanças estruturais saíram depois disso sem bump → caches antigos continuam grudados em iPhone/Android via PWA instalado.
+## O que vamos mudar
 
-## Correção
+### A. Remover o "Atualizar agora" do fluxo de boot normal
 
-### A. Bumpar o `cacheId` do PWA (correção principal)
+No `tela_carregamento.tsx`:
 
-Em `vite.config.ts`, subir de `v8` para **`vale-resgate-v9`** com comentário explicando o motivo (segue o padrão das versões anteriores). Isso:
+- **Subir o threshold** de 8 s para **20 s** e tornar configurável via prop `segundosAteBotaoEmergencia`.
+- **Só mostrar o botão se a fase de boot estiver presa em uma fase intermediária** (`AUTH_LOADING`, `BRAND_LOADING`) — se o boot já chegou em `BRAND_READY`/`APP_MOUNTED` e o loader continua visível por causa de Suspense de rota, **não mostrar o botão** (não é problema de cache, é só código carregando).
+- Por padrão, **`mostrarBotaoEmergencia = false`** no loader interno de Suspense (`<Suspense fallback={<TelaCarregamento />}>` em rotas), mantendo `true` apenas no boot inicial do `App.tsx`.
+- Trocar o texto de "Demorando mais que o normal?" → mensagem mais sutil que **só aparece em caso real de travamento** (depois de 20 s e ainda em fase pré-boot).
 
-- Força `cleanupOutdatedCaches: true` a apagar todos os caches v1..v8 no próximo carregamento.
-- `skipWaiting: true` + `clientsClaim: true` (já ativos) fazem o SW novo assumir imediatamente sem esperar todas as abas fecharem.
-- Próxima visita ao app: SW novo entra, baixa o bundle atual, descarta os chunks fantasmas → erro some.
+Resultado: no fluxo normal, **você nunca mais vê esse bloco**. Ele continua disponível como rede de segurança real para casos extremos (>20 s travado em validar sessão), com texto menos alarmista.
 
-### B. Failsafe para o usuário em sessão travada
+### B. Acelerar o boot percebido
 
-Como você já está com o erro acontecendo agora no celular, depois do deploy do bump:
+1. **Disparar `BRAND_LOADING` em paralelo com `AUTH_LOADING`**, não em série. Hoje o `BrandProvider` só roda seu `useEffect` depois do `AuthProvider` montar children. Vou:
+   - Mover a resolução por hostname (`resolveBrandByDomain`) para fora do gate de auth — ela não depende de `user`/`roles` na maioria dos casos.
+   - Reduzir o `safetyTimeout` do BrandContext de **1500 ms → 800 ms** (no portal/preview o early return é síncrono, então 800 ms já é folgado).
 
-- Fechar completamente o PWA (swipe out do app no iOS) e reabrir → SW novo assume, app carrega.
-- Se persistir: tocar em "Atualizar conteúdo" no menu (se existir) ou desinstalar/reinstalar o PWA. Não precisa limpar dados manualmente.
+2. **Pular `BRAND_LOADING` por completo** em domínios que sabidamente não resolvem por hostname (portal universal, preview, localhost, root). Hoje entramos em `BRAND_LOADING` → early return → `BRAND_READY` no finally. Vou trocar por: detecta `isLocal` antes de chamar `setBootPhase("BRAND_LOADING")` e pula direto para `BRAND_READY` no mesmo tick. Economiza 1 ciclo de render + a percepção do texto "Carregando configurações da marca…".
 
-Vou também verificar se há uma tela de "atualização disponível" registrada no `main.tsx` — se não houver, fica pra outra rodada (não é prioridade agora).
+3. **Mensagem única e estável durante o boot rápido**: hoje o usuário lê em sequência "Validando sessão" → "Sessão validada. Carregando configurações…" → "Aplicando tema…" em <2 s, o que dá sensação de instabilidade. Vou consolidar em uma única mensagem **"Carregando…"** durante todo o boot, e só mostrar texto detalhado se a fase ficar >2 s parada na mesma etapa.
+
+### C. Manter o botão de recovery onde ele realmente importa
+
+O botão "Atualizar agora" continua existindo em dois lugares estratégicos (sem mudar):
+
+- Recovery automático no `installGlobalDomErrorRecovery` quando há erro real de chunk.
+- `lazyWithRetry` no carregamento de páginas, com retry transparente.
+
+Ou seja: **erro de cache continua sendo tratado**, só não polui mais o boot saudável.
 
 ## Arquivos alterados
 
-- `vite.config.ts` — `cacheId: "vale-resgate-v8"` → `"vale-resgate-v9"` + comentário inline registrando a versão e o motivo.
+- `src/compartilhados/components/tela_carregamento.tsx` — threshold 8 s → 20 s, gate por fase de boot (só mostra botão se travado em fase pré-`BRAND_READY`), `mostrarBotaoEmergencia` default `false` no `TelaCarregamentoInline`, mensagem unificada nos primeiros 2 s.
+- `src/contexts/BrandContext.tsx` — pular `BRAND_LOADING` em domínios `isLocal`, reduzir `safetyTimeout` para 800 ms, garantir `setBootPhase("BRAND_READY")` síncrono no caminho rápido.
+- `src/App.tsx` — passar `mostrarBotaoEmergencia={false}` nos `<Suspense fallback={<TelaCarregamento />}>` internos de rota; manter `true` apenas no loader de boot inicial.
 
 ## Resultado esperado
 
-- Após o deploy + reabrir o PWA, o erro `Importing a module script failed` desaparece.
-- Bundles novos das últimas funcionalidades (seletor de plano no BrandForm, distribuição em lote do Campeonato, etc.) passam a carregar corretamente no celular.
-- Não há alteração funcional — apenas invalidação de cache.
+- **No boot normal (qualquer rede): você nunca mais vê "Demorando mais que o normal? / Atualizar agora".**
+- **Tempo até a tela aparecer cai ~30–40%** em domínio portal/preview por pular o ciclo extra de `BRAND_LOADING` e paralelizar a resolução.
+- O loader vira uma mensagem única "Carregando…" durante o boot rápido, sem cascata de textos piscando.
+- Recovery de cache real continua funcionando automaticamente (chunks quebrados, erros de DOM).
 
 ## Risco e rollback
 
-- **Risco mínimo**: mudança de uma única string de versionamento. Padrão já usado 7 vezes antes no projeto.
-- **Rollback**: voltar `cacheId` para `"vale-resgate-v8"` (não recomendado — manteria o problema).
+- **Risco baixo**: mudanças concentradas no loader e em otimizações do BrandContext. Nenhuma alteração de RLS, banco ou rota.
+- **Rollback**: voltar `setTimeout` para 8000 ms no `tela_carregamento.tsx` e remover o early `BRAND_READY` do `BrandContext.tsx`.
 
