@@ -356,6 +356,46 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
         onConfirm={() => habilitarTodos.mutate()}
         onClose={() => setShowConfirmAll(false)}
       />
+
+      {/* Sprint 4B — Cascata D9: desligar duelo com apostas ativas */}
+      <AlertDialog open={confirmDuelOff} onOpenChange={setConfirmDuelOff}>
+        <AlertDialogContent className="z-[100]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Desativar Duelo vai desligar Apostas
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta cidade tem <strong>Apostas paralelas ativas</strong>. Ao desligar
+              todas as modalidades de Duelo, o sistema também desliga as Apostas
+              automaticamente. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                setConfirmDuelOff(false);
+                try {
+                  await setFeature.mutateAsync({
+                    branchId,
+                    feature: "duelo",
+                    enabled: false,
+                    cascadeSideBets: true,
+                  });
+                  // Após RPC aplicar duelo+aposta=false em cascata, persiste o
+                  // restante via UPDATE cru (DvD/Sponsored/parâmetros/etc).
+                  salvar.mutate();
+                } catch {
+                  // toast já disparado pelo hook
+                }
+              }}
+            >
+              Desativar e desligar apostas
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
