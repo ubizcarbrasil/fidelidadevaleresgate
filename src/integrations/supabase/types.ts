@@ -10189,6 +10189,15 @@ export type Database = {
         Args: { p_branch_id: string; p_feature: string }
         Returns: boolean
       }
+      branch_set_feature: {
+        Args: {
+          p_branch_id: string
+          p_cascade_side_bets?: boolean
+          p_enabled: boolean
+          p_feature: string
+        }
+        Returns: Json
+      }
       brand_get_brackets_full: { Args: { p_season_id: string }; Returns: Json }
       brand_get_campeonato_dashboard: {
         Args: { p_brand_id: string }
