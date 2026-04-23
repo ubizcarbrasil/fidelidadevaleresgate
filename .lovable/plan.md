@@ -1,92 +1,69 @@
 
 
-# Diagnóstico: por que o motorista não vê nada do Campeonato
+# Diagnóstico: por que "Painel do Motorista" abre uma tela de Carteira sem cidade
 
-Verifiquei o banco e o código. A temporada **"Abril 2026"** foi criada para a marca *Meu Mototáxi* na cidade alvo, mas ela está **vazia** — sem séries materializadas e sem motoristas distribuídos. Por isso o painel do motorista mostra "nenhum campeonato ativo".
+## O que está acontecendo
 
-## O que encontrei
+Você está logado como **Brand Admin** da Ubiz Resgata (sem `branch_id` próprio, porque admin de marca atende várias cidades). Ao clicar em algo chamado "Painel do Motorista" / "Painel Franqueado", caiu em **`/branch-wallet`** (Carteira de Pontos da Cidade) sem `?branchId=...` na URL → a página não sabe qual cidade carregar e mostra **"Nenhuma cidade vinculada ao seu perfil"**.
 
-**Estado atual da temporada `Abril 2026`:**
-| Item | Valor |
-|---|---|
-| `phase` | `classification` (correto) |
-| `tier_seeding_completed_at` | **NULL** — seeding nunca rodou |
-| Séries materializadas (`duelo_season_tiers`) | **0** |
-| Motoristas distribuídos (`duelo_tier_memberships`) | **0** |
-| Standings (`duelo_season_standings`) | **0** |
-| Motoristas elegíveis na marca | 4.257 |
-| `engagement_format` em `brand_business_models` | **`campeonato`** ✅ |
+A tela em si não está bugada. O problema é de **navegação confusa** causado por três pontos:
 
-**Causa raiz**: a função `criarTemporadaCompleta` (em `servico_campeonato_empreendedor.ts`) só faz o `INSERT` em `duelo_seasons` e grava os prêmios. **Ela não chama** a RPC `duelo_seed_initial_tier_memberships`, que é quem:
-1. Cria as séries reais (`duelo_season_tiers`) a partir do `tiers_config_json`
-2. Aloca os motoristas elegíveis nas séries (`duelo_tier_memberships`)
-3. Cria os standings zerados
-4. Marca `tier_seeding_completed_at = now()`
+### 1. Dois itens no sidebar com nomes idênticos
+| Chave | Rótulo exibido | Vai para | O que é de fato |
+|---|---|---|---|
+| `sidebar.painel_motorista_view` (Gestão Comercial) | **"Painel do Motorista"** | `/driver?brandId=...` | App real do motorista (correto) |
+| `sidebar.painel_motorista` (Configurações) | **"Painel do Motorista"** *(forçado em `useMenuLabels.ts:151`)* | `/driver-config` | Configuração do painel |
 
-Sem esse passo, o motorista cai no `JOIN` vazio dentro de `driver_get_active_season` e a RPC retorna `NULL` → o painel mostra "nenhum campeonato ativo".
+O `defaultTitle` no registro é "Configurar Painel Motorista", mas o `useMenuLabels` sobrescreve para "Painel do Motorista" — ficando idêntico ao item de visualização. Confunde quem clica.
+
+### 2. Atalho "Painel Franqueado" no Dashboard sem cidade
+`DashboardQuickLinks.tsx` (linha 106) cria um card chamado **"Painel Franqueado"** apontando para `/branch-wallet` — sem `?branchId=...`. Para o Brand Admin (que não tem `branch_id` no perfil), a página resolve `effectiveBranchId = null` e mostra "Nenhuma cidade vinculada".
+
+### 3. Item "Carteira de Pontos" no sidebar também sem cidade
+O item `sidebar.carteira_pontos` aponta para `/branch-wallet` direto, sem `branchId`. Mesma armadilha para Brand Admin.
 
 ## O que vou ajustar
 
-### 1. Disparar o seeding logo após criar a temporada
-No `criarTemporadaCompleta`, depois do insert da temporada e dos prêmios, chamar a RPC `duelo_seed_initial_tier_memberships(p_season_id)`. Se ela falhar, mostrar mensagem clara ao empreendedor com o motivo (ex.: nenhum motorista elegível na cidade) e oferecer a opção de tentar novamente sem precisar recriar a temporada.
+### A. Renomear o item de configuração para acabar com a duplicidade
+Em `useMenuLabels.ts`, trocar o `defaultLabel` de `sidebar.painel_motorista` de **"Painel do Motorista"** para **"Configurar Painel do Motorista"**. Em `dados_manuais.ts` e demais lugares, alinhar a mesma terminologia. Resultado: dois itens com nomes claros e diferentes.
 
-### 2. Botão "Distribuir motoristas agora" para temporadas órfãs
-Na página `pagina_campeonato_empreendedor.tsx`, quando uma temporada estiver criada mas com `tier_seeding_completed_at IS NULL`, exibir um banner amarelo no card da temporada ativa:
+### B. Remover/corrigir o atalho "Painel Franqueado" para Brand Admin
+Em `DashboardQuickLinks.tsx`:
+- Para **Brand Admin**, trocar o link "Painel Franqueado → /branch-wallet" por **"Minhas Cidades → /brand-branches"**, que é o ponto de entrada correto para escolher uma cidade e então abrir suas ferramentas.
+- Manter "Painel Franqueado → /branch-wallet" apenas para usuários com `consoleScope === "BRANCH"` (Branch Admin), que têm `branch_id` próprio.
 
-> ⚠️ Temporada criada, mas os motoristas ainda não foram distribuídos nas séries. Clique em **"Distribuir motoristas agora"** para iniciar.
+### C. Bloquear "Carteira de Pontos" sem cidade selecionada para Brand Admin
+Duas opções (vou aplicar a 1 que é mais simples e segura):
 
-Isso resolve o caso da temporada de Abril/2026 que já existe **sem precisar excluí-la e recriar**.
+1. **Esconder o item `sidebar.carteira_pontos`** quando o usuário é Brand/Tenant/Root sem cidade impersonada (sem `?branchId=` ativo). Brand Admin acessa a Carteira pela rota natural: **Minhas Cidades → escolher cidade → Carteira**, e nesse fluxo o `?branchId=` é injetado.
+2. *(Alternativa, não vai entrar agora)*: Mostrar um seletor de cidade dentro de `BranchWalletPage` quando faltar `branchId`.
 
-### 3. Indicador visual no painel do motorista
-No `CampeonatoMotoristaPanel`, refinar o estado vazio para diferenciar dois casos:
-- **Não há temporada ativa**: mensagem atual ("Aguarde o próximo período…")
-- **Há temporada mas o motorista ainda não foi distribuído**: mensagem nova ("A temporada *X* começa em breve. Você será adicionado automaticamente quando o empreendedor concluir a distribuição das séries.")
+Vou aplicar a opção **1** (esconder), porque mantém a coerência com o restante do produto onde "operações de cidade" são feitas dentro do contexto de uma cidade selecionada.
 
-Para isso, vou criar uma RPC leve `driver_get_pending_season(p_brand_id)` que retorna apenas nome/datas da próxima temporada (sem exigir tier membership), ou ajustar `driver_get_active_season` para retornar o registro mesmo sem `tier_id`, com `driver_position = null`.
+### D. Melhorar a mensagem da própria `BranchWalletPage` (failsafe)
+Para o caso raro de alguém aterrissar lá sem `branchId`, trocar o texto seco "Nenhuma cidade vinculada ao seu perfil" por um **estado vazio com ação clara**:
 
-### 4. Realtime no painel do motorista
-Hoje o `useTemporadaAtivaDoMotorista` tem `refetchInterval: 5min`. Vou adicionar **subscription Realtime** em `duelo_tier_memberships` filtrada por `driver_id = me`, para que assim que o seeding rodar no servidor, o painel do motorista se atualize sozinho sem precisar recarregar.
+> 📍 Selecione uma cidade primeiro
+> A Carteira de Pontos é gerenciada por cidade. Vá em **"Minhas Cidades"**, escolha uma cidade e abra a Carteira pelo painel dela.
+> [Botão: Ir para Minhas Cidades]
 
 ## Arquivos que serão ajustados
 
-- `src/features/campeonato_duelo/services/servico_campeonato_empreendedor.ts`
-  - após o insert em `duelo_seasons`, chamar `supabase.rpc("duelo_seed_initial_tier_memberships", { p_season_id: season.id })`
-  - tratar erros do seeding sem perder a temporada criada
-
-- `src/features/campeonato_duelo/hooks/hook_mutations_campeonato.ts`
-  - novo hook `useExecutarSeedingTemporada(seasonId)` para o botão "Distribuir motoristas agora"
-
-- `src/features/campeonato_duelo/pagina_campeonato_empreendedor.tsx`
-  - banner amarelo + botão de seeding manual quando `tier_seeding_completed_at IS NULL`
-
-- `src/features/campeonato_duelo/services/servico_campeonato_motorista.ts` + `hook_campeonato_motorista.ts`
-  - melhorar mensagem do estado "temporada existe mas motorista ainda não distribuído"
-  - adicionar Realtime channel em `duelo_tier_memberships`
-
-- `src/components/driver/campeonato/CampeonatoMotoristaPanel.tsx`
-  - texto de estado vazio mais informativo
-
-### Migration nova (Supabase)
-- Criar RPC `driver_get_pending_or_active_season(p_brand_id, p_driver_id)` que retorna a temporada vigente mesmo quando o motorista ainda não foi distribuído (com flag `is_pending_seeding: true`). Isso permite a UI explicar o que está acontecendo em vez de mostrar "nenhum campeonato ativo".
-
-## O que você precisa fazer agora (resposta direta à sua pergunta)
-
-Para a temporada **Abril 2026** que já está criada e vazia, depois que eu aplicar essas mudanças:
-
-1. Acessar **Gamificação → Campeonato** no painel do empreendedor
-2. Clicar no novo botão **"Distribuir motoristas agora"** que aparecerá no banner amarelo da temporada
-3. Aguardar o seeding distribuir os motoristas elegíveis nas séries
-4. A partir daí, todo motorista da cidade verá o card **"Campeonato"** na home e poderá acessar ranking, série, confronto, etc.
+- `src/hooks/useMenuLabels.ts` — renomear `sidebar.painel_motorista` para "Configurar Painel do Motorista"
+- `src/compartilhados/constants/constantes_menu_sidebar.ts` — alinhar `defaultTitle` de `sidebar.painel_motorista`
+- `src/components/dashboard/DashboardQuickLinks.tsx` — substituir "Painel Franqueado" por "Minhas Cidades" para Brand Admin
+- `src/components/consoles/BrandSidebar.tsx` — esconder `sidebar.carteira_pontos` quando `consoleScope` for BRAND/TENANT/ROOT sem `?branchId=` na URL
+- `src/pages/BranchWalletPage.tsx` — estado vazio com botão "Ir para Minhas Cidades"
 
 ## Resultado esperado
 
-- **Toda temporada nova já nasce com motoristas distribuídos**, sem passo manual.
-- **Temporadas órfãs (como a atual Abril 2026)** podem ser corrigidas com um clique, sem recriar.
-- O painel do motorista deixa de mostrar "nenhum campeonato ativo" quando há uma temporada em andamento — explica claramente o estado real (aguardando distribuição, em classificação, em mata-mata, etc.).
-- Atualização em tempo real: assim que o seeding roda, o motorista vê o conteúdo aparecer sem refresh.
+- O item **"Painel do Motorista"** no sidebar passa a abrir só o app real do motorista (`/driver?brandId=...`). A configuração vira **"Configurar Painel do Motorista"**, sem confusão.
+- O **Dashboard** do Brand Admin não oferece mais o atalho "Painel Franqueado" sem cidade — em vez disso, mostra **"Minhas Cidades"**, que é o caminho real.
+- A **Carteira de Pontos** só aparece no menu quando faz sentido (dentro de uma cidade).
+- Se ainda assim alguém cair na URL `/branch-wallet` sem cidade, vê uma orientação clara em vez de uma mensagem seca.
 
 ## Risco e rollback
 
-- **Risco baixo**: o seeding é uma RPC `SECURITY DEFINER` já existente e testada no banco; apenas não estava sendo chamada pelo frontend.
-- **Rollback**: remover a chamada da RPC no `criarTemporadaCompleta` e o botão manual; nada do banco é alterado destrutivamente.
+- **Risco baixo**: mudanças concentradas em rótulos de menu, filtros visuais e um link do Dashboard. Nenhuma rota é removida; nenhuma RLS/banco é alterada.
+- **Rollback**: restaurar o `defaultLabel` original em `useMenuLabels.ts`, devolver "Painel Franqueado" no `DashboardQuickLinks` e remover o filtro do `sidebar.carteira_pontos`.
 
