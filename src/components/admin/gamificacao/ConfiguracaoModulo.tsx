@@ -39,6 +39,13 @@ const DEFAULT_PHRASES = [
 export default function ConfiguracaoModulo({ branchId, settings }: Props) {
   const qc = useQueryClient();
 
+  // Sprint 4B — leitura RPC das 4 features D9 (fonte de verdade)
+  const dueloQ    = useBranchFeature(branchId, "duelo");
+  const cinturaoQ = useBranchFeature(branchId, "cinturao");
+  const rankingQ  = useBranchFeature(branchId, "ranking");
+  const apostaQ   = useBranchFeature(branchId, "aposta");
+  const setFeature = useSetBranchFeature();
+
   // Compat: se a flag legada existir e nenhuma das novas, usa o valor antigo como base
   const legacyDuelsOn = settings.enable_driver_duels !== false;
   const [enableDuelDvD, setEnableDuelDvD] = useState(
@@ -49,12 +56,6 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
     settings.enable_duel_sponsored_by_brand === true ||
       (settings.enable_duel_sponsored_by_brand === undefined && legacyDuelsOn),
   );
-  const [enableDuelSideBets, setEnableDuelSideBets] = useState(
-    settings.enable_duel_side_bets === true ||
-      (settings.enable_duel_side_bets === undefined && legacyDuelsOn),
-  );
-  const [enableRanking, setEnableRanking] = useState(settings.enable_city_ranking !== false);
-  const [enableBelt, setEnableBelt] = useState(settings.enable_city_belt !== false);
   const [publicViewing, setPublicViewing] = useState(settings.allow_public_duel_viewing !== false);
   const [enableGuesses, setEnableGuesses] = useState(settings.enable_duel_guesses === true);
   const [enableRatings, setEnableRatings] = useState(settings.enable_duel_ratings !== false);
@@ -71,6 +72,14 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
   );
   const [newPhrase, setNewPhrase] = useState("");
   const [showConfirmAll, setShowConfirmAll] = useState(false);
+  const [confirmDuelOff, setConfirmDuelOff] = useState(false);
+
+  // Valores derivados (RPC é fonte de verdade; fallback para flag legada enquanto carrega)
+  const dueloAtivo    = dueloQ.data    ?? legacyDuelsOn;
+  const cinturaoAtivo = cinturaoQ.data ?? settings.enable_city_belt    !== false;
+  const rankingAtivo  = rankingQ.data  ?? settings.enable_city_ranking !== false;
+  const apostasAtivas = apostaQ.data
+    ?? (settings.enable_side_bets === true || settings.enable_duel_side_bets === true);
 
   const salvar = useMutation({
     mutationFn: async () => {
