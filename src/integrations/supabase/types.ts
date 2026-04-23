@@ -2911,6 +2911,7 @@ export type Database = {
           external_driver_id: string | null
           id: string
           is_active: boolean
+          is_driver: boolean | null
           money_balance: number
           name: string
           phone: string | null
@@ -2934,6 +2935,7 @@ export type Database = {
           external_driver_id?: string | null
           id?: string
           is_active?: boolean
+          is_driver?: boolean | null
           money_balance?: number
           name: string
           phone?: string | null
@@ -2957,6 +2959,7 @@ export type Database = {
           external_driver_id?: string | null
           id?: string
           is_active?: boolean
+          is_driver?: boolean | null
           money_balance?: number
           name?: string
           phone?: string | null
