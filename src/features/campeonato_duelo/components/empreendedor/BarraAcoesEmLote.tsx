@@ -6,7 +6,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, X } from "lucide-react";
+import { ArrowRight, CheckSquare, MousePointerClick, X } from "lucide-react";
 import { useState } from "react";
 
 interface SerieAlvo {
@@ -20,6 +20,8 @@ interface Props {
   desabilitado?: boolean;
   aoMover: (tierId: string) => void;
   aoLimpar: () => void;
+  aoSelecionarTodos?: () => void;
+  totalDisponiveisVisiveis?: number;
 }
 
 export default function BarraAcoesEmLote({
@@ -28,10 +30,33 @@ export default function BarraAcoesEmLote({
   desabilitado,
   aoMover,
   aoLimpar,
+  aoSelecionarTodos,
+  totalDisponiveisVisiveis = 0,
 }: Props) {
   const [destino, setDestino] = useState("");
 
-  if (total === 0) return null;
+  if (total === 0) {
+    if (totalDisponiveisVisiveis === 0) return null;
+    return (
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-dashed bg-muted/30 p-2 text-xs text-muted-foreground">
+        <MousePointerClick className="h-3.5 w-3.5 shrink-0" />
+        <span className="flex-1">
+          Selecione motoristas em &quot;Disponíveis&quot; para mover em lote
+        </span>
+        {aoSelecionarTodos && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 text-xs"
+            onClick={aoSelecionarTodos}
+          >
+            <CheckSquare className="mr-1 h-3.5 w-3.5" />
+            Selecionar todos visíveis ({totalDisponiveisVisiveis})
+          </Button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-primary/5 p-2 text-xs">

@@ -10407,6 +10407,14 @@ export type Database = {
         }
         Returns: Json
       }
+      duelo_mover_motoristas_em_lote: {
+        Args: {
+          p_driver_ids: string[]
+          p_season_id: string
+          p_target_tier_id: string
+        }
+        Returns: Json
+      }
       duelo_pause_season: { Args: { p_season_id: string }; Returns: Json }
       duelo_reconcile_standings: { Args: { p_hours?: number }; Returns: Json }
       duelo_remove_driver_from_season: {
