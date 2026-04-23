@@ -67,12 +67,30 @@ export default function CardMotoristaArrastavel({
       )}
     >
       {selecionavel && (
-        <Checkbox
-          checked={!!selecionado}
-          onCheckedChange={() => aoAlternarSelecao?.(driverId)}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!modoLeitura) aoAlternarSelecao?.(driverId);
+          }}
           disabled={modoLeitura}
+          className={cn(
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border transition",
+            selecionado
+              ? "border-primary bg-primary/10 hover:bg-primary/20"
+              : "border-border bg-background hover:bg-accent",
+            modoLeitura && "cursor-not-allowed opacity-50",
+          )}
           aria-label={`Selecionar ${driverName ?? "motorista"}`}
-        />
+          aria-pressed={selecionado}
+        >
+          <Checkbox
+            checked={!!selecionado}
+            disabled={modoLeitura}
+            className="pointer-events-none"
+            tabIndex={-1}
+          />
+        </button>
       )}
 
       {!modoLeitura && (

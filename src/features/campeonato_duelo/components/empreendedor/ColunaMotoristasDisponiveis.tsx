@@ -1,27 +1,47 @@
-import { useMemo, useState } from "react";
+import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Users } from "lucide-react";
+import { CheckSquare, Search, Square, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import CardMotoristaArrastavel from "./CardMotoristaArrastavel";
+import PopoverDistribuirAutomaticamente from "./PopoverDistribuirAutomaticamente";
 import type { MotoristaDisponivel } from "../../types/tipos_empreendedor";
+import type { EstrategiaDistribuicaoAutomatica } from "../../types/tipos_empreendedor";
 
 interface Props {
   motoristas: MotoristaDisponivel[];
   selecionados: Set<string>;
   aoAlternarSelecao: (id: string) => void;
   aoLimparSelecao: () => void;
+  aoSelecionarVarios?: (ids: string[]) => void;
+  totalSeries?: number;
+  pendenteDistribuicao?: boolean;
+  aoDistribuirAutomaticamente?: (
+    estrategia: EstrategiaDistribuicaoAutomatica,
+  ) => void;
   modoLeitura?: boolean;
 }
 
-export default function ColunaMotoristasDisponiveis({
+export interface ColunaMotoristasDisponiveisHandle {
+  selecionarTodosVisiveis: () => void;
+  totalVisiveis: () => number;
+}
+
+const ColunaMotoristasDisponiveis = forwardRef<
+  ColunaMotoristasDisponiveisHandle,
+  Props
+>(function ColunaMotoristasDisponiveis({
   motoristas,
   selecionados,
   aoAlternarSelecao,
   aoLimparSelecao,
+  aoSelecionarVarios,
+  totalSeries = 0,
+  pendenteDistribuicao,
+  aoDistribuirAutomaticamente,
   modoLeitura,
-}: Props) {
+}, ref) {
   const [busca, setBusca] = useState("");
   const { setNodeRef, isOver } = useDroppable({
     id: "available",
@@ -37,6 +57,24 @@ export default function ColunaMotoristasDisponiveis({
         (m.driver_phone ?? "").toLowerCase().includes(t),
     );
   }, [motoristas, busca]);
+
+  function selecionarTodosVisiveis() {
+    if (!aoSelecionarVarios) return;
+    aoSelecionarVarios(filtrados.map((m) => m.driver_id));
+  }
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      selecionarTodosVisiveis,
+      totalVisiveis: () => filtrados.length,
+    }),
+    [filtrados, aoSelecionarVarios],
+  );
+
+  const todosVisiveisSelecionados =
+    filtrados.length > 0 &&
+    filtrados.every((m) => selecionados.has(m.driver_id));
 
   return (
     <div
@@ -74,6 +112,38 @@ export default function ColunaMotoristasDisponiveis({
             className="h-8 pl-7 text-xs"
           />
         </div>
+
+        {!modoLeitura && filtrados.length > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              if (todosVisiveisSelecionados) aoLimparSelecao();
+              else selecionarTodosVisiveis();
+            }}
+            className="flex w-full items-center gap-1.5 rounded-md border bg-card px-2 py-1.5 text-xs font-medium hover:bg-accent"
+          >
+            {todosVisiveisSelecionados ? (
+              <>
+                <Square className="h-3.5 w-3.5" />
+                Desmarcar todos visíveis
+              </>
+            ) : (
+              <>
+                <CheckSquare className="h-3.5 w-3.5" />
+                Selecionar todos visíveis ({filtrados.length})
+              </>
+            )}
+          </button>
+        )}
+
+        {!modoLeitura && aoDistribuirAutomaticamente && (
+          <PopoverDistribuirAutomaticamente
+            totalDisponiveis={motoristas.length}
+            totalSeries={totalSeries}
+            pendente={pendenteDistribuicao}
+            aoConfirmar={aoDistribuirAutomaticamente}
+          />
+        )}
       </div>
 
       <ScrollArea className="flex-1">
@@ -104,4 +174,6 @@ export default function ColunaMotoristasDisponiveis({
       </ScrollArea>
     </div>
   );
-}
+});
+
+export default ColunaMotoristasDisponiveis;
