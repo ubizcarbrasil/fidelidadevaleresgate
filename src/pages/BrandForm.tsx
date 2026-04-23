@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectSeparator } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Key, Trash2, Save } from "lucide-react";
+import { ArrowLeft, Loader2, Key, Trash2, Save, Check, Package } from "lucide-react";
 import BrandThemeEditor from "@/components/BrandThemeEditor";
 import BrandSectionsManager from "@/components/BrandSectionsManager";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
@@ -22,6 +22,14 @@ import type { OfferCardConfig } from "@/hooks/useOfferCardConfig";
 import { DEFAULT_CONFIG } from "@/hooks/useOfferCardConfig";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBrandModules } from "@/hooks/useBrandModules";
+
+// Planos padrão (legado interno) — mantidos para compatibilidade.
+const LEGACY_PLAN_OPTIONS = [
+  { key: "free", label: "Free" },
+  { key: "starter", label: "Starter" },
+  { key: "profissional", label: "Profissional" },
+];
+const LEGACY_PLAN_KEYS = new Set(LEGACY_PLAN_OPTIONS.map((p) => p.key));
 
 export default function BrandForm() {
   const { id } = useParams();
@@ -38,6 +46,7 @@ export default function BrandForm() {
   const [tenantName, setTenantName] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [subscriptionPlan, setSubscriptionPlan] = useState("free");
+  const [initialPlan, setInitialPlan] = useState("free");
   const [theme, setTheme] = useState<BrandTheme>({});
   const [offerCardConfig, setOfferCardConfig] = useState<OfferCardConfig>(DEFAULT_CONFIG);
   const [existingSettings, setExistingSettings] = useState<Record<string, any>>({});
@@ -68,6 +77,34 @@ export default function BrandForm() {
     enabled: isRootAdmin,
   });
 
+  // Produtos comerciais ativos (subscription_plans) — populam o seletor junto com os planos legados.
+  const { data: commercialProducts } = useQuery({
+    queryKey: ["commercial-products-for-brand-edit"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("subscription_plans")
+        .select("plan_key, product_name, label, is_active")
+        .eq("is_active", true)
+        .order("product_name");
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: isRootAdmin,
+  });
+
+  const commercialProductOptions = (commercialProducts ?? [])
+    .filter((p: any) => !LEGACY_PLAN_KEYS.has(p.plan_key))
+    .map((p: any) => ({
+      key: p.plan_key as string,
+      label: (p.product_name || p.label || p.plan_key) as string,
+    }));
+
+  const currentPlanLabel =
+    LEGACY_PLAN_OPTIONS.find((p) => p.key === subscriptionPlan)?.label ||
+    commercialProductOptions.find((p) => p.key === subscriptionPlan)?.label ||
+    subscriptionPlan;
+
   // Load brand data
   useEffect(() => {
     if (isEdit) {
@@ -81,6 +118,7 @@ export default function BrandForm() {
         });
         setIsActive(data.is_active);
         setSubscriptionPlan(data.subscription_plan || "free");
+        setInitialPlan(data.subscription_plan || "free");
         if (data.brand_settings_json && typeof data.brand_settings_json === "object" && !Array.isArray(data.brand_settings_json)) {
           const settings = data.brand_settings_json as Record<string, any>;
           setExistingSettings(settings);
@@ -138,10 +176,20 @@ export default function BrandForm() {
     const basePayload = { name, brand_settings_json: mergedSettings };
 
     if (isEdit) {
-      const { data, error } = await supabase.from("brands").update({
-        ...basePayload,
-        ...(isRootAdmin ? { slug, tenant_id: tenantId, is_active: isActive, subscription_plan: subscriptionPlan } : {}),
-      }).eq("id", id!).select();
+      // Quando o plano muda, delegamos à Edge Function `change_plan` para garantir governança
+      // (re-aplicação do template do plano, auditoria, regras de status). Os demais campos
+      // continuam indo via UPDATE direto.
+      const planChanged = isRootAdmin && subscriptionPlan !== initialPlan;
+      const updatePayload: Record<string, unknown> = { ...basePayload };
+      if (isRootAdmin) {
+        updatePayload.slug = slug;
+        updatePayload.tenant_id = tenantId;
+        updatePayload.is_active = isActive;
+        // subscription_plan fica de fora — quem cuida dele é a Edge Function quando mudou.
+        if (!planChanged) updatePayload.subscription_plan = subscriptionPlan;
+      }
+
+      const { data, error } = await supabase.from("brands").update(updatePayload).eq("id", id!).select();
 
       if (error) {
         toast.error(error.message);
@@ -152,7 +200,21 @@ export default function BrandForm() {
           await supabase.from("tenants").update({ name: tenantName.trim() }).eq("id", tenantId);
           queryClient.invalidateQueries({ queryKey: ["tenants-select"] });
         }
-        toast.success("Marca atualizada!");
+
+        if (planChanged) {
+          try {
+            await invokeAdminAction({ action: "change_plan", brand_id: id, plan: subscriptionPlan });
+            setInitialPlan(subscriptionPlan);
+            queryClient.invalidateQueries({ queryKey: ["brands"] });
+            toast.success(`Marca atualizada e plano alterado para ${currentPlanLabel}!`);
+          } catch (err: any) {
+            toast.error(`Marca salva, mas falha ao trocar plano: ${err.message}`);
+            // Reverte estado local para refletir o plano que ainda está no banco.
+            setSubscriptionPlan(initialPlan);
+          }
+        } else {
+          toast.success("Marca atualizada!");
+        }
       }
     } else {
       const { error } = await supabase.from("brands").insert([{ ...basePayload, slug, tenant_id: tenantId, is_active: isActive, subscription_plan: subscriptionPlan }]);
@@ -272,15 +334,57 @@ export default function BrandForm() {
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label>Plano</Label>
+                      <Label className="flex items-center gap-2">
+                        Plano / Produto
+                        {isEdit && subscriptionPlan !== initialPlan && (
+                          <Badge variant="outline" className="text-xs">Pendente — salvar para aplicar</Badge>
+                        )}
+                      </Label>
                       <Select value={subscriptionPlan} onValueChange={setSubscriptionPlan}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um plano ou produto" />
+                        </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="free">Free</SelectItem>
-                          <SelectItem value="starter">Starter</SelectItem>
-                          <SelectItem value="profissional">Profissional</SelectItem>
+                          <SelectGroup>
+                            <SelectLabel className="text-xs uppercase tracking-wide text-muted-foreground">
+                              Planos Padrão
+                            </SelectLabel>
+                            {LEGACY_PLAN_OPTIONS.map((p) => (
+                              <SelectItem key={p.key} value={p.key}>
+                                <span className="inline-flex items-center gap-2">
+                                  {p.label}
+                                  {p.key === initialPlan && <Check className="h-3 w-3 text-primary" />}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+
+                          {commercialProductOptions.length > 0 && (
+                            <>
+                              <SelectSeparator />
+                              <SelectGroup>
+                                <SelectLabel className="text-xs uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                                  <Package className="h-3 w-3" /> Produtos Comerciais
+                                </SelectLabel>
+                                {commercialProductOptions.map((p) => (
+                                  <SelectItem key={p.key} value={p.key}>
+                                    <span className="inline-flex items-center gap-2">
+                                      {p.label}
+                                      {p.key === initialPlan && <Check className="h-3 w-3 text-primary" />}
+                                    </span>
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                            </>
+                          )}
                         </SelectContent>
                       </Select>
+                      {isEdit && (
+                        <p className="text-xs text-muted-foreground">
+                          Plano vigente: <strong>{currentPlanLabel}</strong>. Ao trocar e salvar, o template de módulos do
+                          novo plano é re-aplicado. Customizações manuais não são resetadas — para isso use a Central de Módulos.
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label>Ativo</Label>
