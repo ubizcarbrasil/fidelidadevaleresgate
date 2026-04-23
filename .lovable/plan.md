@@ -1,69 +1,83 @@
 
 
-# Diagnóstico: por que "Painel do Motorista" abre uma tela de Carteira sem cidade
+# Distribuição de motoristas: destravar bloqueio + multi-seleção decente
 
-## O que está acontecendo
+## Diagnóstico
 
-Você está logado como **Brand Admin** da Ubiz Resgata (sem `branch_id` próprio, porque admin de marca atende várias cidades). Ao clicar em algo chamado "Painel do Motorista" / "Painel Franqueado", caiu em **`/branch-wallet`** (Carteira de Pontos da Cidade) sem `?branchId=...` na URL → a página não sabe qual cidade carregar e mostra **"Nenhuma cidade vinculada ao seu perfil"**.
+Dois problemas combinados na tela "Distribuir motoristas nas séries":
 
-A tela em si não está bugada. O problema é de **navegação confusa** causado por três pontos:
+### 1. Bloqueador real (motivo da coluna "Disponíveis (0)" vazia)
+A RPC `duelo_materialize_and_seed_season(uuid)` **existe no banco**, mas o cache do PostgREST está velho e o cliente recebe:
 
-### 1. Dois itens no sidebar com nomes idênticos
-| Chave | Rótulo exibido | Vai para | O que é de fato |
-|---|---|---|---|
-| `sidebar.painel_motorista_view` (Gestão Comercial) | **"Painel do Motorista"** | `/driver?brandId=...` | App real do motorista (correto) |
-| `sidebar.painel_motorista` (Configurações) | **"Painel do Motorista"** *(forçado em `useMenuLabels.ts:151`)* | `/driver-config` | Configuração do painel |
+> `Could not find the function public.duelo_materialize_and_seed_season without parameters in the schema cache`
 
-O `defaultTitle` no registro é "Configurar Painel Motorista", mas o `useMenuLabels` sobrescreve para "Painel do Motorista" — ficando idêntico ao item de visualização. Confunde quem clica.
+Por isso o botão "Distribuir motoristas agora" falha, o seeding nunca roda, nenhuma série é materializada, nenhum motorista entra na temporada → a tela abre vazia e tudo parece quebrado. Não é só UX.
 
-### 2. Atalho "Painel Franqueado" no Dashboard sem cidade
-`DashboardQuickLinks.tsx` (linha 106) cria um card chamado **"Painel Franqueado"** apontando para `/branch-wallet` — sem `?branchId=...`. Para o Brand Admin (que não tem `branch_id` no perfil), a página resolve `effectiveBranchId = null` e mostra "Nenhuma cidade vinculada".
+### 2. UX da multi-seleção (queixa "está uma merda")
+A seleção em lote existe, mas é fraca:
+- Sem **"Selecionar todos os visíveis"** na coluna Disponíveis
+- A barra de ação em lote **só aparece depois** de selecionar — quem nunca usou não descobre
+- Move 1 motorista por vez via N chamadas RPC paralelas (lento, gera N invalidations)
+- Não tem **distribuição automática equilibrada** ("repartir 60 motoristas em 5 séries balanceando")
+- Em mobile, checkbox + grip + botão competem por 32px de altura — clica errado o tempo todo
 
-### 3. Item "Carteira de Pontos" no sidebar também sem cidade
-O item `sidebar.carteira_pontos` aponta para `/branch-wallet` direto, sem `branchId`. Mesma armadilha para Brand Admin.
+## O que vou fazer
 
-## O que vou ajustar
+### A. Destravar a RPC (correção crítica primeiro)
+1. **Migration leve** de `COMMENT ON FUNCTION duelo_materialize_and_seed_season IS '…'` + `NOTIFY pgrst, 'reload schema'` — força reload do cache do PostgREST sem alterar lógica.
+2. **Fallback no front**: no `executarSeedingTemporada`, se vier o erro `PGRST202` ("function not found"), tentar 1 retry após 1.5s antes de mostrar toast de erro. Cobre casos futuros de propagação lenta de cache.
+3. **Backfill via Edge Function `admin-brand-actions`** já existente: adicionar action `seedSeason` que chama a RPC com `service_role` — bypassa o PostgREST cache do client. Vira o caminho default do botão "Distribuir motoristas agora", deixando o fallback direto no client só como segundo plano.
 
-### A. Renomear o item de configuração para acabar com a duplicidade
-Em `useMenuLabels.ts`, trocar o `defaultLabel` de `sidebar.painel_motorista` de **"Painel do Motorista"** para **"Configurar Painel do Motorista"**. Em `dados_manuais.ts` e demais lugares, alinhar a mesma terminologia. Resultado: dois itens com nomes claros e diferentes.
+### B. Multi-seleção decente na coluna Disponíveis
 
-### B. Remover/corrigir o atalho "Painel Franqueado" para Brand Admin
-Em `DashboardQuickLinks.tsx`:
-- Para **Brand Admin**, trocar o link "Painel Franqueado → /branch-wallet" por **"Minhas Cidades → /brand-branches"**, que é o ponto de entrada correto para escolher uma cidade e então abrir suas ferramentas.
-- Manter "Painel Franqueado → /branch-wallet" apenas para usuários com `consoleScope === "BRANCH"` (Branch Admin), que têm `branch_id` próprio.
+Reformular `ColunaMotoristasDisponiveis.tsx`:
 
-### C. Bloquear "Carteira de Pontos" sem cidade selecionada para Brand Admin
-Duas opções (vou aplicar a 1 que é mais simples e segura):
+1. **Header com modo seleção em lote sempre visível**: chip "Selecionar todos os visíveis (N)" / "Limpar seleção (X)" no topo, não só quando já tem alguém marcado.
+2. **Checkbox grande e dedicado** num slot próprio (esquerda do card), separado do grip e do botão de ação. Touch target 32×32 mínimo.
+3. **Atalho "Distribuir automaticamente"** acima da coluna: abre um popover perguntando o método:
+   - **Equilibrado**: divide igualmente entre todas as séries respeitando `target_size`
+   - **Por ordem alfabética → Série A primeiro até lotar, depois B, etc.**
+   - **Aleatório**: shuffle e distribui equilibrado
+   
+   Isso resolve o caso "tenho 60 motoristas novos, quero jogar tudo de uma vez sem ficar arrastando".
 
-1. **Esconder o item `sidebar.carteira_pontos`** quando o usuário é Brand/Tenant/Root sem cidade impersonada (sem `?branchId=` ativo). Brand Admin acessa a Carteira pela rota natural: **Minhas Cidades → escolher cidade → Carteira**, e nesse fluxo o `?branchId=` é injetado.
-2. *(Alternativa, não vai entrar agora)*: Mostrar um seletor de cidade dentro de `BranchWalletPage` quando faltar `branchId`.
+### C. Mover em lote em **uma chamada só**
 
-Vou aplicar a opção **1** (esconder), porque mantém a coerência com o restante do produto onde "operações de cidade" são feitas dentro do contexto de uma cidade selecionada.
+Hoje `moverEmLote` faz `Promise.allSettled(ids.map(mutateAsync))` — N requests, N RLS checks, N invalidations.
 
-### D. Melhorar a mensagem da própria `BranchWalletPage` (failsafe)
-Para o caso raro de alguém aterrissar lá sem `branchId`, trocar o texto seco "Nenhuma cidade vinculada ao seu perfil" por um **estado vazio com ação clara**:
+1. **Nova RPC** `duelo_mover_motoristas_em_lote(p_season_id uuid, p_driver_ids uuid[], p_target_tier_id uuid)` que faz todos os inserts/updates em transação única e retorna `{ moved: N, failed: [...] }`.
+2. **Refatorar `useMoverMotorista`** para um hook irmão `useMoverMotoristasEmLote` que chama a nova RPC. `BarraAcoesEmLote` passa a usá-lo direto.
+3. **Distribuição automática** vira uma chamada da mesma RPC, agrupada por tier de destino.
 
-> 📍 Selecione uma cidade primeiro
-> A Carteira de Pontos é gerenciada por cidade. Vá em **"Minhas Cidades"**, escolha uma cidade e abra a Carteira pelo painel dela.
-> [Botão: Ir para Minhas Cidades]
+### D. Affordance da barra de ação em lote
 
-## Arquivos que serão ajustados
+`BarraAcoesEmLote.tsx` hoje só renderiza quando `total > 0`. Vou trocar para:
+- Sempre renderizada quando há séries criadas e modo edição
+- Quando `total === 0`: estado "fantasma" com texto "Selecione motoristas para mover em lote" + botão "Selecionar todos os visíveis"
+- Quando `total > 0`: estado ativo atual (selector "Mover para…" + botões)
 
-- `src/hooks/useMenuLabels.ts` — renomear `sidebar.painel_motorista` para "Configurar Painel do Motorista"
-- `src/compartilhados/constants/constantes_menu_sidebar.ts` — alinhar `defaultTitle` de `sidebar.painel_motorista`
-- `src/components/dashboard/DashboardQuickLinks.tsx` — substituir "Painel Franqueado" por "Minhas Cidades" para Brand Admin
-- `src/components/consoles/BrandSidebar.tsx` — esconder `sidebar.carteira_pontos` quando `consoleScope` for BRAND/TENANT/ROOT sem `?branchId=` na URL
-- `src/pages/BranchWalletPage.tsx` — estado vazio com botão "Ir para Minhas Cidades"
+## Arquivos a alterar
+
+- **Nova migration**: `comment + NOTIFY pgrst` + RPC `duelo_mover_motoristas_em_lote`
+- `supabase/functions/admin-brand-actions/index.ts` — nova action `seedSeason`
+- `src/features/campeonato_duelo/services/servico_campeonato_empreendedor.ts` — fallback retry + chamada via edge function
+- `src/features/campeonato_duelo/hooks/hook_distribuicao_manual.ts` — novo `useMoverMotoristasEmLote`, `useDistribuirAutomaticamente`
+- `src/features/campeonato_duelo/components/empreendedor/ColunaMotoristasDisponiveis.tsx` — header com "Selecionar todos visíveis", botão "Distribuir automaticamente"
+- `src/features/campeonato_duelo/components/empreendedor/BarraAcoesEmLote.tsx` — estado fantasma sempre visível
+- `src/features/campeonato_duelo/components/empreendedor/CardMotoristaArrastavel.tsx` — checkbox em slot próprio com touch target maior
+- `src/features/campeonato_duelo/components/empreendedor/DistribuicaoManualView.tsx` — wiring dos novos hooks e do popover de distribuição automática
+- **Novo componente**: `PopoverDistribuirAutomaticamente.tsx`
 
 ## Resultado esperado
 
-- O item **"Painel do Motorista"** no sidebar passa a abrir só o app real do motorista (`/driver?brandId=...`). A configuração vira **"Configurar Painel do Motorista"**, sem confusão.
-- O **Dashboard** do Brand Admin não oferece mais o atalho "Painel Franqueado" sem cidade — em vez disso, mostra **"Minhas Cidades"**, que é o caminho real.
-- A **Carteira de Pontos** só aparece no menu quando faz sentido (dentro de uma cidade).
-- Se ainda assim alguém cair na URL `/branch-wallet` sem cidade, vê uma orientação clara em vez de uma mensagem seca.
+- Botão **"Distribuir motoristas agora"** funciona na primeira tentativa (cache resolvido + edge function como caminho principal). A temporada Abril 2026 sai do estado vazio.
+- Coluna "Disponíveis" passa a mostrar os 4.257 motoristas elegíveis com checkbox claro, busca e **"Selecionar todos visíveis"**.
+- **"Distribuir automaticamente"** resolve o caso comum em 2 cliques: escolher método (equilibrado/alfabético/aleatório) → confirmar.
+- Mover em lote vira **1 chamada de banco** em vez de N — feedback imediato.
+- Barra de ação em lote sempre visível, ensina o que dá pra fazer.
 
 ## Risco e rollback
 
-- **Risco baixo**: mudanças concentradas em rótulos de menu, filtros visuais e um link do Dashboard. Nenhuma rota é removida; nenhuma RLS/banco é alterada.
-- **Rollback**: restaurar o `defaultLabel` original em `useMenuLabels.ts`, devolver "Painel Franqueado" no `DashboardQuickLinks` e remover o filtro do `sidebar.carteira_pontos`.
+- **Risco baixo**: a RPC nova é aditiva, não toca nas existentes. O fallback via edge function não exclui o caminho atual.
+- **Rollback**: descartar a nova RPC e o componente de distribuição automática; o resto continua funcionando.
 
