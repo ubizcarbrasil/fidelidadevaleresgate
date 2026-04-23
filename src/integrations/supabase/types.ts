@@ -10185,6 +10185,10 @@ export type Database = {
         }
         Returns: Json
       }
+      branch_has_feature: {
+        Args: { p_branch_id: string; p_feature: string }
+        Returns: boolean
+      }
       brand_get_brackets_full: { Args: { p_season_id: string }; Returns: Json }
       brand_get_campeonato_dashboard: {
         Args: { p_brand_id: string }
@@ -10202,6 +10206,14 @@ export type Database = {
       brand_get_series_detail: {
         Args: { p_season_id: string; p_tier_id: string }
         Returns: Json
+      }
+      brand_has_feature: {
+        Args: { p_brand_id: string; p_feature: string }
+        Returns: boolean
+      }
+      brand_set_duelo_feature: {
+        Args: { p_brand_id: string; p_enabled: boolean; p_feature: string }
+        Returns: undefined
       }
       collect_duel_ride_ids: {
         Args: {
