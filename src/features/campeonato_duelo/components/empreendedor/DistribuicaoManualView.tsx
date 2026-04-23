@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQueries } from "@tanstack/react-query";
 import {
   Dialog,
@@ -24,15 +24,19 @@ import {
 } from "../../hooks/hook_campeonato_empreendedor";
 import {
   useMoverMotorista,
+  useMoverMotoristasEmLote,
   useRemoverMotorista,
 } from "../../hooks/hook_distribuicao_manual";
 import { obterDetalheSerie } from "../../services/servico_campeonato_empreendedor";
-import ColunaMotoristasDisponiveis from "./ColunaMotoristasDisponiveis";
+import ColunaMotoristasDisponiveis, {
+  type ColunaMotoristasDisponiveisHandle,
+} from "./ColunaMotoristasDisponiveis";
 import ColunaSerie from "./ColunaSerie";
 import BarraAcoesEmLote from "./BarraAcoesEmLote";
 import ConfirmRemoverMotorista from "./ConfirmRemoverMotorista";
 import TutorialDistribuicaoMotoristas from "./TutorialDistribuicaoMotoristas";
 import TourGuiadoDistribuicao from "./TourGuiadoDistribuicao";
+import type { EstrategiaDistribuicaoAutomatica } from "../../types/tipos_empreendedor";
 
 interface Props {
   open: boolean;
@@ -93,8 +97,10 @@ export default function DistribuicaoManualView({
   } | null>(null);
 
   const mover = useMoverMotorista(brandId);
+  const moverEmLoteMut = useMoverMotoristasEmLote(brandId);
   const remover = useRemoverMotorista(brandId);
   const [tourAtivo, setTourAtivo] = useState(false);
+  const colunaDispRef = useRef<ColunaMotoristasDisponiveisHandle>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -129,16 +135,99 @@ export default function DistribuicaoManualView({
 
   function moverEmLote(targetTierId: string) {
     if (modoLeitura || selecionados.size === 0) return;
-    const ids = Array.from(selecionados);
-    Promise.allSettled(
-      ids.map((driverId) =>
-        mover.mutateAsync({ seasonId, driverId, targetTierId }),
-      ),
-    ).then((res) => {
+    const driverIds = Array.from(selecionados);
+    moverEmLoteMut.mutate(
+      { seasonId, driverIds, targetTierId },
+      { onSuccess: () => limparSelecao() },
+    );
+  }
+
+  function selecionarVarios(ids: string[]) {
+    setSelecionados((prev) => {
+      const novo = new Set(prev);
+      ids.forEach((id) => novo.add(id));
+      return novo;
+    });
+  }
+
+  function selecionarTodosVisiveisExterno() {
+    colunaDispRef.current?.selecionarTodosVisiveis();
+  }
+
+  function distribuirAutomaticamente(
+    estrategia: EstrategiaDistribuicaoAutomatica,
+  ) {
+    if (modoLeitura) return;
+    const lista = motoristas ?? [];
+    if (lista.length === 0 || tiers.length === 0) return;
+
+    // 1) ordenar conforme estratégia
+    let ordenados = [...lista];
+    if (estrategia === "alfabetico") {
+      ordenados.sort((a, b) =>
+        (a.driver_name ?? "").localeCompare(b.driver_name ?? "", "pt-BR"),
+      );
+    } else if (estrategia === "aleatorio") {
+      for (let i = ordenados.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [ordenados[i], ordenados[j]] = [ordenados[j], ordenados[i]];
+      }
+    } else {
+      // equilibrado: ordem alfabética como base estável para o round-robin
+      ordenados.sort((a, b) =>
+        (a.driver_name ?? "").localeCompare(b.driver_name ?? "", "pt-BR"),
+      );
+    }
+
+    // 2) montar buckets por tier
+    const buckets = new Map<string, string[]>();
+    tiers.forEach((t) => buckets.set(t.tier_id, []));
+
+    if (estrategia === "alfabetico") {
+      // preenche série por série respeitando members_count atual + capacidade aproximada (target_size = total/tiers.length se desconhecido)
+      const capacidadeAprox = Math.ceil(ordenados.length / tiers.length);
+      let idx = 0;
+      for (const tier of tiers) {
+        const arr = buckets.get(tier.tier_id)!;
+        while (arr.length < capacidadeAprox && idx < ordenados.length) {
+          arr.push(ordenados[idx].driver_id);
+          idx++;
+        }
+      }
+      // sobras vão para o último tier
+      while (idx < ordenados.length) {
+        buckets.get(tiers[tiers.length - 1].tier_id)!.push(
+          ordenados[idx].driver_id,
+        );
+        idx++;
+      }
+    } else {
+      // equilibrado / aleatorio: round-robin
+      ordenados.forEach((m, i) => {
+        const tier = tiers[i % tiers.length];
+        buckets.get(tier.tier_id)!.push(m.driver_id);
+      });
+    }
+
+    // 3) disparar 1 chamada por tier (em paralelo)
+    const tasks: Promise<unknown>[] = [];
+    buckets.forEach((driverIds, targetTierId) => {
+      if (driverIds.length === 0) return;
+      tasks.push(
+        moverEmLoteMut.mutateAsync({ seasonId, driverIds, targetTierId }),
+      );
+    });
+
+    Promise.allSettled(tasks).then((res) => {
       const ok = res.filter((r) => r.status === "fulfilled").length;
       const fail = res.length - ok;
-      if (ok > 0) toast.success(`${ok} motorista(s) movido(s)`);
-      if (fail > 0) toast.error(`${fail} falha(s) ao mover`);
+      if (fail === 0 && ok > 0) {
+        toast.success(
+          `Distribuição automática aplicada (${ordenados.length} motoristas)`,
+        );
+      } else if (fail > 0) {
+        toast.error(`${fail} grupo(s) falharam na distribuição automática`);
+      }
       limparSelecao();
     });
   }
@@ -215,9 +304,13 @@ export default function DistribuicaoManualView({
               <BarraAcoesEmLote
                 total={selecionados.size}
                 series={seriesAlvo}
-                desabilitado={mover.isPending}
+                desabilitado={mover.isPending || moverEmLoteMut.isPending}
                 aoMover={moverEmLote}
                 aoLimpar={limparSelecao}
+                aoSelecionarTodos={selecionarTodosVisiveisExterno}
+                totalDisponiveisVisiveis={
+                  colunaDispRef.current?.totalVisiveis() ?? motoristas?.length ?? 0
+                }
               />
             </div>
           )}
@@ -231,10 +324,15 @@ export default function DistribuicaoManualView({
               <div className="flex flex-1 gap-3 overflow-x-auto pb-2">
                 <div className="w-[280px] shrink-0" data-tour="coluna-disponiveis">
                   <ColunaMotoristasDisponiveis
+                    ref={colunaDispRef}
                     motoristas={motoristas ?? []}
                     selecionados={selecionados}
                     aoAlternarSelecao={alternarSelecao}
                     aoLimparSelecao={limparSelecao}
+                    aoSelecionarVarios={selecionarVarios}
+                    totalSeries={tiers.length}
+                    pendenteDistribuicao={moverEmLoteMut.isPending}
+                    aoDistribuirAutomaticamente={distribuirAutomaticamente}
                     modoLeitura={modoLeitura}
                   />
                 </div>
