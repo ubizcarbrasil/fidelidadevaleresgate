@@ -65,7 +65,11 @@ return ({
         // antes ficava preso em respostas cacheadas (status=running, processed=0) por 5 min.
         // v8 (Import via Storage) — força saída de SW antigos (clientsClaim+skipWaiting já
         // ativos) e invalida bundle no iPhone PWA com upload de planilhas via Storage.
-        cacheId: "vale-resgate-v8",
+        // v9 (BrandForm + Distribuição em lote) — invalida chunks antigos no iPhone/Android
+        // PWA após múltiplas builds (seletor de plano no BrandForm, distribuição em lote
+        // do Campeonato, etc.) que estavam causando "Importing a module script failed"
+        // por chunk-YQECZGAV.js fantasma cacheado pelo SW v8.
+        cacheId: "vale-resgate-v9",
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,jpg,jpeg,webp}"],
