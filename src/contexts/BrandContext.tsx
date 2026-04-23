@@ -100,12 +100,32 @@ async function resolveBrandByDomain(hostname: string): Promise<Brand | null> {
   return null;
 }
 
+// Detecção síncrona executada uma única vez no carregamento do módulo.
+// Permite inicializar `loading` como `false` em domínios sem resolução por
+// hostname (preview, portal universal, localhost), evitando 1 render extra
+// com a tela de carregamento piscando no boot rápido.
+const PORTAL_HOSTNAMES_SYNC = ["app.valeresgate.com.br"];
+const IS_LOCAL_HOST_SYNC = (() => {
+  if (typeof window === "undefined") return false;
+  const h = window.location.hostname;
+  return h === "localhost"
+    || h.includes("lovable.app")
+    || h.includes("lovableproject.com")
+    || h.startsWith("root.")
+    || PORTAL_HOSTNAMES_SYNC.includes(h);
+})();
+const HAS_BRAND_ID_PARAM_SYNC = typeof window !== "undefined"
+  && new URLSearchParams(window.location.search).has("brandId");
+
 export function BrandProvider({ children }: { children: React.ReactNode }) {
   const { user, roles } = useAuth();
   const [brand, setBrand] = useState<Brand | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [selectedBranch, setSelectedBranchState] = useState<Branch | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Em domínios locais/portal sem ?brandId=, já inicia `false` — evita o
+  // flash do loader no boot rápido (caminho mais comum em desenvolvimento
+  // e no portal universal logado).
+  const [loading, setLoading] = useState(!(IS_LOCAL_HOST_SYNC && !HAS_BRAND_ID_PARAM_SYNC));
   const [isWhiteLabel, setIsWhiteLabel] = useState(false);
 
   const isCustomerPath = window.location.pathname.startsWith('/c/') || window.location.pathname.startsWith('/customer-preview');
