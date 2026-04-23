@@ -46,6 +46,7 @@ export default function BrandForm() {
   const [tenantName, setTenantName] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [subscriptionPlan, setSubscriptionPlan] = useState("free");
+  const [initialPlan, setInitialPlan] = useState("free");
   const [theme, setTheme] = useState<BrandTheme>({});
   const [offerCardConfig, setOfferCardConfig] = useState<OfferCardConfig>(DEFAULT_CONFIG);
   const [existingSettings, setExistingSettings] = useState<Record<string, any>>({});
@@ -75,6 +76,34 @@ export default function BrandForm() {
     },
     enabled: isRootAdmin,
   });
+
+  // Produtos comerciais ativos (subscription_plans) — populam o seletor junto com os planos legados.
+  const { data: commercialProducts } = useQuery({
+    queryKey: ["commercial-products-for-brand-edit"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("subscription_plans")
+        .select("plan_key, product_name, label, is_active")
+        .eq("is_active", true)
+        .order("product_name");
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: isRootAdmin,
+  });
+
+  const commercialProductOptions = (commercialProducts ?? [])
+    .filter((p: any) => !LEGACY_PLAN_KEYS.has(p.plan_key))
+    .map((p: any) => ({
+      key: p.plan_key as string,
+      label: (p.product_name || p.label || p.plan_key) as string,
+    }));
+
+  const currentPlanLabel =
+    LEGACY_PLAN_OPTIONS.find((p) => p.key === subscriptionPlan)?.label ||
+    commercialProductOptions.find((p) => p.key === subscriptionPlan)?.label ||
+    subscriptionPlan;
 
   // Load brand data
   useEffect(() => {
