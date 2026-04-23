@@ -334,15 +334,57 @@ export default function BrandForm() {
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label>Plano</Label>
+                      <Label className="flex items-center gap-2">
+                        Plano / Produto
+                        {isEdit && subscriptionPlan !== initialPlan && (
+                          <Badge variant="outline" className="text-xs">Pendente — salvar para aplicar</Badge>
+                        )}
+                      </Label>
                       <Select value={subscriptionPlan} onValueChange={setSubscriptionPlan}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um plano ou produto" />
+                        </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="free">Free</SelectItem>
-                          <SelectItem value="starter">Starter</SelectItem>
-                          <SelectItem value="profissional">Profissional</SelectItem>
+                          <SelectGroup>
+                            <SelectLabel className="text-xs uppercase tracking-wide text-muted-foreground">
+                              Planos Padrão
+                            </SelectLabel>
+                            {LEGACY_PLAN_OPTIONS.map((p) => (
+                              <SelectItem key={p.key} value={p.key}>
+                                <span className="inline-flex items-center gap-2">
+                                  {p.label}
+                                  {p.key === initialPlan && <Check className="h-3 w-3 text-primary" />}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+
+                          {commercialProductOptions.length > 0 && (
+                            <>
+                              <SelectSeparator />
+                              <SelectGroup>
+                                <SelectLabel className="text-xs uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                                  <Package className="h-3 w-3" /> Produtos Comerciais
+                                </SelectLabel>
+                                {commercialProductOptions.map((p) => (
+                                  <SelectItem key={p.key} value={p.key}>
+                                    <span className="inline-flex items-center gap-2">
+                                      {p.label}
+                                      {p.key === initialPlan && <Check className="h-3 w-3 text-primary" />}
+                                    </span>
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                            </>
+                          )}
                         </SelectContent>
                       </Select>
+                      {isEdit && (
+                        <p className="text-xs text-muted-foreground">
+                          Plano vigente: <strong>{currentPlanLabel}</strong>. Ao trocar e salvar, o template de módulos do
+                          novo plano é re-aplicado. Customizações manuais não são resetadas — para isso use a Central de Módulos.
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label>Ativo</Label>
