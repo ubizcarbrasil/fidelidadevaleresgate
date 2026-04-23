@@ -1661,6 +1661,7 @@ export type Database = {
           branch_id: string
           brand_id: string
           business_model_id: string
+          config_json: Json
           created_at: string
           id: string
           is_enabled: boolean
@@ -1670,6 +1671,7 @@ export type Database = {
           branch_id: string
           brand_id: string
           business_model_id: string
+          config_json?: Json
           created_at?: string
           id?: string
           is_enabled: boolean
@@ -1679,6 +1681,7 @@ export type Database = {
           branch_id?: string
           brand_id?: string
           business_model_id?: string
+          config_json?: Json
           created_at?: string
           id?: string
           is_enabled?: boolean
