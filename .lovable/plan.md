@@ -1,139 +1,57 @@
-`. Resposta direta:
 
-## Como mudar o plano/produto de um empreendedor
 
-A funcionalidade **já existe** e está disponível só para **Root Admin**. O caminho:
+# Erro "Importing a module script failed" — corrigir cache stale do PWA
 
-### Passo a passo
+## Diagnóstico
 
-1. No console root, abra **Marcas** (rota `/brands`).
-2. Localize a marca desejada na lista (use a busca por nome ou identificador).
-3. Clique no ícone de **três pontinhos** (⋯) na coluna **Ações** da linha da marca.
-4. Clique em **"Mudar Plano"** — abre um submenu com duas seções:
-   - **Planos Padrão**: Free, Starter, Profissional (legado interno).
-   - **Produtos Comerciais**: tudo que está cadastrado em `subscription_plans` e marcado como ativo (ex.: Ubiz Resgata, Ubiz Car, etc.).
-5. Clique no plano/produto desejado → confirma no diálogo → pronto.
+O erro de runtime que você está vendo:
 
-O plano vigente aparece marcado com **✓** e fica desabilitado para evitar troca para si mesmo.
+> `TypeError: Importing a module script failed.`
+> `chunk-YQECZGAV.js?v=e1ebb75e`
 
-### O que acontece por trás
+**não é um bug do código** das mudanças recentes (BrandForm, distribuição de motoristas, etc.). É o sintoma clássico de **cache stale do Service Worker** do PWA:
 
-- Chama a Edge Function `admin-brand-actions` com `action: "change_plan"`.
-- Atualiza `brands.subscription_plan` para a nova chave.
-- A partir daí, o motor de governança de módulos passa a aplicar o template do novo plano (ver "Subscription Plans" na governança: módulos liberados/bloqueados seguem o template do plano).
-- **Atenção**: a troca de plano **não reseta** customizações manuais de módulos da marca. Se quiser zerar customizações e re-aplicar o template puro do novo plano, vá em **Central de Módulos → aba Empreendedores**, selecione a marca e clique em **"Resetar para padrão do plano"**.
+1. Você abriu a versão anterior do app no celular → o SW (`vale-resgate-v8`) cacheou os chunks daquela build.
+2. Eu publiquei builds novas (BrandForm + distribuição em lote + outras) → cada build gera nomes de chunk novos (`chunk-XXX.js`).
+3. O SW antigo continua tentando importar o chunk velho que não existe mais → `import()` falha → app trava na entrada.
 
-### Onde gerenciar os Produtos Comerciais (catálogo de planos)
+Isso bate com a regra do projeto registrada em memória:
 
-Se o produto que você quer atribuir **não aparece** no submenu "Produtos Comerciais", é porque ele não está cadastrado/ativo. Vá em **Planos & Produtos** (gestão de `subscription_plans`) para criar/editar/ativar o produto, e ele passa a aparecer automaticamente no menu "Mudar Plano" das marcas.
+> **PWA Cache** — SW manual versioning and clearing stale chunks. Bump `cacheId` in `vite.config.ts` when invalidating old SW + caches on client.
 
-### Observações importantes
+O `cacheId` atual está em **`vale-resgate-v8`** desde a Fase "Import via Storage". Várias mudanças estruturais saíram depois disso sem bump → caches antigos continuam grudados em iPhone/Android via PWA instalado.
 
-- Apenas **Root Admin** vê o menu "Mudar Plano" — Brand Admin não pode trocar o próprio plano (precisa pedir pro time da plataforma).
-- A troca de plano **não cobra Stripe automaticamente** — é um override administrativo. Para fluxo comercial real (com cobrança), o cliente deve passar pelo checkout.
-- Se quiser também **renovar/reativar uma assinatura expirada**, no mesmo menu de ações tem **"Renovar Assinatura"**, que muda o `subscription_status` (ACTIVE / TRIAL com X dias / EXPIRED).
+## Correção
 
-Quer que eu adicione algo (ex.: atalho mais visível, log de auditoria das trocas, ou um seletor de plano dentro da página de edição da marca)? Se sim, me diga o que prefere e eu monto o plano.Esse foi um erro meu — não existe ferramenta `plan--create` e essa pergunta é de tipo "como faço" (research), então não precisa de `<lov-plan>`. Resposta direta abaixo:
+### A. Bumpar o `cacheId` do PWA (correção principal)
 
-## Como mudar o plano/produto de um empreendedor
+Em `vite.config.ts`, subir de `v8` para **`vale-resgate-v9`** com comentário explicando o motivo (segue o padrão das versões anteriores). Isso:
 
-A funcionalidade **já existe** e está disponível só para **Root Admin**.
+- Força `cleanupOutdatedCaches: true` a apagar todos os caches v1..v8 no próximo carregamento.
+- `skipWaiting: true` + `clientsClaim: true` (já ativos) fazem o SW novo assumir imediatamente sem esperar todas as abas fecharem.
+- Próxima visita ao app: SW novo entra, baixa o bundle atual, descarta os chunks fantasmas → erro some.
 
-### Passo a passo
+### B. Failsafe para o usuário em sessão travada
 
-1. No console root, abra **Marcas** (rota `/brands`).
-2. Localize a marca desejada na lista (use a busca por nome ou identificador).
-3. Clique no ícone de **três pontinhos (⋯)** na coluna **Ações** da linha da marca.
-4. Clique em **"Mudar Plano"** — abre um submenu com duas seções:
-   - **Planos Padrão**: Free, Starter, Profissional (legado interno).
-   - **Produtos Comerciais**: tudo que está cadastrado em **Planos & Produtos** e marcado como ativo (ex.: Ubiz Resgata, Ubiz Car, etc.).
-5. Clique no plano/produto desejado → confirme no diálogo → pronto.
+Como você já está com o erro acontecendo agora no celular, depois do deploy do bump:
 
-O plano vigente aparece marcado com **✓** e fica desabilitado para evitar troca para si mesmo.
+- Fechar completamente o PWA (swipe out do app no iOS) e reabrir → SW novo assume, app carrega.
+- Se persistir: tocar em "Atualizar conteúdo" no menu (se existir) ou desinstalar/reinstalar o PWA. Não precisa limpar dados manualmente.
 
-### O que acontece por trás
+Vou também verificar se há uma tela de "atualização disponível" registrada no `main.tsx` — se não houver, fica pra outra rodada (não é prioridade agora).
 
-- Chama a Edge Function `admin-brand-actions` com `action: "change_plan"`.
-- Atualiza `brands.subscription_plan` para a nova chave.
-- A partir daí, o motor de governança de módulos passa a aplicar o template do novo plano.
-- **Atenção**: a troca de plano **não reseta** as customizações manuais de módulos já feitas para essa marca. Se quiser zerar tudo e re-aplicar o template puro do novo plano, vá em **Central de Módulos → aba Empreendedores**, selecione a marca e clique em **"Resetar para padrão do plano"**.
+## Arquivos alterados
 
-### Se o produto desejado não aparece no submenu
+- `vite.config.ts` — `cacheId: "vale-resgate-v8"` → `"vale-resgate-v9"` + comentário inline registrando a versão e o motivo.
 
-Significa que ele não está cadastrado/ativo no catálogo. Vá em **Planos & Produtos** (gestão de `subscription_plans`), crie/edite/ative o produto, e ele passa a aparecer automaticamente no menu "Mudar Plano".
+## Resultado esperado
 
-### Observações importantes
+- Após o deploy + reabrir o PWA, o erro `Importing a module script failed` desaparece.
+- Bundles novos das últimas funcionalidades (seletor de plano no BrandForm, distribuição em lote do Campeonato, etc.) passam a carregar corretamente no celular.
+- Não há alteração funcional — apenas invalidação de cache.
 
-- Apenas **Root Admin** vê o menu "Mudar Plano" — Brand Admin não pode trocar o próprio plano.
-- A troca de plano **não cobra Stripe automaticamente** — é um override administrativo. Para fluxo comercial real (com cobrança), o cliente precisa passar pelo checkout.
-- No mesmo menu de ações existe **"Renovar Assinatura"**, que controla `subscription_status` (ACTIVE / TRIAL com X dias / EXPIRED) — útil para reativar marcas expiradas.
+## Risco e rollback
 
-Se quiser que eu melhore algo aqui (ex.: tornar o atalho mais visível, adicionar log de auditoria das trocas, ou colocar um seletor de plano dentro da página de edição da marca), me diga o que prefere e eu monto o plano.Peço desculpas pela confusão. Esta é uma pergunta de pesquisa ("como faço"), não de implementação — então respondo direto, sem `<lov-plan>`.
+- **Risco mínimo**: mudança de uma única string de versionamento. Padrão já usado 7 vezes antes no projeto.
+- **Rollback**: voltar `cacheId` para `"vale-resgate-v8"` (não recomendado — manteria o problema).
 
-## Como mudar o plano/produto de um empreendedor
-
-A funcionalidade **já existe** e está disponível só para **Root Admin**.
-
-### Passo a passo
-
-1. No console root, abra **Marcas** (rota `/brands`).
-2. Localize a marca desejada na lista (use a busca por nome ou identificador).
-3. Clique no ícone de **três pontinhos (⋯)** na coluna **Ações** da linha da marca.
-4. Clique em **"Mudar Plano"** — abre um submenu com duas seções:
-   - **Planos Padrão**: Free, Starter, Profissional (legado interno).
-   - **Produtos Comerciais**: tudo que está cadastrado em **Planos & Produtos** e marcado como ativo (ex.: Ubiz Resgata, Ubiz Car, etc.).
-5. Clique no plano/produto desejado → confirme no diálogo → pronto.
-
-O plano vigente aparece marcado com **✓** e fica desabilitado para evitar troca para si mesmo.
-
-### O que acontece por trás
-
-- Chama a Edge Function `admin-brand-actions` com `action: "change_plan"`.
-- Atualiza `brands.subscription_plan` para a nova chave.
-- O motor de governança de módulos passa a aplicar o template do novo plano dali em diante.
-- **Atenção**: a troca **não reseta** as customizações manuais de módulos já feitas para essa marca. Se quiser zerar e re-aplicar o template puro, vá em **Central de Módulos → aba Empreendedores**, selecione a marca e clique em **"Resetar para padrão do plano"**.
-
-### Se o produto desejado não aparece no submenu
-
-Significa que ele não está cadastrado/ativo no catálogo. Vá em **Planos & Produtos** (gestão de `subscription_plans`), crie/edite/ative o produto, e ele passa a aparecer automaticamente no menu "Mudar Plano".
-
-### Observações importantes
-
-- Apenas **Root Admin** enxerga o menu "Mudar Plano" — Brand Admin não pode trocar o próprio plano.
-- A troca de plano **não cobra Stripe automaticamente** — é um override administrativo. Para fluxo comercial real (com cobrança), o cliente precisa passar pelo checkout.
-- No mesmo menu de ações tem **"Renovar Assinatura"**, que controla `subscription_status` (ACTIVE / TRIAL / EXPIRED) — útil para reativar marcas expiradas.
-
-Se quiser que eu melhore algo aqui (ex.: tornar o atalho mais visível, adicionar log de auditoria das trocas, ou colocar um seletor de plano direto na página de edição da marca), me diga o que prefere e eu monto o plano.## Como mudar o plano/produto de um empreendedor
-
-A funcionalidade **já existe** e está disponível só para **Root Admin**.
-
-### Passo a passo
-
-1. No console root, abra **Marcas** (rota `/brands`).
-2. Localize a marca desejada na lista (use a busca por nome ou identificador).
-3. Clique no ícone de **três pontinhos (⋯)** na coluna **Ações** da linha da marca.
-4. Clique em **"Mudar Plano"** — abre um submenu com duas seções:
-   - **Planos Padrão**: Free, Starter, Profissional (legado interno).
-   - **Produtos Comerciais**: tudo que está cadastrado em **Planos & Produtos** e marcado como ativo (ex.: Ubiz Resgata, Ubiz Car, etc.).
-5. Clique no plano/produto desejado → confirme no diálogo → pronto.
-
-O plano vigente aparece marcado com **✓** e fica desabilitado, evitando troca para si mesmo.
-
-### O que acontece por trás
-
-- Chama a Edge Function `admin-brand-actions` com `action: "change_plan"`.
-- Atualiza `brands.subscription_plan` para a nova chave.
-- O motor de governança de módulos passa a aplicar o template do novo plano dali em diante.
-- **Atenção**: a troca **não reseta** as customizações manuais de módulos já feitas para essa marca. Se quiser zerar e re-aplicar o template puro, vá em **Central de Módulos → aba Empreendedores**, selecione a marca e clique em **"Resetar para padrão do plano"**.
-
-### Se o produto desejado não aparece no submenu
-
-Significa que ele não está cadastrado/ativo no catálogo. Vá em **Planos & Produtos** (gestão de `subscription_plans`), crie/edite/ative o produto, e ele passa a aparecer automaticamente no menu "Mudar Plano".
-
-### Observações importantes
-
-- Apenas **Root Admin** enxerga o menu "Mudar Plano" — Brand Admin não pode trocar o próprio plano.
-- A troca de plano **não cobra Stripe automaticamente** — é um override administrativo. Para o fluxo comercial real (com cobrança), o cliente precisa passar pelo checkout.
-- No mesmo menu de ações há **"Renovar Assinatura"**, que controla `subscription_status` (ACTIVE / TRIAL / EXPIRED) — útil para reativar marcas expiradas.
-
-Se quiser que eu melhore algo aqui (ex.: tornar o atalho mais visível, adicionar log de auditoria das trocas, ou colocar um seletor de plano direto na página de edição da marca), me diga e eu monto o plano.
