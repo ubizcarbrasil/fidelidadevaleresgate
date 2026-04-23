@@ -71,7 +71,7 @@ export function useSetBrandDueloFeature() {
   return useMutation({
     mutationFn: async (input: {
       brandId: string;
-      feature: DueloFeature;
+      feature: DueloBrandFeature;
       enabled: boolean;
     }) => {
       const { error } = await supabase.rpc("brand_set_duelo_feature", {
@@ -91,6 +91,55 @@ export function useSetBrandDueloFeature() {
           ? "Recurso ativado no Duelo"
           : "Recurso desativado no Duelo"
       );
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "Erro ao atualizar recurso";
+      toast.error(msg);
+    },
+  });
+}
+
+/**
+ * Sprint 4B — mutação por cidade.
+ * Aplica D9 e cascata via RPC `branch_set_feature`. A UI deve confirmar
+ * a cascata ANTES de chamar com `cascadeSideBets=true`.
+ *
+ * Retorno da RPC: `{ applied: string[], cascaded: string[] }`.
+ */
+export function useSetBranchFeature() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      branchId: string;
+      feature: DueloFeature;
+      enabled: boolean;
+      cascadeSideBets?: boolean;
+    }) => {
+      const { data, error } = await supabase.rpc("branch_set_feature", {
+        p_branch_id: input.branchId,
+        p_feature: input.feature,
+        p_enabled: input.enabled,
+        p_cascade_side_bets: input.cascadeSideBets ?? false,
+      });
+      if (error) throw error;
+      const result = (data ?? {}) as { applied?: string[]; cascaded?: string[] };
+      return { input, result };
+    },
+    onSuccess: ({ input, result }) => {
+      qc.invalidateQueries({ queryKey: ["branch-feature", input.branchId] });
+      qc.invalidateQueries({ queryKey: ["branch-duelo-raw", input.branchId] });
+      qc.invalidateQueries({ queryKey: ["branch-detail-gamificacao", input.branchId] });
+
+      const cascaded = result.cascaded ?? [];
+      if (cascaded.length > 0) {
+        toast.success(
+          `Recurso atualizado. Apostas foram desligadas em cascata.`
+        );
+      } else {
+        toast.success(
+          input.enabled ? "Recurso ativado na cidade" : "Recurso desativado na cidade"
+        );
+      }
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Erro ao atualizar recurso";
