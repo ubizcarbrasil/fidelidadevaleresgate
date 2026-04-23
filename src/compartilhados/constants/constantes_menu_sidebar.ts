@@ -64,7 +64,7 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
     key: "sidebar.dominios", defaultTitle: "Domínios", url: "/domains", icon: Globe, moduleKey: "domains",
   },
   "sidebar.painel_motorista": {
-    key: "sidebar.painel_motorista", defaultTitle: "Configurar Painel Motorista", url: "/driver-config", icon: Car, moduleKey: "driver_panel_config",
+    key: "sidebar.painel_motorista", defaultTitle: "Configurar Painel do Motorista", url: "/driver-config", icon: Car, moduleKey: "driver_panel_config",
   },
   "sidebar.provisionar_marca": {
     key: "sidebar.provisionar_marca", defaultTitle: "Nova Marca", url: "/provision-brand", icon: Rocket,

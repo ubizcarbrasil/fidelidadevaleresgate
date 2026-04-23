@@ -2,7 +2,7 @@ import React from "react";
 import { LogOut, ChevronRight, FileText } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandInfo } from "@/hooks/useBrandName";
@@ -219,11 +219,13 @@ export function BrandSidebar() {
   const { state, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const urlBranchId = searchParams.get("branchId");
   const { user, signOut } = useAuth();
   const legacyBrandModules = useBrandModules();
   const { getLabel } = useMenuLabels("admin");
   const { name: brandName, logoUrl: brandLogoUrl, subscriptionPlan, brandId: infoBrandId } = useBrandInfo();
-  const { currentBrandId } = useBrandGuard();
+  const { currentBrandId, consoleScope } = useBrandGuard();
   const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
   const { isCampeonato } = useFormatoEngajamento(currentBrandId);
   const escopoProduto = useProductScope();
@@ -266,6 +268,10 @@ export function BrandSidebar() {
 
   const isBasicPlan = !subscriptionPlan || subscriptionPlan === "basic" || subscriptionPlan === "free";
 
+  // Brand/Tenant/Root admins não têm branch_id próprio — só faz sentido mostrar
+  // "Carteira de Pontos" no sidebar quando uma cidade estiver selecionada via ?branchId=.
+  const ocultarCarteiraSemCidade = ["BRAND", "TENANT", "ROOT"].includes(consoleScope) && !urlBranchId;
+
   const resolvedGroups = groups.map(group => ({
     ...group,
     items: group.items
@@ -281,6 +287,7 @@ export function BrandSidebar() {
       .filter(item => !item.moduleKey || isModuleEnabled(item.moduleKey))
       .filter(item => !isBasicPlan || !BASIC_PLAN_HIDDEN_MODULES.includes(item.moduleKey ?? ""))
       .filter(item => !(isCampeonato && item.key === "sidebar.aprovar_regras"))
+      .filter(item => !(ocultarCarteiraSemCidade && item.key === "sidebar.carteira_pontos"))
       .filter(item => {
         if (!item.scoringFilter) return true;
         if (item.scoringFilter === "DRIVER") return audienciaMotoristaAtiva;
