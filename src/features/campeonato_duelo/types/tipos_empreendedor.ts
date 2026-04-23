@@ -241,3 +241,21 @@ export interface RemoverMotoristaInput {
   driverId: string;
   reason?: string;
 }
+
+export interface MoverEmLoteInput {
+  seasonId: string;
+  driverIds: string[];
+  targetTierId: string;
+}
+
+export interface MoverEmLoteResultado {
+  moved: number;
+  failed: Array<{ driver_id: string; error: string }>;
+  target_tier_id: string;
+  target_tier_name: string;
+}
+
+export type EstrategiaDistribuicaoAutomatica =
+  | "equilibrado"
+  | "alfabetico"
+  | "aleatorio";

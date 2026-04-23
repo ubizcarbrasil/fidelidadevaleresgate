@@ -604,6 +604,56 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ACTION: seed_season — materialize tiers and seed drivers (bypasses PostgREST cache)
+    if (action === "seed_season") {
+      const { season_id } = body;
+      if (!season_id) {
+        return new Response(JSON.stringify({ error: "season_id required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Authorization: caller must be admin of the brand owning this season
+      const { data: season, error: seasonErr } = await adminClient
+        .from("duelo_seasons")
+        .select("id, brand_id")
+        .eq("id", season_id)
+        .maybeSingle();
+      if (seasonErr) throw seasonErr;
+      if (!season) {
+        return new Response(JSON.stringify({ error: "Temporada não encontrada" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (!isRootAdmin) {
+        const { data: roleCheck } = await adminClient
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("brand_id", season.brand_id)
+          .in("role", ["brand_admin", "tenant_admin", "branch_admin"])
+          .maybeSingle();
+        if (!roleCheck) {
+          return new Response(JSON.stringify({ error: "Sem permissão para essa marca" }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      const { data, error } = await adminClient.rpc(
+        "duelo_materialize_and_seed_season",
+        { p_season_id: season_id },
+      );
+      if (error) throw error;
+      return new Response(JSON.stringify({ ok: true, result: data }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Unknown action" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
