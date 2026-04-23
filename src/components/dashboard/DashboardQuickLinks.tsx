@@ -18,7 +18,6 @@ import DemoStoresToggle from "@/components/DemoStoresToggle";
 import DemoAccessCard from "@/components/dashboard/DemoAccessCard";
 import { CACHE } from "@/config/constants";
 import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
-import { useBrandGuard as useBrandGuardScope } from "@/hooks/useBrandGuard";
 
 /* ── Brand Quick Links ── */
 function BrandQuickLinks({ isDriverEnabled = true, isPassengerEnabled = true }: { isDriverEnabled?: boolean; isPassengerEnabled?: boolean }) {
