@@ -360,7 +360,7 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
   );
 }
 
-function ToggleRow({ label, checked, onChange, hint }: { label: string; checked: boolean; onChange: (v: boolean) => void; hint?: string }) {
+function ToggleRow({ label, checked, onChange, hint, disabled }: { label: string; checked: boolean; onChange: (v: boolean) => void; hint?: string; disabled?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
       <span className="text-sm flex items-center gap-1.5">
@@ -378,7 +378,7 @@ function ToggleRow({ label, checked, onChange, hint }: { label: string; checked:
           </TooltipProvider>
         )}
       </span>
-      <Switch checked={checked} onCheckedChange={onChange} />
+      <Switch checked={checked} onCheckedChange={onChange} disabled={disabled} />
     </div>
   );
 }
