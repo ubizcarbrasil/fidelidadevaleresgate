@@ -7,9 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, HelpCircle, Users, Loader2 } from "lucide-react";
+import { Plus, Trash2, Save, HelpCircle, Users, Loader2, AlertTriangle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  useBranchFeature,
+  useSetBranchFeature,
+} from "@/compartilhados/hooks/hook_brand_feature";
 
 interface Props {
   branchId: string;
@@ -25,6 +39,13 @@ const DEFAULT_PHRASES = [
 export default function ConfiguracaoModulo({ branchId, settings }: Props) {
   const qc = useQueryClient();
 
+  // Sprint 4B — leitura RPC das 4 features D9 (fonte de verdade)
+  const dueloQ    = useBranchFeature(branchId, "duelo");
+  const cinturaoQ = useBranchFeature(branchId, "cinturao");
+  const rankingQ  = useBranchFeature(branchId, "ranking");
+  const apostaQ   = useBranchFeature(branchId, "aposta");
+  const setFeature = useSetBranchFeature();
+
   // Compat: se a flag legada existir e nenhuma das novas, usa o valor antigo como base
   const legacyDuelsOn = settings.enable_driver_duels !== false;
   const [enableDuelDvD, setEnableDuelDvD] = useState(
@@ -35,12 +56,6 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
     settings.enable_duel_sponsored_by_brand === true ||
       (settings.enable_duel_sponsored_by_brand === undefined && legacyDuelsOn),
   );
-  const [enableDuelSideBets, setEnableDuelSideBets] = useState(
-    settings.enable_duel_side_bets === true ||
-      (settings.enable_duel_side_bets === undefined && legacyDuelsOn),
-  );
-  const [enableRanking, setEnableRanking] = useState(settings.enable_city_ranking !== false);
-  const [enableBelt, setEnableBelt] = useState(settings.enable_city_belt !== false);
   const [publicViewing, setPublicViewing] = useState(settings.allow_public_duel_viewing !== false);
   const [enableGuesses, setEnableGuesses] = useState(settings.enable_duel_guesses === true);
   const [enableRatings, setEnableRatings] = useState(settings.enable_duel_ratings !== false);
@@ -57,18 +72,34 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
   );
   const [newPhrase, setNewPhrase] = useState("");
   const [showConfirmAll, setShowConfirmAll] = useState(false);
+  const [confirmDuelOff, setConfirmDuelOff] = useState(false);
+
+  // Valores derivados (RPC é fonte de verdade; fallback para flag legada enquanto carrega)
+  const dueloAtivo    = dueloQ.data    ?? legacyDuelsOn;
+  const cinturaoAtivo = cinturaoQ.data ?? settings.enable_city_belt    !== false;
+  const rankingAtivo  = rankingQ.data  ?? settings.enable_city_ranking !== false;
+  const apostasAtivas = apostaQ.data
+    ?? (settings.enable_side_bets === true || settings.enable_duel_side_bets === true);
 
   const salvar = useMutation({
     mutationFn: async () => {
+      // Sprint 4B — D9: se DvD/Sponsored/SideBets vão deixar duelo OFF e há apostas,
+      // exigir confirmação antes de gravar. RPC já validou, mas evitamos UPDATE cru
+      // chegar antes da cascata.
+      const novoDueloComposto = enableDuelDvD || enableDuelSponsored || apostasAtivas;
+      if (!novoDueloComposto && apostasAtivas) {
+        // Caminho de cascata: pede confirmação
+        setConfirmDuelOff(true);
+        throw new Error("__pending_cascade__");
+      }
+
       const merged = {
         ...settings,
         enable_duel_driver_vs_driver: enableDuelDvD,
         enable_duel_sponsored_by_brand: enableDuelSponsored,
-        enable_duel_side_bets: enableDuelSideBets,
-        // Compat com telas antigas: enable_driver_duels = OR das três modalidades
-        enable_driver_duels: enableDuelDvD || enableDuelSponsored || enableDuelSideBets,
-        enable_city_ranking: enableRanking,
-        enable_city_belt: enableBelt,
+        // enable_driver_duels / enable_city_ranking / enable_city_belt /
+        // enable_side_bets / enable_duel_side_bets: agora controlados via RPC
+        // `branch_set_feature` (Sprint 4B). UPDATE cru não toca nessas chaves.
         allow_public_duel_viewing: publicViewing,
         enable_duel_guesses: enableGuesses,
         enable_duel_ratings: enableRatings,
@@ -90,7 +121,11 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
       toast.success("Configuração salva!");
       qc.invalidateQueries({ queryKey: ["branch-detail-gamificacao", branchId] });
     },
-    onError: () => toast.error("Erro ao salvar configuração"),
+    onError: (err: unknown) => {
+      // Cascata pendente: silencia erro e deixa o AlertDialog tomar conta
+      if (err instanceof Error && err.message === "__pending_cascade__") return;
+      toast.error("Erro ao salvar configuração");
+    },
   });
 
   const habilitarTodos = useMutation({
@@ -168,12 +203,39 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
             />
             <ToggleRow
               label="Apostas paralelas em duelos"
-              checked={enableDuelSideBets}
-              onChange={setEnableDuelSideBets}
-              hint="Outros motoristas podem apostar pontos no resultado de um duelo."
+              checked={apostasAtivas}
+              onChange={(v) =>
+                setFeature.mutate({ branchId, feature: "aposta", enabled: v })
+              }
+              hint={
+                !dueloAtivo
+                  ? "Requer Duelo ativo na cidade."
+                  : "Outros motoristas podem apostar pontos no resultado de um duelo."
+              }
+              disabled={
+                apostaQ.isLoading ||
+                setFeature.isPending ||
+                (!apostasAtivas && !dueloAtivo)
+              }
             />
-            <ToggleRow label="Ranking da cidade" checked={enableRanking} onChange={setEnableRanking} hint="Exibe uma classificação mensal dos motoristas mais ativos." />
-            <ToggleRow label="Cinturão da cidade" checked={enableBelt} onChange={setEnableBelt} hint="Concede o título de campeão ao motorista com melhor desempenho." />
+            <ToggleRow
+              label="Ranking da cidade"
+              checked={rankingAtivo}
+              onChange={(v) =>
+                setFeature.mutate({ branchId, feature: "ranking", enabled: v })
+              }
+              hint="Exibe uma classificação mensal dos motoristas mais ativos."
+              disabled={rankingQ.isLoading || setFeature.isPending}
+            />
+            <ToggleRow
+              label="Cinturão da cidade"
+              checked={cinturaoAtivo}
+              onChange={(v) =>
+                setFeature.mutate({ branchId, feature: "cinturao", enabled: v })
+              }
+              hint="Concede o título de campeão ao motorista com melhor desempenho."
+              disabled={cinturaoQ.isLoading || setFeature.isPending}
+            />
             <ToggleRow label="Visualização pública de duelos" checked={publicViewing} onChange={setPublicViewing} hint="Permite que todos os motoristas vejam os duelos em andamento." />
             <ToggleRow label="Palpites em duelos" checked={enableGuesses} onChange={setEnableGuesses} hint="Permite que outros motoristas façam palpites sobre o resultado dos duelos." />
             <ToggleRow label="Avaliações pós-duelo" checked={enableRatings} onChange={setEnableRatings} hint="Permite que os participantes se avaliem mutuamente após o duelo." />
@@ -294,11 +356,51 @@ export default function ConfiguracaoModulo({ branchId, settings }: Props) {
         onConfirm={() => habilitarTodos.mutate()}
         onClose={() => setShowConfirmAll(false)}
       />
+
+      {/* Sprint 4B — Cascata D9: desligar duelo com apostas ativas */}
+      <AlertDialog open={confirmDuelOff} onOpenChange={setConfirmDuelOff}>
+        <AlertDialogContent className="z-[100]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Desativar Duelo vai desligar Apostas
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta cidade tem <strong>Apostas paralelas ativas</strong>. Ao desligar
+              todas as modalidades de Duelo, o sistema também desliga as Apostas
+              automaticamente. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                setConfirmDuelOff(false);
+                try {
+                  await setFeature.mutateAsync({
+                    branchId,
+                    feature: "duelo",
+                    enabled: false,
+                    cascadeSideBets: true,
+                  });
+                  // Após RPC aplicar duelo+aposta=false em cascata, persiste o
+                  // restante via UPDATE cru (DvD/Sponsored/parâmetros/etc).
+                  salvar.mutate();
+                } catch {
+                  // toast já disparado pelo hook
+                }
+              }}
+            >
+              Desativar e desligar apostas
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
 
-function ToggleRow({ label, checked, onChange, hint }: { label: string; checked: boolean; onChange: (v: boolean) => void; hint?: string }) {
+function ToggleRow({ label, checked, onChange, hint, disabled }: { label: string; checked: boolean; onChange: (v: boolean) => void; hint?: string; disabled?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
       <span className="text-sm flex items-center gap-1.5">
@@ -316,7 +418,7 @@ function ToggleRow({ label, checked, onChange, hint }: { label: string; checked:
           </TooltipProvider>
         )}
       </span>
-      <Switch checked={checked} onCheckedChange={onChange} />
+      <Switch checked={checked} onCheckedChange={onChange} disabled={disabled} />
     </div>
   );
 }

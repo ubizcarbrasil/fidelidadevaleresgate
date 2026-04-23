@@ -1,0 +1,28 @@
+---
+name: gamification-comprehensive-governance
+description: Governança completa de Gamificação — chave 'achadinhos_motorista', crons, prêmios, Campeonato (3 camadas), e Sprint 4B com D9/cascata/dual-write nas RPCs branch_set_feature/branch_has_feature
+type: feature
+---
+O ecossistema de Gamificação (Duelos, Ranking e Cinturão) é regido pela chave de módulo 'achadinhos_motorista' e automatizado por crons que finalizam disputas e processam prêmios via 'points_ledger' (tipos 'DUEL_*', 'SIDE_BET_*', 'BELT_PRIZE'). A participação é automática (auto-enrollment) ao acessar o hub, onde condutores podem desafiar qualquer colega da cidade (RPC 'list_branch_drivers_for_duels'). Administradores têm controle granular por cidade (seletor obrigatório no painel BRAND) e podem criar desafios forçados ou impulsionar prêmios usando a 'branch_points_wallet'. A interface prioriza a privacidade, exibindo apenas apelidos públicos, e utiliza notificações de alto impacto para desafios. O sistema resolve identidades via 'driver_duel_participants' para contornar restrições de RLS e suporta apostas paralelas P2P com split de 90/10 entre ganhador e o motorista vencedor.
+
+## Campeonato Duelo Motorista — 3 camadas de ativação
+
+O Campeonato (temporadas mensais com séries hierárquicas A/B/C, classificação, mata-mata, hall da fama e prêmios automáticos) tem três chaves independentes que precisam estar todas ON:
+
+1. **Flag global de código** `USE_DUELO_CAMPEONATO` em `src/compartilhados/constants/constantes_features.ts` — ON por padrão desde 2026-04-22 (Bloco C concluído e validado em produção).
+2. **Flag por marca** `brands.brand_settings_json.duelo_campeonato_enabled === true` — controlada pelo empreendedor via `CardAtivarCampeonato` na aba Campeonato do `/gamificacao`. Resolver: `useDueloCampeonatoHabilitado(brandId)`.
+3. **Formato de engajamento** `brand_business_models.engagement_format = 'campeonato'` — controlado pelo `SeletorFormatoEngajamento` (mesma aba).
+
+A UI de ativação (`CardAtivarCampeonato.tsx` + `useAlterarAtivacaoCampeonato`) faz UPDATE em `brands.brand_settings_json` com `.select()` obrigatório (Supabase Update Hardening) e registra `brand_campeonato_toggled` em `duelo_attempts_log`. Desativar no card NÃO cancela temporadas em curso — apenas esconde a UI para empreendedor e motoristas; reativar restaura tudo. Cancelamento real (com refund de prêmios) é feito pelo botão 'Cancelar temporada' do `AcoesTemporadaAtiva`. O motor de avanço de fase, brackets, premiação e abertura de próxima temporada é o cron horário `duelo_advance_phases` (substituiu o legado `duelo_gerar_chaveamento`, dropado em 2026-04-22).
+
+## Sprint 4B — D9, cascata e dual-write nas features de cidade
+
+A leitura/escrita das 4 features 'duelo' | 'cinturao' | 'aposta' | 'ranking' em `branches.branch_settings_json` é feita exclusivamente pelas RPCs `branch_has_feature(uuid, text)` e `branch_set_feature(uuid, text, boolean, p_cascade_side_bets boolean DEFAULT false)`.
+
+- **Defaults:** duelo/cinturao/ranking são default ON (só desligam se a flag = false). 'aposta' é default OFF.
+- **D9 (regra de negócio):** ligar `aposta` exige `duelo` ativo na cidade. RPC `branch_set_feature` rejeita com SQLSTATE 23514 quando D9 é violada — o backend é a fonte de verdade; UI apenas antecipa via `disabled` no toggle de apostas.
+- **Cascata:** desligar `duelo` quando `aposta` está ativa exige `p_cascade_side_bets=true` explícito. Se true, a RPC desliga apostas no mesmo UPDATE e retorna `{ applied: ['duelo'], cascaded: ['aposta'] }`. UI mostra `AlertDialog` (z-[100]) ANTES de chamar com cascade.
+- **Dual-write 'aposta':** `branch_set_feature` grava em AMBAS as chaves `enable_side_bets` (Sprint 3) e `enable_duel_side_bets` (UI legada `ConfiguracaoModulo.tsx`). `branch_has_feature` faz OR das duas chaves na leitura. Solução adotada para evitar migração de dados — auto-normaliza conforme uso.
+- **Hooks frontend:** `useBranchFeature(branchId, feature)` para leitura e `useSetBranchFeature()` para escrita (ambos em `src/compartilhados/hooks/hook_brand_feature.ts`). O hook `useDueloFeatures` em `src/components/driver/duels/hook_duelo_features.ts` consome as 4 RPCs e aplica a regra de Campeonato (silencia tudo quando `isCampeonato=true`). `useBranchDueloRaw` foi removido no Sprint 4B.
+- **UI integrada:** os 3 toggles D9 (apostas, ranking, cinturão) em `ConfiguracaoModulo.tsx` chamam `setFeature.mutate()` direto no toggle, independente do botão 'Salvar'. Os outros 4 toggles legados (DvD, Sponsored, public viewing, guesses, ratings) e parâmetros continuam via UPDATE cru. O composto `enable_driver_duels = OR(DvD, Sponsored, apostasAtivas)` deixou de ser gravado pelo UPDATE; é gerido pela RPC quando o usuário desliga todas as modalidades (cascade dialog).
+- **BrandBranchForm.tsx:** intencionalmente não migrado no Sprint 4B (dívida técnica para Sprint 7). A leitura OR em `branch_has_feature` cobre eventuais inconsistências.
