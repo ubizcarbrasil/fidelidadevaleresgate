@@ -10,6 +10,8 @@ import type {
   IncluirMotoristaInput,
   LinhaSerieDetalhe,
   MotoristaDisponivel,
+  MoverEmLoteInput,
+  MoverEmLoteResultado,
   MoverMotoristaInput,
   RemoverMotoristaInput,
   ResumoDistribuicaoConfirmada,
@@ -232,9 +234,7 @@ export async function criarTemporadaCompleta(
   // Se falhar (ex.: nenhum motorista elegível), a temporada permanece criada
   // e o empreendedor pode disparar manualmente em "Distribuir motoristas agora".
   try {
-    await supabase.rpc("duelo_materialize_and_seed_season" as any, {
-      p_season_id: (season as any).id,
-    });
+    await executarSeedingTemporada((season as any).id);
   } catch (seedErr) {
     // Não propaga: a temporada já foi criada com sucesso.
     console.warn("[criarTemporadaCompleta] seed inicial falhou:", seedErr);
@@ -247,12 +247,44 @@ export async function criarTemporadaCompleta(
  * Materializa séries (se necessário) e distribui motoristas elegíveis para
  * uma temporada que foi criada sem seeding (órfã). Idempotente em relação
  * aos tiers já materializados.
+ *
+ * Estratégia em 2 camadas para resistir a cache stale do PostgREST:
+ *   1) Primeiro tenta via Edge Function `admin-brand-actions` (service_role,
+ *      bypassa cache do PostgREST do client).
+ *   2) Se a edge function falhar, tenta direto via RPC com 1 retry após 1.5s
+ *      em caso de PGRST202 (function not found in cache).
  */
 export async function executarSeedingTemporada(seasonId: string) {
-  const { data, error } = await supabase.rpc(
-    "duelo_materialize_and_seed_season" as any,
-    { p_season_id: seasonId },
-  );
+  // Caminho principal: edge function com service_role
+  try {
+    const { data, error } = await supabase.functions.invoke(
+      "admin-brand-actions",
+      { body: { action: "seed_season", season_id: seasonId } },
+    );
+    if (error) throw error;
+    if (data && typeof data === "object" && "error" in data && data.error) {
+      throw new Error(String((data as any).error));
+    }
+    return (data as any)?.result ?? data;
+  } catch (edgeErr) {
+    console.warn(
+      "[executarSeedingTemporada] edge function falhou, tentando RPC direto:",
+      edgeErr,
+    );
+  }
+
+  // Fallback: RPC direto com retry para cache stale
+  const tentar = async () => {
+    return await supabase.rpc("duelo_materialize_and_seed_season" as any, {
+      p_season_id: seasonId,
+    });
+  };
+
+  let { data, error } = await tentar();
+  if (error && (error as any).code === "PGRST202") {
+    await new Promise((r) => setTimeout(r, 1500));
+    ({ data, error } = await tentar());
+  }
   if (error) throw error;
   return data;
 }
@@ -349,4 +381,23 @@ export async function removerMotoristaDaSeason(input: RemoverMotoristaInput) {
   );
   if (error) throw error;
   return data;
+}
+
+/**
+ * Move múltiplos motoristas para a mesma série em uma única transação.
+ * Substitui o padrão antigo de N chamadas paralelas por 1 chamada de banco.
+ */
+export async function moverMotoristasEmLote(
+  input: MoverEmLoteInput,
+): Promise<MoverEmLoteResultado> {
+  const { data, error } = await supabase.rpc(
+    "duelo_mover_motoristas_em_lote" as any,
+    {
+      p_season_id: input.seasonId,
+      p_driver_ids: input.driverIds,
+      p_target_tier_id: input.targetTierId,
+    },
+  );
+  if (error) throw error;
+  return data as unknown as MoverEmLoteResultado;
 }
