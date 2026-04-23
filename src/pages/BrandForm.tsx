@@ -176,10 +176,20 @@ export default function BrandForm() {
     const basePayload = { name, brand_settings_json: mergedSettings };
 
     if (isEdit) {
-      const { data, error } = await supabase.from("brands").update({
-        ...basePayload,
-        ...(isRootAdmin ? { slug, tenant_id: tenantId, is_active: isActive, subscription_plan: subscriptionPlan } : {}),
-      }).eq("id", id!).select();
+      // Quando o plano muda, delegamos à Edge Function `change_plan` para garantir governança
+      // (re-aplicação do template do plano, auditoria, regras de status). Os demais campos
+      // continuam indo via UPDATE direto.
+      const planChanged = isRootAdmin && subscriptionPlan !== initialPlan;
+      const updatePayload: Record<string, unknown> = { ...basePayload };
+      if (isRootAdmin) {
+        updatePayload.slug = slug;
+        updatePayload.tenant_id = tenantId;
+        updatePayload.is_active = isActive;
+        // subscription_plan fica de fora — quem cuida dele é a Edge Function quando mudou.
+        if (!planChanged) updatePayload.subscription_plan = subscriptionPlan;
+      }
+
+      const { data, error } = await supabase.from("brands").update(updatePayload).eq("id", id!).select();
 
       if (error) {
         toast.error(error.message);
@@ -190,7 +200,21 @@ export default function BrandForm() {
           await supabase.from("tenants").update({ name: tenantName.trim() }).eq("id", tenantId);
           queryClient.invalidateQueries({ queryKey: ["tenants-select"] });
         }
-        toast.success("Marca atualizada!");
+
+        if (planChanged) {
+          try {
+            await invokeAdminAction({ action: "change_plan", brand_id: id, plan: subscriptionPlan });
+            setInitialPlan(subscriptionPlan);
+            queryClient.invalidateQueries({ queryKey: ["brands"] });
+            toast.success(`Marca atualizada e plano alterado para ${currentPlanLabel}!`);
+          } catch (err: any) {
+            toast.error(`Marca salva, mas falha ao trocar plano: ${err.message}`);
+            // Reverte estado local para refletir o plano que ainda está no banco.
+            setSubscriptionPlan(initialPlan);
+          }
+        } else {
+          toast.success("Marca atualizada!");
+        }
       }
     } else {
       const { error } = await supabase.from("brands").insert([{ ...basePayload, slug, tenant_id: tenantId, is_active: isActive, subscription_plan: subscriptionPlan }]);
