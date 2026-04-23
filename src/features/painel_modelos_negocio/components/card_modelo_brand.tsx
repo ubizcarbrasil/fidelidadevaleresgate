@@ -16,6 +16,7 @@ import {
 import type { ResolvedBusinessModel } from "@/compartilhados/hooks/hook_brand_plan_business_models";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import ConfiguradorFormatosDuelo from "./configurador_formatos_duelo";
+import FeatureToggle from "./feature_toggle";
 
 interface Props {
   brandId: string;
@@ -155,6 +156,33 @@ export default function CardModeloBrand({ brandId, resolved }: Props) {
         {/* Bloco Root-only: formatos de engajamento liberados para a marca */}
         {isRootAdmin && isDueloMotorista && !isLocked && (
           <ConfiguradorFormatosDuelo brandId={brandId} />
+        )}
+
+        {/* Bloco "Inclui no Duelo" — features consolidadas (Sprint 3) */}
+        {isDueloMotorista && isActive && !isLocked && (
+          <div className="rounded-lg border bg-muted/30 p-2.5 space-y-1">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Inclui no Duelo
+            </p>
+            <FeatureToggle
+              brandId={brandId}
+              feature="cinturao"
+              label="Cinturão"
+              description="Campeão da cidade leva prêmio extra"
+            />
+            <FeatureToggle
+              brandId={brandId}
+              feature="aposta"
+              label="Apostas"
+              description="Motoristas apostam pontos entre si"
+            />
+            <FeatureToggle
+              brandId={brandId}
+              feature="ranking"
+              label="Ranking"
+              description="Classificação pública por cidade"
+            />
+          </div>
         )}
       </CardContent>
     </Card>

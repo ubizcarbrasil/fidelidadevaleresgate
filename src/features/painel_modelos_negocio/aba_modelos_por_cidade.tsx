@@ -57,6 +57,17 @@ const ORDER: Array<"cliente" | "motorista" | "b2b"> = [
   "b2b",
 ];
 
+/**
+ * Sprint 3 — Filtro UI-only.
+ * Estes BMs foram consolidados em duelo_motorista.config_json.features.
+ * Permanecem is_active=true no banco como rede de segurança (DS3-4).
+ */
+const HIDDEN_LEGACY_KEYS = new Set<string>([
+  "cinturao_motorista",
+  "aposta_motorista",
+  "rank_motorista",
+]);
+
 function useAllBusinessModels() {
   return useQuery({
     queryKey: ["business-models-all"] as const,
@@ -71,7 +82,8 @@ function useAllBusinessModels() {
         .order("audience", { ascending: true })
         .order("sort_order", { ascending: true });
       if (error) throw error;
-      return (data ?? []) as unknown as BusinessModelDef[];
+      const rows = (data ?? []) as unknown as BusinessModelDef[];
+      return rows.filter((bm) => !HIDDEN_LEGACY_KEYS.has(bm.key));
     },
   });
 }
