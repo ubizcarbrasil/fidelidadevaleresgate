@@ -1,18 +1,31 @@
-import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
+import { useDueloFeatures } from "./hook_duelo_features";
 
 /**
- * Hook para extrair flags de configuração do módulo de Duelos
- * a partir do branch_settings_json da cidade.
+ * @deprecated Sprint 4A — prefira `useDueloFeatures` para as 4 flags principais
+ * (duelos, cinturão, ranking, apostas) e leia os 12 campos restantes
+ * (`duracaoMinimaHoras`, `modosDuelo`, etc.) diretamente de `branch_settings_json`.
  *
- * Quando a marca opera no formato "campeonato", forçamos
- * duelos/ranking/cinturão como inativos — independente do que
- * estiver salvo no branch_settings_json.
+ * Mantido como WRAPPER de compatibilidade (não pode ser apagado — Sprint 4A regra 3).
+ *
+ * Comportamento híbrido:
+ *  - 4 booleans (duelosAtivos, cinturaoAtivo, rankingAtivo, apostasAtivas) →
+ *    assíncronos via React Query + RPC `branch_has_feature` (Sprint 3).
+ *    Na PRIMEIRA render retornam `false` enquanto resolvem (defaults seguros).
+ *  - 12 campos de configuração (visualizacaoPublica, duracaoMinimaHoras,
+ *    modosDuelo, revanchaHabilitada, temporadasAtivas, conquistasAtivas,
+ *    feedCompetitivo, provocacoesAutomaticas, rankingPeriodos, premiacaoPontos,
+ *    limites de aposta, ciclo, contagem por corrida) → leitura SÍNCRONA
+ *    direta de `branch.branch_settings_json` preservada (zero mudança).
+ *
+ * Componentes que precisam reagir ao loading podem ler `isLoading`/`isError`
+ * (campos novos, opcionais para consumidores antigos).
  */
 
 export interface ConfigDuelos {
   duelosAtivos: boolean;
   rankingAtivo: boolean;
   cinturaoAtivo: boolean;
+  apostasAtivas: boolean;
   visualizacaoPublica: boolean;
   duracaoMinimaHoras: number;
   // Escalabilidade futura — Etapa 8
@@ -31,48 +44,43 @@ export interface ConfigDuelos {
   cicloResetAtivo: boolean;
   contarPontosCorrida: boolean;
   fatorPontosCorrida: number;
+  // Sprint 4A — estado assíncrono dos 4 booleans-feature
+  isLoading: boolean;
+  isError: boolean;
 }
 
-const DEFAULTS: ConfigDuelos = {
-  duelosAtivos: true,
-  rankingAtivo: true,
-  cinturaoAtivo: true,
+/**
+ * Defaults dos 12 campos síncronos legados (NÃO inclui os 4 booleans-feature
+ * — esses vêm sempre de `useDueloFeatures` com defaults seguros = false).
+ */
+const SYNC_DEFAULTS = {
   visualizacaoPublica: true,
   duracaoMinimaHoras: 1,
-  modosDuelo: ["rides"],
+  modosDuelo: ["rides"] as string[],
   revanchaHabilitada: false,
   temporadasAtivas: false,
   conquistasAtivas: false,
   feedCompetitivo: false,
   provocacoesAutomaticas: false,
-  rankingPeriodos: ["monthly"],
+  rankingPeriodos: ["monthly"] as string[],
   premiacaoPontos: false,
-  limiteApostaMinIndividual: null,
-  limiteApostaMaxIndividual: null,
-  limiteApostaMaxTotal: null,
+  limiteApostaMinIndividual: null as number | null,
+  limiteApostaMaxIndividual: null as number | null,
+  limiteApostaMaxTotal: null as number | null,
   cicloResetAtivo: false,
   contarPontosCorrida: false,
   fatorPontosCorrida: 1,
 };
 
-export function useConfigDuelos(branch: { brand_id?: string; branch_settings_json?: any } | null | undefined): ConfigDuelos {
-  const { isCampeonato } = useFormatoEngajamento(branch?.brand_id);
-
-  if (!branch?.branch_settings_json || typeof branch.branch_settings_json !== "object") {
-    if (isCampeonato) {
-      return { ...DEFAULTS, duelosAtivos: false, rankingAtivo: false, cinturaoAtivo: false, visualizacaoPublica: false };
-    }
-    return DEFAULTS;
+function readSyncSettings(settingsJson: any) {
+  if (!settingsJson || typeof settingsJson !== "object") {
+    return { ...SYNC_DEFAULTS };
   }
-
-  const s = branch.branch_settings_json as Record<string, unknown>;
-
+  const s = settingsJson as Record<string, unknown>;
   return {
-    duelosAtivos: isCampeonato ? false : s.enable_driver_duels !== false,
-    rankingAtivo: isCampeonato ? false : s.enable_city_ranking !== false,
-    cinturaoAtivo: isCampeonato ? false : s.enable_city_belt !== false,
     visualizacaoPublica: s.allow_public_duel_viewing !== false,
-    duracaoMinimaHoras: typeof s.duel_min_duration_hours === "number" ? (s.duel_min_duration_hours as number) : 1,
+    duracaoMinimaHoras:
+      typeof s.duel_min_duration_hours === "number" ? (s.duel_min_duration_hours as number) : 1,
     modosDuelo: Array.isArray(s.duel_modes) ? (s.duel_modes as string[]) : ["rides"],
     revanchaHabilitada: s.enable_rematch === true,
     temporadasAtivas: s.enable_seasons === true,
@@ -81,11 +89,35 @@ export function useConfigDuelos(branch: { brand_id?: string; branch_settings_jso
     provocacoesAutomaticas: s.enable_auto_provocations === true,
     rankingPeriodos: Array.isArray(s.ranking_periods) ? (s.ranking_periods as string[]) : ["monthly"],
     premiacaoPontos: s.enable_prize_points === true,
-    limiteApostaMinIndividual: typeof s.duel_bet_min_individual === "number" ? s.duel_bet_min_individual : null,
-    limiteApostaMaxIndividual: typeof s.duel_bet_max_individual === "number" ? s.duel_bet_max_individual : null,
-    limiteApostaMaxTotal: typeof s.duel_bet_max_total === "number" ? s.duel_bet_max_total : null,
+    limiteApostaMinIndividual:
+      typeof s.duel_bet_min_individual === "number" ? (s.duel_bet_min_individual as number) : null,
+    limiteApostaMaxIndividual:
+      typeof s.duel_bet_max_individual === "number" ? (s.duel_bet_max_individual as number) : null,
+    limiteApostaMaxTotal:
+      typeof s.duel_bet_max_total === "number" ? (s.duel_bet_max_total as number) : null,
     cicloResetAtivo: s.duel_cycle_reset_enabled === true,
     contarPontosCorrida: s.duel_count_ride_points === true,
-    fatorPontosCorrida: typeof s.duel_ride_points_factor === "number" ? s.duel_ride_points_factor : 1,
+    fatorPontosCorrida:
+      typeof s.duel_ride_points_factor === "number" ? (s.duel_ride_points_factor as number) : 1,
+  };
+}
+
+/**
+ * @deprecated Sprint 4A — wrapper de compatibilidade. Veja header do arquivo.
+ */
+export function useConfigDuelos(
+  branch: { id?: string; brand_id?: string; branch_settings_json?: any } | null | undefined
+): ConfigDuelos {
+  const features = useDueloFeatures(branch);
+  const sync = readSyncSettings(branch?.branch_settings_json);
+
+  return {
+    duelosAtivos: features.duelosAtivos,
+    cinturaoAtivo: features.cinturaoAtivo,
+    rankingAtivo: features.rankingAtivo,
+    apostasAtivas: features.apostasAtivas,
+    ...sync,
+    isLoading: features.isLoading,
+    isError: features.isError,
   };
 }
