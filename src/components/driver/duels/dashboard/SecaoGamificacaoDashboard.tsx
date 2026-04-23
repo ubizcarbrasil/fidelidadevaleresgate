@@ -44,6 +44,10 @@ export default function SecaoGamificacaoDashboard({ branch, customerId, fontHead
   const [showCinturao, setShowCinturao] = useState(false);
   const [showDuelsHub, setShowDuelsHub] = useState(false);
 
+  // Sprint 4A: useConfigDuelos virou wrapper assíncrono. Na primeira render,
+  // os 4 booleans-feature retornam `false` enquanto resolvem. Sem este guard,
+  // a seção piscaria oculta antes de aparecer.
+  if (config.isLoading) return null;
   if (!config.duelosAtivos) return null;
 
   const participantId = participant?.id || null;
