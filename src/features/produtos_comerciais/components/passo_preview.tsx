@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Lock, AlertTriangle, CheckCircle2, ArrowLeft, Sparkles, ListChecks, RotateCcw } from "lucide-react";
+import { Lock, AlertTriangle, CheckCircle2, ArrowLeft, Sparkles, ListChecks, RotateCcw, LayoutDashboard } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { ProdutoComercialDraft, LandingBenefit } from "../types/tipos_produto";
@@ -243,6 +243,14 @@ export default function PassoPreview({ draft, onChange, onVoltarPasso }: Props) 
             )}
           </div>
           <div className="space-y-1.5">
+            {/* Visão Geral — atalho fixo, sempre visível no topo do sidebar real */}
+            <div className="flex items-center gap-2 rounded px-2 py-1.5 text-xs text-foreground/90 bg-background/60 border-l-2 border-primary">
+              <LayoutDashboard className="h-3.5 w-3.5 shrink-0 text-primary" />
+              <span className="flex-1 truncate font-medium">Visão Geral</span>
+              <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 shrink-0 inline-flex items-center gap-1">
+                <Lock className="h-2.5 w-2.5" /> fixo
+              </span>
+            </div>
             {gruposEfetivos.map((g, idx) => (
               <PreviewSidebarGrupo
                 key={g.label}

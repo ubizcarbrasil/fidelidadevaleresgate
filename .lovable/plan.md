@@ -1,63 +1,49 @@
-# Corrigir painel cortado no mobile
+## Problema
 
-## O problema
+No menu lateral do empreendedor (mobile e desktop), não há um atalho direto para a tela inicial ("Visão Geral / Dashboard"). O item "Visão Geral" existe, mas está dentro do grupo colapsável "Painel" — e em algumas marcas (como a do print: Ubiz Shop) o grupo nem aparece porque o item depende do módulo `dashboard` estar habilitado, e o grupo todo some quando o item é filtrado.
 
-Ao abrir o painel administrativo no celular (rota `/`, "Visão Geral"), o conteúdo final (cards "Pontos Clientes", "Pontos Motoristas") fica **cortado na parte inferior** e não é possível rolar até o fim. A barra inferior do navegador mobile (e a barra de chat do preview) cobre a última parte da página.
+Resultado: ao abrir o menu em mobile, o usuário começa em "Guias & Manuais" e não tem como voltar para a Visão Geral pelo menu — só fechando o menu e usando outro caminho.
 
-## Causa raiz
+## Solução
 
-Em `src/components/AppLayout.tsx`:
+Promover "Visão Geral" a **item fixo no topo do sidebar**, sempre visível, fora dos grupos colapsáveis e independente do módulo `dashboard` estar habilitado (já que toda marca tem uma tela inicial).
 
-- O wrapper raiz usa `min-h-screen` (`100vh`).
-- O `<main>` usa `flex-1 overflow-auto pwa-safe-bottom`.
+### Como vai ficar
 
-No mobile (Safari/Chrome iOS/Android), `100vh` é calculado **ignorando** a barra de navegação inferior do navegador. Resultado: o container fica maior que a área visível e o `overflow-auto` interno “engole” a parte de baixo. A classe `pwa-safe-bottom` só funciona em PWA instalado — no navegador comum não adiciona padding.
-
-A unidade correta para esse caso é `100dvh` (dynamic viewport height), que reage à barra do navegador mostrada/escondida.
-
-## O que vamos mudar
-
-Apenas ajustes de CSS/layout, sem alterar lógica de negócio. Mudanças escopadas para não impactar PWA instalado nem desktop.
-
-### 1. `src/components/AppLayout.tsx`
-
-- Trocar o wrapper raiz de `min-h-screen` para uma altura responsiva ao viewport dinâmico:
-  - usar `min-h-[100dvh]` no `<div className="min-h-screen flex w-full">` (linhas 175 e 200).
-- No `<main>` (linha 310): garantir que ele respeita a altura disponível e tem padding inferior extra no mobile, somando o safe-area:
-  - adicionar classe utilitária `main-scroll-area` (definida no CSS) que aplica `padding-bottom: calc(env(safe-area-inset-bottom) + 24px)` em telas até 640px.
-  - manter `overflow-auto` para a rolagem interna.
-
-### 2. `src/index.css`
-
-Adicionar regra única, isolada na seção mobile já existente (`@media (max-width: 640px)`):
-
-```css
-.main-scroll-area {
-  /* Garante espaço extra abaixo no mobile para não ficar atrás da barra do navegador */
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
-}
-
-/* Wrapper full-height que respeita a barra do navegador mobile */
-.app-shell-height {
-  min-height: 100dvh;
-}
+```text
+┌─ Ubiz Shop · Gestão Estratégica ──┐
+│                                    │
+│  🏠  Visão Geral        ← NOVO     │
+│ ─────────────────────              │
+│  > GUIAS & MANUAIS                 │
+│  > CIDADES                         │
+│  > PERSONALIZAÇÃO & VITRINE        │
+│  ...                               │
+└────────────────────────────────────┘
 ```
 
-E aplicar `app-shell-height` em substituição (ou em complemento) ao `min-h-screen` nos dois wrappers do `AppLayout` para fallback consistente.
+- Item destacado, sempre visível, sem precisar expandir nada.
+- Marca como ativo automaticamente quando a rota é `/`.
+- Em mobile, ao tocar fecha o sidebar e navega para a Home.
+- Em desktop colapsado, mostra só o ícone com tooltip "Visão Geral".
 
-### 3. Validação visual
+### Arquivos a modificar
 
-- Desktop (≥1024): nenhum impacto — `100dvh` ≈ `100vh`.
-- Mobile (375–430px): a última seção do painel passa a ser totalmente acessível por rolagem; nenhum corte.
-- PWA standalone: continua respeitando `safe-area-inset-bottom` como antes.
+1. **`src/components/consoles/BrandSidebar.tsx`**
+   - Adicionar bloco `SidebarGroup` fixo no topo do `SidebarContent` com um único `SidebarMenuItem` apontando para `/` (ícone `LayoutDashboard`, label "Visão Geral" obtida via `getLabel("sidebar.dashboard")` para respeitar rótulos personalizados).
+   - Marcar como `isActive` quando `location.pathname === "/"`.
+   - Fechar o menu mobile no clique (`setOpenMobile(false)`).
 
-## Arquivos editados
+2. **`src/compartilhados/constants/constantes_grupos_sidebar_marca.ts`**
+   - Remover o grupo "Painel" da lista (vira item fixo, não precisa mais do grupo colapsável duplicado).
 
-- `src/components/AppLayout.tsx` — substituir `min-h-screen` por classe utilitária e adicionar classe no `<main>`.
-- `src/index.css` — adicionar `.app-shell-height` e `.main-scroll-area`.
+### Impacto colateral
 
-## Fora de escopo
+- A página de **Pré-visualização do Produto Comercial** (que usa `brandGroupDefs` para montar o preview do sidebar) precisa também mostrar o "Visão Geral" como item fixo. Vou ajustar o componente de preview do sidebar para refletir essa mesma estrutura (item fixo + grupos), mantendo a consistência entre o que o admin configura no produto e o que a marca enxerga.
 
-- Não alteramos o conteúdo do Dashboard.
-- Não mexemos no wizard de produto nem no preview de sidebar.
-- Não tocamos em `Dashboard.tsx`, sidebars ou rotas.
+- Não afeta nenhuma permissão: a rota `/` já é acessível por todos os perfis de admin de marca; estamos apenas tornando o atalho mais descobrível.
+
+## Outros pontos verificados
+
+- Os outros consoles (Branch / Store / Root) usam sidebars próprios com seus próprios grupos — não há regressão neles.
+- O sumiço do grupo "Painel" para a Ubiz Shop confirma que o módulo `dashboard` não está habilitado para essa marca; ainda assim, o usuário precisa do atalho para a Home (ela existe e funciona). Por isso o item fixo não fica condicionado a esse módulo.

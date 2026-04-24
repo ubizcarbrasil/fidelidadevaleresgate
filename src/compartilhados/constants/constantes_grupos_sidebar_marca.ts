@@ -10,10 +10,6 @@ import type { DefinicaoGrupoSidebar } from "./constantes_menu_sidebar";
  */
 export const brandGroupDefs: DefinicaoGrupoSidebar[] = [
   {
-    label: "Painel",
-    items: ["sidebar.dashboard"],
-  },
-  {
     label: "Guias & Manuais",
     items: [
       "sidebar.jornada", "sidebar.jornada_emissor",
