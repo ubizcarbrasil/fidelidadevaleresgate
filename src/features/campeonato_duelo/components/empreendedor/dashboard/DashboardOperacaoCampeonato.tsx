@@ -2,9 +2,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy } from "lucide-react";
 import { useBrandCampeonatoKPIs } from "../../../hooks/hook_kpis_campeonato";
+import { useRankingsDisponiveis } from "../../../hooks/hook_rankings_disponiveis";
 import SecaoStatusTemporada from "./SecaoStatusTemporada";
 import SecaoKpisCampeonato from "./SecaoKpisCampeonato";
 import SecaoCtaAdaptativo from "./SecaoCtaAdaptativo";
+import SecaoRankings from "./SecaoRankings";
 
 interface Props {
   brandId: string;
@@ -49,6 +51,7 @@ export default function DashboardOperacaoCampeonato({ brandId, onAcaoCta }: Prop
   }
 
   const { season, kpis } = data;
+  const { disponivel: rankingsDisponiveis } = useRankingsDisponiveis(kpis);
 
   return (
     <div className="space-y-3">
@@ -61,6 +64,7 @@ export default function DashboardOperacaoCampeonato({ brandId, onAcaoCta }: Prop
         knockoutEndsAt={season.knockout_ends_at}
       />
       <SecaoKpisCampeonato kpis={kpis} isLoading={false} />
+      {rankingsDisponiveis && <SecaoRankings kpis={kpis} />}
       <SecaoCtaAdaptativo
         phase={season.phase}
         kpis={kpis}
