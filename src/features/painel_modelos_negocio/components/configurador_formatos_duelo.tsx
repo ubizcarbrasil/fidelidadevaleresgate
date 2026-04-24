@@ -2,7 +2,7 @@
  * ConfiguradorFormatosDuelo — Camada 2
  * Bloco visível apenas para Root Admin dentro do CardModeloBrand
  * quando o modelo é o `duelo_motorista`.
- * Permite habilitar/desabilitar Duelo 1v1, Desafio em Massa e Campeonato
+ * Permite habilitar/desabilitar Duelo 1v1, Desafio na cidade e Campeonato
  * por marca.
  */
 import { useEffect, useMemo, useState } from "react";
