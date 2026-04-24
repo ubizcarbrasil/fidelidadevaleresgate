@@ -20,6 +20,7 @@ import DetalheSerieView from "./components/empreendedor/DetalheSerieView";
 import CardPremiosADistribuir from "./components/empreendedor/CardPremiosADistribuir";
 import CardAtivarCampeonato from "./components/empreendedor/CardAtivarCampeonato";
 import DashboardOperacaoCampeonato from "./components/empreendedor/dashboard/DashboardOperacaoCampeonato";
+import DistribuicaoManualView from "./components/empreendedor/DistribuicaoManualView";
 
 interface Props {
   brandId: string;
@@ -33,6 +34,7 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
   const { data: dashboard, isLoading } = useDashboardCampeonato(brandId);
   const seedingMutation = useExecutarSeedingTemporada(brandId);
   const [modalCriar, setModalCriar] = useState(false);
+  const [modalDistribuicao, setModalDistribuicao] = useState(false);
   const [serieAberta, setSerieAberta] = useState<{
     tier_id: string;
     tier_name: string;
@@ -72,14 +74,16 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
               return;
             }
             if (tiers.length === 0) {
-              seedingMutation.mutate(ativa.id);
+              // Sem séries criadas: roda o seeding inicial e, ao concluir,
+              // abre a tela de distribuição manual para o admin ajustar A/B/C.
+              seedingMutation.mutate(ativa.id, {
+                onSuccess: () => setModalDistribuicao(true),
+              });
               return;
             }
-            const primeira = tiers[0];
-            setSerieAberta({
-              tier_id: primeira.tier_id,
-              tier_name: primeira.tier_name,
-            });
+            // Séries já existem (caso "todos em C" da Ubiz Resgata, ou rebalancear):
+            // abre direto a distribuição manual para promover/rebaixar motoristas.
+            setModalDistribuicao(true);
           }}
         />
       )}
@@ -247,6 +251,16 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
         tierId={serieAberta?.tier_id ?? null}
         tierName={serieAberta?.tier_name ?? null}
       />
+
+      {ativa && (
+        <DistribuicaoManualView
+          open={modalDistribuicao}
+          onClose={() => setModalDistribuicao(false)}
+          brandId={brandId}
+          seasonId={ativa.id}
+          fase={ativa.phase}
+        />
+      )}
     </div>
   );
 }
