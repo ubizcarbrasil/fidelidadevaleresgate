@@ -22,6 +22,7 @@ import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import TelaCarregamento, { TelaCarregamentoInline } from "@/compartilhados/components/tela_carregamento";
 // MountSignal moved to BootShell in main.tsx for instant bootstrap dismissal
 const RootJourneyGuidePage = lazyWithRetry(() => import("@/pages/RootJourneyGuidePage"));
+const PaginaAdminOrigens = lazyWithRetry(() => import("@/features/admin_origens/pagina_admin_origens"));
 import { queryClient } from "@/lib/queryClient";
 import { initEventBusQueryBridge } from "@/lib/eventBusQueryBridge";
 const BrandJourneyGuidePage = lazyWithRetry(() => import("@/pages/BrandJourneyGuidePage"));
