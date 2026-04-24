@@ -251,57 +251,33 @@ export default function Dashboard() {
   const { data: kpis } = useDashboardKpis(brandFilter, periodStart);
 
   // Chart data
-  const fetchChartData = useCallback(async (table: string, extraFilter?: (q: any) => any, dateColumn = "created_at") => {
-    const startDate = getPeriodStart(period);
+  // Server-side aggregated counts (1 RPC call instead of paginating ~10k rows)
+  const { data: dailyCounts } = useQuery({
+    queryKey: ["dashboard-daily-counts", period, brandFilter ?? "global", periodDays],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_dashboard_daily_counts", {
+        p_brand_id: brandFilter ?? null,
+        p_period_days: periodDays,
+      });
+      if (error) throw error;
+      return (data ?? []) as Array<{ day: string; redemptions_count: number; rides_count: number }>;
+    },
+    staleTime: 60_000,
+  });
 
-    // Build the bucket map first
-    const countByDate: Record<string, number> = {};
-    for (let i = periodDays - 1; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      countByDate[d.toISOString().slice(0, 10)] = 0;
-    }
-
-    // Paginated fetch to avoid the 5000-row truncation
-    const PAGE_SIZE = 1000;
-    let offset = 0;
-    let hasMore = true;
-
-    while (hasMore) {
-      let q = fromTable(table).select(dateColumn).gte(dateColumn, startDate.toISOString());
-      if (brandFilter) q = q.eq("brand_id", brandFilter);
-      if (extraFilter) q = extraFilter(q);
-      q = q.order(dateColumn, { ascending: true }).range(offset, offset + PAGE_SIZE - 1);
-      const { data: rows } = await q;
-
-      for (const row of rows || []) {
-        const val = (row as unknown as Record<string, unknown>)[dateColumn];
-        const key = typeof val === "string" ? val.slice(0, 10) : null;
-        if (key && key in countByDate) countByDate[key]++;
-      }
-
-      hasMore = (rows?.length ?? 0) === PAGE_SIZE;
-      offset += PAGE_SIZE;
-    }
-
-    return Object.entries(countByDate).map(([dateStr, count]) => {
+  const { recentRedemptions, recentEarnings } = useMemo(() => {
+    const rows = dailyCounts ?? [];
+    const fmtLabel = (dateStr: string) => {
       const d = new Date(dateStr + "T12:00:00");
-      const fmt = periodDays <= 7
+      return periodDays <= 7
         ? d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")
         : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-      return { label: fmt, count };
-    });
-  }, [period, periodDays, brandFilter]);
-
-  const { data: recentRedemptions } = useQuery({
-    queryKey: ["redemptions-chart", period, brandFilter ?? "global"],
-    queryFn: () => fetchChartData("redemptions"),
-    staleTime: 60_000,
-  });
-  const { data: recentEarnings } = useQuery({
-    queryKey: ["earnings-chart", period, brandFilter ?? "global"],
-    queryFn: () => fetchChartData("machine_rides", (q: any) => q.eq("ride_status", "FINALIZED"), "finalized_at"),
-    staleTime: 60_000,
-  });
+    };
+    return {
+      recentRedemptions: rows.map((r) => ({ label: fmtLabel(r.day), count: Number(r.redemptions_count) || 0 })),
+      recentEarnings: rows.map((r) => ({ label: fmtLabel(r.day), count: Number(r.rides_count) || 0 })),
+    };
+  }, [dailyCounts, periodDays]);
 
   const combinedChart = useMemo(() => {
     if (!recentRedemptions || !recentEarnings) return null;
