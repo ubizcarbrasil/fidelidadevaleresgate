@@ -7,6 +7,10 @@ import {
 } from "@/components/ui/table";
 import { Search } from "lucide-react";
 import type { ModuloDiagnostico, OrigemModulo } from "../types/tipos_diagnostico";
+import { useHookPaginacao } from "@/compartilhados/hooks/hook_paginacao";
+import PaginacaoTabela from "@/compartilhados/components/paginacao_tabela";
+
+const ITENS_POR_PAGINA = 20;
 
 interface Props {
   modulos: ModuloDiagnostico[];
@@ -35,6 +39,14 @@ export default function TabelaModulosOrigem({ modulos }: Props) {
       );
     });
   }, [modulos, busca, filtroOrigem]);
+
+  const {
+    paginaAtual,
+    totalPaginas,
+    totalItens,
+    itensVisiveis,
+    irParaPagina,
+  } = useHookPaginacao(filtrados, { itensPorPagina: ITENS_POR_PAGINA });
 
   return (
     <Card className="p-4 space-y-4">
@@ -65,6 +77,11 @@ export default function TabelaModulosOrigem({ modulos }: Props) {
         </div>
       </div>
 
+      <div className="text-xs text-muted-foreground">
+        {totalItens} {totalItens === 1 ? "módulo" : "módulos"} no total
+        {totalItens !== modulos.length && ` (de ${modulos.length} ativos)`}
+      </div>
+
       <div className="rounded-md border overflow-hidden">
         <Table>
           <TableHeader>
@@ -76,7 +93,7 @@ export default function TabelaModulosOrigem({ modulos }: Props) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtrados.length === 0 ? (
+            {itensVisiveis.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={4}
@@ -86,7 +103,7 @@ export default function TabelaModulosOrigem({ modulos }: Props) {
                 </TableCell>
               </TableRow>
             ) : (
-              filtrados.map((m) => (
+              itensVisiveis.map((m) => (
                 <TableRow key={m.id}>
                   <TableCell className="font-medium">{m.label}</TableCell>
                   <TableCell className="text-muted-foreground text-xs">
@@ -114,6 +131,14 @@ export default function TabelaModulosOrigem({ modulos }: Props) {
           </TableBody>
         </Table>
       </div>
+
+      <PaginacaoTabela
+        paginaAtual={paginaAtual}
+        totalPaginas={totalPaginas}
+        totalItens={totalItens}
+        itensPorPagina={ITENS_POR_PAGINA}
+        onMudarPagina={irParaPagina}
+      />
     </Card>
   );
 }
