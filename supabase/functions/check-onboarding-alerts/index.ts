@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { createEdgeLogger } from "../_shared/edgeLogger.ts";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/telegram";
