@@ -19,7 +19,7 @@ export async function buscarDiagnosticoMarca(brandId: string): Promise<Diagnosti
   // 1. Marca
   const { data: marca, error: marcaError } = await supabase
     .from("brands")
-    .select("id, name, slug, subscription_plan, subscription_status, updated_at")
+    .select("id, name, slug, subscription_plan, subscription_status, created_at")
     .eq("id", brandId)
     .maybeSingle();
   if (marcaError) throw marcaError;
@@ -156,7 +156,7 @@ export async function buscarDiagnosticoMarca(brandId: string): Promise<Diagnosti
     planKey: marca.subscription_plan,
     produtoNome: produto?.product_name ?? produto?.label ?? null,
     subscriptionStatus: marca.subscription_status ?? "—",
-    ultimaAplicacaoTemplate: marca.updated_at ?? null,
+    ultimaAplicacaoTemplate: marca.created_at ?? null,
   };
 
   return {
