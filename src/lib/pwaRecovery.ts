@@ -24,14 +24,6 @@ export async function recoverFromChunkError() {
   }
 }
 
-export function disableRuntimeCachesOnBoot() {
-  // No-op intencional. Antes este método limpava SW + caches em toda
-  // abertura do app, o que provocava reloads invisíveis e degradava o
-  // boot. A limpeza agora é REATIVA: só ocorre em erro real de chunk
-  // (lazyWithRetry / installGlobalDomErrorRecovery) ou ação manual do
-  // usuário ("Atualizar agora").
-}
-
 /**
  * Detecta se uma mensagem de erro indica problema de DOM/cache do PWA.
  * Inclui: chunk loading errors, removeChild/insertBefore (DOM dessincronizado).

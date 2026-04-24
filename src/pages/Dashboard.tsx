@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, Suspense, startTransition, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandInfo } from "@/hooks/useBrandName";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,18 +15,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
-import BranchDashboardSection from "@/components/dashboard/BranchDashboardSection";
 import PlatformLogo from "@/components/PlatformLogo";
 import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
 
 import DashboardKpiSection from "@/components/dashboard/DashboardKpiSection";
-import DashboardChartsSection from "@/components/dashboard/DashboardChartsSection";
 import DashboardQuickLinksSection from "@/components/dashboard/DashboardQuickLinks";
 import RidesCounterCard from "@/components/dashboard/RidesCounterCard";
 import AdminNotificationBell from "@/components/dashboard/AdminNotificationBell";
 
 const DashboardTasksSection = lazyWithRetry(() => import("@/components/dashboard/TasksSection"));
 const DashboardActivityFeed = lazyWithRetry(() => import("@/components/dashboard/ActivityFeed"));
+const DashboardChartsSection = lazyWithRetry(() => import("@/components/dashboard/DashboardChartsSection"));
+const BranchDashboardSection = lazyWithRetry(() => import("@/components/dashboard/BranchDashboardSection"));
 
 type PeriodKey = "today" | "7d" | "30d";
 
@@ -74,6 +74,8 @@ function useDashboardKpis(brandFilter?: string, periodStart?: Date) {
 
   return useQuery<DashboardKpis>({
     queryKey: ["dashboard-kpis", brandFilter ?? "global", periodStart?.toISOString()],
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await (supabase.rpc as any)("get_dashboard_kpis", {
         p_brand_id: brandFilter || null,
@@ -83,50 +85,7 @@ function useDashboardKpis(brandFilter?: string, periodStart?: Date) {
       if (error) throw error;
       return data as DashboardKpis;
     },
-    staleTime: 30_000,
   });
-}
-
-function useRealtimeRefresh() {
-  const queryClient = useQueryClient();
-  const pendingKeys = useRef<Set<string>>(new Set());
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const flush = () => {
-      const keys = Array.from(pendingKeys.current);
-      pendingKeys.current.clear();
-      timerRef.current = null;
-      startTransition(() => {
-        keys.forEach((k) => queryClient.invalidateQueries({ queryKey: [k] }));
-      });
-    };
-
-    const enqueue = (...queryKeys: string[]) => {
-      queryKeys.forEach((k) => pendingKeys.current.add(k));
-      if (!timerRef.current) timerRef.current = setTimeout(flush, 120);
-    };
-
-    const channel = supabase
-      .channel("dashboard-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "redemptions" }, () => {
-        enqueue("dashboard-kpis", "redemptions-chart");
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "machine_rides" }, () => {
-        enqueue("dashboard-kpis", "earnings-chart", "ranking-pontuacao");
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "customers" }, () => {
-        enqueue("dashboard-kpis");
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "offers" }, () => {
-        enqueue("dashboard-kpis");
-      })
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [queryClient]);
 }
 
 /** Componente-gate que registra o realtime apenas quando habilitado (após idle). */
@@ -246,9 +205,15 @@ export default function Dashboard() {
   const isRoot = consoleScope === "ROOT";
   const showTenant = ["ROOT", "TENANT"].includes(consoleScope);
   const showBrand = ["ROOT", "TENANT", "BRAND"].includes(consoleScope);
-  const periodStart = getPeriodStart(period);
-  const periodDays = getPeriodDays(period);
-  const brandFilter = isRoot ? undefined : currentBrandId ?? undefined;
+  // Memoizar para manter referência estável entre renders — evita
+  // que useDashboardKpis e useQuery("dashboard-daily-counts") refaçam
+  // a chamada a cada render (era a fonte do duplo fetch das KPIs).
+  const periodStart = useMemo(() => getPeriodStart(period), [period]);
+  const periodDays = useMemo(() => getPeriodDays(period), [period]);
+  const brandFilter = useMemo(
+    () => (isRoot ? undefined : currentBrandId ?? undefined),
+    [isRoot, currentBrandId]
+  );
 
   // All metrics consolidated in a single RPC
   const { data: kpis } = useDashboardKpis(brandFilter, periodStart);
@@ -257,6 +222,8 @@ export default function Dashboard() {
   // Server-side aggregated counts (1 RPC call instead of paginating ~10k rows)
   const { data: dailyCounts } = useQuery({
     queryKey: ["dashboard-daily-counts", period, brandFilter ?? "global", periodDays],
+    placeholderData: keepPreviousData,
+    staleTime: 10 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await (supabase as any).rpc("get_dashboard_daily_counts", {
         p_brand_id: brandFilter ?? null,
@@ -265,7 +232,6 @@ export default function Dashboard() {
       if (error) throw error;
       return (data ?? []) as Array<{ day: string; redemptions_count: number; rides_count: number }>;
     },
-    staleTime: 60_000,
   });
 
   const { recentRedemptions, recentEarnings } = useMemo(() => {
@@ -358,12 +324,16 @@ export default function Dashboard() {
 
       {/* Branch-specific dashboard */}
       {consoleScope === "BRANCH" && currentBranchId && (
-        <BranchDashboardSection branchId={currentBranchId} />
+        <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+          <BranchDashboardSection branchId={currentBranchId} />
+        </Suspense>
       )}
 
       {/* Brand/Tenant/Root viewing a specific branch */}
       {isViewingBranch && viewingBranchId && (
-        <BranchDashboardSection branchId={viewingBranchId} />
+        <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+          <BranchDashboardSection branchId={viewingBranchId} />
+        </Suspense>
       )}
 
       {/* Sections hidden for BRANCH scope */}
@@ -373,17 +343,19 @@ export default function Dashboard() {
           {showBrand && isDriverEnabled && <RidesCounterCard brandId={brandFilter} />}
 
           {/* Charts, Ranking, Alerts, Heatmap, Reports */}
-          <DashboardChartsSection
-            combinedChart={combinedChart}
-            recentRedemptions={recentRedemptions}
-            brandFilter={brandFilter}
-            showBrand={showBrand}
-            isRoot={isRoot}
-            redemptionsPending={kpis?.redemptions_pending}
-            storeRulesPending={kpis?.store_rules_pending}
-            isDriverEnabled={isDriverEnabled}
-            isPassengerEnabled={isPassengerEnabled}
-          />
+          <Suspense fallback={<Skeleton className="h-72 w-full" />}>
+            <DashboardChartsSection
+              combinedChart={combinedChart}
+              recentRedemptions={recentRedemptions}
+              brandFilter={brandFilter}
+              showBrand={showBrand}
+              isRoot={isRoot}
+              redemptionsPending={kpis?.redemptions_pending}
+              storeRulesPending={kpis?.store_rules_pending}
+              isDriverEnabled={isDriverEnabled}
+              isPassengerEnabled={isPassengerEnabled}
+            />
+          </Suspense>
 
           {/* Tasks + Activity Feed */}
           <div className="grid gap-4 lg:grid-cols-2 animate-slide-up delay-7">

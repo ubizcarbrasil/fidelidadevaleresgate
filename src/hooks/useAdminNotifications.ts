@@ -13,14 +13,14 @@ export interface AdminNotification {
   created_at: string;
 }
 
-export function useAdminNotifications() {
+export function useAdminNotifications(enabled: boolean = true) {
   const { currentBrandId } = useBrandGuard();
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const fetchNotifications = useCallback(async () => {
-    if (!currentBrandId) {
+    if (!currentBrandId || !enabled) {
       setNotifications([]);
       setUnreadCount(0);
       return;
@@ -37,7 +37,7 @@ export function useAdminNotifications() {
     setNotifications(items);
     setUnreadCount(items.filter((n) => !n.is_read).length);
     setLoading(false);
-  }, [currentBrandId]);
+  }, [currentBrandId, enabled]);
 
   useEffect(() => {
     fetchNotifications();
@@ -45,7 +45,7 @@ export function useAdminNotifications() {
 
   // Realtime subscription
   useEffect(() => {
-    if (!currentBrandId) return;
+    if (!currentBrandId || !enabled) return;
 
     const channel = supabase
       .channel(`admin-notif-${currentBrandId}`)
@@ -68,7 +68,7 @@ export function useAdminNotifications() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentBrandId]);
+  }, [currentBrandId, enabled]);
 
   const markAsRead = useCallback(
     async (id: string) => {
