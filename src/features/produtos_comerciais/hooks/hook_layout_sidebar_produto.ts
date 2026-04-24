@@ -16,7 +16,6 @@ const CORE_KEYS = ["brand_settings", "subscription", "users_management"] as cons
 interface ModuloDef {
   id: string;
   key: string;
-  label: string;
   is_core: boolean;
 }
 
@@ -31,7 +30,7 @@ export function useLayoutSidebarProduto({ draft, onChange }: UseLayoutSidebarPro
     queryFn: async (): Promise<ModuloDef[]> => {
       const { data, error } = await supabase
         .from("module_definitions")
-        .select("id, key, label, is_core");
+        .select("id, key, is_core");
       if (error) throw error;
       return (data ?? []) as ModuloDef[];
     },
