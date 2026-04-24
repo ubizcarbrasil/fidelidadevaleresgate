@@ -5,7 +5,7 @@ if (typeof window !== "undefined") {
 }
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutGrid, Package, Layers, Building2, MapPin, History, Briefcase, BookOpen } from "lucide-react";
+import { LayoutGrid, Package, Layers, Building2, MapPin, History, Briefcase, BookOpen, Bookmark } from "lucide-react";
 import AbaCatalogo from "./components/aba_catalogo";
 import AbaModelosNegocio from "./components/aba_modelos_negocio";
 import AbaPlanos from "./components/aba_planos";
@@ -13,8 +13,9 @@ import AbaEmpreendedores from "./components/aba_empreendedores";
 import AbaCidades from "./components/aba_cidades";
 import AbaAuditoria from "./components/aba_auditoria";
 import AbaManual from "./components/aba_manual";
+import AbaTemplates from "./components/aba_templates";
 
-const ABAS_VALIDAS = ["catalogo", "modelos", "planos", "empreendedores", "cidades", "auditoria", "manual"] as const;
+const ABAS_VALIDAS = ["catalogo", "modelos", "planos", "templates", "empreendedores", "cidades", "auditoria", "manual"] as const;
 type AbaValida = typeof ABAS_VALIDAS[number];
 
 export default function PaginaCentralModulos() {
@@ -45,7 +46,7 @@ export default function PaginaCentralModulos() {
       </div>
 
       <Tabs value={abaAtiva} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 h-auto gap-1 p-1">
+        <TabsList className="grid w-full grid-cols-4 sm:grid-cols-8 h-auto gap-1 p-1">
           <TabsTrigger value="catalogo" className="text-[11px] sm:text-sm flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 px-1">
             <Package className="h-4 w-4" />
             <span className="leading-none">Catálogo</span>
@@ -57,6 +58,10 @@ export default function PaginaCentralModulos() {
           <TabsTrigger value="planos" className="text-[11px] sm:text-sm flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 px-1">
             <Layers className="h-4 w-4" />
             <span className="leading-none">Planos</span>
+          </TabsTrigger>
+          <TabsTrigger value="templates" className="text-[11px] sm:text-sm flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 px-1">
+            <Bookmark className="h-4 w-4" />
+            <span className="leading-none">Templates</span>
           </TabsTrigger>
           <TabsTrigger value="empreendedores" className="text-[11px] sm:text-sm flex-col sm:flex-row gap-1 sm:gap-1.5 py-2 px-1">
             <Building2 className="h-4 w-4" />
@@ -79,6 +84,7 @@ export default function PaginaCentralModulos() {
         <TabsContent value="catalogo" className="mt-4"><AbaCatalogo /></TabsContent>
         <TabsContent value="modelos" className="mt-4"><AbaModelosNegocio /></TabsContent>
         <TabsContent value="planos" className="mt-4"><AbaPlanos /></TabsContent>
+        <TabsContent value="templates" className="mt-4"><AbaTemplates /></TabsContent>
         <TabsContent value="empreendedores" className="mt-4"><AbaEmpreendedores /></TabsContent>
         <TabsContent value="cidades" className="mt-4"><AbaCidades /></TabsContent>
         <TabsContent value="auditoria" className="mt-4"><AbaAuditoria /></TabsContent>
