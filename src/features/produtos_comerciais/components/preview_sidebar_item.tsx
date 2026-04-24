@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { ArrowUp, ArrowDown, X, Lock } from "lucide-react";
-import { useMenuLabels } from "@/hooks/useMenuLabels";
 import type { ItemEfetivo } from "../utils/utilitarios_layout_sidebar";
 
 interface Props {
@@ -14,9 +13,8 @@ interface Props {
 export default function PreviewSidebarItem({
   item, podeMoverCima, podeMoverBaixo, onMover, onRemover,
 }: Props) {
-  const { getLabel } = useMenuLabels();
   const Icon = item.registro.icon;
-  const titulo = getLabel(item.registro.key, item.registro.defaultTitle);
+  const titulo = item.registro.defaultTitle;
   const ehNucleo = !item.moduleDefinitionId; // sem módulo associado = sempre visível
 
   return (
