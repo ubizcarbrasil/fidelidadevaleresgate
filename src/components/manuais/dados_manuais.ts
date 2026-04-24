@@ -1210,21 +1210,21 @@ export const gruposManuais: GrupoManual[] = [
       {
         id: "central-modulos-visao-geral",
         titulo: "Visão Geral da Central de Módulos",
-        descricao: "A Central de Módulos é o painel mestre do Root Admin para governar TODA a plataforma: define o catálogo de funcionalidades, os Modelos de Negócio, os Planos comerciais, ativações por marca, overrides por cidade e auditoria. É a fonte única de verdade da arquitetura SaaS.",
+        descricao: "A Central de Módulos é o painel mestre do Root Admin para governar TODA a plataforma: define o catálogo técnico, os Modelos de Negócio, a matriz de Planos × Módulos, os Templates reutilizáveis, ativações por marca, overrides por cidade e auditoria. É a fonte única de verdade da arquitetura SaaS.",
         comoAtivar: "Acesso exclusivo do Root Admin. Disponível em '/admin/central-modulos' ou pelo menu lateral 'Central de Módulos'.",
         passos: [
           "Acesse '/admin/central-modulos' (somente Root Admin).",
-          "A página é organizada em 6 abas no topo: Catálogo, Modelos, Planos, Empreendedores, Cidades e Auditoria.",
-          "Cada aba representa uma camada da arquitetura: Catálogo (módulos técnicos), Modelos (pacotes comerciais), Planos (combos de Modelos), Empreendedores (ativação por marca), Cidades (overrides locais) e Auditoria (histórico).",
-          "Use a aba mais à esquerda quando estiver criando coisas novas; as do meio para vincular; as da direita para liberar e auditar.",
+          "A página é organizada em 8 abas no topo: Catálogo, Modelos, Planos, Templates, Empreendedores, Cidades, Auditoria e Manual.",
+          "Cada aba representa uma camada: Catálogo (módulos técnicos), Modelos (pacotes comerciais), Planos (matriz módulo × plano), Templates (conjuntos livres de módulos reutilizáveis), Empreendedores (ativação por marca), Cidades (overrides locais), Auditoria (histórico) e Manual (esta documentação).",
+          "Fluxo típico: cadastre módulos no Catálogo → empacote em Modelos → defina o que cada Plano inclui na aba Planos → use Templates para aplicar pacotes prontos em lote → ajuste por marca em Empreendedores ou por cidade em Cidades → consulte Auditoria quando precisar rastrear mudanças.",
           "Toda alteração feita aqui é registrada automaticamente na aba 'Auditoria' com responsável, data e contexto.",
           "Mudanças em módulos refletem em tempo real nos painéis das marcas e cidades afetadas."
         ],
         dicas: [
-          "Hierarquia mental: Catálogo é o 'estoque' técnico → Modelos empacotam comercialmente → Planos juntam Modelos → Empreendedores compram Planos → Cidades podem ajustar finos.",
+          "Hierarquia mental: Catálogo é o 'estoque' técnico → Modelos empacotam comercialmente → a matriz Planos define o que cada plano inclui → Templates servem como 'atalhos' para aplicar conjuntos em várias marcas/cidades de uma vez.",
           "Use a Auditoria sempre que houver dúvida sobre 'quem mudou o quê' antes de abrir chamado.",
-          "Comece pela Aba Catálogo se for cadastrar funcionalidade nova; pela Aba Empreendedores se for liberar para uma marca específica.",
-          "A flag 'business_models_ui_enabled' controla quem vê a nova arquitetura de Modelos — hoje apenas marcas em beta."
+          "Comece pela aba Catálogo se for cadastrar funcionalidade nova; pela aba Empreendedores para liberar em uma marca específica; pela aba Templates quando precisar padronizar várias marcas/cidades de uma só vez.",
+          "A aba Manual fica disponível dentro da própria Central — não precisa sair da página para consultar a documentação."
         ],
         rota: "/admin/central-modulos"
       },
@@ -1313,22 +1313,23 @@ export const gruposManuais: GrupoManual[] = [
       },
       {
         id: "central-modulos-planos",
-        titulo: "Aba Planos",
-        descricao: "Cadastre e gerencie os Planos comerciais oferecidos aos empreendedores (Free, Starter, Profissional, Enterprise, etc.). Cada Plano define preço, ciclo de cobrança e — via aba 'Modelos × Planos' — quais Modelos de Negócio estão inclusos.",
+        titulo: "Aba Planos — Matriz Módulo × Plano",
+        descricao: "Define, módulo por módulo, o que cada Plano comercial (Free, Starter, Profissional, Enterprise) inclui. A interface é uma matriz: linhas são módulos (agrupados por categoria), colunas são os 4 planos. Marcar/desmarcar uma célula liga ou desliga aquele módulo no plano correspondente.",
         comoAtivar: "Acesso Root Admin. Disponível em 'Central de Módulos' → aba 'Planos'.",
         passos: [
           "Acesse '/admin/central-modulos' e abra a aba 'Planos'.",
-          "Para criar: clique em 'Novo Plano' e preencha chave (imutável), nome comercial, descrição, ordem de exibição e flag de visibilidade.",
-          "Para editar: abra o card do Plano e ajuste descrição, ordem ou disponibilidade pública.",
-          "Para vincular Modelos: vá para a aba 'Modelos' → 'Modelos × Planos' e marque os Modelos inclusos neste Plano.",
-          "Use o toggle 'Ativo' para descontinuar um Plano sem afetar quem já o assina.",
-          "Use 'Visível publicamente' para esconder planos legados ou em construção da página de assinatura."
+          "Use a busca no topo para localizar um módulo pelo nome ou chave; use os badges de categoria para filtrar por área (Comercial, Fidelidade, Engajamento, etc.).",
+          "Para incluir/remover um módulo de um plano: clique no checkbox da célula correspondente. A mudança é salva automaticamente.",
+          "Para preencher um plano inteiro de uma vez: use os botões 'Todos' / 'Nenhum' no cabeçalho de cada coluna de plano.",
+          "Módulos marcados como Core ficam travados ON em todos os planos (com tooltip explicativo).",
+          "Para sincronizar marcas existentes com a configuração atual: clique em 'Aplicar Retroativamente', escolha os planos, revise o impacto (marcas afetadas + customizações que serão sobrescritas) e digite 'CONFIRMAR' para liberar o botão.",
+          "Para criar conjuntos livres de módulos (não amarrados a um plano), use a aba 'Templates' — útil para padronizar pacotes ad-hoc em lote."
         ],
         dicas: [
-          "A chave do Plano é referenciada em vários lugares (faturamento, provisionamento) — não altere após criar.",
-          "Para descontinuar um Plano: desmarque 'Visível' primeiro, mantenha 'Ativo' até migrar todos os clientes.",
-          "Use a 'ordem de exibição' para controlar como aparecem na página de pricing pública.",
-          "Templates de módulos legados ficam em '/plan-templates' (banner amarelo indica que está sendo substituído por Modelos × Planos)."
+          "Marcar um módulo num plano NÃO altera marcas já existentes — só novas marcas são provisionadas com a configuração atual. Use 'Aplicar Retroativamente' para sincronizar quem já existe.",
+          "'Aplicar Retroativamente' RESETA brand_modules das marcas selecionadas, apagando customizações manuais — sempre confira o contador de 'customização(ões)' antes de confirmar.",
+          "Para padronizar várias marcas/cidades sem mexer em planos, prefira a aba 'Templates' (aplicação em lote com opção de mesclar ou substituir).",
+          "Mudanças invalidam o cache automaticamente — usuários afetados veem o novo estado na próxima navegação."
         ],
         rota: "/admin/central-modulos"
       },
@@ -1369,6 +1370,30 @@ export const gruposManuais: GrupoManual[] = [
           "Sempre revise a lista de marcas afetadas antes de confirmar — a ação é em lote.",
           "Cada alteração entra individualmente no log de Auditoria, identificando marca e responsável.",
           "Use seleção em massa com cautela em módulos críticos (faturamento, autenticação)."
+        ],
+        rota: "/admin/central-modulos"
+      },
+      {
+        id: "central-modulos-templates",
+        titulo: "Aba Templates — Pacotes reutilizáveis de módulos",
+        descricao: "Salve conjuntos livres de módulos (ex.: 'Pacote E-commerce', 'Mobilidade Básica', 'Cidade Pequena') como templates nomeados e aplique-os rapidamente, em lote, em várias marcas e/ou cidades. Diferente da matriz Planos (que define o pacote padrão de cada plano), Templates permitem 'kits' ad-hoc que você reaproveita sempre que precisar — sem amarrar a um plano comercial.",
+        comoAtivar: "Acesso Root Admin. Disponível em 'Central de Módulos' → aba 'Templates'.",
+        passos: [
+          "Acesse '/admin/central-modulos' e abra a aba 'Templates'.",
+          "CRIAR — clique em 'Novo template'. Preencha nome, cor de identificação e (opcional) descrição. Em seguida marque os módulos que farão parte do template (lista agrupada por categoria, com busca, 'marcar todos da categoria', 'selecionar todos' e 'limpar'). Módulos Core e inativos são filtrados automaticamente.",
+          "EDITAR / EXCLUIR — cada card tem ícones de lápis (editar) e lixeira (excluir). Excluir o template NÃO afeta marcas/cidades onde ele já foi aplicado anteriormente.",
+          "APLICAR — clique no botão 'Aplicar' no card. O dialog abre com 2 abas (Marcas / Cidades), busca e seleção múltipla. Selecione quantos alvos quiser de cada lado.",
+          "Escolha a POLÍTICA de aplicação: 'Mesclar' (recomendado — apenas liga os módulos do template, não desativa nada já configurado) ou 'Substituir' (apaga as linhas dos módulos do template no alvo e regrava do zero — outros módulos ficam intactos).",
+          "Se escolher 'Substituir', será obrigatório digitar 'CONFIRMAR' antes do botão 'Aplicar' liberar.",
+          "Confirme — o sistema aplica em brand_modules (para marcas) e/ou city_module_overrides (para cidades), invalida caches e mostra um toast com a contagem de alvos atualizados.",
+          "Toda aplicação é registrada em audit_logs com a ação 'template_applied_merge' ou 'template_applied_replace'."
+        ],
+        dicas: [
+          "Use 'Mesclar' para 99% dos casos — é a operação segura que só adiciona. Reserve 'Substituir' para quando precisar realmente forçar um estado limpo.",
+          "Templates são INDEPENDENTES dos planos: aplicar um template não muda o subscription_plan da marca, só liga/desliga módulos.",
+          "Crie templates temáticos por nicho (ex.: 'Cooperativa de Mobilidade', 'Loja de Bairro', 'Programa Cliente Premium') para acelerar o onboarding manual de novas marcas.",
+          "Para padronizar TODAS as marcas de um plano específico (resetando customizações), prefira 'Aplicar Retroativamente' na aba Planos. Templates servem para subconjuntos arbitrários de marcas/cidades.",
+          "A cor do template ajuda a diferenciar visualmente quando você tiver muitos cards — escolha cores semânticas (verde para 'completo', amarelo para 'experimental', etc.)."
         ],
         rota: "/admin/central-modulos"
       },
