@@ -269,7 +269,7 @@ export default function Brands() {
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" collisionPadding={12} className="max-w-[calc(100vw-24px)]">
                           <DropdownMenuItem onClick={() => navigate(`/brands/${b.id}`)}>
                             <Pencil className="h-4 w-4 mr-2" />Editar
                           </DropdownMenuItem>
@@ -293,11 +293,24 @@ export default function Brands() {
                           }}>
                             <RefreshCw className="h-4 w-4 mr-2" />Renovar Assinatura
                           </DropdownMenuItem>
+                          {isMobile ? (
+                            <DropdownMenuItem
+                              onClick={() =>
+                                setPlanPickerTarget({
+                                  brandId: b.id,
+                                  brandName: b.name,
+                                  currentPlan: b.subscription_plan,
+                                })
+                              }
+                            >
+                              <ArrowUpDown className="h-4 w-4 mr-2" />Mudar Plano
+                            </DropdownMenuItem>
+                          ) : (
                           <DropdownMenuSub>
                             <DropdownMenuSubTrigger>
                               <ArrowUpDown className="h-4 w-4 mr-2" />Mudar Plano
                             </DropdownMenuSubTrigger>
-                            <DropdownMenuSubContent>
+                            <DropdownMenuSubContent collisionPadding={12} className="max-w-[calc(100vw-24px)]">
                               <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">
                                 Planos Padrão
                               </div>
@@ -343,6 +356,7 @@ export default function Brands() {
                               )}
                             </DropdownMenuSubContent>
                           </DropdownMenuSub>
+                          )}
                           <DropdownMenuItem onClick={() => toggleActive.mutate({ id: b.id, is_active: !b.is_active })}>
                             <Power className="h-4 w-4 mr-2" />{b.is_active ? "Inativar" : "Ativar"}
                           </DropdownMenuItem>
