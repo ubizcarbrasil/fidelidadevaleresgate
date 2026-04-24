@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
+import { useProductScope } from "@/features/city_onboarding/hooks/hook_escopo_produto";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +27,12 @@ const DEFAULTS: TaxasConversao = {
 export default function PaginaConversaoResgate() {
   const qc = useQueryClient();
   const { currentBrandId } = useBrandGuard();
+  const { isDriverEnabled: scoringDriverOn, isPassengerEnabled: scoringPassengerOn } = useBrandScoringModels();
+  const escopoProduto = useProductScope();
+  // Audiência efetiva = produto contratado AND scoring_model das cidades.
+  const audienciaMotoristaAtiva = escopoProduto.hasAudience("motorista") && scoringDriverOn;
+  const audienciaClienteAtiva = escopoProduto.hasAudience("cliente") && scoringPassengerOn;
+  const ambasAudiencias = audienciaMotoristaAtiva && audienciaClienteAtiva;
   const [form, setForm] = useState<TaxasConversao>(DEFAULTS);
   const [dirty, setDirty] = useState(false);
 
@@ -111,6 +119,7 @@ export default function PaginaConversaoResgate() {
       title: "Taxa do Motorista",
       description: "Quantos pontos equivalem a R$ 1,00 no resgate de produtos para motoristas",
       field: "points_per_real_driver" as keyof TaxasConversao,
+      audiencia: "motorista" as const,
       example: form.points_per_real_driver > 0
         ? `Produto de R$ 100 = ${Math.ceil(100 * form.points_per_real_driver).toLocaleString("pt-BR")} pts`
         : "",
@@ -123,11 +132,20 @@ export default function PaginaConversaoResgate() {
       title: "Taxa do Passageiro",
       description: "Quantos pontos equivalem a R$ 1,00 no resgate de produtos para passageiros",
       field: "points_per_real_customer" as keyof TaxasConversao,
+      audiencia: "cliente" as const,
       example: form.points_per_real_customer > 0
         ? `Produto de R$ 100 = ${Math.ceil(100 * form.points_per_real_customer).toLocaleString("pt-BR")} pts`
         : "",
     },
-  ];
+  ].filter((card) =>
+    card.audiencia === "motorista" ? audienciaMotoristaAtiva : audienciaClienteAtiva
+  );
+
+  const subtituloPagina = ambasAudiencias
+    ? "Defina taxas de conversão diferentes para motoristas e passageiros"
+    : audienciaMotoristaAtiva
+      ? "Defina a taxa de conversão para motoristas"
+      : "Defina a taxa de conversão para passageiros";
 
   return (
     <div className="space-y-6">
@@ -136,7 +154,7 @@ export default function PaginaConversaoResgate() {
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Conversão de Resgate por Público</h2>
           <p className="text-sm text-muted-foreground">
-            Defina taxas de conversão diferentes para motoristas e passageiros
+            {subtituloPagina}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -149,7 +167,7 @@ export default function PaginaConversaoResgate() {
       </div>
 
       {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className={`grid grid-cols-1 gap-6 ${ambasAudiencias ? "md:grid-cols-2" : "max-w-xl"}`}>
         {cards.map((card) => (
           <Card key={card.field} className={`${card.borderColor}`}>
             <CardHeader className="pb-3">
@@ -196,9 +214,11 @@ export default function PaginaConversaoResgate() {
                 <strong>Como funciona:</strong> Ao adicionar um produto como resgatável, o sistema calcula automaticamente
                 o custo em pontos usando a taxa do público-alvo do produto (motorista ou passageiro).
               </p>
-              <p className="text-sm text-muted-foreground">
-                Produtos marcados como <strong>"Ambos"</strong> usarão a maior taxa entre as duas para garantir equidade.
-              </p>
+              {ambasAudiencias && (
+                <p className="text-sm text-muted-foreground">
+                  Produtos marcados como <strong>"Ambos"</strong> usarão a maior taxa entre as duas para garantir equidade.
+                </p>
+              )}
             </div>
           </div>
         </CardContent>
