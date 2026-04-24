@@ -10203,6 +10203,7 @@ export type Database = {
         Args: { p_brand_id: string }
         Returns: Json
       }
+      brand_get_campeonato_kpis: { Args: { p_brand_id: string }; Returns: Json }
       brand_get_drivers_available: {
         Args: { p_brand_id: string; p_season_id: string }
         Returns: Json
