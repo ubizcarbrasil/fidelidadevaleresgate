@@ -884,15 +884,16 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { brand_id, mode, source_type: requestedSource } = body;
+    const { brand_id, mode, source_type: requestedSource, config_id: requestedConfigId } = body;
     const isDiagnose = mode === "diagnose";
 
     // Handle auto-sync from cron
     if (brand_id === "auto") {
       const { data: configs } = await supabase
         .from("mirror_sync_config")
-        .select("brand_id, source_type")
-        .eq("auto_sync_enabled", true);
+        .select("id, brand_id, source_type, is_enabled")
+        .eq("auto_sync_enabled", true)
+        .eq("is_enabled", true);
 
       const results = [];
       for (const cfg of configs || []) {
@@ -900,7 +901,7 @@ Deno.serve(async (req) => {
           const res = await fetch(`${supabaseUrl}/functions/v1/mirror-sync`, {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceKey}` },
-            body: JSON.stringify({ brand_id: cfg.brand_id, source_type: cfg.source_type }),
+            body: JSON.stringify({ brand_id: cfg.brand_id, source_type: cfg.source_type, config_id: cfg.id }),
           });
           const data = await res.json();
           results.push({ brand_id: cfg.brand_id, source_type: cfg.source_type, ...data });
@@ -924,13 +925,29 @@ Deno.serve(async (req) => {
     // Determine source type
     const sourceType = requestedSource || "divulgador_inteligente";
 
-    // Load config for this source
-    const { data: config } = await supabase
-      .from("mirror_sync_config")
-      .select("*")
-      .eq("brand_id", brand_id)
-      .eq("source_type", sourceType)
-      .maybeSingle();
+    // Load config(s) for this source
+    // - If config_id supplied: target a single connector
+    // - Else: pick the first active connector for backward compat
+    let config: any = null;
+    if (requestedConfigId) {
+      const { data } = await supabase
+        .from("mirror_sync_config")
+        .select("*")
+        .eq("id", requestedConfigId)
+        .eq("brand_id", brand_id)
+        .maybeSingle();
+      config = data;
+    } else {
+      const { data } = await supabase
+        .from("mirror_sync_config")
+        .select("*")
+        .eq("brand_id", brand_id)
+        .eq("source_type", sourceType)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      config = data;
+    }
 
     // Route to appropriate handler
     if (sourceType === "dvlinks") {
