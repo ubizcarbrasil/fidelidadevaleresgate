@@ -23,6 +23,7 @@ import TelaCarregamento, { TelaCarregamentoInline } from "@/compartilhados/compo
 // MountSignal moved to BootShell in main.tsx for instant bootstrap dismissal
 const RootJourneyGuidePage = lazyWithRetry(() => import("@/pages/RootJourneyGuidePage"));
 const PaginaAdminOrigens = lazyWithRetry(() => import("@/features/admin_origens/pagina_admin_origens"));
+const PaginaDiagnosticoMarca = lazyWithRetry(() => import("@/features/diagnostico_marca/pagina_diagnostico_marca"));
 import { queryClient } from "@/lib/queryClient";
 import { initEventBusQueryBridge } from "@/lib/eventBusQueryBridge";
 const BrandJourneyGuidePage = lazyWithRetry(() => import("@/pages/BrandJourneyGuidePage"));
@@ -303,6 +304,7 @@ function AnimatedRoutes() {
               
               <Route path="admin/produtos-comerciais" element={<RootGuard><PaginaProdutosComerciais /></RootGuard>} />
               <Route path="admin/auditoria-duplicacoes" element={<RootGuard><PaginaAuditoriaDuplicacoes /></RootGuard>} />
+              <Route path="admin/diagnostico-marca/:brandId" element={<RootGuard><PaginaDiagnosticoMarca /></RootGuard>} />
               <Route path="leads-comerciais" element={<RootGuard><PaginaLeadsComerciais /></RootGuard>} />
               <Route path="leads-comerciais/:id" element={<RootGuard><PaginaDetalhesLead /></RootGuard>} />
               <Route path="driver-config" element={<ErrorBoundary><DriverPanelConfigPage /></ErrorBoundary>} />

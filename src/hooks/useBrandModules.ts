@@ -36,9 +36,15 @@ export function useBrandModules() {
     enabled: !!effectiveBrandId && !isRoot,
   });
 
-  /** Modules that should always be visible even without a brand_modules row. */
+  /**
+   * Módulos sempre visíveis (núcleo do produto), mesmo sem registro em brand_modules.
+   * Mantém-se em sincronia com `module_definitions.is_core = true`
+   * (ver migration de reorganização de módulos core, Parte A1).
+   * NÃO incluir aqui módulos opcionais (ex.: csv_import) — eles devem vir do
+   * template do produto (`plan_module_templates`).
+   */
   const ALWAYS_ON_MODULES = new Set([
-    "brand_settings", "csv_import", "subscription", "users_management",
+    "brand_settings", "subscription", "users_management",
   ]);
 
   const isModuleEnabled = (moduleKey: string): boolean => {
