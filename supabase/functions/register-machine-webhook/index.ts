@@ -18,7 +18,7 @@ function getClientIp(req: Request): string | null {
 }
 
 function logAudit(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   action: string,
   opts: { userId?: string; brandId?: string; entityId?: string; ip?: string | null; details?: Record<string, unknown>; changes?: Record<string, unknown> } = {}
 ) {

@@ -103,7 +103,7 @@ interface Integration {
 }
 
 async function processIntegration(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   integration: Integration,
 ): Promise<{ sent: number; skipped: number }> {
   const { brand_id, driver_message_frequency, driver_message_frequency_value } = integration;
@@ -120,7 +120,7 @@ async function processIntegration(
 
 // --- DAILY mode ---
 async function processDailyMode(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   integration: Integration,
   scheduledMinutes: number,
 ): Promise<{ sent: number; skipped: number }> {
@@ -146,7 +146,7 @@ async function processDailyMode(
 
 // --- EVERY_X_HOURS mode ---
 async function processEveryXHoursMode(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   integration: Integration,
   hours: number,
 ): Promise<{ sent: number; skipped: number }> {
@@ -163,7 +163,7 @@ async function processEveryXHoursMode(
 
 // --- Shared: find drivers with rides in period, check for existing notifs, send ---
 async function sendSummaryNotifications(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   integration: Integration,
   sinceUTC: string,
   periodLabel: string,
@@ -347,7 +347,7 @@ async function sendDriverMessage(
 }
 
 // --- Log error ---
-async function logError(sb: ReturnType<typeof createClient>, brandId: string, message: string) {
+async function logError(sb: any, brandId: string, message: string) {
   try {
     await sb.from("error_logs").insert({
       source: "driver-notifications-cron",

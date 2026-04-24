@@ -18,7 +18,7 @@ function json(body: Record<string, unknown>, status = 200) {
 }
 
 async function findCustomerCascade(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   brandId: string,
   cpf: string | null,
   phone: string | null,
@@ -61,7 +61,7 @@ async function findCustomerCascade(
 }
 
 async function retryRide(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   integration: any,
   ride: any,
 ) {
