@@ -19,6 +19,7 @@ import ListaTemporadasAnteriores from "./components/empreendedor/ListaTemporadas
 import DetalheSerieView from "./components/empreendedor/DetalheSerieView";
 import CardPremiosADistribuir from "./components/empreendedor/CardPremiosADistribuir";
 import CardAtivarCampeonato from "./components/empreendedor/CardAtivarCampeonato";
+import DashboardOperacaoCampeonato from "./components/empreendedor/dashboard/DashboardOperacaoCampeonato";
 
 interface Props {
   brandId: string;
@@ -61,6 +62,27 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
     <div className="space-y-4 p-1">
       <CardAtivarCampeonato brandId={brandId} />
       <SeletorFormatoEngajamento brandId={brandId} />
+
+      {isCampeonato && (
+        <DashboardOperacaoCampeonato
+          brandId={brandId}
+          onAcaoCta={() => {
+            if (!ativa) {
+              setModalCriar(true);
+              return;
+            }
+            if (tiers.length === 0) {
+              seedingMutation.mutate(ativa.id);
+              return;
+            }
+            const primeira = tiers[0];
+            setSerieAberta({
+              tier_id: primeira.tier_id,
+              tier_name: primeira.tier_name,
+            });
+          }}
+        />
+      )}
 
       {!isCampeonato ? (
         <Card>
