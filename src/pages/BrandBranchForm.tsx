@@ -495,7 +495,10 @@ export default function BrandBranchForm() {
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: ["brand-branches"] });
+      // Garante que a lista será refetchada antes de navegar (evita exibir cache vazio
+      // quando o BrandBranchesPage remonta logo após a criação).
+      await queryClient.invalidateQueries({ queryKey: ["brand-branches"] });
+      await queryClient.refetchQueries({ queryKey: ["brand-branches"] });
       navigate("/brand-branches");
     } catch (err: any) {
       toast.error(err?.message || "Erro ao salvar cidade.");
