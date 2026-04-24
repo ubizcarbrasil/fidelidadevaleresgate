@@ -502,6 +502,94 @@ export default function Brands() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Plan picker dialog (mobile substitui o submenu lateral) */}
+      <AlertDialog
+        open={!!planPickerTarget}
+        onOpenChange={(open) => {
+          if (!open) setPlanPickerTarget(null);
+        }}
+      >
+        <AlertDialogContent className="max-h-[85vh] overflow-y-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mudar Plano — {planPickerTarget?.brandName}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Escolha o novo plano para esta marca.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <p className="px-1 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                Planos Padrão
+              </p>
+              <div className="flex flex-col gap-1">
+                {LEGACY_PLAN_OPTIONS.map((p) => {
+                  const atual = planPickerTarget?.currentPlan === p.key;
+                  return (
+                    <Button
+                      key={p.key}
+                      type="button"
+                      variant={atual ? "secondary" : "outline"}
+                      className="justify-between"
+                      disabled={atual}
+                      onClick={() => {
+                        if (!planPickerTarget) return;
+                        setPlanChangeTarget({
+                          brandId: planPickerTarget.brandId,
+                          brandName: planPickerTarget.brandName,
+                          planKey: p.key,
+                          planLabel: p.label,
+                        });
+                        setPlanPickerTarget(null);
+                      }}
+                    >
+                      <span>{p.label}</span>
+                      {atual && <span className="text-xs">Atual ✓</span>}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+            {commercialProductOptions.length > 0 && (
+              <div>
+                <p className="px-1 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Produtos Comerciais
+                </p>
+                <div className="flex flex-col gap-1">
+                  {commercialProductOptions.map((p) => {
+                    const atual = planPickerTarget?.currentPlan === p.key;
+                    return (
+                      <Button
+                        key={p.key}
+                        type="button"
+                        variant={atual ? "secondary" : "outline"}
+                        className="justify-between"
+                        disabled={atual}
+                        onClick={() => {
+                          if (!planPickerTarget) return;
+                          setPlanChangeTarget({
+                            brandId: planPickerTarget.brandId,
+                            brandName: planPickerTarget.brandName,
+                            planKey: p.key,
+                            planLabel: p.label,
+                          });
+                          setPlanPickerTarget(null);
+                        }}
+                      >
+                        <span className="truncate text-left">{p.label}</span>
+                        {atual && <span className="text-xs shrink-0 ml-2">Atual ✓</span>}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Fechar</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
