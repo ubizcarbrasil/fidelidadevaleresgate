@@ -132,6 +132,53 @@ export function useLayoutSidebarProduto({ draft, onChange }: UseLayoutSidebarPro
     [onChange, draft.module_definition_ids],
   );
 
+  /**
+   * Reativa um item adicionando seu moduleDefinitionId à seleção do produto.
+   * Retorna o id se foi efetivamente adicionado (não estava ainda), senão null.
+   */
+  const reativarItem = useCallback(
+    (moduleDefinitionId: string | null): string | null => {
+      if (!moduleDefinitionId) return null;
+      if (draft.module_definition_ids.includes(moduleDefinitionId)) return null;
+      onChange({
+        module_definition_ids: [...draft.module_definition_ids, moduleDefinitionId],
+      });
+      return moduleDefinitionId;
+    },
+    [onChange, draft.module_definition_ids],
+  );
+
+  /**
+   * Reativa todos os itens ocultos de um grupo (que tenham moduleDefinitionId).
+   * Retorna a lista de ids efetivamente adicionados (sem duplicar os já presentes).
+   */
+  const reativarGrupo = useCallback(
+    (grupoLabel: string): string[] => {
+      const grupo = gruposEfetivos.find((g) => g.label === grupoLabel);
+      if (!grupo) return [];
+      const idsParaAdicionar = grupo.itens
+        .filter((it) => !it.moduleAtivo && it.moduleDefinitionId)
+        .map((it) => it.moduleDefinitionId!)
+        .filter((id) => !draft.module_definition_ids.includes(id));
+      if (idsParaAdicionar.length === 0) return [];
+      onChange({
+        module_definition_ids: [...draft.module_definition_ids, ...idsParaAdicionar],
+      });
+      return idsParaAdicionar;
+    },
+    [onChange, draft.module_definition_ids, gruposEfetivos],
+  );
+
+  /** Inverso de reativar — usado pelo Desfazer dos toasts de reativação. */
+  const desfazerReativacao = useCallback(
+    (ids: string[]) => {
+      if (ids.length === 0) return;
+      const novos = draft.module_definition_ids.filter((id) => !ids.includes(id));
+      onChange({ module_definition_ids: novos });
+    },
+    [onChange, draft.module_definition_ids],
+  );
+
   return {
     isLoading,
     gruposEfetivos,
@@ -141,6 +188,9 @@ export function useLayoutSidebarProduto({ draft, onChange }: UseLayoutSidebarPro
     removerItem,
     removerGrupo,
     desfazerRemocao,
+    reativarItem,
+    reativarGrupo,
+    desfazerReativacao,
     restaurarPadrao,
   };
 }

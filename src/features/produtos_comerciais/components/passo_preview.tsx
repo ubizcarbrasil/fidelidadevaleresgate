@@ -42,6 +42,9 @@ export default function PassoPreview({ draft, onChange, onVoltarPasso }: Props) 
     removerItem,
     removerGrupo,
     desfazerRemocao,
+    reativarItem,
+    reativarGrupo,
+    desfazerReativacao,
     restaurarPadrao,
   } = useLayoutSidebarProduto({ draft, onChange });
 
@@ -73,6 +76,36 @@ export default function PassoPreview({ draft, onChange, onVoltarPasso }: Props) 
         action: {
           label: "Desfazer",
           onClick: () => desfazerRemocao(removidos),
+        },
+      },
+    );
+  };
+
+  const handleReativarItem = (moduleDefinitionId: string | null) => {
+    const adicionado = reativarItem(moduleDefinitionId);
+    if (!adicionado) return;
+    const agora = Date.now();
+    if (agora - ultimoToastRef.current < 200) return;
+    ultimoToastRef.current = agora;
+    toast.success("Item reativado no produto", {
+      action: {
+        label: "Desfazer",
+        onClick: () => desfazerReativacao([adicionado]),
+      },
+    });
+  };
+
+  const handleReativarGrupo = (label: string) => {
+    const adicionados = reativarGrupo(label);
+    if (adicionados.length === 0) return;
+    toast.success(
+      `Grupo "${label}" reativado (${adicionados.length} ${
+        adicionados.length === 1 ? "item" : "itens"
+      })`,
+      {
+        action: {
+          label: "Desfazer",
+          onClick: () => desfazerReativacao(adicionados),
         },
       },
     );
@@ -160,9 +193,9 @@ export default function PassoPreview({ draft, onChange, onVoltarPasso }: Props) 
         </div>
         <p className="text-xs text-muted-foreground">
           Esta é a experiência que uma marca contratante receberá. Abra os
-          grupos para ver os itens, use ↑ ↓ para reordenar e o &quot;X&quot;
-          para remover do produto. Itens removidos aqui também saem do
-          passo de Funcionalidades.
+          grupos para ver os itens, use ↑ ↓ para reordenar, &quot;X&quot;
+          para remover do produto e &quot;+&quot; para reativar itens
+          ocultos. As alterações aqui refletem no passo de Funcionalidades.
         </p>
       </div>
 
@@ -220,6 +253,8 @@ export default function PassoPreview({ draft, onChange, onVoltarPasso }: Props) 
                 onMoverItem={(itemIdx, dir) => moverItem(idx, itemIdx, dir)}
                 onRemoverItem={handleRemoverItem}
                 onRemoverGrupo={() => handleRemoverGrupo(g.label)}
+                onReativarItem={handleReativarItem}
+                onReativarGrupo={() => handleReativarGrupo(g.label)}
               />
             ))}
           </div>

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowUp, ArrowDown, X, Lock } from "lucide-react";
+import { ArrowUp, ArrowDown, X, Lock, Plus } from "lucide-react";
 import type { ItemEfetivo } from "../utils/utilitarios_layout_sidebar";
 
 interface Props {
@@ -8,14 +8,16 @@ interface Props {
   podeMoverBaixo: boolean;
   onMover: (direcao: "up" | "down") => void;
   onRemover: () => void;
+  onReativar: () => void;
 }
 
 export default function PreviewSidebarItem({
-  item, podeMoverCima, podeMoverBaixo, onMover, onRemover,
+  item, podeMoverCima, podeMoverBaixo, onMover, onRemover, onReativar,
 }: Props) {
   const Icon = item.registro.icon;
   const titulo = item.registro.defaultTitle;
   const ehNucleo = !item.moduleDefinitionId; // sem módulo associado = sempre visível
+  const podeReativar = !item.moduleAtivo && !!item.moduleDefinitionId;
 
   return (
     <div
@@ -32,7 +34,11 @@ export default function PreviewSidebarItem({
           oculto
         </span>
       )}
-      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div
+        className={`flex items-center gap-0.5 transition-opacity ${
+          podeReativar ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        }`}
+      >
         <Button
           type="button"
           variant="ghost"
@@ -74,7 +80,17 @@ export default function PreviewSidebarItem({
             <X className="h-3 w-3" />
           </Button>
         ) : (
-          <span className="h-6 w-6" />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-emerald-500 hover:text-emerald-500 hover:bg-emerald-500/10"
+            onClick={onReativar}
+            aria-label="Reativar item no produto"
+            title="Reativar este item no produto"
+          >
+            <Plus className="h-3 w-3" />
+          </Button>
         )}
       </div>
     </div>

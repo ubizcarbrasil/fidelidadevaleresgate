@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Collapsible, CollapsibleContent, CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ArrowUp, ArrowDown, ChevronRight, Trash2 } from "lucide-react";
+import { ArrowUp, ArrowDown, ChevronRight, Trash2, PlusCircle } from "lucide-react";
 import PreviewSidebarItem from "./preview_sidebar_item";
 import DialogConfirmarRemoverGrupo from "./dialog_confirmar_remover_grupo";
 import type { GrupoEfetivo } from "../utils/utilitarios_layout_sidebar";
@@ -18,11 +18,14 @@ interface Props {
   onMoverItem: (itemIdx: number, direcao: "up" | "down") => void;
   onRemoverItem: (moduleDefinitionId: string | null) => void;
   onRemoverGrupo: () => void;
+  onReativarItem: (moduleDefinitionId: string | null) => void;
+  onReativarGrupo: () => void;
 }
 
 export default function PreviewSidebarGrupo({
   grupo, grupoIdx, totalGrupos, defaultOpen,
   onMoverGrupo, onMoverItem, onRemoverItem, onRemoverGrupo,
+  onReativarItem, onReativarGrupo,
 }: Props) {
   const [aberto, setAberto] = useState(defaultOpen ?? grupoIdx < 2);
   const [confirmarOpen, setConfirmarOpen] = useState(false);
@@ -30,6 +33,9 @@ export default function PreviewSidebarGrupo({
   const itensAtivos = grupo.itens.filter((i) => i.moduleAtivo);
   const totalAtivos = itensAtivos.length;
   const removiveis = itensAtivos.filter((i) => !!i.moduleDefinitionId).length;
+  const reativaveis = grupo.itens.filter(
+    (i) => !i.moduleAtivo && !!i.moduleDefinitionId,
+  ).length;
   const grupoVazio = totalAtivos === 0;
 
   return (
@@ -68,6 +74,21 @@ export default function PreviewSidebarGrupo({
             </CollapsibleTrigger>
 
             <div className="flex items-center gap-0.5">
+              {reativaveis > 0 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-emerald-500 hover:text-emerald-500 hover:bg-emerald-500/10"
+                  onClick={onReativarGrupo}
+                  aria-label="Reativar todos os itens ocultos do grupo"
+                  title={`Reativar ${reativaveis} ${
+                    reativaveis === 1 ? "item oculto" : "itens ocultos"
+                  }`}
+                >
+                  <PlusCircle className="h-3 w-3" />
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="ghost"
@@ -124,6 +145,7 @@ export default function PreviewSidebarGrupo({
                     podeMoverBaixo={idx < grupo.itens.length - 1}
                     onMover={(dir) => onMoverItem(idx, dir)}
                     onRemover={() => onRemoverItem(item.moduleDefinitionId)}
+                    onReativar={() => onReativarItem(item.moduleDefinitionId)}
                   />
                 ))}
               </div>
