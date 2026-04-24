@@ -17,6 +17,7 @@ import PassoIdentificacao from "./passo_identificacao";
 import PassoModelos from "./passo_modelos";
 import PassoModulos from "./passo_modulos";
 import PassoLanding from "./passo_landing";
+import PassoPreview from "./passo_preview";
 import PassoRevisao from "./passo_revisao";
 
 interface Props {
@@ -31,6 +32,7 @@ const STEPS = [
   { key: "models", label: "Modelos" },
   { key: "modules", label: "Funcionalidades" },
   { key: "landing", label: "Landing" },
+  { key: "preview", label: "Pré-visualizar" },
   { key: "review", label: "Revisão" },
 ] as const;
 
@@ -213,7 +215,10 @@ export default function WizardProduto({ open, onOpenChange, planKey, initialDraf
                 <PassoModulos draft={draft} onChange={update} onVoltarPasso={() => setStepIdx(1)} />
               )}
               {stepIdx === 3 && <PassoLanding draft={draft} onChange={update} />}
-              {stepIdx === 4 && <PassoRevisao draft={draft} saved={savedOnce} />}
+              {stepIdx === 4 && (
+                <PassoPreview draft={draft} onVoltarPasso={(i) => setStepIdx(i)} />
+              )}
+              {stepIdx === 5 && <PassoRevisao draft={draft} saved={savedOnce} />}
             </>
           )}
         </div>
