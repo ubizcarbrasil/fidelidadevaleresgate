@@ -174,6 +174,9 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
   "sidebar.governanca_ofertas": {
     key: "sidebar.governanca_ofertas", defaultTitle: "Governança de Ofertas", url: "/offer-governance", icon: Shield, moduleKey: "affiliate_governance",
   },
+  "sidebar.admin_origens": {
+    key: "sidebar.admin_origens", defaultTitle: "Origens da Plataforma", url: "/admin-origens", icon: Layers,
+  },
 
   // ─── Aprovações ───
   "sidebar.aprovar_regras": {

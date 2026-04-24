@@ -22,6 +22,7 @@ import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import TelaCarregamento, { TelaCarregamentoInline } from "@/compartilhados/components/tela_carregamento";
 // MountSignal moved to BootShell in main.tsx for instant bootstrap dismissal
 const RootJourneyGuidePage = lazyWithRetry(() => import("@/pages/RootJourneyGuidePage"));
+const PaginaAdminOrigens = lazyWithRetry(() => import("@/features/admin_origens/pagina_admin_origens"));
 import { queryClient } from "@/lib/queryClient";
 import { initEventBusQueryBridge } from "@/lib/eventBusQueryBridge";
 const BrandJourneyGuidePage = lazyWithRetry(() => import("@/pages/BrandJourneyGuidePage"));
@@ -230,6 +231,7 @@ function AnimatedRoutes() {
               <Route path="flags" element={<RootGuard><FeatureFlagsPage /></RootGuard>} />
               <Route path="audit" element={<ModuleGuard moduleKey="audit"><AuditLogsPage /></ModuleGuard>} />
               <Route path="releases" element={<RootGuard><ReleasesPage /></RootGuard>} />
+              <Route path="admin-origens" element={<RootGuard><PaginaAdminOrigens /></RootGuard>} />
               <Route path="home-templates" element={<RootGuard><HomeTemplatesPage /></RootGuard>} />
               <Route path="csv-import" element={<ModuleGuard moduleKey="csv_import"><CsvImportPage /></ModuleGuard>} />
               <Route path="clone-branch" element={<RootGuard><CloneBranchPage /></RootGuard>} />

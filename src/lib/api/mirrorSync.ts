@@ -1,8 +1,46 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export async function triggerMirrorSync(brandId: string, sourceType = "divulgador_inteligente") {
+// ─────────────────────────────────────────────
+// Catálogo de Origens (gerido pelo Root Admin)
+// ─────────────────────────────────────────────
+
+export interface SourceCatalogEntry {
+  id: string;
+  source_key: string;
+  display_name: string;
+  description: string | null;
+  icon: string | null;
+  is_enabled: boolean;
+  scraper_handler: string;
+  sort_order: number;
+}
+
+export async function fetchSourceCatalog(opts?: { onlyEnabled?: boolean }): Promise<SourceCatalogEntry[]> {
+  let q = supabase
+    .from("mirror_source_catalog" as any)
+    .select("*")
+    .order("sort_order", { ascending: true });
+  if (opts?.onlyEnabled) q = q.eq("is_enabled", true);
+  const { data, error } = await q;
+  if (error) throw error;
+  return ((data as unknown) as SourceCatalogEntry[]) || [];
+}
+
+export async function updateSourceCatalogEntry(id: string, patch: Partial<Pick<SourceCatalogEntry, "display_name" | "description" | "icon" | "is_enabled" | "sort_order">>) {
+  const { error } = await supabase
+    .from("mirror_source_catalog" as any)
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+// ─────────────────────────────────────────────
+// Conectores (mirror_sync_config) — múltiplos por origem
+// ─────────────────────────────────────────────
+
+export async function triggerMirrorSync(brandId: string, sourceType = "divulgador_inteligente", configId?: string) {
   const { data, error } = await supabase.functions.invoke("mirror-sync", {
-    body: { brand_id: brandId, source_type: sourceType },
+    body: { brand_id: brandId, source_type: sourceType, config_id: configId },
   });
   if (error) throw new Error(error.message);
   return data;
@@ -33,6 +71,8 @@ export async function fetchSyncConfig(brandId: string, sourceType = "divulgador_
     .select("*")
     .eq("brand_id", brandId)
     .eq("source_type" as any, sourceType)
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle();
   if (error) throw error;
   return data;
@@ -42,9 +82,56 @@ export async function fetchAllSyncConfigs(brandId: string) {
   const { data, error } = await supabase
     .from("mirror_sync_config")
     .select("*")
-    .eq("brand_id", brandId);
+    .eq("brand_id", brandId)
+    .order("source_type", { ascending: true })
+    .order("created_at", { ascending: true });
   if (error) throw error;
   return data || [];
+}
+
+export async function fetchConnectorById(configId: string) {
+  const { data, error } = await supabase
+    .from("mirror_sync_config")
+    .select("*")
+    .eq("id", configId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function createConnector(brandId: string, sourceType: string, payload: Record<string, any>) {
+  const { data, error } = await supabase
+    .from("mirror_sync_config")
+    .insert({ brand_id: brandId, source_type: sourceType, ...payload })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateConnector(configId: string, payload: Record<string, any>) {
+  const { error } = await supabase
+    .from("mirror_sync_config")
+    .update({ ...payload, updated_at: new Date().toISOString() })
+    .eq("id", configId);
+  if (error) throw error;
+}
+
+export async function deleteConnector(configId: string, opts?: { archiveDeals?: boolean; brandId?: string; sourceType?: string }) {
+  // Optionally archive related deals (origin matches source_type globally — we cannot scope by config_id since
+  // affiliate_deals doesn't carry config_id today. Archiving is opt-in and scoped by brand+origin.)
+  if (opts?.archiveDeals && opts.brandId && opts.sourceType) {
+    await supabase
+      .from("affiliate_deals")
+      .update({ current_status: "archived", is_active: false, updated_at: new Date().toISOString() } as any)
+      .eq("brand_id", opts.brandId)
+      .eq("origin", opts.sourceType);
+  }
+  const { error } = await supabase
+    .from("mirror_sync_config")
+    .delete()
+    .eq("id", configId);
+  if (error) throw error;
 }
 
 export async function upsertSyncConfig(brandId: string, sourceType: string, config: Record<string, any>) {
@@ -53,6 +140,8 @@ export async function upsertSyncConfig(brandId: string, sourceType: string, conf
     .select("id")
     .eq("brand_id", brandId)
     .eq("source_type" as any, sourceType)
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle();
 
   if (existing) {

@@ -6423,6 +6423,45 @@ export type Database = {
           },
         ]
       }
+      mirror_source_catalog: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_name: string
+          icon: string | null
+          id: string
+          is_enabled: boolean
+          scraper_handler: string
+          sort_order: number
+          source_key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_name: string
+          icon?: string | null
+          id?: string
+          is_enabled?: boolean
+          scraper_handler: string
+          sort_order?: number
+          source_key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          icon?: string | null
+          id?: string
+          is_enabled?: boolean
+          scraper_handler?: string
+          sort_order?: number
+          source_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mirror_sync_config: {
         Row: {
           auto_activate: boolean | null
@@ -6433,6 +6472,8 @@ export type Database = {
           debug_mode: boolean | null
           extra_pages: string[] | null
           id: string
+          is_enabled: boolean
+          label: string | null
           max_offers_per_read: number | null
           max_pages: number | null
           origin_url: string
@@ -6450,6 +6491,8 @@ export type Database = {
           debug_mode?: boolean | null
           extra_pages?: string[] | null
           id?: string
+          is_enabled?: boolean
+          label?: string | null
           max_offers_per_read?: number | null
           max_pages?: number | null
           origin_url?: string
@@ -6467,6 +6510,8 @@ export type Database = {
           debug_mode?: boolean | null
           extra_pages?: string[] | null
           id?: string
+          is_enabled?: boolean
+          label?: string | null
           max_offers_per_read?: number | null
           max_pages?: number | null
           origin_url?: string
