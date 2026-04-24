@@ -60,7 +60,7 @@ function createAuditLogger(
         details_json: opts.details || {},
         changes_json: opts.changes || {},
       })
-      .then(({ error }) => {
+      .then(({ error }: { error: unknown }) => {
         if (error) createEdgeLogger("earn-webhook").error("audit_log insert error", { error });
       });
   };

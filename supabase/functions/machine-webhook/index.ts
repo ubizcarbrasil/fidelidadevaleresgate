@@ -47,7 +47,7 @@ function logAudit(
       details_json: details,
       changes_json: opts.changes || {},
     })
-    .then(({ error }) => {
+    .then(({ error }: { error: unknown }) => {
       if (error) logger.error("audit_log insert error", { error });
     });
 }
