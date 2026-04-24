@@ -28,7 +28,7 @@ function json(body: Record<string, unknown>, status = 200) {
 }
 
 function logAudit(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   action: string,
   opts: { brandId?: string; entityId?: string; ip?: string | null; details?: Record<string, unknown>; changes?: Record<string, unknown> } = {}
 ) {
@@ -47,12 +47,12 @@ function logAudit(
       details_json: details,
       changes_json: opts.changes || {},
     })
-    .then(({ error }) => {
+    .then(({ error }: { error: unknown }) => {
       if (error) logger.error("audit_log insert error", { error });
     });
 }
 
-async function findIntegration(sb: ReturnType<typeof createClient>, req: Request, body: Record<string, unknown>) {
+async function findIntegration(sb: any, req: Request, body: Record<string, unknown>) {
   const apiSecret = req.headers.get("x-api-secret") || req.headers.get("x-api-key");
   const url = new URL(req.url);
   const queryBrandId = url.searchParams.get("brand_id");
@@ -134,7 +134,7 @@ function getTierFromRideCount(rideCount: number): string {
 const CUSTOMER_SELECT = "id, branch_id, points_balance, name, phone, customer_tier, ride_count, external_driver_id";
 
 async function findCustomerCascade(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   brandId: string,
   cpf: string | null,
   phone: string | null,
@@ -183,7 +183,7 @@ async function findCustomerCascade(
 }
 
 async function resolveEffectivePointsPerReal(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   brandId: string,
   branchId: string | null,
   customerTier: string
@@ -222,7 +222,7 @@ async function resolveEffectivePointsPerReal(
 }
 
 async function processFinalized(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   integration: any,
   brandId: string,
   branchId: string | null,

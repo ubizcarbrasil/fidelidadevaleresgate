@@ -208,7 +208,7 @@ function cleanName(name?: string | null): string {
 }
 
 async function sendNotification(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   customerIds: string[],
   title: string,
   body: string,

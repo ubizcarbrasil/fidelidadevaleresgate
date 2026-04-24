@@ -18,7 +18,7 @@ function getClientIp(req: Request): string | null {
 }
 
 function logAudit(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   action: string,
   opts: { userId?: string; brandId?: string; entityId?: string; ip?: string | null; details?: Record<string, unknown>; changes?: Record<string, unknown> } = {}
 ) {
@@ -34,7 +34,7 @@ function logAudit(
       details_json: opts.details || {},
       changes_json: opts.changes || {},
     })
-    .then(({ error }) => {
+    .then(({ error }: { error: unknown }) => {
       if (error) createEdgeLogger("register-machine-webhook").error("audit_log insert error", { error });
     });
 }

@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
 async function dispatchMessageFlow(
   supabaseUrl: string,
   serviceKey: string,
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   customerIds: string[],
   eventType: string,
   contextVars?: Record<string, string>,

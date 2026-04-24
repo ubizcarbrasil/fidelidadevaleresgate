@@ -35,8 +35,9 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     const errLog = createEdgeLogger("expire-pending-pins");
-    errLog.error("Error expiring PINs", { message: err.message });
-    return new Response(JSON.stringify({ error: err.message }), {
+    const message = err instanceof Error ? err.message : String(err);
+    errLog.error("Error expiring PINs", { message });
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

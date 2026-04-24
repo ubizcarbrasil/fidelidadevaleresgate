@@ -37,7 +37,7 @@ function getClientIp(req: Request): string | null {
 // ── Audit Logger ─────────────────────────────────────────────────────
 
 function createAuditLogger(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   clientIp: string | null
 ) {
   return function logAudit(
@@ -60,7 +60,7 @@ function createAuditLogger(
         details_json: opts.details || {},
         changes_json: opts.changes || {},
       })
-      .then(({ error }) => {
+      .then(({ error }: { error: unknown }) => {
         if (error) createEdgeLogger("earn-webhook").error("audit_log insert error", { error });
       });
   };
@@ -68,7 +68,7 @@ function createAuditLogger(
 
 // ── Validators ───────────────────────────────────────────────────────
 
-async function validateApiKey(sb: ReturnType<typeof createClient>, apiKey: string) {
+async function validateApiKey(sb: any, apiKey: string) {
   const keyHash = await sha256(apiKey);
   const { data, error } = await sb
     .from("brand_api_keys")
@@ -131,7 +131,7 @@ function calculatePoints(
 }
 
 async function getEffectivePointsPerReal(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   rule: any,
   storeId: string
 ): Promise<number> {
@@ -165,7 +165,7 @@ async function getEffectivePointsPerReal(
 // ── Anti-Fraud Checks ────────────────────────────────────────────────
 
 async function checkDailyLimits(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   customerId: string,
   storeId: string,
   points: number,
@@ -202,7 +202,7 @@ async function checkDailyLimits(
 }
 
 async function checkReceiptUniqueness(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   storeId: string,
   receiptCode: string | undefined,
   requireReceipt: boolean
@@ -228,7 +228,7 @@ async function checkReceiptUniqueness(
 // ── Billing (Ganha-Ganha) ────────────────────────────────────────────
 
 async function processGanhaGanhaBilling(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   brandId: string,
   storeId: string,
   points: number,

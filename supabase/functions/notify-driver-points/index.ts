@@ -253,7 +253,7 @@ Deno.serve(async (req) => {
 
 // --- Helper: send message via TaxiMachine API ---
 async function sendDriverMessage(
-  _sb: ReturnType<typeof createClient>,
+  _sb: any,
   integration: { api_key: string; basic_auth_user: string; basic_auth_password: string },
   driverIdRaw: string,
   mensagem: string,
@@ -304,7 +304,7 @@ async function sendDriverMessage(
 
 // --- Helper: log error ---
 async function logError(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   brandId: string,
   machineRideId: string,
   driverId: string,
