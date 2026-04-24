@@ -324,12 +324,16 @@ export default function Dashboard() {
 
       {/* Branch-specific dashboard */}
       {consoleScope === "BRANCH" && currentBranchId && (
-        <BranchDashboardSection branchId={currentBranchId} />
+        <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+          <BranchDashboardSection branchId={currentBranchId} />
+        </Suspense>
       )}
 
       {/* Brand/Tenant/Root viewing a specific branch */}
       {isViewingBranch && viewingBranchId && (
-        <BranchDashboardSection branchId={viewingBranchId} />
+        <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+          <BranchDashboardSection branchId={viewingBranchId} />
+        </Suspense>
       )}
 
       {/* Sections hidden for BRANCH scope */}
@@ -339,17 +343,19 @@ export default function Dashboard() {
           {showBrand && isDriverEnabled && <RidesCounterCard brandId={brandFilter} />}
 
           {/* Charts, Ranking, Alerts, Heatmap, Reports */}
-          <DashboardChartsSection
-            combinedChart={combinedChart}
-            recentRedemptions={recentRedemptions}
-            brandFilter={brandFilter}
-            showBrand={showBrand}
-            isRoot={isRoot}
-            redemptionsPending={kpis?.redemptions_pending}
-            storeRulesPending={kpis?.store_rules_pending}
-            isDriverEnabled={isDriverEnabled}
-            isPassengerEnabled={isPassengerEnabled}
-          />
+          <Suspense fallback={<Skeleton className="h-72 w-full" />}>
+            <DashboardChartsSection
+              combinedChart={combinedChart}
+              recentRedemptions={recentRedemptions}
+              brandFilter={brandFilter}
+              showBrand={showBrand}
+              isRoot={isRoot}
+              redemptionsPending={kpis?.redemptions_pending}
+              storeRulesPending={kpis?.store_rules_pending}
+              isDriverEnabled={isDriverEnabled}
+              isPassengerEnabled={isPassengerEnabled}
+            />
+          </Suspense>
 
           {/* Tasks + Activity Feed */}
           <div className="grid gap-4 lg:grid-cols-2 animate-slide-up delay-7">
