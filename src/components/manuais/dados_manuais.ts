@@ -1313,22 +1313,23 @@ export const gruposManuais: GrupoManual[] = [
       },
       {
         id: "central-modulos-planos",
-        titulo: "Aba Planos",
-        descricao: "Cadastre e gerencie os Planos comerciais oferecidos aos empreendedores (Free, Starter, Profissional, Enterprise, etc.). Cada Plano define preço, ciclo de cobrança e — via aba 'Modelos × Planos' — quais Modelos de Negócio estão inclusos.",
+        titulo: "Aba Planos — Matriz Módulo × Plano",
+        descricao: "Define, módulo por módulo, o que cada Plano comercial (Free, Starter, Profissional, Enterprise) inclui. A interface é uma matriz: linhas são módulos (agrupados por categoria), colunas são os 4 planos. Marcar/desmarcar uma célula liga ou desliga aquele módulo no plano correspondente.",
         comoAtivar: "Acesso Root Admin. Disponível em 'Central de Módulos' → aba 'Planos'.",
         passos: [
           "Acesse '/admin/central-modulos' e abra a aba 'Planos'.",
-          "Para criar: clique em 'Novo Plano' e preencha chave (imutável), nome comercial, descrição, ordem de exibição e flag de visibilidade.",
-          "Para editar: abra o card do Plano e ajuste descrição, ordem ou disponibilidade pública.",
-          "Para vincular Modelos: vá para a aba 'Modelos' → 'Modelos × Planos' e marque os Modelos inclusos neste Plano.",
-          "Use o toggle 'Ativo' para descontinuar um Plano sem afetar quem já o assina.",
-          "Use 'Visível publicamente' para esconder planos legados ou em construção da página de assinatura."
+          "Use a busca no topo para localizar um módulo pelo nome ou chave; use os badges de categoria para filtrar por área (Comercial, Fidelidade, Engajamento, etc.).",
+          "Para incluir/remover um módulo de um plano: clique no checkbox da célula correspondente. A mudança é salva automaticamente.",
+          "Para preencher um plano inteiro de uma vez: use os botões 'Todos' / 'Nenhum' no cabeçalho de cada coluna de plano.",
+          "Módulos marcados como Core ficam travados ON em todos os planos (com tooltip explicativo).",
+          "Para sincronizar marcas existentes com a configuração atual: clique em 'Aplicar Retroativamente', escolha os planos, revise o impacto (marcas afetadas + customizações que serão sobrescritas) e digite 'CONFIRMAR' para liberar o botão.",
+          "Para criar conjuntos livres de módulos (não amarrados a um plano), use a aba 'Templates' — útil para padronizar pacotes ad-hoc em lote."
         ],
         dicas: [
-          "A chave do Plano é referenciada em vários lugares (faturamento, provisionamento) — não altere após criar.",
-          "Para descontinuar um Plano: desmarque 'Visível' primeiro, mantenha 'Ativo' até migrar todos os clientes.",
-          "Use a 'ordem de exibição' para controlar como aparecem na página de pricing pública.",
-          "Templates de módulos legados ficam em '/plan-templates' (banner amarelo indica que está sendo substituído por Modelos × Planos)."
+          "Marcar um módulo num plano NÃO altera marcas já existentes — só novas marcas são provisionadas com a configuração atual. Use 'Aplicar Retroativamente' para sincronizar quem já existe.",
+          "'Aplicar Retroativamente' RESETA brand_modules das marcas selecionadas, apagando customizações manuais — sempre confira o contador de 'customização(ões)' antes de confirmar.",
+          "Para padronizar várias marcas/cidades sem mexer em planos, prefira a aba 'Templates' (aplicação em lote com opção de mesclar ou substituir).",
+          "Mudanças invalidam o cache automaticamente — usuários afetados veem o novo estado na próxima navegação."
         ],
         rota: "/admin/central-modulos"
       },
