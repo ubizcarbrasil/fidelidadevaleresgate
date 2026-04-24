@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Trophy,
   Users,
+  Layers,
 } from "lucide-react";
 import type { FaseCampeonato } from "../../../types/tipos_campeonato";
 import type { KpisCampeonato } from "../../../types/tipos_dashboard_kpis";
@@ -91,10 +92,10 @@ function derivarCta(
     return {
       Icon: AlertTriangle,
       iconClass: "text-amber-600",
-      titulo: "Distribua os motoristas",
+      titulo: "Sem motoristas no campeonato",
       descricao:
-        "Sem motoristas alocados nas séries, o app do motorista mostra 'nenhum campeonato ativo'.",
-      cta: "Distribuir agora",
+        "Nenhum motorista foi inscrito ainda. Importe ou habilite motoristas para iniciar a competição.",
+      cta: "Gerenciar motoristas",
       ctaVariant: "default" as const,
       containerClass:
         "border-amber-300 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/20",
@@ -103,7 +104,44 @@ function derivarCta(
     };
   }
 
-  // Caso 3: classificação + pouco tempo até mata-mata (<24h) — revisar bracket
+  // Caso 3: motoristas existem mas Séries A e B estão vazias (todos em C / sem seeding)
+  if (kpis.by_tier.A === 0 && kpis.by_tier.B === 0 && kpis.by_tier.C > 0) {
+    return {
+      Icon: Layers,
+      iconClass: "text-amber-600",
+      titulo: "Séries A e B vazias",
+      descricao: `${kpis.by_tier.C} motoristas concentrados na Série C. Faça o seeding para promover os melhores às Séries A e B e iniciar a disputa.`,
+      cta: "Fazer seeding",
+      ctaVariant: "default" as const,
+      containerClass:
+        "border-amber-300 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/20",
+      titleClass: "text-amber-900 dark:text-amber-100",
+      descClass: "text-amber-800/90 dark:text-amber-200/80",
+    };
+  }
+
+  // Caso 3b: apenas uma das séries de elite vazia — sugerir rebalanceamento
+  if (
+    phase === "classification" &&
+    (kpis.by_tier.A === 0 || kpis.by_tier.B === 0)
+  ) {
+    const serieVazia = kpis.by_tier.A === 0 ? "A" : "B";
+    return {
+      Icon: Layers,
+      iconClass: "text-orange-600",
+      titulo: `Série ${serieVazia} sem motoristas`,
+      descricao:
+        "Distribuição desbalanceada entre as séries. Revise o seeding para garantir competição equilibrada.",
+      cta: "Revisar séries",
+      ctaVariant: "default" as const,
+      containerClass:
+        "border-orange-300 bg-orange-50 dark:border-orange-900/50 dark:bg-orange-950/20",
+      titleClass: "text-orange-900 dark:text-orange-100",
+      descClass: "text-orange-800/90 dark:text-orange-200/80",
+    };
+  }
+
+  // Caso 4: classificação + pouco tempo até mata-mata (<24h) — revisar bracket
   if (phase === "classification" && horasParaMataMata > 0 && horasParaMataMata < 24) {
     return {
       Icon: Users,
@@ -119,7 +157,7 @@ function derivarCta(
     };
   }
 
-  // Caso 4: mata-mata em andamento — acompanhar
+  // Caso 5: mata-mata em andamento — acompanhar
   if (phase !== "classification" && agora >= inicioMataMata && agora <= fimMataMata) {
     return {
       Icon: Trophy,
@@ -136,12 +174,12 @@ function derivarCta(
     };
   }
 
-  // Caso 5 (default): operação saudável durante classificação
+  // Caso 6 (default): operação saudável durante classificação
   return {
     Icon: CheckCircle2,
     iconClass: "text-emerald-600",
     titulo: "Tudo em ordem",
-    descricao: `${kpis.total_drivers} motoristas competindo · ${kpis.events_last_24h} ações nas últimas 24h. Mantenha as séries balanceadas.`,
+    descricao: `${kpis.total_drivers} motoristas competindo (A:${kpis.by_tier.A} · B:${kpis.by_tier.B} · C:${kpis.by_tier.C}) · ${kpis.events_last_24h} ações nas últimas 24h.`,
     cta: undefined,
     ctaVariant: "outline" as const,
     containerClass:
