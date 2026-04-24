@@ -1,57 +1,55 @@
-## Problema
+## Diagnóstico — NÃO É VAZAMENTO ENTRE MARCAS
 
-A marca **Ubiz Shop** tem o produto comercial **"Cliente Resgate"** (apenas audiência `cliente`). Mas o Dashboard ainda mostra elementos de motorista:
+Investiguei o banco de dados diretamente. Boa notícia: **não há vazamento de dados entre empreendedores**. A cidade "São João - SP" está corretamente associada ao `brand_id` da Ubiz Shop no banco (não pertence ao Ubiz Resgata nem ao Ubiz Car). As políticas de RLS e o filtro por `brand_id` na página `/brand-branches` estão funcionando.
 
-- Aba **"Motoristas"** dentro do Ranking de Pontuação
-- Banner **"Duelos & Ranking"** (gamificação de motorista)
-- Quick link **"Painel do Motorista"**
-- Quick link **"Conversão por Público"** (correto manter) com card **"Taxa do Motorista"** dentro dele
-
-### Causa raiz
-
-O Dashboard decide o que mostrar com base no `scoring_model` das **branches** (cidades) através do hook `useBrandScoringModels`. A cidade da marca está como `BOTH` (legado), então o Dashboard acha que motorista está habilitado — mesmo o produto contratado dizendo o contrário.
-
-A regra arquitetural do projeto já estabelece: **"Audiência do produto contratado tem precedência sobre o scoring_model das branches"**. O `BrandSidebar` já segue essa regra (combina `useProductScope` + `useBrandScoringModels`); o Dashboard e a página de Conversão ainda não.
-
-## Solução
-
-Aplicar no Dashboard e nas páginas relacionadas a mesma combinação que o sidebar usa:
+**Causa real:** o motor de provisionamento (`provision-trial`) **cria automaticamente uma cidade obrigatória** no momento do cadastro, usando os campos `city_name` + `state` que o empreendedor preenche no wizard. No caso da Ubiz Shop, alguém digitou "São João" + "SP" durante o cadastro inicial, e essa cidade ficou registrada.
 
 ```text
-audiencia_efetiva = audiencia_do_produto AND scoring_model_da_cidade
+Wizard de Cadastro (TrialSignupPage)
+   ├─ Nome da empresa: "Ubiz Shop"
+   ├─ Cidade: "São João"   ← obrigatório hoje
+   └─ Estado: "SP"
+            │
+            ▼
+provision-trial (Edge Function)
+   ├─ Cria tenant
+   ├─ Cria brand
+   ├─ Cria branch (cidade) ← criação automática indesejada
+   └─ Cria brand_admin role
 ```
 
-Ou seja: só considera motorista habilitado quando o **produto inclui motorista** E a **cidade está configurada para motorista**. Idem para cliente. Isso elimina inconsistências causadas por configurações legadas das cidades.
+Confirmação no banco: a marca foi criada às `14:04:40.400` e a branch às `14:04:40.947` (0,5s depois) — assinatura clara de criação pelo mesmo motor.
 
-### Arquivos a modificar
+## Correção em duas frentes
 
-1. **`src/pages/Dashboard.tsx`**
-   - Importar `useProductScope` e calcular as flags efetivas:
-     ```ts
-     const escopo = useProductScope();
-     const audienciaMotoristaAtiva = escopo.hasAudience("motorista") && isDriverEnabled;
-     const audienciaClienteAtiva = escopo.hasAudience("cliente") && isPassengerEnabled;
-     ```
-   - Substituir todas as ocorrências de `isDriverEnabled` / `isPassengerEnabled` pelos novos valores efetivos ao passar para `DashboardKpiSection`, `DashboardChartsSection`, `DashboardQuickLinksSection`, `RidesCounterCard` e o banner de Gamificação.
+### Frente 1 — Limpeza imediata (Ubiz Shop)
+Remover a cidade "São João - SP" (`c88979ba-...`) do brand Ubiz Shop, deixando o painel realmente virgem para o empreendedor configurar do zero. Verificar antes se há dados vinculados (clientes, ofertas, resgates) — se houver, apenas inativar a cidade em vez de excluir.
 
-2. **`src/pages/conversao_resgate/pagina_conversao_resgate.tsx`**
-   - Importar `useProductScope` + `useBrandScoringModels`.
-   - Renderizar o card **"Taxa do Motorista"** apenas se a audiência motorista estiver efetivamente ativa.
-   - Renderizar o card **"Taxa do Passageiro"** apenas se a audiência cliente estiver efetivamente ativa.
-   - Se só uma audiência está ativa, o grid passa a ter uma única coluna centralizada.
-   - Atualizar o subtítulo da página para refletir o público vigente (ex: "Defina a taxa de conversão para passageiros" quando só cliente).
+### Frente 2 — Correção estrutural no provisionamento
+Tornar a cidade **opcional** durante o cadastro. O empreendedor cadastra apenas a empresa; a primeira cidade é criada por ele depois, na tela "Minhas Cidades". Isso atende ao requisito: *"Quando é criado um empreendedor tem que vir um painel virgem de tudo pois ele ainda vai fazer suas configurações"*.
 
-### O que vai acontecer na tela da Ubiz Shop
+**Mudanças técnicas:**
 
-- **Ranking de Pontuação**: deixa de mostrar a aba "Motoristas". Mostra direto a lista de Passageiros, sem abas.
-- **Banner Duelos & Ranking**: some (era exclusivo de motorista).
-- **Painel do Motorista** nos quick links: some.
-- **Conversão por Público**: passa a mostrar apenas o card "Taxa do Passageiro".
-- **Pontuações em Tempo Real / Mapa de Atividade**: passam a contabilizar apenas eventos de cliente.
-- **KPIs de motorista (total motoristas, pontos motoristas)**: já são filtrados pelas mesmas flags via `DashboardKpiSection`.
+1. **`supabase/functions/provision-trial/index.ts`**
+   - Remover a obrigatoriedade de `city_name` e `state` na validação (linha 252).
+   - Tornar o bloco "Create Branch" (linhas 345-375) condicional: só cria branch se `city_name` E `state` foram informados.
+   - Manter retrocompatibilidade: quem informar cidade continua tendo a branch criada.
 
-### Impacto colateral
+2. **`src/pages/TrialSignupPage.tsx`** e **`src/pages/ProvisionBrandWizard.tsx`**
+   - Remover os campos "Cidade" e "Estado" do wizard (ou movê-los para um passo opcional "pular").
+   - Ajustar o resumo final do wizard para não exibir a cidade quando não informada.
+   - Após o cadastro, redirecionar o empreendedor para `/brand-branches` com um banner do tipo *"Sua marca foi criada! Cadastre sua primeira cidade para começar."*
 
-- Marcas com plano **enterprise** ou **free** continuam permissivas (mostram tudo) porque `useProductScope.isPermissive = true` para esses planos.
-- Marcas com produto que cobre motorista E cliente continuam vendo tudo.
-- Não toca em RLS nem em dados — só na renderização condicional.
+3. **Estado vazio em `/brand-branches`** (já existe, linha 86-91 de `BrandBranchesPage.tsx`)
+   - Reforçar visualmente o estado "Nenhuma cidade cadastrada ainda" com um CTA destacado para "Criar primeira cidade".
+
+### O que NÃO vai mudar
+- Políticas de RLS — estão corretas.
+- Filtro `eq("brand_id", currentBrandId)` em `BrandBranchesPage` — está correto.
+- O hook `useBrandGuard` — está correto.
+
+## Resumo do que o empreendedor verá depois
+
+- Ubiz Shop entra no painel e vê "Nenhuma cidade cadastrada ainda" com botão grande "Criar primeira cidade".
+- Próximos cadastros de novos empreendedores também começam com painel 100% virgem.
+- A obrigatoriedade de cidade no wizard de cadastro é eliminada.
