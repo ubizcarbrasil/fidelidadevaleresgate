@@ -186,6 +186,22 @@ html, body {
   }
 }
 
+/* ── App shell altura responsiva ao viewport dinâmico (mobile browsers) ── */
+.app-shell-height {
+  min-height: 100vh; /* fallback */
+  min-height: 100dvh;
+}
+
+/* Área principal de scroll: garante folga inferior no mobile, considerando safe-area */
+.main-scroll-area {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+}
+@media (max-width: 640px) {
+  .main-scroll-area {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 96px);
+  }
+}
+
 /* ── Mobile touch ── */
 @media (max-width: 640px) {
   button:not(.no-touch-min), a:not(.no-touch-min), [role="button"]:not(.no-touch-min) {
