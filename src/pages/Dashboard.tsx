@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, Suspense, startTransition, useRef } from "react";
+import { useState, useEffect, useMemo, Suspense, startTransition, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,9 +40,6 @@ function getPeriodStart(period: PeriodKey): Date {
 function getPeriodDays(period: PeriodKey): number {
   return period === "today" ? 1 : period === "7d" ? 7 : 30;
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase.from() requires dynamic table names here
-const fromTable = (table: string) => (supabase.from as (t: string) => ReturnType<typeof supabase.from>)(table);
 
 interface DashboardKpis {
   stores_active: number;
