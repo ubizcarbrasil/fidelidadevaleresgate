@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useBranchesSync } from "@/compartilhados/hooks/hook_branches_sync";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -24,7 +24,7 @@ interface Props {
 
 export function AcoesCidade({ branchId, branchName, onDeleted }: Props) {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { syncAfterMutation: syncBranches } = useBranchesSync();
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -56,7 +56,7 @@ export function AcoesCidade({ branchId, branchName, onDeleted }: Props) {
       if (data?.error) throw new Error(data.error);
 
       toast.success("Cidade excluída com sucesso");
-      queryClient.invalidateQueries({ queryKey: ["onboarding-branches"] });
+      await syncBranches();
       onDeleted();
     } catch (err: any) {
       toast.error(err.message || "Erro ao excluir cidade");
