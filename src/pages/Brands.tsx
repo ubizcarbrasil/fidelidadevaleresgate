@@ -17,6 +17,7 @@ import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { TelaCarregamentoInline } from "@/compartilhados/components/tela_carregamento";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const PAGE_SIZE = 20;
 
@@ -36,6 +37,7 @@ const STATUS_OPTIONS = [
 export default function Brands() {
   const { isRootAdmin, currentBrandId } = useBrandGuard();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!isRootAdmin && currentBrandId) {
@@ -63,6 +65,12 @@ export default function Brands() {
     brandName: string;
     planKey: string;
     planLabel: string;
+  } | null>(null);
+  // Diálogo de seleção de plano em mobile (substitui o submenu lateral cortado)
+  const [planPickerTarget, setPlanPickerTarget] = useState<{
+    brandId: string;
+    brandName: string;
+    currentPlan: string;
   } | null>(null);
 
   // Produtos comerciais ativos (subscription_plans)
@@ -227,9 +235,9 @@ export default function Brands() {
         <Button asChild className="w-full sm:w-auto"><Link to="/brands/new"><Plus className="h-4 w-4 mr-2" />Nova Marca</Link></Button>
       </div>
       <DataTableControls search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} searchPlaceholder="Buscar por nome ou slug..." page={page} pageSize={PAGE_SIZE} totalCount={data?.count ?? 0} onPageChange={setPage} />
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader><CardTitle className="text-base">Lista de Marcas</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent className="px-0 sm:px-6">
           {isLoading ? <TelaCarregamentoInline /> : (
           <Table>
             <TableHeader>
@@ -261,7 +269,7 @@ export default function Brands() {
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" collisionPadding={12} className="max-w-[calc(100vw-24px)]">
                           <DropdownMenuItem onClick={() => navigate(`/brands/${b.id}`)}>
                             <Pencil className="h-4 w-4 mr-2" />Editar
                           </DropdownMenuItem>
@@ -285,11 +293,24 @@ export default function Brands() {
                           }}>
                             <RefreshCw className="h-4 w-4 mr-2" />Renovar Assinatura
                           </DropdownMenuItem>
+                          {isMobile ? (
+                            <DropdownMenuItem
+                              onClick={() =>
+                                setPlanPickerTarget({
+                                  brandId: b.id,
+                                  brandName: b.name,
+                                  currentPlan: b.subscription_plan,
+                                })
+                              }
+                            >
+                              <ArrowUpDown className="h-4 w-4 mr-2" />Mudar Plano
+                            </DropdownMenuItem>
+                          ) : (
                           <DropdownMenuSub>
                             <DropdownMenuSubTrigger>
                               <ArrowUpDown className="h-4 w-4 mr-2" />Mudar Plano
                             </DropdownMenuSubTrigger>
-                            <DropdownMenuSubContent>
+                            <DropdownMenuSubContent collisionPadding={12} className="max-w-[calc(100vw-24px)]">
                               <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">
                                 Planos Padrão
                               </div>
@@ -335,6 +356,7 @@ export default function Brands() {
                               )}
                             </DropdownMenuSubContent>
                           </DropdownMenuSub>
+                          )}
                           <DropdownMenuItem onClick={() => toggleActive.mutate({ id: b.id, is_active: !b.is_active })}>
                             <Power className="h-4 w-4 mr-2" />{b.is_active ? "Inativar" : "Ativar"}
                           </DropdownMenuItem>
@@ -477,6 +499,94 @@ export default function Brands() {
             >
               {actionLoading ? "Aplicando..." : "Confirmar troca"}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Plan picker dialog (mobile substitui o submenu lateral) */}
+      <AlertDialog
+        open={!!planPickerTarget}
+        onOpenChange={(open) => {
+          if (!open) setPlanPickerTarget(null);
+        }}
+      >
+        <AlertDialogContent className="max-h-[85vh] overflow-y-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mudar Plano — {planPickerTarget?.brandName}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Escolha o novo plano para esta marca.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <p className="px-1 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                Planos Padrão
+              </p>
+              <div className="flex flex-col gap-1">
+                {LEGACY_PLAN_OPTIONS.map((p) => {
+                  const atual = planPickerTarget?.currentPlan === p.key;
+                  return (
+                    <Button
+                      key={p.key}
+                      type="button"
+                      variant={atual ? "secondary" : "outline"}
+                      className="justify-between"
+                      disabled={atual}
+                      onClick={() => {
+                        if (!planPickerTarget) return;
+                        setPlanChangeTarget({
+                          brandId: planPickerTarget.brandId,
+                          brandName: planPickerTarget.brandName,
+                          planKey: p.key,
+                          planLabel: p.label,
+                        });
+                        setPlanPickerTarget(null);
+                      }}
+                    >
+                      <span>{p.label}</span>
+                      {atual && <span className="text-xs">Atual ✓</span>}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+            {commercialProductOptions.length > 0 && (
+              <div>
+                <p className="px-1 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Produtos Comerciais
+                </p>
+                <div className="flex flex-col gap-1">
+                  {commercialProductOptions.map((p) => {
+                    const atual = planPickerTarget?.currentPlan === p.key;
+                    return (
+                      <Button
+                        key={p.key}
+                        type="button"
+                        variant={atual ? "secondary" : "outline"}
+                        className="justify-between"
+                        disabled={atual}
+                        onClick={() => {
+                          if (!planPickerTarget) return;
+                          setPlanChangeTarget({
+                            brandId: planPickerTarget.brandId,
+                            brandName: planPickerTarget.brandName,
+                            planKey: p.key,
+                            planLabel: p.label,
+                          });
+                          setPlanPickerTarget(null);
+                        }}
+                      >
+                        <span className="truncate text-left">{p.label}</span>
+                        {atual && <span className="text-xs shrink-0 ml-2">Atual ✓</span>}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Fechar</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
