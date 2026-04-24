@@ -235,9 +235,9 @@ export default function Brands() {
         <Button asChild className="w-full sm:w-auto"><Link to="/brands/new"><Plus className="h-4 w-4 mr-2" />Nova Marca</Link></Button>
       </div>
       <DataTableControls search={search} onSearchChange={(v) => { setSearch(v); setPage(1); }} searchPlaceholder="Buscar por nome ou slug..." page={page} pageSize={PAGE_SIZE} totalCount={data?.count ?? 0} onPageChange={setPage} />
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader><CardTitle className="text-base">Lista de Marcas</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent className="px-0 sm:px-6">
           {isLoading ? <TelaCarregamentoInline /> : (
           <Table>
             <TableHeader>
