@@ -39,6 +39,8 @@ export default function BrandBranchesPage() {
       return data || [];
     },
     enabled: !!currentBrandId,
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const toggleMutation = useMutation({
