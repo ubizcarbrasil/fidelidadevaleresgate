@@ -205,9 +205,15 @@ export default function Dashboard() {
   const isRoot = consoleScope === "ROOT";
   const showTenant = ["ROOT", "TENANT"].includes(consoleScope);
   const showBrand = ["ROOT", "TENANT", "BRAND"].includes(consoleScope);
-  const periodStart = getPeriodStart(period);
-  const periodDays = getPeriodDays(period);
-  const brandFilter = isRoot ? undefined : currentBrandId ?? undefined;
+  // Memoizar para manter referência estável entre renders — evita
+  // que useDashboardKpis e useQuery("dashboard-daily-counts") refaçam
+  // a chamada a cada render (era a fonte do duplo fetch das KPIs).
+  const periodStart = useMemo(() => getPeriodStart(period), [period]);
+  const periodDays = useMemo(() => getPeriodDays(period), [period]);
+  const brandFilter = useMemo(
+    () => (isRoot ? undefined : currentBrandId ?? undefined),
+    [isRoot, currentBrandId]
+  );
 
   // All metrics consolidated in a single RPC
   const { data: kpis } = useDashboardKpis(brandFilter, periodStart);
@@ -216,6 +222,8 @@ export default function Dashboard() {
   // Server-side aggregated counts (1 RPC call instead of paginating ~10k rows)
   const { data: dailyCounts } = useQuery({
     queryKey: ["dashboard-daily-counts", period, brandFilter ?? "global", periodDays],
+    placeholderData: keepPreviousData,
+    staleTime: 10 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await (supabase as any).rpc("get_dashboard_daily_counts", {
         p_brand_id: brandFilter ?? null,
@@ -224,7 +232,6 @@ export default function Dashboard() {
       if (error) throw error;
       return (data ?? []) as Array<{ day: string; redemptions_count: number; rides_count: number }>;
     },
-    staleTime: 60_000,
   });
 
   const { recentRedemptions, recentEarnings } = useMemo(() => {
