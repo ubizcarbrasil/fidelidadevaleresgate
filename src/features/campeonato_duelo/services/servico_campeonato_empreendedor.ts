@@ -20,6 +20,7 @@ import type {
   StatusFiltroSeason,
   TrocarFormatoInput,
 } from "../types/tipos_empreendedor";
+import type { DashboardKpisResponse } from "../types/tipos_dashboard_kpis";
 
 /**
  * Camada de acesso às 12 RPCs SECURITY DEFINER do empreendedor (C.4).
@@ -41,6 +42,29 @@ export async function obterDashboardCampeonato(
     active_season: null,
     tiers: [],
   };
+}
+
+export async function obterKpisCampeonato(
+  brandId: string,
+): Promise<DashboardKpisResponse> {
+  const { data, error } = await supabase.rpc(
+    "brand_get_campeonato_kpis" as never,
+    { p_brand_id: brandId } as never,
+  );
+  if (error) throw error;
+  return (
+    (data as unknown as DashboardKpisResponse) ?? {
+      has_active_season: false,
+      season: null,
+      kpis: {
+        total_drivers: 0,
+        by_tier: { A: 0, B: 0, C: 0 },
+        rides_in_season: 0,
+        points_distributed: 0,
+        events_last_24h: 0,
+      },
+    }
+  );
 }
 
 export async function listarTemporadasMarca(
