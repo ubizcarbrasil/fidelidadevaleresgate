@@ -173,7 +173,7 @@ export default function AppLayout() {
     return (
       <SidebarProvider>
         <div className="app-shell-height flex w-full">
-          <div className="w-16 shrink-0 bg-sidebar" />
+          <div className="hidden w-16 shrink-0 bg-sidebar md:block" />
           <div className="flex-1 flex flex-col min-w-0">
             <header className="h-14 saas-topbar shrink-0" />
             <main className="flex-1 p-3 sm:p-6 overflow-auto" />
@@ -198,7 +198,7 @@ export default function AppLayout() {
   return (
     <SidebarProvider>
       <div className="app-shell-height flex w-full">
-        <Suspense fallback={<div className="w-16 shrink-0 bg-sidebar" />}>
+        <Suspense fallback={<div className="hidden w-16 shrink-0 bg-sidebar md:block" />}>
           <SidebarComponent />
         </Suspense>
         <div className="flex-1 flex flex-col min-w-0">
