@@ -15,12 +15,17 @@ function retryDelay(attemptIndex: number): number {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: CACHE.STALE_TIME_SHORT,
+      // Cache mais longo por padrão: a maioria das telas administrativas
+      // não precisa refetchar a cada navegação. Hooks específicos com
+      // dados realtime (machine_rides, redemptions) sobrescrevem com
+      // staleTime menor onde necessário.
+      staleTime: CACHE.STALE_TIME_MEDIUM,
       gcTime: CACHE.GC_TIME,
-      retry: 2,
+      retry: 1,
       retryDelay,
       refetchOnWindowFocus: false,
-      refetchOnReconnect: true,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
     },
     mutations: {
       retry: 1,
