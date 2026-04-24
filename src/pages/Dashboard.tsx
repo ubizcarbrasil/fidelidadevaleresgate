@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, Smartphone, Swords } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
+import { useProductScope } from "@/features/city_onboarding/hooks/hook_escopo_produto";
 import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
 import { useStoreOwnerRedirect } from "@/hooks/useStoreOwnerRedirect";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -216,7 +217,12 @@ export default function Dashboard() {
   const [searchParams] = useSearchParams();
   const { isRedirecting } = useStoreOwnerRedirect();
   const { consoleScope, currentBrandId, currentBranchId } = useBrandGuard();
-  const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
+  const { isDriverEnabled: scoringDriverOn, isPassengerEnabled: scoringPassengerOn } = useBrandScoringModels();
+  const escopoProduto = useProductScope();
+  // Audiência efetiva = produto contratado AND scoring_model das cidades.
+  // Garante que o produto comercial tem precedência sobre configurações legadas das branches.
+  const isDriverEnabled = escopoProduto.hasAudience("motorista") && scoringDriverOn;
+  const isPassengerEnabled = escopoProduto.hasAudience("cliente") && scoringPassengerOn;
   const { isCampeonato } = useFormatoEngajamento(currentBrandId);
 
   // Allow BRAND/TENANT/ROOT admins to view a specific branch dashboard via URL param
