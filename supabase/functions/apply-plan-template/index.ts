@@ -147,9 +147,10 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    log.error("apply-plan-template error", { message: error.message });
+    const msg = error instanceof Error ? error.message : String(error);
+    log.error("apply-plan-template error", { message: msg });
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: msg }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
