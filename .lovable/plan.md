@@ -1,75 +1,91 @@
-# Plano de otimização de performance
+## Resumo
 
-Vou atacar a lentidão em duas frentes: remover esperas globais desnecessárias no boot/navegação e reduzir consultas pesadas que rodam em quase toda abertura de tela.
+Hoje a plataforma tem só **2 origens fixas e codificadas** no sistema (`Divulga Link` e `Divulgador Inteligente`), e cada marca consegue salvar apenas **1 URL por origem** (tabela `mirror_sync_config` com unique em `brand_id + source_type`).
 
-## O que está pesando hoje
+Você quer:
+1. **Cadastrar várias URLs do mesmo tipo** (ex: 3 grupos diferentes do Divulga Link rodando em paralelo).
+2. **Dois níveis de gestão**:
+   - **Root Admin (plataforma)**: define o catálogo de origens disponíveis (ligar/desligar quais aparecem no sistema, editar nomes, ícones).
+   - **Empreendedor (marca)**: dentro das origens disponíveis, ativa as que usa e cadastra quantas URLs/grupos quiser.
 
-1. O app fica preso no loader global enquanto valida sessão e carrega configurações da marca.
-2. O layout administrativo dispara várias consultas logo ao abrir qualquer rota:
-   - tema da plataforma
-   - dados da marca
-   - labels do menu
-   - módulos resolvidos
-   - scoring models
-   - escopo do produto
-   - badges do sidebar
-3. O sidebar/admin shell depende de hooks caros para decidir o que mostrar antes da tela principal aparecer.
-4. Algumas páginas, principalmente Motoristas, fazem enriquecimento com múltiplas consultas e RPCs por abertura.
-5. Ainda existem trechos usando o guard antigo de módulos, o que pode forçar consultas extras e loaders desnecessários em navegações internas.
+---
 
-## O que vou implementar
+## O que será construído
 
-### 1. Enxugar o boot global
-- Parar de bloquear a renderização principal por dados não críticos do layout.
-- Manter o acesso rápido ao shell e carregar em background o que for secundário.
-- Ajustar o uso de `TelaCarregamento` para que loaders de rota não pareçam “travamento do app”.
+### 1. Catálogo de Origens (Root Admin)
 
-### 2. Reduzir queries globais do AppLayout e sidebars
-- Reaproveitar mais dados já presentes no contexto da marca.
-- Tirar consultas que podem ser lazy/deferred após a primeira pintura.
-- Evitar que cada abertura de página refaça checagens de menu, badges e configuração que não mudam com frequência.
+Nova página em `/admin-origens` (Root Admin only):
 
-### 3. Unificar a resolução de módulos
-- Migrar guards e sidebars para o caminho já otimizado com `useResolvedModules`.
-- Eliminar dependências do hook legado `useBrandModules` onde ele ainda força leitura extra.
-- Aplicar cache mais agressivo e reduzir invalidações desnecessárias.
+- Lista as origens da plataforma: hoje `Divulga Link` e `Divulgador Inteligente`.
+- Para cada origem, controla:
+  - Ativa/inativa globalmente (esconde do menu de todas as marcas se desligar).
+  - Nome de exibição editável (ex: trocar "Divulgador Inteligente" por outro rótulo).
+  - Ícone/cor para o sidebar.
+  - Tipo de scraper que ela usa internamente (read-only — vinculado ao código do `mirror-sync`).
+- Botão **"Solicitar nova origem"** abre apenas um aviso explicando que adicionar um site totalmente novo (ex: Awin, Lomadee) exige programação de um scraper específico no backend — isso é um pedido pra equipe técnica, não cadastro pela tela.
 
-### 4. Otimizar páginas mais pesadas
-- Revisar a tela de Motoristas para reduzir o custo da listagem inicial e do enriquecimento.
-- Adiar consultas secundárias até a tela já estar visível.
-- Revisar dashboard e blocos auxiliares para evitar que várias queries pequenas disputem o carregamento inicial.
+### 2. Múltiplas URLs por origem (Empreendedor)
 
-### 5. Limpeza de UX e markup que hoje geram ruído
-- Corrigir os dialogs sem título/descrição obrigatórios.
-- Corrigir o breadcrumb com `li` aninhado incorretamente.
-- Isso não é o principal gargalo, mas reduz warnings e renderizações desnecessárias.
+Refatorar a página atual **`/mirror-sync` (Espelhamento de Ofertas)**:
 
-## Resultado esperado
+- Hoje cada origem aceita 1 URL → vai aceitar **N URLs**, cada uma com nome próprio (ex: "Grupo Promoções Achadinhos", "Grupo Eletrônicos").
+- Cada URL vira um "conector" independente:
+  - URL da origem.
+  - Apelido/nome interno.
+  - Ativo/inativo.
+  - Configurações próprias (intervalo de sync, máx. páginas, auto-ativar, auto-visível motorista, sub-páginas para scrape).
+  - Indicador da última sincronização e quantidade de ofertas importadas.
+- Lista em cards com:
+  - Botão **"Sincronizar agora"** por conector.
+  - Botão **"Editar"** abre modal com configs.
+  - Botão **"Pausar/Ativar"**.
+  - Botão **"Remover"** (com confirmação — remove o conector e arquiva as ofertas vinculadas).
+- Botão grande **"+ Adicionar URL de [Divulga Link / Divulgador Inteligente]"** acima da lista.
 
-- Abertura inicial bem mais rápida, sem ficar vários segundos em “Sessão validada. Carregando configurações…”.
-- Troca entre telas administrativas mais fluida.
-- Menos sensação de travamento ao abrir módulos como Motoristas, Configurações e telas do dashboard.
-- Menor carga no backend e menos requests repetidos no início de cada navegação.
+### 3. Governança de Ofertas (já existe em `/offer-governance`)
 
-## Detalhes técnicos
+Mantida como está, mas:
+- O seletor de origem no topo (que hoje mostra `Divulga Link / Divulgador Inteligente`) agora respeita o catálogo do Root Admin (esconde origens desativadas globalmente).
+- Os filtros por "Grupo" no submenu **Grupos** já funcionam por `source_group_id` — só recebem mais grupos automaticamente quando você cadastrar novas URLs.
 
-- Arquivos principais a revisar:
-  - `src/App.tsx`
-  - `src/components/AppLayout.tsx`
-  - `src/contexts/AuthContext.tsx`
-  - `src/contexts/BrandContext.tsx`
-  - `src/components/consoles/BrandSidebar.tsx`
-  - `src/components/consoles/BranchSidebar.tsx`
-  - `src/components/ModuleGuard.tsx`
-  - `src/compartilhados/hooks/hook_modulos_resolvidos.ts`
-  - `src/features/gestao_motoristas/hooks/hook_listagem_motoristas.ts`
-  - `src/pages/Dashboard.tsx`
-- Estratégias:
-  - reduzir bloqueios no boot
-  - adiar queries não críticas para depois da primeira pintura
-  - consolidar hooks globais repetidos
-  - substituir fluxo legado de módulos pelo fluxo resolvido em RPC
-  - usar cache/staleTime mais longo para dados administrativos estáveis
-  - trocar loaders full-screen por loaders inline quando for navegação interna
+---
 
-Se você aprovar, eu implemento essa rodada de otimização agora, começando pelo boot/layout global e depois pelas páginas mais pesadas.
+## Mudanças técnicas (resumo)
+
+**Banco de dados (migração)**
+- Nova tabela `mirror_source_catalog` (catálogo global gerido pelo Root):
+  - `id`, `source_key` (unique: `dvlinks` / `divulgador_inteligente`), `display_name`, `icon`, `is_enabled`, `scraper_handler` (read-only).
+- Refatorar `mirror_sync_config`:
+  - Remover constraint unique de `(brand_id, source_type)`.
+  - Adicionar colunas `label` (apelido) e `is_enabled`.
+  - Permitir múltiplas linhas por `(brand_id, source_type)`.
+- Migration de dados: preserva os configs existentes com `label = "Conector principal"`.
+
+**Backend (Edge Function `mirror-sync`)**
+- Aceita `config_id` opcional no body para sincronizar um conector específico (não a marca inteira).
+- Loop interno percorre todos os configs ativos quando `config_id` não vier.
+- Cron de auto-sync passa a iterar por todos os conectores ativos da marca.
+
+**Frontend**
+- Nova página `src/features/admin_origens/pagina_admin_origens.tsx` (Root Admin).
+- Refatorar `src/pages/MirrorSyncPage.tsx` para listar/criar/editar conectores em vez de uma config única.
+- Componentes novos:
+  - `card_conector_origem.tsx`
+  - `modal_editar_conector.tsx`
+  - `modal_adicionar_conector.tsx`
+- `src/lib/api/mirrorSync.ts`: adicionar `listConnectors`, `createConnector`, `updateConnector`, `deleteConnector`.
+- `OfferGovernancePage` filtra `ORIGENS` pelas que estiverem `is_enabled` no catálogo.
+
+**Sidebar / rotas**
+- Adicionar item "Origens da Plataforma" no grupo Root Admin → `/admin-origens`.
+- Atualizar `MENU_REGISTRY` com a nova rota.
+
+**Manuais**
+- Atualizar `dados_manuais.ts` e `helpContent.ts` com a nova mecânica (múltiplas URLs + catálogo Root).
+
+---
+
+## O que NÃO está incluído
+
+- Cadastrar sites totalmente novos pela tela (ex: Awin, Lomadee). Como cada site tem HTML próprio, exige programação de scraper na Edge Function — isso continua sendo um pedido sob demanda pra equipe técnica.
+- Mudanças no fluxo de Achadinhos do cliente/motorista (a vitrine continua igual, só passa a receber ofertas de mais fontes).
