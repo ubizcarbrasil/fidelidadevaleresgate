@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useBrand } from "@/contexts/BrandContext";
 
 /**
  * Auto-seeds demo stores for a brand on first customer visit
@@ -8,9 +9,20 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export function useAutoSeedDemo(brandId: string | undefined, branchId: string | undefined) {
   const triggered = useRef(false);
+  const { brand } = useBrand();
+  const ctxSettings = (brand?.brand_settings_json as Record<string, unknown> | null) || null;
+  const ctxAutoSeedDone = ctxSettings?.auto_seed_done === true;
 
   useEffect(() => {
     if (!brandId || !branchId || triggered.current) return;
+
+    // Atalho: se o BrandContext já carregou as settings e elas indicam
+    // auto_seed_done = true, evitamos as 3 requisições extras (brands +
+    // 2x stores HEAD) que rodavam em todo boot.
+    if (ctxAutoSeedDone) {
+      triggered.current = true;
+      return;
+    }
 
     const check = async () => {
       triggered.current = true;
@@ -71,5 +83,5 @@ export function useAutoSeedDemo(brandId: string | undefined, branchId: string | 
     };
 
     check();
-  }, [brandId, branchId]);
+  }, [brandId, branchId, ctxAutoSeedDone]);
 }
