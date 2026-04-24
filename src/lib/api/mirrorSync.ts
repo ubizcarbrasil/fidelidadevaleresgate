@@ -23,7 +23,7 @@ export async function fetchSourceCatalog(opts?: { onlyEnabled?: boolean }): Prom
   if (opts?.onlyEnabled) q = q.eq("is_enabled", true);
   const { data, error } = await q;
   if (error) throw error;
-  return (data || []) as SourceCatalogEntry[];
+  return ((data as unknown) as SourceCatalogEntry[]) || [];
 }
 
 export async function updateSourceCatalogEntry(id: string, patch: Partial<Pick<SourceCatalogEntry, "display_name" | "description" | "icon" | "is_enabled" | "sort_order">>) {
