@@ -1,5 +1,5 @@
 import React from "react";
-import { LogOut, ChevronRight } from "lucide-react";
+import { LogOut, ChevronRight, LayoutDashboard } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
@@ -212,6 +212,40 @@ export function BrandSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-2">
+        {/* Atalho fixo para a Visão Geral — sempre visível, fora dos grupos colapsáveis */}
+        <SidebarGroup className="py-0">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={location.pathname === "/"}
+                  tooltip={getLabel("sidebar.dashboard") || "Visão Geral"}
+                >
+                  <NavLink
+                    to="/"
+                    end
+                    className={`transition-colors rounded-md ${
+                      location.pathname === "/"
+                        ? "bg-primary/10 text-primary border-l-2 border-primary"
+                        : "text-foreground hover:bg-accent/40"
+                    }`}
+                    activeClassName=""
+                    onClick={() => setOpenMobile(false)}
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    {!collapsed && (
+                      <span className="flex-1 font-medium">
+                        {getLabel("sidebar.dashboard") || "Visão Geral"}
+                      </span>
+                    )}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         {sortedGroups.map((group) => {
           if (group.items.length === 0) return null;
           return (
