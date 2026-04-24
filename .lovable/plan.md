@@ -1,49 +1,57 @@
 ## Problema
 
-No menu lateral do empreendedor (mobile e desktop), não há um atalho direto para a tela inicial ("Visão Geral / Dashboard"). O item "Visão Geral" existe, mas está dentro do grupo colapsável "Painel" — e em algumas marcas (como a do print: Ubiz Shop) o grupo nem aparece porque o item depende do módulo `dashboard` estar habilitado, e o grupo todo some quando o item é filtrado.
+A marca **Ubiz Shop** tem o produto comercial **"Cliente Resgate"** (apenas audiência `cliente`). Mas o Dashboard ainda mostra elementos de motorista:
 
-Resultado: ao abrir o menu em mobile, o usuário começa em "Guias & Manuais" e não tem como voltar para a Visão Geral pelo menu — só fechando o menu e usando outro caminho.
+- Aba **"Motoristas"** dentro do Ranking de Pontuação
+- Banner **"Duelos & Ranking"** (gamificação de motorista)
+- Quick link **"Painel do Motorista"**
+- Quick link **"Conversão por Público"** (correto manter) com card **"Taxa do Motorista"** dentro dele
+
+### Causa raiz
+
+O Dashboard decide o que mostrar com base no `scoring_model` das **branches** (cidades) através do hook `useBrandScoringModels`. A cidade da marca está como `BOTH` (legado), então o Dashboard acha que motorista está habilitado — mesmo o produto contratado dizendo o contrário.
+
+A regra arquitetural do projeto já estabelece: **"Audiência do produto contratado tem precedência sobre o scoring_model das branches"**. O `BrandSidebar` já segue essa regra (combina `useProductScope` + `useBrandScoringModels`); o Dashboard e a página de Conversão ainda não.
 
 ## Solução
 
-Promover "Visão Geral" a **item fixo no topo do sidebar**, sempre visível, fora dos grupos colapsáveis e independente do módulo `dashboard` estar habilitado (já que toda marca tem uma tela inicial).
-
-### Como vai ficar
+Aplicar no Dashboard e nas páginas relacionadas a mesma combinação que o sidebar usa:
 
 ```text
-┌─ Ubiz Shop · Gestão Estratégica ──┐
-│                                    │
-│  🏠  Visão Geral        ← NOVO     │
-│ ─────────────────────              │
-│  > GUIAS & MANUAIS                 │
-│  > CIDADES                         │
-│  > PERSONALIZAÇÃO & VITRINE        │
-│  ...                               │
-└────────────────────────────────────┘
+audiencia_efetiva = audiencia_do_produto AND scoring_model_da_cidade
 ```
 
-- Item destacado, sempre visível, sem precisar expandir nada.
-- Marca como ativo automaticamente quando a rota é `/`.
-- Em mobile, ao tocar fecha o sidebar e navega para a Home.
-- Em desktop colapsado, mostra só o ícone com tooltip "Visão Geral".
+Ou seja: só considera motorista habilitado quando o **produto inclui motorista** E a **cidade está configurada para motorista**. Idem para cliente. Isso elimina inconsistências causadas por configurações legadas das cidades.
 
 ### Arquivos a modificar
 
-1. **`src/components/consoles/BrandSidebar.tsx`**
-   - Adicionar bloco `SidebarGroup` fixo no topo do `SidebarContent` com um único `SidebarMenuItem` apontando para `/` (ícone `LayoutDashboard`, label "Visão Geral" obtida via `getLabel("sidebar.dashboard")` para respeitar rótulos personalizados).
-   - Marcar como `isActive` quando `location.pathname === "/"`.
-   - Fechar o menu mobile no clique (`setOpenMobile(false)`).
+1. **`src/pages/Dashboard.tsx`**
+   - Importar `useProductScope` e calcular as flags efetivas:
+     ```ts
+     const escopo = useProductScope();
+     const audienciaMotoristaAtiva = escopo.hasAudience("motorista") && isDriverEnabled;
+     const audienciaClienteAtiva = escopo.hasAudience("cliente") && isPassengerEnabled;
+     ```
+   - Substituir todas as ocorrências de `isDriverEnabled` / `isPassengerEnabled` pelos novos valores efetivos ao passar para `DashboardKpiSection`, `DashboardChartsSection`, `DashboardQuickLinksSection`, `RidesCounterCard` e o banner de Gamificação.
 
-2. **`src/compartilhados/constants/constantes_grupos_sidebar_marca.ts`**
-   - Remover o grupo "Painel" da lista (vira item fixo, não precisa mais do grupo colapsável duplicado).
+2. **`src/pages/conversao_resgate/pagina_conversao_resgate.tsx`**
+   - Importar `useProductScope` + `useBrandScoringModels`.
+   - Renderizar o card **"Taxa do Motorista"** apenas se a audiência motorista estiver efetivamente ativa.
+   - Renderizar o card **"Taxa do Passageiro"** apenas se a audiência cliente estiver efetivamente ativa.
+   - Se só uma audiência está ativa, o grid passa a ter uma única coluna centralizada.
+   - Atualizar o subtítulo da página para refletir o público vigente (ex: "Defina a taxa de conversão para passageiros" quando só cliente).
+
+### O que vai acontecer na tela da Ubiz Shop
+
+- **Ranking de Pontuação**: deixa de mostrar a aba "Motoristas". Mostra direto a lista de Passageiros, sem abas.
+- **Banner Duelos & Ranking**: some (era exclusivo de motorista).
+- **Painel do Motorista** nos quick links: some.
+- **Conversão por Público**: passa a mostrar apenas o card "Taxa do Passageiro".
+- **Pontuações em Tempo Real / Mapa de Atividade**: passam a contabilizar apenas eventos de cliente.
+- **KPIs de motorista (total motoristas, pontos motoristas)**: já são filtrados pelas mesmas flags via `DashboardKpiSection`.
 
 ### Impacto colateral
 
-- A página de **Pré-visualização do Produto Comercial** (que usa `brandGroupDefs` para montar o preview do sidebar) precisa também mostrar o "Visão Geral" como item fixo. Vou ajustar o componente de preview do sidebar para refletir essa mesma estrutura (item fixo + grupos), mantendo a consistência entre o que o admin configura no produto e o que a marca enxerga.
-
-- Não afeta nenhuma permissão: a rota `/` já é acessível por todos os perfis de admin de marca; estamos apenas tornando o atalho mais descobrível.
-
-## Outros pontos verificados
-
-- Os outros consoles (Branch / Store / Root) usam sidebars próprios com seus próprios grupos — não há regressão neles.
-- O sumiço do grupo "Painel" para a Ubiz Shop confirma que o módulo `dashboard` não está habilitado para essa marca; ainda assim, o usuário precisa do atalho para a Home (ela existe e funciona). Por isso o item fixo não fica condicionado a esse módulo.
+- Marcas com plano **enterprise** ou **free** continuam permissivas (mostram tudo) porque `useProductScope.isPermissive = true` para esses planos.
+- Marcas com produto que cobre motorista E cliente continuam vendo tudo.
+- Não toca em RLS nem em dados — só na renderização condicional.
