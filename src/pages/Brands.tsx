@@ -17,6 +17,7 @@ import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { TelaCarregamentoInline } from "@/compartilhados/components/tela_carregamento";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const PAGE_SIZE = 20;
 
@@ -36,6 +37,7 @@ const STATUS_OPTIONS = [
 export default function Brands() {
   const { isRootAdmin, currentBrandId } = useBrandGuard();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!isRootAdmin && currentBrandId) {
@@ -63,6 +65,12 @@ export default function Brands() {
     brandName: string;
     planKey: string;
     planLabel: string;
+  } | null>(null);
+  // Diálogo de seleção de plano em mobile (substitui o submenu lateral cortado)
+  const [planPickerTarget, setPlanPickerTarget] = useState<{
+    brandId: string;
+    brandName: string;
+    currentPlan: string;
   } | null>(null);
 
   // Produtos comerciais ativos (subscription_plans)
