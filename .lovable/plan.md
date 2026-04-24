@@ -1,91 +1,112 @@
-## Resumo
+## Contexto
 
-Hoje a plataforma tem só **2 origens fixas e codificadas** no sistema (`Divulga Link` e `Divulgador Inteligente`), e cada marca consegue salvar apenas **1 URL por origem** (tabela `mirror_sync_config` com unique em `brand_id + source_type`).
+A marca **Ubiz Shop** recebeu o produto **ACHADINHOS**, mas o sidebar dela mostra Programa de Fidelidade, Gamificação, Equipe & Acessos, Inteligência & Dados, Integrações & API e Configurações — coisas que não deveriam vir nesse produto.
 
-Você quer:
-1. **Cadastrar várias URLs do mesmo tipo** (ex: 3 grupos diferentes do Divulga Link rodando em paralelo).
-2. **Dois níveis de gestão**:
-   - **Root Admin (plataforma)**: define o catálogo de origens disponíveis (ligar/desligar quais aparecem no sistema, editar nomes, ícones).
-   - **Empreendedor (marca)**: dentro das origens disponíveis, ativa as que usa e cadastra quantas URLs/grupos quiser.
+Investiguei o banco e a aplicação está **coerente** com o template do produto (18 módulos no template, 18 ativos na marca). O problema está na configuração do template e em como o sistema o constrói.
 
----
+### Causas-raiz
 
-## O que será construído
+1. **`is_core = true` força módulos em TODOS os produtos.** 10 módulos hoje são core: `brand_settings, csv_import, customers, home_sections, offers, redemption_qr, stores, subscription, users_management, wallet`. Mesmo que você não marque no wizard do Achadinhos, eles entram. Os grupos do sidebar ficam visíveis porque pelo menos um item core dentro deles passou no filtro.
 
-### 1. Catálogo de Origens (Root Admin)
+2. **`change_plan` não sincroniza módulos.** A edge function só atualiza `brands.subscription_plan`. Não toca em `brand_modules` nem em `brand_business_models`. Trocar o produto de uma marca hoje não troca as features.
 
-Nova página em `/admin-origens` (Root Admin only):
+3. **`apply-plan-template` rejeita produtos comerciais.** A whitelist aceita só `free, starter, profissional, enterprise`. Os produtos novos (`a, clienteresgata, vr_motorista_premium, ganhaganha`) não podem ser reaplicados retroativamente.
 
-- Lista as origens da plataforma: hoje `Divulga Link` e `Divulgador Inteligente`.
-- Para cada origem, controla:
-  - Ativa/inativa globalmente (esconde do menu de todas as marcas se desligar).
-  - Nome de exibição editável (ex: trocar "Divulgador Inteligente" por outro rótulo).
-  - Ícone/cor para o sidebar.
-  - Tipo de scraper que ela usa internamente (read-only — vinculado ao código do `mirror-sync`).
-- Botão **"Solicitar nova origem"** abre apenas um aviso explicando que adicionar um site totalmente novo (ex: Awin, Lomadee) exige programação de um scraper específico no backend — isso é um pedido pra equipe técnica, não cadastro pela tela.
-
-### 2. Múltiplas URLs por origem (Empreendedor)
-
-Refatorar a página atual **`/mirror-sync` (Espelhamento de Ofertas)**:
-
-- Hoje cada origem aceita 1 URL → vai aceitar **N URLs**, cada uma com nome próprio (ex: "Grupo Promoções Achadinhos", "Grupo Eletrônicos").
-- Cada URL vira um "conector" independente:
-  - URL da origem.
-  - Apelido/nome interno.
-  - Ativo/inativo.
-  - Configurações próprias (intervalo de sync, máx. páginas, auto-ativar, auto-visível motorista, sub-páginas para scrape).
-  - Indicador da última sincronização e quantidade de ofertas importadas.
-- Lista em cards com:
-  - Botão **"Sincronizar agora"** por conector.
-  - Botão **"Editar"** abre modal com configs.
-  - Botão **"Pausar/Ativar"**.
-  - Botão **"Remover"** (com confirmação — remove o conector e arquiva as ofertas vinculadas).
-- Botão grande **"+ Adicionar URL de [Divulga Link / Divulgador Inteligente]"** acima da lista.
-
-### 3. Governança de Ofertas (já existe em `/offer-governance`)
-
-Mantida como está, mas:
-- O seletor de origem no topo (que hoje mostra `Divulga Link / Divulgador Inteligente`) agora respeita o catálogo do Root Admin (esconde origens desativadas globalmente).
-- Os filtros por "Grupo" no submenu **Grupos** já funcionam por `source_group_id` — só recebem mais grupos automaticamente quando você cadastrar novas URLs.
+4. **Configuração espalhada e invisível.** Quem cria um produto não consegue ver "o que esse produto entrega" antes de salvar. E quem gerencia uma marca não consegue ver de onde cada módulo veio (núcleo, produto, modelo de negócio, override manual).
 
 ---
 
-## Mudanças técnicas (resumo)
+## Plano de execução
 
-**Banco de dados (migração)**
-- Nova tabela `mirror_source_catalog` (catálogo global gerido pelo Root):
-  - `id`, `source_key` (unique: `dvlinks` / `divulgador_inteligente`), `display_name`, `icon`, `is_enabled`, `scraper_handler` (read-only).
-- Refatorar `mirror_sync_config`:
-  - Remover constraint unique de `(brand_id, source_type)`.
-  - Adicionar colunas `label` (apelido) e `is_enabled`.
-  - Permitir múltiplas linhas por `(brand_id, source_type)`.
-- Migration de dados: preserva os configs existentes com `label = "Conector principal"`.
+### Parte A — Fix do problema atual (resolve a Ubiz Shop)
 
-**Backend (Edge Function `mirror-sync`)**
-- Aceita `config_id` opcional no body para sincronizar um conector específico (não a marca inteira).
-- Loop interno percorre todos os configs ativos quando `config_id` não vier.
-- Cron de auto-sync passa a iterar por todos os conectores ativos da marca.
+**A1. Migration: reduzir `is_core`**
 
-**Frontend**
-- Nova página `src/features/admin_origens/pagina_admin_origens.tsx` (Root Admin).
-- Refatorar `src/pages/MirrorSyncPage.tsx` para listar/criar/editar conectores em vez de uma config única.
-- Componentes novos:
-  - `card_conector_origem.tsx`
-  - `modal_editar_conector.tsx`
-  - `modal_adicionar_conector.tsx`
-- `src/lib/api/mirrorSync.ts`: adicionar `listConnectors`, `createConnector`, `updateConnector`, `deleteConnector`.
-- `OfferGovernancePage` filtra `ORIGENS` pelas que estiverem `is_enabled` no catálogo.
+Manter como `is_core = true` apenas o mínimo estrutural (3 módulos):
+- `brand_settings` (Visão Geral)
+- `subscription` (Meu Plano)
+- `users_management` (Gestão de Usuários)
 
-**Sidebar / rotas**
-- Adicionar item "Origens da Plataforma" no grupo Root Admin → `/admin-origens`.
-- Atualizar `MENU_REGISTRY` com a nova rota.
+Marcar como `is_core = false` os outros 7: `csv_import, customers, home_sections, offers, redemption_qr, stores, wallet`.
 
-**Manuais**
-- Atualizar `dados_manuais.ts` e `helpContent.ts` com a nova mecânica (múltiplas URLs + catálogo Root).
+**A2. Migration data-fix: limpar `brand_modules`**
+
+Para cada marca existente: deletar `brand_modules` cujos `module_definition_id` não estejam no `plan_module_templates` do plano atual da marca **e** não sejam dos 3 cores remanescentes. Corrige a Ubiz Shop e qualquer outra afetada.
+
+**A3. Edge function `admin-brand-actions` — ação `change_plan`**
+
+Após `UPDATE brands SET subscription_plan = X`:
+1. `DELETE brand_modules WHERE brand_id = X`
+2. `INSERT brand_modules` a partir de `plan_module_templates` do novo `plan_key` (forçando `is_enabled=true` para os 3 cores)
+3. Sincronizar `brand_business_models` a partir de `plan_business_models` do novo `plan_key` (o trigger já existente cuida do resto)
+
+**A4. Edge function `apply-plan-template` — generalizar**
+
+Trocar a whitelist hardcoded por uma validação dinâmica: aceitar qualquer `plan_key` que exista em `subscription_plans` com `is_active = true`.
+
+### Parte B — Visibilidade no wizard (sugestão #1)
+
+**B1. Componente "Pré-visualizar Produto"**
+
+Novo passo no wizard `src/features/produtos_comerciais/components/wizard_produto.tsx`, antes do passo de revisão:
+
+- **Sidebar simulado** renderizado com os módulos selecionados (mesma lógica do `BrandSidebar`)
+- Lista de módulos divididos em 2 colunas:
+  - **Forçados pelo núcleo** (3 cores) — ícone de cadeado, não removíveis
+  - **Vindos da sua seleção** (do passo de módulos) — editáveis
+- Lista de **rotas acessíveis** vs **rotas bloqueadas** para essa configuração
+- Aviso vermelho se algum módulo da promessa do produto (extraído de `landing_config_json.benefits`) não estiver na seleção
+
+### Parte C — Diagnóstico por marca (sugestão #2)
+
+**C1. Página `/admin/diagnostico-marca/:brandId`**
+
+Acessível só por root_admin, com link na lista de marcas (`Brands.tsx`) no menu de ações (`...`).
+
+Mostra:
+- Produto atual + data da última aplicação
+- Tabela de módulos ativos com 4 colunas de origem:
+  - **Núcleo** (is_core)
+  - **Produto** (veio do `plan_module_templates`)
+  - **Modelo de negócio** (veio do trigger via `brand_business_models`)
+  - **Override manual** (existe em `brand_modules` mas não no template e não é core)
+- Botão **"Reaplicar template do produto"** (chama `apply-plan-template` corrigido)
+- Botão **"Comparar com template"** — mostra o diff visual (o que está sobrando, o que está faltando)
+
+### Parte D — Prevenção automática (sugestões #5 e #6)
+
+**D1. Testes de integração de promessa do produto**
+
+Novo arquivo `src/features/produtos_comerciais/__tests__/promessa_produto.integration.test.ts`:
+- Para cada `subscription_plans` ativo, simula provisionamento (mock do `provision-brand`)
+- Valida que apenas os módulos esperados ficam ativos (cores + template)
+- Valida que rotas fora do escopo redirecionariam para `/`
+- Roda no CI via `vitest`
+
+**D2. Botão "Ver console como esta marca"**
+
+Em `src/pages/Brands.tsx`, dentro do `DropdownMenu` de cada marca, adicionar item **"Ver como esta marca"** que abre `/?brandId={brandId}` em nova aba — aproveita o sistema de impersonação por URL já existente (`BrandContext`).
 
 ---
 
-## O que NÃO está incluído
+## Ordem de execução
 
-- Cadastrar sites totalmente novos pela tela (ex: Awin, Lomadee). Como cada site tem HTML próprio, exige programação de scraper na Edge Function — isso continua sendo um pedido sob demanda pra equipe técnica.
-- Mudanças no fluxo de Achadinhos do cliente/motorista (a vitrine continua igual, só passa a receber ofertas de mais fontes).
+1. **A1** Migration: reduzir `is_core`
+2. **A2** Migration data-fix: limpar `brand_modules` desalinhados
+3. **A3** Edge function `change_plan`
+4. **A4** Edge function `apply-plan-template`
+5. **D2** Botão "Ver como esta marca" (rápido, valida tudo visualmente)
+6. **C1** Página de diagnóstico por marca
+7. **B1** Preview no wizard de produtos
+8. **D1** Testes de integração
+
+---
+
+## Detalhes técnicos
+
+- O sidebar (`BrandSidebar`) **já oculta grupos vazios** via `if (group.items.length === 0) return null`. Após A1+A2, isso passa a funcionar de fato.
+- O hook `useBrandModules` tem um `ALWAYS_ON_MODULES` hardcoded com `["brand_settings", "csv_import", "subscription", "users_management"]`. Precisa ser ajustado para refletir os 3 cores reais (sem `csv_import`).
+- O trigger `sync_brand_modules_from_business_models` continua válido — ele só cuida do canal "modelo de negócio → módulos required".
+- A página de diagnóstico não exige novas tabelas: tudo é derivável de `brand_modules`, `module_definitions`, `plan_module_templates`, `brand_business_models`, `business_model_modules`.
+- O preview no wizard reutiliza `MENU_REGISTRY` e a lógica de filtragem do `BrandSidebar` extraída em uma função pura.
+- A impersonação via `?brandId=` já é validada pelo `useBrandGuard` para root_admin (memória `brand-impersonation-logic`).

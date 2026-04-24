@@ -57,8 +57,24 @@ Deno.serve(async (req) => {
     }
 
     const { plan_key } = await req.json();
-    if (!plan_key || !["free", "starter", "profissional", "enterprise"].includes(plan_key)) {
-      return new Response(JSON.stringify({ error: "Invalid plan_key" }), {
+    if (!plan_key || typeof plan_key !== "string") {
+      return new Response(JSON.stringify({ error: "plan_key required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Aceita qualquer plan_key que exista em subscription_plans e esteja ativo.
+    // Substitui a antiga whitelist hardcoded (free/starter/profissional/enterprise)
+    // para que produtos comerciais novos também possam ser reaplicados.
+    const { data: planRow, error: planErr } = await adminClient
+      .from("subscription_plans")
+      .select("plan_key, is_active, label, product_name")
+      .eq("plan_key", plan_key)
+      .maybeSingle();
+    if (planErr) throw planErr;
+    if (!planRow || !planRow.is_active) {
+      return new Response(JSON.stringify({ error: "Plano inválido ou inativo" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -131,9 +147,10 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    log.error("apply-plan-template error", { message: error.message });
+    const msg = error instanceof Error ? error.message : String(error);
+    log.error("apply-plan-template error", { message: msg });
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: msg }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

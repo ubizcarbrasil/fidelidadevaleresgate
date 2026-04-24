@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Pencil, Power, MoreHorizontal, Trash2, Key, ArrowUpDown, Blocks, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Power, MoreHorizontal, Trash2, Key, ArrowUpDown, Blocks, RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -267,6 +267,11 @@ export default function Brands() {
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => navigate(`/brands/${b.id}?tab=modules`)}>
                             <Blocks className="h-4 w-4 mr-2" />Gerenciar Módulos
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => window.open(`/?brandId=${b.id}`, "_blank", "noopener")}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />Ver como esta marca
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => openPasswordDialog(b.id, b.name)}>
                             <Key className="h-4 w-4 mr-2" />Redefinir Senha

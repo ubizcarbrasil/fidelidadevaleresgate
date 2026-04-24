@@ -334,14 +334,145 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const { error } = await adminClient
+
+      // 1) Validar que o plano existe e está ativo em subscription_plans
+      const { data: planRow, error: planErr } = await adminClient
+        .from("subscription_plans")
+        .select("plan_key, is_active")
+        .eq("plan_key", plan)
+        .maybeSingle();
+      if (planErr) throw planErr;
+      if (!planRow || !planRow.is_active) {
+        return new Response(JSON.stringify({ error: "Plano inválido ou inativo" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // 2) Atualiza subscription_plan da marca
+      const { error: updErr } = await adminClient
         .from("brands")
         .update({ subscription_plan: plan })
         .eq("id", brand_id);
-      if (error) throw error;
-      return new Response(JSON.stringify({ ok: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      if (updErr) throw updErr;
+
+      // 3) Carrega template de módulos do novo plano + IDs core
+      const [tplRes, coreRes] = await Promise.all([
+        adminClient
+          .from("plan_module_templates")
+          .select("module_definition_id, is_enabled")
+          .eq("plan_key", plan),
+        adminClient
+          .from("module_definitions")
+          .select("id")
+          .eq("is_active", true)
+          .eq("is_core", true),
+      ]);
+      if (tplRes.error) throw tplRes.error;
+      if (coreRes.error) throw coreRes.error;
+
+      const templates = tplRes.data ?? [];
+      const coreIds = new Set((coreRes.data ?? []).map((m: any) => m.id));
+
+      // 4) Reaplica brand_modules: limpa e recria a partir do template (+ cores forçados)
+      await adminClient.from("brand_modules").delete().eq("brand_id", brand_id);
+
+      // União: módulos do template + cores que possam não estar no template
+      const moduleIds = new Set<string>();
+      const enabledMap = new Map<string, boolean>();
+      for (const t of templates as any[]) {
+        moduleIds.add(t.module_definition_id);
+        enabledMap.set(t.module_definition_id, t.is_enabled);
+      }
+      for (const id of coreIds) {
+        moduleIds.add(id);
+        enabledMap.set(id, true); // cores sempre on
+      }
+
+      let i = 0;
+      const rows = Array.from(moduleIds).map((mid) => ({
+        brand_id,
+        module_definition_id: mid,
+        is_enabled: coreIds.has(mid) ? true : (enabledMap.get(mid) ?? false),
+        order_index: i++,
+      }));
+
+      if (rows.length > 0) {
+        const { error: insErr } = await adminClient.from("brand_modules").insert(rows);
+        if (insErr) throw insErr;
+      }
+
+      // 5) Sincroniza brand_business_models a partir de plan_business_models
+      const { data: planModels, error: pbmErr } = await adminClient
+        .from("plan_business_models")
+        .select("business_model_id, is_included")
+        .eq("plan_key", plan);
+      if (pbmErr) throw pbmErr;
+
+      const includedModelIds = new Set(
+        (planModels ?? []).filter((p: any) => p.is_included).map((p: any) => p.business_model_id)
+      );
+
+      // Carrega modelos atualmente vinculados à marca
+      const { data: currentBbm } = await adminClient
+        .from("brand_business_models")
+        .select("business_model_id, is_enabled")
+        .eq("brand_id", brand_id);
+      const currentMap = new Map(
+        (currentBbm ?? []).map((b: any) => [b.business_model_id, b.is_enabled])
+      );
+
+      // Habilita/cria os incluídos
+      for (const mid of includedModelIds) {
+        if (currentMap.has(mid)) {
+          if (currentMap.get(mid) !== true) {
+            await adminClient
+              .from("brand_business_models")
+              .update({ is_enabled: true })
+              .eq("brand_id", brand_id)
+              .eq("business_model_id", mid);
+          }
+        } else {
+          await adminClient
+            .from("brand_business_models")
+            .insert({ brand_id, business_model_id: mid, is_enabled: true });
+        }
+      }
+
+      // Desabilita os que não estão mais incluídos
+      for (const [mid, enabled] of currentMap.entries()) {
+        if (!includedModelIds.has(mid) && enabled) {
+          await adminClient
+            .from("brand_business_models")
+            .update({ is_enabled: false })
+            .eq("brand_id", brand_id)
+            .eq("business_model_id", mid);
+        }
+      }
+
+      // 6) Audit log
+      await adminClient.from("audit_logs").insert({
+        actor_user_id: user.id,
+        entity_type: "brand",
+        entity_id: brand_id,
+        action: "change_plan_with_sync",
+        scope_type: "BRAND",
+        scope_id: brand_id,
+        details_json: {
+          new_plan: plan,
+          modules_applied: rows.length,
+          business_models_included: includedModelIds.size,
+        },
       });
+
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          modules_applied: rows.length,
+          business_models_included: includedModelIds.size,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // ACTION: reset_branch_points — granular points reset per branch
