@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Bell, Check, Package, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,8 +16,19 @@ const isRedemptionType = (type: string) =>
   type === "redemption_product" || type === "redemption_city";
 
 const AdminNotificationBell = memo(function AdminNotificationBell() {
+  // Adia o fetch + canal Realtime de admin_notifications para depois do
+  // primeiro paint do Dashboard. Antes, esses dois roundtrips entravam no
+  // caminho crítico do boot e atrasavam o LCP.
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    const ric = (window as any).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 600));
+    const id = ric(() => setHydrated(true));
+    const cancel = (window as any).cancelIdleCallback ?? clearTimeout;
+    return () => { try { cancel(id); } catch { /* noop */ } };
+  }, []);
+
   const { notifications, unreadCount, markAsRead, markAllAsRead } =
-    useAdminNotifications();
+    useAdminNotifications(hydrated);
   const [open, setOpen] = useState(false);
   const [detailOrderId, setDetailOrderId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
