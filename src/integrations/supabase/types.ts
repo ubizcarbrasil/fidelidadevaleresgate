@@ -10592,6 +10592,14 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string[]
       }
+      get_dashboard_daily_counts: {
+        Args: { p_brand_id: string; p_period_days: number }
+        Returns: {
+          day: string
+          redemptions_count: number
+          rides_count: number
+        }[]
+      }
       get_dashboard_kpis: {
         Args: {
           p_brand_id?: string
