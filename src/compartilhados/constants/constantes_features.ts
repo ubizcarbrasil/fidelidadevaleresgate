@@ -36,4 +36,4 @@ export const USE_DUELO_CAMPEONATO = true;
  * Esta flag é independente de `USE_DUELO_CAMPEONATO` para permitir liberar
  * primeiro o campeonato simples e depois ativar séries hierárquicas.
  */
-export const USE_DUELO_CAMPEONATO_SERIES = false;
+export const USE_DUELO_CAMPEONATO_SERIES = true;
