@@ -2,7 +2,7 @@
  * Cron — avanço de fases do Campeonato Duelo.
  * Roda a cada hora; a função SQL decide por temporada se há algo a fazer.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

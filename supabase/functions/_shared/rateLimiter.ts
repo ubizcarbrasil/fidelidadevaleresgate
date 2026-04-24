@@ -7,7 +7,7 @@
  *   if (!rl.allowed) return new Response(JSON.stringify({ ok: false, error: "Too many requests" }), { status: 429 });
  */
 
-import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 export interface RateLimitOptions {
   /** Max requests allowed in the window (default: 60) */
