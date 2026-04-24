@@ -13,16 +13,21 @@ import MirrorSyncCategoryDiag from "@/components/mirror-sync/MirrorSyncCategoryD
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import ListaConectores from "@/features/conectores_origem/lista_conectores";
 import { fetchSourceCatalog } from "@/lib/api/mirrorSync";
+import ChecklistOnboarding from "@/features/onboarding_espelhamento/componentes/checklist_onboarding";
+import { useProgressoOnboardingEmpreendedor } from "@/features/onboarding_espelhamento/hooks/hook_progresso_onboarding";
 
 export default function MirrorSyncPage() {
   const { currentBrandId } = useBrandGuard();
   const [refreshKey, setRefreshKey] = useState(0);
   const [sourceType, setSourceType] = useState("divulgador_inteligente");
+  const [tabAtiva, setTabAtiva] = useState("conectores");
 
   const { data: catalog = [] } = useQuery({
     queryKey: ["source-catalog-enabled"],
     queryFn: () => fetchSourceCatalog({ onlyEnabled: true }),
   });
+
+  const onboarding = useProgressoOnboardingEmpreendedor(currentBrandId);
 
   const onSyncDone = () => setRefreshKey((k) => k + 1);
 
@@ -50,9 +55,21 @@ export default function MirrorSyncPage() {
         </div>
       </div>
 
+      <ChecklistOnboarding
+        storageKey={`onboarding-mirror-sync-brand-${currentBrandId}`}
+        titulo="Onboarding — Primeiros passos do Espelhamento"
+        subtitulo="Siga o passo a passo para importar suas primeiras ofertas."
+        passos={onboarding.passos}
+        concluidos={onboarding.concluidos}
+        total={onboarding.total}
+        completo={onboarding.completo}
+        isLoading={onboarding.isLoading}
+        onAcaoTab={setTabAtiva}
+      />
+
       <MirrorSyncKpis brandId={currentBrandId} refreshKey={refreshKey} onSyncDone={onSyncDone} sourceType={sourceType} />
 
-      <Tabs defaultValue="conectores" className="w-full">
+      <Tabs value={tabAtiva} onValueChange={setTabAtiva} className="w-full">
         <TabsList className="w-full overflow-x-auto scrollbar-hide justify-start">
           <TabsTrigger value="conectores">Conectores</TabsTrigger>
           <TabsTrigger value="deals">Ofertas</TabsTrigger>
