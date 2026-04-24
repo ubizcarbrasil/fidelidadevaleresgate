@@ -97,7 +97,7 @@ export function obterTemplatePorChave(
  */
 export const ROTULOS_FORMATO: Record<string, string> = {
   duelo: "Duelo 1v1",
-  mass_duel: "Desafio em Massa",
+  mass_duel: "Desafio na cidade",
   campeonato: "Campeonato",
 };
 
