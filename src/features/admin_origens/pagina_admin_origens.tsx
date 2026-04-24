@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Sparkles, Link2, Info, Save, Pencil } from "lucide-react";
@@ -91,12 +91,12 @@ function ModalEditarOrigem({
   const [icon, setIcon] = useState(entry?.icon || "");
   const [saving, setSaving] = useState(false);
 
-  // Sync state quando o entry muda
-  useState(() => {
+  // Sincroniza o formulário quando o entry muda
+  useEffect(() => {
     setDisplayName(entry?.display_name || "");
     setDescription(entry?.description || "");
     setIcon(entry?.icon || "");
-  });
+  }, [entry?.id]);
 
   if (!entry) return null;
 
