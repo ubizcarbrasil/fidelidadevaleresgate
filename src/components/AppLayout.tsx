@@ -172,7 +172,7 @@ export default function AppLayout() {
   if (consoleScope === "LOADING") {
     return (
       <SidebarProvider>
-        <div className="min-h-screen flex w-full">
+        <div className="app-shell-height flex w-full">
           <div className="w-16 shrink-0 bg-sidebar" />
           <div className="flex-1 flex flex-col min-w-0">
             <header className="h-14 saas-topbar shrink-0" />
@@ -197,7 +197,7 @@ export default function AppLayout() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="app-shell-height flex w-full">
         <Suspense fallback={<div className="w-16 shrink-0 bg-sidebar" />}>
           <SidebarComponent />
         </Suspense>
@@ -307,7 +307,7 @@ export default function AppLayout() {
             </DropdownMenu>
           </header>
 
-          <main className="flex-1 p-3 sm:p-6 overflow-auto scrollbar-thin pwa-safe-bottom pwa-safe-x">
+          <main className="flex-1 p-3 sm:p-6 overflow-auto scrollbar-thin pwa-safe-bottom pwa-safe-x main-scroll-area">
             <TrialBanner />
             <Outlet />
           </main>
