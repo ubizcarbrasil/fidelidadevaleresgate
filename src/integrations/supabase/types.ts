@@ -6642,6 +6642,75 @@ export type Database = {
         }
         Relationships: []
       }
+      module_template_items: {
+        Row: {
+          created_at: string
+          id: string
+          is_enabled: boolean
+          module_definition_id: string
+          template_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          module_definition_id: string
+          template_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          module_definition_id?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_template_items_module_definition_id_fkey"
+            columns: ["module_definition_id"]
+            isOneToOne: false
+            referencedRelation: "module_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_template_items_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "module_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      module_templates: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       offer_reports: {
         Row: {
           created_at: string
