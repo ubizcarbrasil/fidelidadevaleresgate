@@ -84,6 +84,15 @@ function isScreenshot(v: unknown): v is Screenshot {
   return true;
 }
 
+type SidebarLayoutGrupoRaw = { label: string; itens_keys: string[] };
+function isSidebarLayoutGrupo(v: unknown): v is SidebarLayoutGrupoRaw {
+  if (!v || typeof v !== "object") return false;
+  const o = v as Record<string, unknown>;
+  if (!isStringNaoVazia(o.label)) return false;
+  if (!Array.isArray(o.itens_keys)) return false;
+  return o.itens_keys.every((k) => typeof k === "string");
+}
+
 /** Filtra um array com type guard, descartando itens inválidos com warn. */
 function filtrarComWarn<T>(
   campo: string,
@@ -150,6 +159,20 @@ function sanitizeLanding(raw: LandingConfig): LandingConfig {
     ch,
     isStringNaoVazia,
   );
+
+  // sidebar_layout — objeto opcional com array de grupos
+  const sl = (raw as Record<string, unknown>).sidebar_layout;
+  if (sl && typeof sl === "object" && !Array.isArray(sl)) {
+    const slObj = sl as Record<string, unknown>;
+    const gruposValidos = filtrarComWarn(
+      "sidebar_layout.grupos",
+      slObj.grupos,
+      isSidebarLayoutGrupo,
+    );
+    if (gruposValidos.length > 0) {
+      safe.sidebar_layout = { grupos: gruposValidos };
+    }
+  }
 
   return safe;
 }

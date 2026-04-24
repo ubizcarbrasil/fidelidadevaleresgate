@@ -33,6 +33,19 @@ export interface LandingMetric {
   label: string;
 }
 
+/**
+ * Sub-fase 6.6 — Layout customizado do sidebar do produto.
+ * Permite ao Root reordenar grupos e itens, e remover itens
+ * (que dispara desativação do módulo correspondente).
+ */
+export interface SidebarLayoutGrupo {
+  label: string;
+  itens_keys: string[];
+}
+export interface SidebarLayoutOverride {
+  grupos: SidebarLayoutGrupo[];
+}
+
 export interface LandingConfig {
   headline?: string;
   subheadline?: string;
@@ -50,6 +63,8 @@ export interface LandingConfig {
   metrics?: LandingMetric[];
   problems?: string[];
   solutions?: string[];
+  // Sub-fase 6.6 — sidebar customizado por produto
+  sidebar_layout?: SidebarLayoutOverride;
 }
 
 export interface ProdutoComercial {

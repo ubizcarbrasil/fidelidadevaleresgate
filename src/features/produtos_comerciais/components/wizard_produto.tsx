@@ -216,7 +216,11 @@ export default function WizardProduto({ open, onOpenChange, planKey, initialDraf
               )}
               {stepIdx === 3 && <PassoLanding draft={draft} onChange={update} />}
               {stepIdx === 4 && (
-                <PassoPreview draft={draft} onVoltarPasso={(i) => setStepIdx(i)} />
+                <PassoPreview
+                  draft={draft}
+                  onChange={update}
+                  onVoltarPasso={(i) => setStepIdx(i)}
+                />
               )}
               {stepIdx === 5 && <PassoRevisao draft={draft} saved={savedOnce} />}
             </>
