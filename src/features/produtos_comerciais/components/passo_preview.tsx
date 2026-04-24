@@ -1,22 +1,25 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Lock, AlertTriangle, CheckCircle2, ArrowLeft, Sparkles, ListChecks } from "lucide-react";
+import { Lock, AlertTriangle, CheckCircle2, ArrowLeft, Sparkles, ListChecks, RotateCcw } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import type { ProdutoComercialDraft, LandingBenefit } from "../types/tipos_produto";
-import { MENU_REGISTRY } from "@/compartilhados/constants/constantes_menu_sidebar";
+import { useLayoutSidebarProduto } from "../hooks/hook_layout_sidebar_produto";
+import PreviewSidebarGrupo from "./preview_sidebar_grupo";
 
 interface Props {
   draft: ProdutoComercialDraft;
+  onChange: (patch: Partial<ProdutoComercialDraft>) => void;
   onVoltarPasso: (idx: number) => void;
 }
 
 const CORE_KEYS = ["brand_settings", "subscription", "users_management"];
 
-export default function PassoPreview({ draft, onVoltarPasso }: Props) {
+export default function PassoPreview({ draft, onChange, onVoltarPasso }: Props) {
   // Carrega definições dos módulos selecionados + cores
   const { data: modulos, isLoading } = useQuery({
     queryKey: ["pc-preview-modulos", draft.module_definition_ids],
@@ -30,6 +33,50 @@ export default function PassoPreview({ draft, onVoltarPasso }: Props) {
       return data ?? [];
     },
   });
+
+  const {
+    gruposEfetivos,
+    temLayoutCustomizado,
+    moverGrupo,
+    moverItem,
+    removerItem,
+    removerGrupo,
+    desfazerRemocao,
+    restaurarPadrao,
+  } = useLayoutSidebarProduto({ draft, onChange });
+
+  // pequeno buffer para evitar toasts duplicados rápidos
+  const ultimoToastRef = useRef<number>(0);
+
+  const handleRemoverItem = (moduleDefinitionId: string | null) => {
+    const removido = removerItem(moduleDefinitionId);
+    if (!removido) return;
+    const agora = Date.now();
+    if (agora - ultimoToastRef.current < 200) return;
+    ultimoToastRef.current = agora;
+    toast.success("Item removido do produto", {
+      action: {
+        label: "Desfazer",
+        onClick: () => desfazerRemocao([removido]),
+      },
+    });
+  };
+
+  const handleRemoverGrupo = (label: string) => {
+    const removidos = removerGrupo(label);
+    if (removidos.length === 0) return;
+    toast.success(
+      `Grupo "${label}" removido (${removidos.length} ${
+        removidos.length === 1 ? "item" : "itens"
+      })`,
+      {
+        action: {
+          label: "Desfazer",
+          onClick: () => desfazerRemocao(removidos),
+        },
+      },
+    );
+  };
 
   const selecionadosSet = useMemo(
     () => new Set(draft.module_definition_ids),
@@ -52,31 +99,18 @@ export default function PassoPreview({ draft, onVoltarPasso }: Props) {
     return { forcados, escolhidos, keysAtivas };
   }, [modulos, selecionadosSet]);
 
-  // Filtra MENU_REGISTRY por moduleKey
-  const { rotasAcessiveis, rotasBloqueadas } = useMemo(() => {
-    const ac: Array<{ key: string; title: string; url: string }> = [];
-    const bl: Array<{ key: string; title: string; url: string; moduleKey: string }> = [];
-    Object.values(MENU_REGISTRY).forEach((item) => {
-      if (!item.moduleKey) {
-        ac.push({ key: item.key, title: item.defaultTitle, url: item.url });
-        return;
-      }
-      // moduleKey pode ser combinado: "a|b"
-      const keys = item.moduleKey.split("|");
-      const liberado = keys.some((k) => keysAtivas.has(k.trim()));
-      if (liberado) {
-        ac.push({ key: item.key, title: item.defaultTitle, url: item.url });
-      } else {
-        bl.push({
-          key: item.key,
-          title: item.defaultTitle,
-          url: item.url,
-          moduleKey: item.moduleKey,
-        });
-      }
+  // Rotas bloqueadas = itens dos grupos cujo módulo NÃO está ativo no produto.
+  const rotasBloqueadas = useMemo(() => {
+    const bl: Array<{ key: string; title: string }> = [];
+    gruposEfetivos.forEach((g) => {
+      g.itens.forEach((it) => {
+        if (!it.moduleAtivo) {
+          bl.push({ key: it.menuKey, title: it.registro.defaultTitle });
+        }
+      });
     });
-    return { rotasAcessiveis: ac, rotasBloqueadas: bl };
-  }, [keysAtivas]);
+    return bl;
+  }, [gruposEfetivos]);
 
   // Promessa: benefícios da landing que apontam módulo (icon ou description com module_key)
   // Como o tipo LandingBenefit não tem module_key formal, fazemos uma checagem leve por nome.
@@ -125,9 +159,10 @@ export default function PassoPreview({ draft, onVoltarPasso }: Props) {
           </p>
         </div>
         <p className="text-xs text-muted-foreground">
-          Esta é a experiência que uma marca contratante deste produto receberá.
-          Confira o sidebar simulado, os módulos forçados pelo núcleo e o que
-          a sua seleção entrega antes de salvar.
+          Esta é a experiência que uma marca contratante receberá. Abra os
+          grupos para ver os itens, use ↑ ↓ para reordenar e o &quot;X&quot;
+          para remover do produto. Itens removidos aqui também saem do
+          passo de Funcionalidades.
         </p>
       </div>
 
@@ -153,27 +188,41 @@ export default function PassoPreview({ draft, onVoltarPasso }: Props) {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4">
-        {/* Sidebar simulado */}
-        <Card className="p-3 space-y-2 bg-muted/40 max-h-[420px] overflow-y-auto">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground px-2">
-            Sidebar do console
-          </p>
-          <ul className="space-y-0.5">
-            {rotasAcessiveis.slice(0, 30).map((r) => (
-              <li
-                key={r.key}
-                className="text-xs px-2 py-1.5 rounded hover:bg-background/50 text-foreground/80"
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
+        {/* Sidebar simulado interativo */}
+        <Card className="p-3 space-y-2 bg-muted/40 max-h-[520px] overflow-y-auto">
+          <div className="flex items-center justify-between gap-2 px-1">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Sidebar do console
+            </p>
+            {temLayoutCustomizado && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-[10px] gap-1"
+                onClick={() => {
+                  restaurarPadrao();
+                  toast.success("Ordem padrão do sidebar restaurada");
+                }}
               >
-                {r.title}
-              </li>
-            ))}
-            {rotasAcessiveis.length > 30 && (
-              <li className="text-[10px] px-2 text-muted-foreground italic">
-                + {rotasAcessiveis.length - 30} itens
-              </li>
+                <RotateCcw className="h-3 w-3" /> Restaurar ordem
+              </Button>
             )}
-          </ul>
+          </div>
+          <div className="space-y-1.5">
+            {gruposEfetivos.map((g, idx) => (
+              <PreviewSidebarGrupo
+                key={g.label}
+                grupo={g}
+                grupoIdx={idx}
+                totalGrupos={gruposEfetivos.length}
+                onMoverGrupo={(dir) => moverGrupo(idx, dir)}
+                onMoverItem={(itemIdx, dir) => moverItem(idx, itemIdx, dir)}
+                onRemoverItem={handleRemoverItem}
+                onRemoverGrupo={() => handleRemoverGrupo(g.label)}
+              />
+            ))}
+          </div>
         </Card>
 
         {/* Listas de módulos */}
@@ -244,14 +293,14 @@ export default function PassoPreview({ draft, onVoltarPasso }: Props) {
           <Card className="p-4 space-y-2">
             <p className="text-sm font-semibold flex items-center gap-2">
               <ListChecks className="h-4 w-4 text-muted-foreground" />
-              Rotas bloqueadas
+              Itens ocultos no sidebar
               <Badge variant="secondary" className="text-[10px]">
                 {rotasBloqueadas.length}
               </Badge>
             </p>
             <p className="text-[11px] text-muted-foreground">
-              Itens de menu que <strong>não aparecerão</strong> para a marca por
-              não terem o módulo correspondente ativo.
+              Itens que <strong>não aparecerão</strong> para a marca por não
+              terem o módulo ativo (ou removidos manualmente nesta tela).
             </p>
             <div className="max-h-32 overflow-y-auto pt-1">
               <ul className="text-[11px] grid grid-cols-2 gap-x-3 gap-y-0.5">
@@ -263,7 +312,7 @@ export default function PassoPreview({ draft, onVoltarPasso }: Props) {
               </ul>
               {rotasBloqueadas.length > 30 && (
                 <p className="text-[10px] text-muted-foreground italic pt-1">
-                  + {rotasBloqueadas.length - 30} rotas
+                  + {rotasBloqueadas.length - 30} itens
                 </p>
               )}
             </div>
