@@ -375,7 +375,7 @@ Deno.serve(async (req) => {
     if (branchErr) throw new Error(`Branch: ${branchErr.message}`);
 
     // ─── 5. Create Domain ────────────────────────────────────────
-    const domainValue = `${brandSlug}.valeresgate.com`;
+    const domainValue = `${brandSlug}.valeresgate.com.br`;
     await supabaseAdmin.from("brand_domains").insert({
       brand_id: brand.id,
       domain: domainValue,
