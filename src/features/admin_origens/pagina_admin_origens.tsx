@@ -20,6 +20,8 @@ import {
 import {
   fetchSourceCatalog, updateSourceCatalogEntry, type SourceCatalogEntry,
 } from "@/lib/api/mirrorSync";
+import ChecklistOnboarding from "@/features/onboarding_espelhamento/componentes/checklist_onboarding";
+import { useProgressoOnboardingAdmin } from "@/features/onboarding_espelhamento/hooks/hook_progresso_onboarding";
 
 const ICON_MAP: Record<string, any> = { Sparkles, Link2 };
 
@@ -169,12 +171,24 @@ export default function PaginaAdminOrigens() {
   });
 
   const [editando, setEditando] = useState<SourceCatalogEntry | null>(null);
+  const onboarding = useProgressoOnboardingAdmin();
 
   return (
     <div className="space-y-6 p-6 max-w-5xl mx-auto">
       <PageHeader
         title="Origens da Plataforma"
         description="Catálogo global de origens de sincronização. Define o que cada marca pode usar."
+      />
+
+      <ChecklistOnboarding
+        storageKey="onboarding-mirror-sync-admin"
+        titulo="Onboarding — Origens da Plataforma"
+        subtitulo="Garanta que ao menos uma origem esteja disponível para todas as marcas."
+        passos={onboarding.passos}
+        concluidos={onboarding.concluidos}
+        total={onboarding.total}
+        completo={onboarding.completo}
+        isLoading={onboarding.isLoading}
       />
 
       <Alert>
