@@ -110,18 +110,25 @@ export default function AppLayout() {
 
     // Só mostra o onboarding se a marca ainda NÃO tiver a API Key da matriz configurada.
     let cancelled = false;
-    supabase
-      .from("brands")
-      .select("matrix_api_key")
-      .eq("id", brandId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (cancelled) return;
-        const jaConfigurado = !!data?.matrix_api_key;
-        if (!jaConfigurado) setShowApiKeyOnboarding(true);
-      });
+    // Deferred para idle — não compete com o boot inicial das telas críticas.
+    const ric = (window as any).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500));
+    const cancelRic = (window as any).cancelIdleCallback ?? clearTimeout;
+    const idleId = ric(() => {
+      if (cancelled) return;
+      supabase
+        .from("brands")
+        .select("matrix_api_key")
+        .eq("id", brandId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (cancelled) return;
+          const jaConfigurado = !!data?.matrix_api_key;
+          if (!jaConfigurado) setShowApiKeyOnboarding(true);
+        });
+    });
     return () => {
       cancelled = true;
+      try { cancelRic(idleId); } catch { /* noop */ }
     };
   }, [consoleScope, brandId, brandSettings]);
 
