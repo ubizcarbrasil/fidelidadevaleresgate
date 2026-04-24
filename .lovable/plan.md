@@ -1,112 +1,124 @@
-## Contexto
+## Objetivo
 
-A marca **Ubiz Shop** recebeu o produto **ACHADINHOS**, mas o sidebar dela mostra Programa de Fidelidade, Gamificação, Equipe & Acessos, Inteligência & Dados, Integrações & API e Configurações — coisas que não deveriam vir nesse produto.
-
-Investiguei o banco e a aplicação está **coerente** com o template do produto (18 módulos no template, 18 ativos na marca). O problema está na configuração do template e em como o sistema o constrói.
-
-### Causas-raiz
-
-1. **`is_core = true` força módulos em TODOS os produtos.** 10 módulos hoje são core: `brand_settings, csv_import, customers, home_sections, offers, redemption_qr, stores, subscription, users_management, wallet`. Mesmo que você não marque no wizard do Achadinhos, eles entram. Os grupos do sidebar ficam visíveis porque pelo menos um item core dentro deles passou no filtro.
-
-2. **`change_plan` não sincroniza módulos.** A edge function só atualiza `brands.subscription_plan`. Não toca em `brand_modules` nem em `brand_business_models`. Trocar o produto de uma marca hoje não troca as features.
-
-3. **`apply-plan-template` rejeita produtos comerciais.** A whitelist aceita só `free, starter, profissional, enterprise`. Os produtos novos (`a, clienteresgata, vr_motorista_premium, ganhaganha`) não podem ser reaplicados retroativamente.
-
-4. **Configuração espalhada e invisível.** Quem cria um produto não consegue ver "o que esse produto entrega" antes de salvar. E quem gerencia uma marca não consegue ver de onde cada módulo veio (núcleo, produto, modelo de negócio, override manual).
+Encerrar o plano de governança de produtos comerciais resolvendo os 4 itens pendentes: ajustar o hook que ainda força módulos extras, criar a página de **Diagnóstico por Marca**, adicionar **Preview no Wizard de Produtos** e implementar **testes de integração** que travam regressões no provisionamento.
 
 ---
 
-## Plano de execução
+## Etapa 1 — Ajuste crítico no `useBrandModules` (fecha a Parte A)
 
-### Parte A — Fix do problema atual (resolve a Ubiz Shop)
+Hoje o hook tem `csv_import` no `ALWAYS_ON_MODULES` hardcoded. Como o banco já não considera mais `csv_import` como core, isso faz com que **toda marca continue vendo o módulo** mesmo sem ele estar no produto contratado — anula parte do fix da migration.
 
-**A1. Migration: reduzir `is_core`**
+**Mudança em `src/hooks/useBrandModules.ts`:**
+- Remover `"csv_import"` do `ALWAYS_ON_MODULES`.
+- Deixar apenas os 3 reais: `brand_settings`, `subscription`, `users_management`.
+- Adicionar comentário curto referenciando a migration A1 para evitar regressão futura.
 
-Manter como `is_core = true` apenas o mínimo estrutural (3 módulos):
-- `brand_settings` (Visão Geral)
-- `subscription` (Meu Plano)
-- `users_management` (Gestão de Usuários)
+---
 
-Marcar como `is_core = false` os outros 7: `csv_import, customers, home_sections, offers, redemption_qr, stores, wallet`.
+## Etapa 2 — Página de Diagnóstico por Marca (item C1)
 
-**A2. Migration data-fix: limpar `brand_modules`**
+Nova feature seguindo o padrão do workspace.
 
-Para cada marca existente: deletar `brand_modules` cujos `module_definition_id` não estejam no `plan_module_templates` do plano atual da marca **e** não sejam dos 3 cores remanescentes. Corrige a Ubiz Shop e qualquer outra afetada.
+**Estrutura:**
+```text
+src/features/diagnostico_marca/
+├── pagina_diagnostico_marca.tsx
+├── components/
+│   ├── cabecalho_diagnostico.tsx
+│   ├── tabela_modulos_origem.tsx
+│   ├── card_resumo_produto.tsx
+│   └── dialog_diff_template.tsx
+├── hooks/
+│   └── hook_diagnostico_marca.ts
+├── services/
+│   └── servico_diagnostico_marca.ts
+├── types/
+│   └── tipos_diagnostico.ts
+└── utils/
+    └── utilitarios_origem_modulo.ts
+```
 
-**A3. Edge function `admin-brand-actions` — ação `change_plan`**
+**Rota:** `/admin/diagnostico-marca/:brandId` registrada em `src/App.tsx` dentro de `RootGuard` (apenas root_admin).
 
-Após `UPDATE brands SET subscription_plan = X`:
-1. `DELETE brand_modules WHERE brand_id = X`
-2. `INSERT brand_modules` a partir de `plan_module_templates` do novo `plan_key` (forçando `is_enabled=true` para os 3 cores)
-3. Sincronizar `brand_business_models` a partir de `plan_business_models` do novo `plan_key` (o trigger já existente cuida do resto)
+**Funcionalidades da página:**
+1. **Cabeçalho** com nome da marca, produto atual (`subscription_plan`), data da última aplicação de template e botão **"Ver como esta marca"** (abre `/?brandId=...`).
+2. **Tabela de módulos ativos** com 4 colunas marcando a origem de cada um:
+   - Núcleo (`is_core = true`)
+   - Produto (presente em `plan_module_templates` do plano da marca)
+   - Modelo de Negócio (derivado de `brand_business_models` → `business_model_modules`)
+   - Override Manual (existe em `brand_modules` mas não cai em nenhuma das 3 acima)
+3. **Botão "Reaplicar template do produto"** chamando a edge function `apply-plan-template` já corrigida no passo A4.
+4. **Botão "Comparar com template"** abre `dialog_diff_template.tsx` mostrando: módulos sobrando (na marca, fora do template) e módulos faltando (no template, fora da marca).
 
-**A4. Edge function `apply-plan-template` — generalizar**
+**Acesso na lista de marcas:** adicionar item **"Diagnosticar marca"** no `DropdownMenu` de cada marca em `src/pages/Brands.tsx` (mesmo grupo do botão "Ver como esta marca").
 
-Trocar a whitelist hardcoded por uma validação dinâmica: aceitar qualquer `plan_key` que exista em `subscription_plans` com `is_active = true`.
+**Lógica de origem (em `utilitarios_origem_modulo.ts`):**
+Função pura `classificarOrigem(modulo, contexto)` que recebe `{ moduleKey, isCore, templateKeys, businessModelKeys }` e retorna um array de origens. Reaproveitada nos testes.
 
-### Parte B — Visibilidade no wizard (sugestão #1)
+---
 
-**B1. Componente "Pré-visualizar Produto"**
+## Etapa 3 — Preview no Wizard de Produtos (item B1)
 
-Novo passo no wizard `src/features/produtos_comerciais/components/wizard_produto.tsx`, antes do passo de revisão:
+Novo passo no wizard, **antes** do passo de Revisão.
 
-- **Sidebar simulado** renderizado com os módulos selecionados (mesma lógica do `BrandSidebar`)
-- Lista de módulos divididos em 2 colunas:
-  - **Forçados pelo núcleo** (3 cores) — ícone de cadeado, não removíveis
-  - **Vindos da sua seleção** (do passo de módulos) — editáveis
-- Lista de **rotas acessíveis** vs **rotas bloqueadas** para essa configuração
-- Aviso vermelho se algum módulo da promessa do produto (extraído de `landing_config_json.benefits`) não estiver na seleção
+**Arquivos:**
+- `src/features/produtos_comerciais/components/passo_preview.tsx` (novo)
+- `src/features/produtos_comerciais/utils/utilitarios_simulacao_sidebar.ts` (novo) — função pura que dado `{ moduleKeys, businessModelKeys }` devolve a estrutura do menu filtrada (extraída da lógica do `BrandSidebar`).
+- `src/features/produtos_comerciais/components/wizard_produto.tsx` (editar) — inserir o passo entre `modules`/`landing` e `review`.
 
-### Parte C — Diagnóstico por marca (sugestão #2)
+**Conteúdo da tela de preview:**
+1. **Sidebar simulado** renderizado em uma coluna estreita à esquerda usando os módulos selecionados + os 3 cores (mesma lógica do console real).
+2. **Lista de módulos divididos em 2 colunas** à direita:
+   - **Forçados pelo núcleo** — com ícone de cadeado, não editáveis.
+   - **Vindos da sua seleção** — com link "voltar para editar" que retorna ao passo de módulos.
+3. **Rotas acessíveis vs bloqueadas** — lista derivada do `MENU_REGISTRY` filtrada pela seleção.
+4. **Aviso de promessa** — se o produto tem benefícios em `landing_config_json.benefits` cujo `module_key` declarado não estiver na seleção, mostra alerta vermelho listando os benefícios "prometidos mas não entregues".
 
-**C1. Página `/admin/diagnostico-marca/:brandId`**
+---
 
-Acessível só por root_admin, com link na lista de marcas (`Brands.tsx`) no menu de ações (`...`).
+## Etapa 4 — Testes de integração de promessa do produto (item D1)
 
-Mostra:
-- Produto atual + data da última aplicação
-- Tabela de módulos ativos com 4 colunas de origem:
-  - **Núcleo** (is_core)
-  - **Produto** (veio do `plan_module_templates`)
-  - **Modelo de negócio** (veio do trigger via `brand_business_models`)
-  - **Override manual** (existe em `brand_modules` mas não no template e não é core)
-- Botão **"Reaplicar template do produto"** (chama `apply-plan-template` corrigido)
-- Botão **"Comparar com template"** — mostra o diff visual (o que está sobrando, o que está faltando)
+Novo arquivo `src/features/produtos_comerciais/__tests__/promessa_produto.integration.test.ts`.
 
-### Parte D — Prevenção automática (sugestões #5 e #6)
+**Cobertura:**
+1. Para cada `subscription_plans` ativo no banco (mockado via fixture):
+   - Simula provisionamento chamando a função pura de cálculo de módulos finais (`calcularModulosFinais({ planKey, coreModules, templateModules, businessModelModules })` extraída da lógica de `provision-brand`).
+   - Assert: o resultado contém **exatamente** `core ∪ template`. Nada a mais, nada a menos.
+2. Valida que o módulo `csv_import` **não aparece** automaticamente em produtos que não o incluem (regressão da Ubiz Shop).
+3. Valida que `change_plan` (lógica em função pura `calcularDeltaTrocaPlano`) gera o `INSERT`/`DELETE` correto de `brand_modules` ao trocar de produto.
+4. Valida que `classificarOrigem` (utilidade da Etapa 2) marca corretamente cada cenário: só núcleo, só produto, núcleo+produto, override manual.
 
-**D1. Testes de integração de promessa do produto**
-
-Novo arquivo `src/features/produtos_comerciais/__tests__/promessa_produto.integration.test.ts`:
-- Para cada `subscription_plans` ativo, simula provisionamento (mock do `provision-brand`)
-- Valida que apenas os módulos esperados ficam ativos (cores + template)
-- Valida que rotas fora do escopo redirecionariam para `/`
-- Roda no CI via `vitest`
-
-**D2. Botão "Ver console como esta marca"**
-
-Em `src/pages/Brands.tsx`, dentro do `DropdownMenu` de cada marca, adicionar item **"Ver como esta marca"** que abre `/?brandId={brandId}` em nova aba — aproveita o sistema de impersonação por URL já existente (`BrandContext`).
+Roda no CI via `vitest` (já configurado em `vitest.config.ts` e `.github/workflows/ci.yml`).
 
 ---
 
 ## Ordem de execução
 
-1. **A1** Migration: reduzir `is_core`
-2. **A2** Migration data-fix: limpar `brand_modules` desalinhados
-3. **A3** Edge function `change_plan`
-4. **A4** Edge function `apply-plan-template`
-5. **D2** Botão "Ver como esta marca" (rápido, valida tudo visualmente)
-6. **C1** Página de diagnóstico por marca
-7. **B1** Preview no wizard de produtos
-8. **D1** Testes de integração
+1. **Etapa 1** — Ajuste no `useBrandModules` (1 arquivo, ~1 minuto, fecha a Parte A de fato).
+2. **Etapa 2** — Diagnóstico por Marca (página + rota + link no menu de marcas). É a ferramenta que dá poder pro Root Admin auditar a Ubiz Shop e qualquer marca futura.
+3. **Etapa 3** — Preview no Wizard (impede que produtos sejam salvos sem que o criador veja o que entregam).
+4. **Etapa 4** — Testes de integração (trava regressões automaticamente no CI).
 
 ---
 
 ## Detalhes técnicos
 
-- O sidebar (`BrandSidebar`) **já oculta grupos vazios** via `if (group.items.length === 0) return null`. Após A1+A2, isso passa a funcionar de fato.
-- O hook `useBrandModules` tem um `ALWAYS_ON_MODULES` hardcoded com `["brand_settings", "csv_import", "subscription", "users_management"]`. Precisa ser ajustado para refletir os 3 cores reais (sem `csv_import`).
-- O trigger `sync_brand_modules_from_business_models` continua válido — ele só cuida do canal "modelo de negócio → módulos required".
-- A página de diagnóstico não exige novas tabelas: tudo é derivável de `brand_modules`, `module_definitions`, `plan_module_templates`, `brand_business_models`, `business_model_modules`.
-- O preview no wizard reutiliza `MENU_REGISTRY` e a lógica de filtragem do `BrandSidebar` extraída em uma função pura.
-- A impersonação via `?brandId=` já é validada pelo `useBrandGuard` para root_admin (memória `brand-impersonation-logic`).
+- **Lógica compartilhada de filtragem de menu:** vou extrair a lógica atual do `BrandSidebar` para uma função pura em `src/compartilhados/utils/utilitarios_filtro_menu.ts`, consumida tanto pelo sidebar real quanto pelo preview do wizard e pela página de diagnóstico. Mantém uma fonte única de verdade.
+- **Sem novas tabelas:** todo o diagnóstico é derivado de `brand_modules`, `module_definitions`, `plan_module_templates`, `brand_business_models`, `business_model_modules`.
+- **Memória de impersonação:** o botão "Ver como esta marca" já existe (criado na fase anterior) e usa `?brandId=` validado pelo `useBrandGuard` (memória `brand-impersonation-logic`). O diagnóstico apenas reaproveita.
+- **Nomenclatura:** todos os arquivos novos seguem snake_case em português conforme regras do workspace (`pagina_*`, `hook_*`, `servico_*`, `tipos_*`, `utilitarios_*`, `constantes_*`).
+- **Design System:** página de diagnóstico usa os tokens semânticos já definidos (`bg-card`, `text-muted-foreground`, `border-border`), shadcn `Table`, `Badge`, `Card`, `Dialog`. Sem cores diretas.
+- **RLS:** nenhuma alteração necessária — o root_admin já tem acesso total via `has_role`. As consultas serão feitas via Supabase client com filtros explícitos por `brand_id`.
+- **Edge functions:** nenhuma nova edge function. A página de diagnóstico apenas consome `apply-plan-template` (já corrigida).
+- **Guard de rota:** `/admin/diagnostico-marca/:brandId` envolvida por `RootGuard` em `App.tsx`.
+
+---
+
+## Resumo do que fica entregue
+
+- `useBrandModules` alinhado com a nova lista de cores (fix do "leak" residual de `csv_import`).
+- Nova página `/admin/diagnostico-marca/:brandId` com auditoria completa de origem de módulos por marca.
+- Botão de acesso ao diagnóstico no menu de cada marca em `Brands.tsx`.
+- Novo passo "Pré-visualizar Produto" no wizard, com sidebar simulado e validação de promessa.
+- Suíte de testes `promessa_produto.integration.test.ts` validando provisionamento, troca de plano e classificação de origem.
+- Função pura compartilhada de filtragem de menu, garantindo que sidebar real, preview do wizard e diagnóstico falem a mesma língua.
