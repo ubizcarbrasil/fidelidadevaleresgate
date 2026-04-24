@@ -1374,6 +1374,30 @@ export const gruposManuais: GrupoManual[] = [
         rota: "/admin/central-modulos"
       },
       {
+        id: "central-modulos-templates",
+        titulo: "Aba Templates — Pacotes reutilizáveis de módulos",
+        descricao: "Salve conjuntos livres de módulos (ex.: 'Pacote E-commerce', 'Mobilidade Básica', 'Cidade Pequena') como templates nomeados e aplique-os rapidamente, em lote, em várias marcas e/ou cidades. Diferente da matriz Planos (que define o pacote padrão de cada plano), Templates permitem 'kits' ad-hoc que você reaproveita sempre que precisar — sem amarrar a um plano comercial.",
+        comoAtivar: "Acesso Root Admin. Disponível em 'Central de Módulos' → aba 'Templates'.",
+        passos: [
+          "Acesse '/admin/central-modulos' e abra a aba 'Templates'.",
+          "CRIAR — clique em 'Novo template'. Preencha nome, cor de identificação e (opcional) descrição. Em seguida marque os módulos que farão parte do template (lista agrupada por categoria, com busca, 'marcar todos da categoria', 'selecionar todos' e 'limpar'). Módulos Core e inativos são filtrados automaticamente.",
+          "EDITAR / EXCLUIR — cada card tem ícones de lápis (editar) e lixeira (excluir). Excluir o template NÃO afeta marcas/cidades onde ele já foi aplicado anteriormente.",
+          "APLICAR — clique no botão 'Aplicar' no card. O dialog abre com 2 abas (Marcas / Cidades), busca e seleção múltipla. Selecione quantos alvos quiser de cada lado.",
+          "Escolha a POLÍTICA de aplicação: 'Mesclar' (recomendado — apenas liga os módulos do template, não desativa nada já configurado) ou 'Substituir' (apaga as linhas dos módulos do template no alvo e regrava do zero — outros módulos ficam intactos).",
+          "Se escolher 'Substituir', será obrigatório digitar 'CONFIRMAR' antes do botão 'Aplicar' liberar.",
+          "Confirme — o sistema aplica em brand_modules (para marcas) e/ou city_module_overrides (para cidades), invalida caches e mostra um toast com a contagem de alvos atualizados.",
+          "Toda aplicação é registrada em audit_logs com a ação 'template_applied_merge' ou 'template_applied_replace'."
+        ],
+        dicas: [
+          "Use 'Mesclar' para 99% dos casos — é a operação segura que só adiciona. Reserve 'Substituir' para quando precisar realmente forçar um estado limpo.",
+          "Templates são INDEPENDENTES dos planos: aplicar um template não muda o subscription_plan da marca, só liga/desliga módulos.",
+          "Crie templates temáticos por nicho (ex.: 'Cooperativa de Mobilidade', 'Loja de Bairro', 'Programa Cliente Premium') para acelerar o onboarding manual de novas marcas.",
+          "Para padronizar TODAS as marcas de um plano específico (resetando customizações), prefira 'Aplicar Retroativamente' na aba Planos. Templates servem para subconjuntos arbitrários de marcas/cidades.",
+          "A cor do template ajuda a diferenciar visualmente quando você tiver muitos cards — escolha cores semânticas (verde para 'completo', amarelo para 'experimental', etc.)."
+        ],
+        rota: "/admin/central-modulos"
+      },
+      {
         id: "central-modulos-cidades",
         titulo: "Aba Cidades (Overrides)",
         descricao: "Aplique exceções por cidade sobre a configuração da marca. Permite ligar/desligar módulos pontualmente em uma filial específica sem afetar as outras cidades da mesma marca.",
