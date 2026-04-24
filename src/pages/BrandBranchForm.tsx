@@ -22,6 +22,7 @@ import {
   normalizarScoringModel,
   rotuloDoPlano,
 } from "@/features/city_onboarding/hooks/hook_escopo_produto";
+import { useBranchesSync } from "@/compartilhados/hooks/hook_branches_sync";
 
 const ESTADOS = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
@@ -53,6 +54,7 @@ export default function BrandBranchForm() {
   const navigate = useNavigate();
   const { currentBrandId } = useBrandGuard();
   const queryClient = useQueryClient();
+  const { syncAfterMutation: syncBranches } = useBranchesSync();
 
   // Escopo do produto comercial contratado pela marca
   const escopo = useProductScope();
@@ -495,10 +497,10 @@ export default function BrandBranchForm() {
         }
       }
 
-      // Garante que a lista será refetchada antes de navegar (evita exibir cache vazio
-      // quando o BrandBranchesPage remonta logo após a criação).
-      await queryClient.invalidateQueries({ queryKey: ["brand-branches"] });
-      await queryClient.refetchQueries({ queryKey: ["brand-branches"] });
+      // Sincronização global: invalida e refaz fetch de TODAS as queries
+      // que dependem de cidade (lista, seletores, dashboards, etc.) antes
+      // de navegar — assim qualquer tela já abre com o branch_id mais novo.
+      await syncBranches();
       navigate("/brand-branches");
     } catch (err: any) {
       toast.error(err?.message || "Erro ao salvar cidade.");
