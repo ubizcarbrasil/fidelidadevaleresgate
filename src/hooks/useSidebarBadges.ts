@@ -60,10 +60,14 @@ export function useSidebarBadges() {
       return result;
     },
     enabled: !!currentBrandId,
-    // Sem polling agressivo: badges atualizadas sob demanda / na próxima navegação
-    staleTime: 2 * 60_000, // 2 min
-    gcTime: 5 * 60_000,
+    // Sem polling agressivo: badges são contagens administrativas que não
+    // precisam ser realtime. Cache longo evita refetch a cada navegação
+    // entre páginas internas.
+    staleTime: 5 * 60_000, // 5 min
+    gcTime: 15 * 60_000,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
   });
 
   return badges;

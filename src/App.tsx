@@ -407,9 +407,9 @@ function AppContent() {
     return <Navigate to="/auth" replace />;
   }
 
-  if ((loading || authLoading) && !isPublicPath) {
-    return <TelaCarregamento />;
-  }
+  // Não bloqueamos a árvore inteira aqui. ProtectedRoute e AppLayout
+  // já mostram seu próprio loader/skeleton enquanto auth/brand resolvem,
+  // o que evita o "flash" de full-screen loader em cada navegação interna.
 
   // Portal mode: app.valeresgate.com.br
   if (isPortalDomain && isWhiteLabel) {

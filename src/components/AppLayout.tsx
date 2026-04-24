@@ -110,18 +110,25 @@ export default function AppLayout() {
 
     // Só mostra o onboarding se a marca ainda NÃO tiver a API Key da matriz configurada.
     let cancelled = false;
-    supabase
-      .from("brands")
-      .select("matrix_api_key")
-      .eq("id", brandId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (cancelled) return;
-        const jaConfigurado = !!data?.matrix_api_key;
-        if (!jaConfigurado) setShowApiKeyOnboarding(true);
-      });
+    // Deferred para idle — não compete com o boot inicial das telas críticas.
+    const ric = (window as any).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500));
+    const cancelRic = (window as any).cancelIdleCallback ?? clearTimeout;
+    const idleId = ric(() => {
+      if (cancelled) return;
+      supabase
+        .from("brands")
+        .select("matrix_api_key")
+        .eq("id", brandId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (cancelled) return;
+          const jaConfigurado = !!data?.matrix_api_key;
+          if (!jaConfigurado) setShowApiKeyOnboarding(true);
+        });
+    });
     return () => {
       cancelled = true;
+      try { cancelRic(idleId); } catch { /* noop */ }
     };
   }, [consoleScope, brandId, brandSettings]);
 
@@ -158,9 +165,22 @@ export default function AppLayout() {
     return <Navigate to="/store-panel" replace />;
   }
 
-  // Estado de carregamento: roles ainda não chegaram. Não renderizar sidebar errada.
+  // Estado de carregamento: roles ainda não chegaram. Em vez de bloquear
+  // a tela toda com o loader full-screen (que dá sensação de "travamento"),
+  // mostramos um shell mínimo (sidebar/topbar vazios) e deixamos cada
+  // página assumir o estado de carregamento por conta própria.
   if (consoleScope === "LOADING") {
-    return <TelaCarregamento />;
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <div className="w-16 shrink-0 bg-sidebar" />
+          <div className="flex-1 flex flex-col min-w-0">
+            <header className="h-14 saas-topbar shrink-0" />
+            <main className="flex-1 p-3 sm:p-6 overflow-auto" />
+          </div>
+        </div>
+      </SidebarProvider>
+    );
   }
 
   const SidebarComponent = {

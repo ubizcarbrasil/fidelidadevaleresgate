@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, AlertTriangle, CheckCircle2, Zap } from "lucide-react";
+import { Clock, AlertTriangle, Zap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { useNavigate } from "react-router-dom";
 
 interface TaskItem {
@@ -20,39 +21,11 @@ interface TaskItem {
 export default function TasksSection() {
   const navigate = useNavigate();
   const { currentBrandId, isRootAdmin } = useBrandGuard();
-
-  const { data: pendingRedemptions } = useQuery({
-    queryKey: ["tasks-pending-redemptions", currentBrandId ?? "global"],
-    queryFn: async () => {
-      let q = supabase.from("redemptions").select("*", { count: "exact", head: true }).eq("status", "PENDING");
-      if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);
-      const { count } = await q;
-      return count || 0;
-    },
-    staleTime: 30_000,
-  });
-
-  const { data: pendingStores } = useQuery({
-    queryKey: ["tasks-pending-stores", currentBrandId ?? "global"],
-    queryFn: async () => {
-      let q = supabase.from("stores").select("*", { count: "exact", head: true }).eq("approval_status", "PENDING_APPROVAL" as any);
-      if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);
-      const { count } = await q;
-      return count || 0;
-    },
-    staleTime: 30_000,
-  });
-
-  const { data: pendingRules } = useQuery({
-    queryKey: ["tasks-pending-rules", currentBrandId ?? "global"],
-    queryFn: async () => {
-      let q = supabase.from("store_points_rules").select("*", { count: "exact", head: true }).eq("status", "PENDING_APPROVAL");
-      if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);
-      const { count } = await q;
-      return count || 0;
-    },
-    staleTime: 30_000,
-  });
+  // Reaproveita a query do sidebar — evita 4 contagens duplicadas no boot.
+  const badges = useSidebarBadges();
+  const pendingRedemptions = badges["sidebar.resgates"];
+  const pendingStores = badges["sidebar.parceiros"];
+  const pendingRules = badges["sidebar.aprovar_regras"];
 
   const { data: pendingReports } = useQuery({
     queryKey: ["tasks-pending-reports-count", currentBrandId ?? "global"],
@@ -60,10 +33,12 @@ export default function TasksSection() {
       const { count } = await supabase.from("offer_reports").select("*", { count: "exact", head: true }).eq("status", "pending");
       return count || 0;
     },
-    staleTime: 30_000,
+    staleTime: 2 * 60_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
   });
 
-  const isLoading = pendingRedemptions === undefined && pendingStores === undefined;
+  const isLoading = !currentBrandId && !isRootAdmin;
 
   const tasks: TaskItem[] = [
     ...(pendingRedemptions && pendingRedemptions > 0 ? [{
