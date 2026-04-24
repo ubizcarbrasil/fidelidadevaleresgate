@@ -114,6 +114,7 @@ const rootGroupDefs: DefinicaoGrupoSidebar[] = [
       "sidebar.funcionalidades",
       { key: "sidebar.modulos", overrides: { defaultTitle: "Módulos das Marcas" } },
       "sidebar.permissoes_globais", "sidebar.secoes_home", "sidebar.modelos_home",
+      "sidebar.admin_origens",
       "sidebar.controle_recursos", "sidebar.atualizacoes", "sidebar.kit_inicial",
       "sidebar.configuracoes",
       { key: "sidebar.subscription", overrides: { defaultTitle: "Assinatura" } },

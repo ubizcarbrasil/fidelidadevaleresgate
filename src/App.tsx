@@ -231,6 +231,7 @@ function AnimatedRoutes() {
               <Route path="flags" element={<RootGuard><FeatureFlagsPage /></RootGuard>} />
               <Route path="audit" element={<ModuleGuard moduleKey="audit"><AuditLogsPage /></ModuleGuard>} />
               <Route path="releases" element={<RootGuard><ReleasesPage /></RootGuard>} />
+              <Route path="admin-origens" element={<RootGuard><PaginaAdminOrigens /></RootGuard>} />
               <Route path="home-templates" element={<RootGuard><HomeTemplatesPage /></RootGuard>} />
               <Route path="csv-import" element={<ModuleGuard moduleKey="csv_import"><CsvImportPage /></ModuleGuard>} />
               <Route path="clone-branch" element={<RootGuard><CloneBranchPage /></RootGuard>} />
