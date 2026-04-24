@@ -195,7 +195,7 @@ export default function ProvisionBrandWizard() {
             <div className="space-y-2">
               <Label>Slug da Marca</Label>
               <Input value={form.brand_slug} onChange={(e) => update("brand_slug", e.target.value)} placeholder="vale-resgate-exemplo" />
-              <p className="text-xs text-muted-foreground">URL: {form.brand_slug || "slug"}.valeresgate.com</p>
+              <p className="text-xs text-muted-foreground">URL: {form.brand_slug || "slug"}.valeresgate.com.br</p>
             </div>
 
             <div className="border-t pt-4 space-y-4">
@@ -356,7 +356,7 @@ export default function ProvisionBrandWizard() {
                 )}
                 <div>
                   <p className="font-semibold" style={{ color: form.primary_color }}>{form.company_name || "Nome da Empresa"}</p>
-                  <p className="text-xs text-muted-foreground">{form.subdomain || form.brand_slug}.valeresgate.com</p>
+                  <p className="text-xs text-muted-foreground">{form.subdomain || form.brand_slug}.valeresgate.com.br</p>
                 </div>
               </div>
             </div>
@@ -437,7 +437,7 @@ export default function ProvisionBrandWizard() {
               </div>
               <div className="flex justify-between p-3">
                 <span className="text-muted-foreground">Domínio</span>
-                <span className="font-mono text-xs">{form.subdomain || form.brand_slug}.valeresgate.com</span>
+                <span className="font-mono text-xs">{form.subdomain || form.brand_slug}.valeresgate.com.br</span>
               </div>
               <div className="flex justify-between p-3">
                 <span className="text-muted-foreground">Seções ativas</span>
