@@ -1210,21 +1210,21 @@ export const gruposManuais: GrupoManual[] = [
       {
         id: "central-modulos-visao-geral",
         titulo: "Visão Geral da Central de Módulos",
-        descricao: "A Central de Módulos é o painel mestre do Root Admin para governar TODA a plataforma: define o catálogo de funcionalidades, os Modelos de Negócio, os Planos comerciais, ativações por marca, overrides por cidade e auditoria. É a fonte única de verdade da arquitetura SaaS.",
+        descricao: "A Central de Módulos é o painel mestre do Root Admin para governar TODA a plataforma: define o catálogo técnico, os Modelos de Negócio, a matriz de Planos × Módulos, os Templates reutilizáveis, ativações por marca, overrides por cidade e auditoria. É a fonte única de verdade da arquitetura SaaS.",
         comoAtivar: "Acesso exclusivo do Root Admin. Disponível em '/admin/central-modulos' ou pelo menu lateral 'Central de Módulos'.",
         passos: [
           "Acesse '/admin/central-modulos' (somente Root Admin).",
-          "A página é organizada em 6 abas no topo: Catálogo, Modelos, Planos, Empreendedores, Cidades e Auditoria.",
-          "Cada aba representa uma camada da arquitetura: Catálogo (módulos técnicos), Modelos (pacotes comerciais), Planos (combos de Modelos), Empreendedores (ativação por marca), Cidades (overrides locais) e Auditoria (histórico).",
-          "Use a aba mais à esquerda quando estiver criando coisas novas; as do meio para vincular; as da direita para liberar e auditar.",
+          "A página é organizada em 8 abas no topo: Catálogo, Modelos, Planos, Templates, Empreendedores, Cidades, Auditoria e Manual.",
+          "Cada aba representa uma camada: Catálogo (módulos técnicos), Modelos (pacotes comerciais), Planos (matriz módulo × plano), Templates (conjuntos livres de módulos reutilizáveis), Empreendedores (ativação por marca), Cidades (overrides locais), Auditoria (histórico) e Manual (esta documentação).",
+          "Fluxo típico: cadastre módulos no Catálogo → empacote em Modelos → defina o que cada Plano inclui na aba Planos → use Templates para aplicar pacotes prontos em lote → ajuste por marca em Empreendedores ou por cidade em Cidades → consulte Auditoria quando precisar rastrear mudanças.",
           "Toda alteração feita aqui é registrada automaticamente na aba 'Auditoria' com responsável, data e contexto.",
           "Mudanças em módulos refletem em tempo real nos painéis das marcas e cidades afetadas."
         ],
         dicas: [
-          "Hierarquia mental: Catálogo é o 'estoque' técnico → Modelos empacotam comercialmente → Planos juntam Modelos → Empreendedores compram Planos → Cidades podem ajustar finos.",
+          "Hierarquia mental: Catálogo é o 'estoque' técnico → Modelos empacotam comercialmente → a matriz Planos define o que cada plano inclui → Templates servem como 'atalhos' para aplicar conjuntos em várias marcas/cidades de uma vez.",
           "Use a Auditoria sempre que houver dúvida sobre 'quem mudou o quê' antes de abrir chamado.",
-          "Comece pela Aba Catálogo se for cadastrar funcionalidade nova; pela Aba Empreendedores se for liberar para uma marca específica.",
-          "A flag 'business_models_ui_enabled' controla quem vê a nova arquitetura de Modelos — hoje apenas marcas em beta."
+          "Comece pela aba Catálogo se for cadastrar funcionalidade nova; pela aba Empreendedores para liberar em uma marca específica; pela aba Templates quando precisar padronizar várias marcas/cidades de uma só vez.",
+          "A aba Manual fica disponível dentro da própria Central — não precisa sair da página para consultar a documentação."
         ],
         rota: "/admin/central-modulos"
       },
