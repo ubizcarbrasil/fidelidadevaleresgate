@@ -249,7 +249,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (!company_name || !owner_name || !owner_email || !owner_password) {
+    if (!company_name || !owner_name || !owner_email || !owner_password || !city_name || !state) {
       return new Response(JSON.stringify({ error: "Preencha todos os campos obrigatórios." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -272,8 +272,7 @@ Deno.serve(async (req) => {
         .replace(/^-|-$/g, "");
 
     const brandSlug = autoSlug(company_name);
-    const hasCityInfo = !!(city_name && String(city_name).trim() && state && String(state).trim());
-    const citySlug = hasCityInfo ? autoSlug(`${city_name}-${state}`) : "";
+    const citySlug = autoSlug(`${city_name}-${state}`);
     const emailPrefix = brandSlug.replace(/[^a-z0-9]/g, "");
 
     // Check if brand slug already exists
