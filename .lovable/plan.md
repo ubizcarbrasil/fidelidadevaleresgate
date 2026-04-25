@@ -1,60 +1,64 @@
-## Problema
+## Problema (grave de white-label)
 
-Ao abrir **Gamificação Admin → Campeonato → selecionar cidade**, a tela quebra com:
+O usuário entrou com `ubizshop@gmail.com` (brand_admin da marca **Ubiz Shop** — `ff650889…`), mas a tela carregou exibindo a logo / título / cores da marca **Ubiz Resgata** (`db15bd21…`), que pertence ao login anterior (`ubiz.tecnologia@gmail.com` / Alecio).
 
-> `undefined is not an object (evaluating 's.top.length')`
+Sequência observada nos logs de auth:
+1. Login Alecio → carrega Ubiz Resgata (marca, tema, logo, manifest).
+2. Logout Alecio.
+3. Login ubizshop, **na mesma aba, sem reload** → permanece com identidade visual da Ubiz Resgata.
 
 ## Causa raiz
 
-A RPC `brand_get_campeonato_dashboard` (em `supabase/migrations/20260422010737_*.sql`) devolve um JSON cujos nomes de campos **não batem** com o que o frontend espera no tipo `DashboardCampeonatoData` (`src/features/campeonato_duelo/types/tipos_empreendedor.ts`). O serviço apenas faz `as DashboardCampeonatoData` sem mapear, então os campos chegam `undefined` e estouram no primeiro `.length` / `.map`.
+São **quatro vazamentos** acumulados, todos no mesmo fluxo de troca de conta sem refresh:
 
-| Frontend espera | RPC devolve |
-|---|---|
-| `tiers[].top` | `tiers[].top3` ← **causa direta do erro** |
-| `tiers[].members_count` | `tiers[].total_drivers` |
-| `tiers[].top[].position` | (não retornado) |
-| `active_season.id` | `active_season.season_id` |
-| `active_season.name` | `active_season.season_name` |
-| `active_season.branch_name` | (não retornado) |
-| `has_active_season`, `engagement_format` | (não retornados — devolve só `active_season` e `tiers`) |
+1. **`AuthContext.signOut`** (`src/contexts/AuthContext.tsx`, linhas 196–200) só faz `supabase.auth.signOut()` e limpa `roles`. **Não chama `queryClient.clear()`**, então a query `["brand-info", brandId-antigo]` (TTL de 5 min em `useBrandName.ts`) continua servindo dados da marca anterior — incluindo `logo_url`.
 
-Resultado: `serie.top` é `undefined` → `serie.top.length` quebra o `ErrorBoundary`.
+2. **`BrandContext`** (`src/contexts/BrandContext.tsx`, linhas 224–237) só resolve a marca pelos `roles` quando `brand === null`. Como o estado React `brand` mantém a "Ubiz Resgata" da sessão anterior, **nunca atualiza** para a marca do novo usuário (ubizshop), mesmo após `roles` mudarem.
+
+3. **`useBrandTheme`** (`src/hooks/useBrandTheme.ts`) escreve variáveis CSS, favicon, `document.title` e um manifest dinâmico em `document.documentElement` / `<head>`. O cleanup só roda ao **trocar `settings`** — se a marca não troca (vazamento #2), o tema antigo permanece grudado.
+
+4. **`useBrandInfo`** (`src/hooks/useBrandName.ts`, linha 20) calcula `brandId` como `ctxBrand?.id ?? roles.find(...)?.brand_id`. Como `ctxBrand` ainda é a Ubiz Resgata, o `??` nunca cai no fallback de `roles` do novo usuário.
+
+Resultado: logo, título, cores, favicon, manifest — tudo do tenant errado. Risco de **vazamento cross-tenant grave**.
 
 ## Solução
 
-Adaptar **no frontend, na camada de serviço** (sem migração de banco — mais rápido e seguro). Mapeamos o JSON cru da RPC para o shape esperado pelos tipos/components.
+Mudanças cirúrgicas em 3 arquivos, sem migração SQL:
 
-### Arquivo a editar
+### 1. `src/contexts/AuthContext.tsx` — limpar cache no logout
 
-`src/features/campeonato_duelo/services/servico_campeonato_empreendedor.ts` — função `obterDashboardCampeonato`:
+- Importar `useQueryClient` do `@tanstack/react-query`.
+- Em `signOut`, antes de qualquer outra coisa, chamar `queryClient.clear()` para invalidar TODAS as queries (brand-info, dashboards, etc.) que podem ter sido cacheadas pelo usuário anterior.
+- Manter `setRoles([])` e `supabase.auth.signOut()`.
 
-1. Tipar o retorno cru como `unknown` e ler defensivamente.
-2. Construir o objeto `DashboardCampeonatoData` mapeando:
-   - `active_season.season_id` → `id`
-   - `active_season.season_name` → `name`
-   - demais campos copiados 1-a-1, com `branch_name: null` quando ausente
-   - `has_active_season` derivado de `active_season != null`
-   - `engagement_format` resolvido pela RPC `brand_get_engagement_format` já existente, ou caímos para `"duelo"` por padrão (mantendo retrocompatível)
-3. Para cada `tier`, mapear:
-   - `top: (raw.top3 ?? []).map(d => ({ ...d, position: null }))`
-   - `members_count: raw.total_drivers ?? 0`
-   - `qualified_count: raw.qualified_count ?? 0`
-4. Garantir defaults seguros: `tiers: []`, `top: []`, nunca `undefined`.
+### 2. `src/contexts/BrandContext.tsx` — re-resolver brand quando o usuário muda
 
-### Hardening adicional (defesa em profundidade)
+- O `useEffect` das linhas 224–237 hoje só roda quando `brand === null`. Trocar a guarda para também disparar quando o `user.id` mudar:
+  - Manter um `previousUserIdRef` (via `useRef`) e, no efeito, comparar com `user?.id`.
+  - Se o `user.id` for **diferente** do anterior, **forçar o re-fetch** da brand a partir dos `roles` atuais (mesmo que `brand` esteja preenchido) — e atualizar `setBrand(...)` com a nova marca, ou `setBrand(null)` quando o usuário deslogar.
+- Quando `user === null` (logout), também resetar `setBrand(null)`, `setBranches([])`, `setSelectedBranchState(null)` para liberar o cleanup do `useBrandTheme`.
 
-`src/features/campeonato_duelo/components/empreendedor/CardResumoSerie.tsx`:
-- Trocar `serie.top.length === 0` por `(serie.top ?? []).length === 0`
-- Trocar `serie.top.slice(0, 3)` por `(serie.top ?? []).slice(0, 3)`
+### 3. `src/hooks/useBrandName.ts` — não confiar cegamente em `ctxBrand`
 
-Assim, mesmo que uma futura RPC volte a divergir, a tela não quebra — apenas mostra "Sem motoristas pontuando ainda."
+- Trocar:
+  ```ts
+  const brandId = ctxBrand?.id ?? roles.find((r) => r.brand_id)?.brand_id ?? null;
+  ```
+  por uma lógica que **prefere o role do usuário autenticado** quando ele existe e diverge do `ctxBrand`:
+  ```ts
+  const userRoleBrandId = roles.find((r) => r.brand_id)?.brand_id ?? null;
+  const brandId = userRoleBrandId ?? ctxBrand?.id ?? null;
+  ```
+  Assim, mesmo se o `BrandContext` ainda não tiver atualizado, a logo / nome no header já refletem a marca real do usuário logado. Defesa em profundidade.
 
-## Resultado esperado
+## Validação
 
-- Página do Campeonato carrega normalmente após selecionar a cidade.
-- Cards de série exibem `top 3`, contagem de motoristas e qualificados corretos.
-- Ações de temporada ativa (`ativa.id`) voltam a funcionar (botão de seeding, distribuição manual, etc.).
+Cenário a testar manualmente:
+1. Login com `ubiz.tecnologia@gmail.com` (Ubiz Resgata) — confirmar logo / título "Ubiz Resgata".
+2. Sem fechar a aba, fazer logout.
+3. Login com `ubizshop@gmail.com` — a logo, título, favicon e cores devem trocar **imediatamente** para "Ubiz Shop".
+4. Repetir invertendo a ordem.
 
 ## Escopo
 
-Mudança pequena, em **2 arquivos**, sem migração SQL, sem mudança de tipos. Risco baixo — o mapeamento é puramente aditivo.
+3 arquivos, sem migração SQL, sem mudança de tipos. Risco baixo: as três correções são aditivas e fortalecem o isolamento multi-tenant — nenhuma quebra de fluxo existente.

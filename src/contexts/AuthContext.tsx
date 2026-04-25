@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import * as Sentry from "@sentry/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole, UserRole } from "@/modules/auth/types";
 import { logAudit } from "@/lib/auditLogger";
@@ -26,6 +27,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<UserRole[]>([]);
@@ -194,6 +196,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isRootAdmin = hasRole("root_admin");
 
   const signOut = async () => {
+    // Limpa o cache do React Query antes do signOut para evitar que
+    // dados sensíveis do usuário anterior (incluindo branding/marca)
+    // vazem para o próximo login na mesma aba.
+    try {
+      queryClient.clear();
+    } catch {
+      /* noop */
+    }
     await supabase.auth.signOut();
     setRoles([]);
     setRolesCarregados(true);
