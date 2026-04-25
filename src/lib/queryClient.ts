@@ -25,7 +25,10 @@ export const queryClient = new QueryClient({
       retryDelay,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
-      refetchOnMount: false,
+      // refetchOnMount: padrão true → refetch ao montar APENAS se a query
+      // estiver stale. Combinado com staleTime alto, mantém performance e
+      // garante que mutations + invalidateQueries reflitam imediatamente
+      // na UI quando o componente é remontado (ex: fechar wizard → listar).
     },
     mutations: {
       retry: 1,
