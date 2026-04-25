@@ -10,11 +10,16 @@ import { createRoot } from "react-dom/client";
 import { Suspense, useEffect, Component, type ReactNode } from "react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import { installGlobalDomErrorRecovery } from "@/lib/pwaRecovery";
+import { installRadixPointerEventsFix } from "@/lib/radixPointerEventsFix";
 import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
 
 // Recuperação reativa apenas em erro real de chunk/import dinâmico.
 // Não limpamos mais SW/caches em toda abertura — isso degradava o boot.
 installGlobalDomErrorRecovery();
+
+// Fix global para travamento da UI causado pelo bug do Radix Dialog/Popover
+// que deixa pointer-events:none no <body> ao fechar overlays em sequência.
+installRadixPointerEventsFix();
 
 const App = lazyWithRetry(() => {
   console.info("[boot] App dynamic import started");
