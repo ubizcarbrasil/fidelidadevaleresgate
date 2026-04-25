@@ -1,72 +1,60 @@
+## Problema
 
-## Diagnóstico — porque o cupom criado não aparece
+Ao abrir **Gamificação Admin → Campeonato → selecionar cidade**, a tela quebra com:
 
-Confirmei consultando o banco em tempo real:
+> `undefined is not an object (evaluating 's.top.length')`
 
-- A loja do usuário (Verde Vegan, `store_id: 41dd3149...`) tem **2 cupons** salvos no banco:
-  - `Prato executivo R$24,90` — criado às `00:09:17` (esse aparece na tela)
-  - `CRÉDITO DE R$ 20.00` — criado às `00:31:47` (**esse não aparece**)
-- O INSERT funcionou: `status=ACTIVE`, `is_active=true`.
-- A última requisição GET de cupons foi às `00:28:35` — antes da criação. **Nenhum refetch ocorreu após o INSERT**.
+## Causa raiz
 
-### Causa raiz
+A RPC `brand_get_campeonato_dashboard` (em `supabase/migrations/20260422010737_*.sql`) devolve um JSON cujos nomes de campos **não batem** com o que o frontend espera no tipo `DashboardCampeonatoData` (`src/features/campeonato_duelo/types/tipos_empreendedor.ts`). O serviço apenas faz `as DashboardCampeonatoData` sem mapear, então os campos chegam `undefined` e estouram no primeiro `.length` / `.map`.
 
-O `queryClient` global (`src/lib/queryClient.ts`) está configurado com:
-```ts
-staleTime: 5 * 60 * 1000   // 5 min
-refetchOnMount: false       // nunca refetch ao montar
-```
+| Frontend espera | RPC devolve |
+|---|---|
+| `tiers[].top` | `tiers[].top3` ← **causa direta do erro** |
+| `tiers[].members_count` | `tiers[].total_drivers` |
+| `tiers[].top[].position` | (não retornado) |
+| `active_season.id` | `active_season.season_id` |
+| `active_season.name` | `active_season.season_name` |
+| `active_season.branch_name` | (não retornado) |
+| `has_active_season`, `engagement_format` | (não retornados — devolve só `active_season` e `tiers`) |
 
-Quando o usuário fecha o Wizard:
-1. `setShowWizard(false)` é chamado → `StoreCouponsTab` vai remontar.
-2. `qc.invalidateQueries({ queryKey: ["store-offers", store.id] })` é chamado no mesmo tick.
-3. Como o `StoreCouponsTab` ainda **não está montado** (re-render acontece após o callback), não há query ativa → o invalidate apenas **marca como stale**, sem disparar refetch.
-4. Na remontagem, `useQuery` lê o cache existente. Por causa de `refetchOnMount: false`, **não refetcha mesmo estando stale**.
-5. Resultado: a lista exibe dados antigos até um hard reload (F5).
+Resultado: `serie.top` é `undefined` → `serie.top.length` quebra o `ErrorBoundary`.
 
-Esse mesmo padrão afeta outras telas com fluxo Wizard → fechar → listar (cidades, vouchers admin, ofertas, etc.).
+## Solução
 
-## Correção proposta
+Adaptar **no frontend, na camada de serviço** (sem migração de banco — mais rápido e seguro). Mapeamos o JSON cru da RPC para o shape esperado pelos tipos/components.
 
-### 1. Ajustar config global do React Query (`src/lib/queryClient.ts`)
-Trocar `refetchOnMount: false` por `refetchOnMount: "always"` apenas quando a query estiver stale. Comportamento padrão do React Query (`true`) já é "refetch ao montar se stale" — basta remover a linha que força `false`.
+### Arquivo a editar
 
-```ts
-// ANTES
-refetchOnMount: false,
+`src/features/campeonato_duelo/services/servico_campeonato_empreendedor.ts` — função `obterDashboardCampeonato`:
 
-// DEPOIS
-// remove a linha; deixa o padrão `true` (refetch only-if-stale)
-```
+1. Tipar o retorno cru como `unknown` e ler defensivamente.
+2. Construir o objeto `DashboardCampeonatoData` mapeando:
+   - `active_season.season_id` → `id`
+   - `active_season.season_name` → `name`
+   - demais campos copiados 1-a-1, com `branch_name: null` quando ausente
+   - `has_active_season` derivado de `active_season != null`
+   - `engagement_format` resolvido pela RPC `brand_get_engagement_format` já existente, ou caímos para `"duelo"` por padrão (mantendo retrocompatível)
+3. Para cada `tier`, mapear:
+   - `top: (raw.top3 ?? []).map(d => ({ ...d, position: null }))`
+   - `members_count: raw.total_drivers ?? 0`
+   - `qualified_count: raw.qualified_count ?? 0`
+4. Garantir defaults seguros: `tiers: []`, `top: []`, nunca `undefined`.
 
-Mantemos `staleTime: 5 min` e `refetchOnWindowFocus: false` (evita refetch agressivo em foco), mas garantimos que **após invalidação, qualquer tela que monte refetcha**.
+### Hardening adicional (defesa em profundidade)
 
-### 2. Garantir await + sequencing correto no `StoreVoucherWizard`
-No `handleSubmit` do `StoreVoucherWizard.tsx`, após sucesso, invalidar a query **antes** de fechar o wizard, e usar `await` para garantir refetch:
+`src/features/campeonato_duelo/components/empreendedor/CardResumoSerie.tsx`:
+- Trocar `serie.top.length === 0` por `(serie.top ?? []).length === 0`
+- Trocar `serie.top.slice(0, 3)` por `(serie.top ?? []).slice(0, 3)`
 
-```ts
-} else {
-  toast.success("Cupom criado com sucesso!");
-  await queryClient.invalidateQueries({ queryKey: ["store-offers", storeId] });
-  await queryClient.invalidateQueries({ queryKey: ["store-offers-recent", storeId] });
-  await queryClient.invalidateQueries({ queryKey: ["store-dashboard-stats", storeId] });
-  onClose();
-}
-```
-
-Isso elimina a corrida (close → unmount → invalidate → remount com cache antigo).
-
-### 3. Limpar o `onClose` no `StoreOwnerPanel.tsx`
-O invalidate redundante no callback do parent fica como fallback, mas o trabalho real passa a ocorrer no wizard com `await`.
-
-## Arquivos editados
-
-- `src/lib/queryClient.ts` — remover `refetchOnMount: false`.
-- `src/components/store-voucher-wizard/StoreVoucherWizard.tsx` — invalidar com `await` antes de `onClose()`; importar `useQueryClient`.
-- `src/pages/StoreOwnerPanel.tsx` — manter invalidate no `onClose` como salvaguarda (sem mudanças funcionais relevantes).
+Assim, mesmo que uma futura RPC volte a divergir, a tela não quebra — apenas mostra "Sem motoristas pontuando ainda."
 
 ## Resultado esperado
 
-- Após salvar um cupom, a lista atualiza imediatamente exibindo o novo registro, sem necessidade de F5.
-- Mesma melhoria automática para qualquer outro fluxo do app que dependa de `invalidateQueries` após mutation (cidades, ofertas, tenants, etc.).
-- Sem impacto negativo de performance: o refetch só ocorre quando a query está realmente stale (>5 min) ou foi invalidada explicitamente.
+- Página do Campeonato carrega normalmente após selecionar a cidade.
+- Cards de série exibem `top 3`, contagem de motoristas e qualificados corretos.
+- Ações de temporada ativa (`ativa.id`) voltam a funcionar (botão de seeding, distribuição manual, etc.).
+
+## Escopo
+
+Mudança pequena, em **2 arquivos**, sem migração SQL, sem mudança de tipos. Risco baixo — o mapeamento é puramente aditivo.

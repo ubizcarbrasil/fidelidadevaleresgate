@@ -36,11 +36,71 @@ export async function obterDashboardCampeonato(
     p_brand_id: brandId,
   });
   if (error) throw error;
-  return (data as unknown as DashboardCampeonatoData) ?? {
-    has_active_season: false,
-    engagement_format: "duelo",
-    active_season: null,
-    tiers: [],
+
+  /**
+   * A RPC `brand_get_campeonato_dashboard` retorna um JSON cujos nomes de
+   * campos divergem do contrato esperado pelo frontend (`DashboardCampeonatoData`).
+   * Ex.: `top3` no SQL ↔ `top` no TS, `total_drivers` ↔ `members_count`,
+   * `season_id`/`season_name` ↔ `id`/`name`. Este mapeamento defensivo evita
+   * que campos `undefined` (como `serie.top`) quebrem o ErrorBoundary.
+   */
+  const raw = (data ?? {}) as Record<string, unknown>;
+  const rawSeason = (raw.active_season ?? null) as Record<string, unknown> | null;
+  const rawTiers = Array.isArray(raw.tiers) ? (raw.tiers as Array<Record<string, unknown>>) : [];
+
+  const activeSeason: DashboardCampeonatoData["active_season"] = rawSeason
+    ? {
+        id: ((rawSeason.id ?? rawSeason.season_id) as string) ?? "",
+        name: ((rawSeason.name ?? rawSeason.season_name) as string) ?? "",
+        year: (rawSeason.year as number) ?? 0,
+        month: (rawSeason.month as number) ?? 0,
+        phase: ((rawSeason.phase as string) ?? "classification") as NonNullable<
+          DashboardCampeonatoData["active_season"]
+        >["phase"],
+        classification_starts_at: (rawSeason.classification_starts_at as string) ?? "",
+        classification_ends_at: (rawSeason.classification_ends_at as string) ?? "",
+        knockout_starts_at: (rawSeason.knockout_starts_at as string) ?? "",
+        knockout_ends_at: (rawSeason.knockout_ends_at as string) ?? "",
+        paused_at: (rawSeason.paused_at as string | null) ?? null,
+        cancelled_at: (rawSeason.cancelled_at as string | null) ?? null,
+        cancellation_reason: (rawSeason.cancellation_reason as string | null) ?? null,
+        branch_id: (rawSeason.branch_id as string) ?? "",
+        branch_name: (rawSeason.branch_name as string | null) ?? null,
+      }
+    : null;
+
+  const tiers = rawTiers.map((t) => {
+    const rawTop = (Array.isArray(t.top) ? t.top : Array.isArray(t.top3) ? t.top3 : []) as Array<
+      Record<string, unknown>
+    >;
+    return {
+      tier_id: (t.tier_id as string) ?? "",
+      tier_name: (t.tier_name as string) ?? "",
+      tier_order: (t.tier_order as number) ?? 0,
+      members_count:
+        (t.members_count as number | undefined) ??
+        (t.total_drivers as number | undefined) ??
+        0,
+      qualified_count: (t.qualified_count as number) ?? 0,
+      top: rawTop.map((d) => ({
+        driver_id: (d.driver_id as string) ?? "",
+        driver_name: (d.driver_name as string | null) ?? null,
+        points: (d.points as number) ?? 0,
+        weekend_rides_count: (d.weekend_rides_count as number) ?? 0,
+        position: (d.position as number | null) ?? null,
+      })),
+    };
+  });
+
+  return {
+    has_active_season:
+      typeof raw.has_active_season === "boolean"
+        ? (raw.has_active_season as boolean)
+        : activeSeason !== null,
+    engagement_format:
+      ((raw.engagement_format as DashboardCampeonatoData["engagement_format"]) ?? "duelo"),
+    active_season: activeSeason,
+    tiers,
   };
 }
 
