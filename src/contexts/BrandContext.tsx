@@ -1,11 +1,10 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "./AuthContext";
 import { getCurrentPosition, distanceKm, type Coords } from "@/lib/geolocation";
 import { useBrandTheme, type BrandTheme } from "@/hooks/useBrandTheme";
 import { setBootPhase } from "@/lib/bootState";
-import { useRef } from "react";
 
 type Brand = Tables<"brands">;
 type Branch = Tables<"branches">;
