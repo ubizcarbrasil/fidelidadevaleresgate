@@ -5,6 +5,7 @@ import { useAuth } from "./AuthContext";
 import { getCurrentPosition, distanceKm, type Coords } from "@/lib/geolocation";
 import { useBrandTheme, type BrandTheme } from "@/hooks/useBrandTheme";
 import { setBootPhase } from "@/lib/bootState";
+import { useRef } from "react";
 
 type Brand = Tables<"brands">;
 type Branch = Tables<"branches">;
@@ -221,15 +222,74 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
   // Portal universal (app.valeresgate.com.br): sem domain match, resolve o brand
   // a partir dos roles que o AuthContext já carregou — evita um SELECT extra
   // em user_roles no caminho crítico do login.
+  //
+  // Também precisa re-resolver quando o usuário troca (logout + login na
+  // mesma aba) para evitar vazamento da identidade visual do tenant
+  // anterior (logo, cores, favicon, manifest). Não confiamos só em
+  // `brand === null`: comparamos `user.id` com o último resolvido.
+  const lastResolvedUserIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (brand || loading) return;
-    if (!user) return;
+    if (loading) return;
+
+    // Logout: limpa toda a identidade da marca anterior para que o
+    // cleanup do useBrandTheme remova as variáveis CSS, favicon e título.
+    if (!user) {
+      lastResolvedUserIdRef.current = null;
+      if (brand) {
+        setBrand(null);
+        setBranches([]);
+        setSelectedBranchState(null);
+      }
+      return;
+    }
+
+    // Já resolvido para este mesmo usuário e a marca atual bate com algum
+    // role dele → nada a fazer (caso comum de re-renders).
+    const roleBrandIds = new Set(
+      roles.map((r) => r.brand_id).filter((v): v is string => !!v)
+    );
+    const brandMatchesUser = brand ? roleBrandIds.has(brand.id) : false;
+    if (
+      lastResolvedUserIdRef.current === user.id &&
+      (brand === null || brandMatchesUser)
+    ) {
+      // Se não há brand ainda e não há role com brand, nada a fazer
+      if (brand || roleBrandIds.size > 0) return;
+      return;
+    }
+
+    // Usuário mudou OU brand atual não pertence aos roles dele
+    // (vazamento entre logins). Re-resolve a partir dos roles.
     const roleWithBrand = roles.find((r) => r.brand_id);
-    if (!roleWithBrand?.brand_id) return;
+    if (!roleWithBrand?.brand_id) {
+      // Usuário sem brand_id em roles (root admin puro, etc.). Se a brand
+      // atual é de um login anterior (não bate com roles), zera.
+      if (brand && !brandMatchesUser) {
+        setBrand(null);
+        setBranches([]);
+        setSelectedBranchState(null);
+      }
+      lastResolvedUserIdRef.current = user.id;
+      return;
+    }
+
+    // Se a brand atual já é a correta para este usuário, só registra.
+    if (brand && brand.id === roleWithBrand.brand_id) {
+      lastResolvedUserIdRef.current = user.id;
+      return;
+    }
+
     let cancelled = false;
     (async () => {
       const brandData = await fetchBrandById(roleWithBrand.brand_id!);
-      if (!cancelled && brandData) setBrand(brandData);
+      if (cancelled) return;
+      if (brandData) {
+        setBrand(brandData);
+        // Reset branches/selected ao trocar de marca
+        setBranches([]);
+        setSelectedBranchState(null);
+        lastResolvedUserIdRef.current = user.id;
+      }
     })();
     return () => {
       cancelled = true;
