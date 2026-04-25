@@ -17,7 +17,12 @@ export function useBrandInfo(): {
   const { roles } = useAuth();
   const { brand: ctxBrand } = useBrand();
 
-  const brandId = ctxBrand?.id ?? roles.find((r) => r.brand_id)?.brand_id ?? null;
+  // Defesa em profundidade contra vazamento entre logins: se o usuário
+  // autenticado tem um role com brand_id, esse é a fonte da verdade —
+  // mesmo que o BrandContext ainda não tenha re-resolvido a marca após
+  // troca de conta na mesma aba.
+  const userRoleBrandId = roles.find((r) => r.brand_id)?.brand_id ?? null;
+  const brandId = userRoleBrandId ?? ctxBrand?.id ?? null;
 
   const { data } = useQuery({
     queryKey: ["brand-info", brandId],
