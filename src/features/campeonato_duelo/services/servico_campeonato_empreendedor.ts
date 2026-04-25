@@ -54,11 +54,9 @@ export async function obterDashboardCampeonato(
         name: ((rawSeason.name ?? rawSeason.season_name) as string) ?? "",
         year: (rawSeason.year as number) ?? 0,
         month: (rawSeason.month as number) ?? 0,
-        phase: (rawSeason.phase as DashboardCampeonatoData["active_season"] extends infer S
-          ? S extends { phase: infer P }
-            ? P
-            : never
-          : never) ?? "classification",
+        phase: ((rawSeason.phase as string) ?? "classification") as NonNullable<
+          DashboardCampeonatoData["active_season"]
+        >["phase"],
         classification_starts_at: (rawSeason.classification_starts_at as string) ?? "",
         classification_ends_at: (rawSeason.classification_ends_at as string) ?? "",
         knockout_starts_at: (rawSeason.knockout_starts_at as string) ?? "",
