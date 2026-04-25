@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +41,7 @@ interface Props {
 
 export default function StoreVoucherWizard({ storeId, branchId, brandId, editOffer, onClose }: Props) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
   const [maxVisited, setMaxVisited] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -234,6 +235,14 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
       toast.error(error.message);
     } else {
       toast.success(editOffer ? "Cupom atualizado com sucesso!" : "Cupom criado com sucesso!");
+      // Garante refetch ANTES de desmontar o wizard. Sem o await, o
+      // StoreCouponsTab remontaria com cache antigo e o cupom recém-criado
+      // não apareceria na lista até um hard reload.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["store-offers", storeId] }),
+        queryClient.invalidateQueries({ queryKey: ["store-offers-recent", storeId] }),
+        queryClient.invalidateQueries({ queryKey: ["store-dashboard-stats", storeId] }),
+      ]);
       onClose();
     }
     setSaving(false);
