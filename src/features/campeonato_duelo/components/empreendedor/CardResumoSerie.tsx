@@ -10,6 +10,7 @@ interface Props {
 }
 
 export default function CardResumoSerie({ serie, aoVerDetalhes }: Props) {
+  const top = Array.isArray(serie.top) ? serie.top : [];
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -26,11 +27,11 @@ export default function CardResumoSerie({ serie, aoVerDetalhes }: Props) {
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
-        {serie.top.length === 0 ? (
+        {top.length === 0 ? (
           <p className="text-xs text-muted-foreground">Sem motoristas pontuando ainda.</p>
         ) : (
           <ul className="space-y-1.5">
-            {serie.top.slice(0, 3).map((d, idx) => (
+            {top.slice(0, 3).map((d, idx) => (
               <li
                 key={d.driver_id}
                 className="flex items-center justify-between gap-2 rounded-md bg-muted/40 px-2 py-1.5"
