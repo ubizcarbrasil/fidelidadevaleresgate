@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Loader2, Sparkles, Tag } from "lucide-react";
 import { useBrandTheme } from "@/hooks/useBrandTheme";
 import DriverBannerCarousel from "@/components/driver/DriverBannerCarousel";
-import DriverCategoryPage from "@/components/driver/DriverCategoryPage";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 import { shareDriverUrl } from "@/lib/publicShareUrl";
 import CabecalhoOfertas from "./components/cabecalho_ofertas";
@@ -12,7 +11,7 @@ import PortaoAcessoOfertas from "./components/portao_acesso_ofertas";
 import type { ModoAcessoOfertas } from "./components/controle_acesso_ofertas";
 import { useMarcaOfertas } from "./hooks/hook_marca_ofertas";
 import { useOfertasPublicas } from "./hooks/hook_ofertas_publicas";
-import type { CategoriaOferta, OfertaPublica } from "./types/tipos_ofertas";
+import type { OfertaPublica } from "./types/tipos_ofertas";
 
 const JANELA_NOVAS_OFERTAS_MS = 48 * 60 * 60 * 1000;
 
@@ -31,7 +30,7 @@ export default function PaginaUbizOfertas() {
 
   const { ofertas, categorias, carregando: carregandoOfertas } = useOfertasPublicas(habilitado ? brandId : null);
 
-  const [categoriaAberta, setCategoriaAberta] = useState<CategoriaOferta | null>(null);
+  const [categoriaSelecionadaId, setCategoriaSelecionadaId] = useState<string | null>(null);
   const [ofertaAberta, setOfertaAberta] = useState<OfertaPublica | null>(null);
 
   // Title da aba
@@ -39,14 +38,19 @@ export default function PaginaUbizOfertas() {
     if (marca?.name) document.title = `${titulo}`;
   }, [marca, titulo]);
 
+  const ofertasFiltradas = useMemo(() => {
+    if (!categoriaSelecionadaId) return ofertas;
+    return ofertas.filter((d) => d.category_id === categoriaSelecionadaId);
+  }, [ofertas, categoriaSelecionadaId]);
+
   const novasOfertas = useMemo(() => {
     const limite = Date.now() - JANELA_NOVAS_OFERTAS_MS;
-    return ofertas
+    return ofertasFiltradas
       .filter((d) => d.created_at && new Date(d.created_at).getTime() > limite)
       .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime());
-  }, [ofertas]);
+  }, [ofertasFiltradas]);
 
-  const ofertasDestaque = useMemo(() => ofertas.filter((d) => d.is_featured), [ofertas]);
+  const ofertasDestaque = useMemo(() => ofertasFiltradas.filter((d) => d.is_featured), [ofertasFiltradas]);
 
   const categoriasComOfertas = useMemo(() => {
     const ids = new Set(ofertas.map((d) => d.category_id).filter(Boolean));
@@ -100,7 +104,8 @@ export default function PaginaUbizOfertas() {
         <GradeCategoriasOfertas
           categorias={categoriasComOfertas}
           fontHeading={fontHeading}
-          onSelecionar={(cat) => setCategoriaAberta(cat)}
+          selecionadaId={categoriaSelecionadaId}
+          onSelecionar={(id) => setCategoriaSelecionadaId(id)}
         />
 
         {carregandoOfertas && ofertas.length === 0 ? (
@@ -145,10 +150,10 @@ export default function PaginaUbizOfertas() {
               />
             )}
 
-            {ofertas.length > 0 && (
+            {ofertasFiltradas.length > 0 && (
               <VitrineOfertas
                 titulo="Todas as ofertas"
-                ofertas={ofertas}
+                ofertas={ofertasFiltradas}
                 fontHeading={fontHeading}
                 onClickOferta={(o) => setOfertaAberta(o)}
               />
@@ -160,19 +165,6 @@ export default function PaginaUbizOfertas() {
           <div className="text-center py-8 text-xs text-foreground/30 px-4">{theme.footer_text}</div>
         )}
       </div>
-
-      {categoriaAberta && (
-        <DriverCategoryPage
-          category={categoriaAberta as any}
-          brandId={marca.id}
-          branchId={null}
-          customerId={null}
-          fontHeading={fontHeading}
-          brandSettings={settings}
-          theme={theme}
-          onBack={() => setCategoriaAberta(null)}
-        />
-      )}
 
       {ofertaAberta && (
         <AchadinhoDealDetail
