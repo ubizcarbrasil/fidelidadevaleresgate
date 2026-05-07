@@ -158,6 +158,7 @@ const GamificacaoAdminPage = lazyWithRetry(() => import("@/pages/GamificacaoAdmi
 const PaginaPacotesPontos = lazyWithRetry(() => import("@/features/pacotes_pontos/pagina_pacotes_pontos"));
 const PaginaLojaPacotes = lazyWithRetry(() => import("@/features/pacotes_pontos/pagina_loja_pacotes"));
 const PaginaLojaPublica = lazyWithRetry(() => import("@/features/loja_publica/pagina_loja_publica"));
+const PaginaUbizOfertas = lazyWithRetry(() => import("@/features/ubiz_ofertas/pagina_ubiz_ofertas"));
 const InstallPwaPage = lazyWithRetry(() => import("@/pages/InstallPwaPage"));
 
 // QueryClient is now centralized in src/lib/queryClient.ts
@@ -194,6 +195,7 @@ function AnimatedRoutes() {
             <Route path="/:slug/parceiro" element={<PartnerLandingPage />} />
             <Route path="/register-store" element={<StoreRegistrationWizard />} />
             <Route path="/loja/:slug" element={<PaginaLojaPublica />} />
+            <Route path="/ofertas" element={<PaginaUbizOfertas />} />
             <Route path="/campeonato/:brandSlug/hall-da-fama" element={<PaginaHallDaFama />} />
             <Route path="/install" element={<InstallPwaPage />} />
             <Route path="/store-panel" element={<ProtectedRoute><StoreOwnerPanel /></ProtectedRoute>} />
@@ -383,6 +385,7 @@ function AppContent() {
   // Partner landing page is a public route that works regardless of white-label mode
   const isPartnerLanding = /^\/[^/]+\/parceiro\/?$/.test(location.pathname);
   const isDriverPanel = location.pathname === "/driver" || location.pathname.startsWith("/driver/");
+  const isUbizOfertas = location.pathname === "/ofertas" || location.pathname.startsWith("/ofertas/");
 
   if (isPartnerLanding) {
     return (
@@ -402,8 +405,18 @@ function AppContent() {
     );
   }
 
+  if (isUbizOfertas) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/ofertas" element={<PaginaUbizOfertas />} />
+        </Routes>
+      </Suspense>
+    );
+  }
+
   // Public paths that don't need brand resolution
-  const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store", "/p/", "/driver", "/loja/", "/campeonato/"];
+  const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store", "/p/", "/driver", "/loja/", "/campeonato/", "/ofertas"];
   const isPublicPath = publicPaths.some(p => location.pathname.startsWith(p));
 
   // Portal domain: redirect unauthenticated users to /auth immediately (before loading guard)

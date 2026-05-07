@@ -4,7 +4,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Palette, Type, Image, FileText, Smartphone, Sun, Moon, Wand2, MessageCircle, Plug } from "lucide-react";
+import { Palette, Type, Image, FileText, Smartphone, Sun, Moon, Wand2, MessageCircle, Plug, Tag } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
 import ImageUploadField from "@/components/ImageUploadField";
 import BrandThemePreview from "@/components/BrandThemePreview";
@@ -438,6 +439,40 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
         </CardContent>
       </Card>
       )}
+
+      {/* Modos de entrada */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Tag className="h-4 w-4" /> Modos de entrada
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Ubiz Ofertas (vitrine pública)</Label>
+              <p className="text-[11px] text-muted-foreground">
+                Ativa a rota pública <code>/ofertas</code> com a mesma vitrine dos Achadinhos, porém sem
+                pontuação, duelos, campeonato, apostas, comprar pontos ou WhatsApp.
+              </p>
+            </div>
+            <Switch
+              checked={(value as any).enable_ubiz_ofertas_mode === true}
+              onCheckedChange={(checked) =>
+                update({ enable_ubiz_ofertas_mode: checked === true ? true : false } as any)
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Título exibido na vitrine</Label>
+            <Input
+              value={(value as any).ubiz_ofertas_title || ""}
+              onChange={(e) => update({ ubiz_ofertas_title: e.target.value || undefined } as any)}
+              placeholder="Ubiz Ofertas"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Layout & Dimensions */}
       {canShow("theme_layout") && (
