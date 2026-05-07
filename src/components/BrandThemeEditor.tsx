@@ -13,6 +13,7 @@ import OfferCardConfigSection from "@/components/OfferCardConfigSection";
 import type { OfferCardConfig } from "@/hooks/useOfferCardConfig";
 import FontSelect from "@/components/brand-theme/FontSelect";
 import LayoutDimensionsSection from "@/components/brand-theme/LayoutDimensionsSection";
+import LinkPublicoOfertas from "@/features/ubiz_ofertas/components/link_publico_ofertas";
 
 interface BrandThemeEditorProps {
   value: BrandTheme;
@@ -471,6 +472,13 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
               placeholder="Ubiz Ofertas"
             />
           </div>
+
+          {(value as any).enable_ubiz_ofertas_mode === true && (
+            <LinkPublicoOfertas
+              brandId={brandId}
+              titulo={(value as any).ubiz_ofertas_title || brandName}
+            />
+          )}
         </CardContent>
       </Card>
 

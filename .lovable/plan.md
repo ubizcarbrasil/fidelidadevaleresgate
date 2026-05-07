@@ -1,40 +1,53 @@
-## Problema
+## Objetivo
+Tornar o **Ubiz Ofertas** fácil de usar: explicar como configurar e exibir o **link público** dentro do painel da Marca, com botões para copiar e abrir.
 
-Ao abrir `/ofertas` no domínio de preview (lovable.app) ou em qualquer domínio que não seja `app.valeresgate.com.br` e sem `?brandId=` na URL, a página exibe **"Parâmetro brandId é obrigatório"** e não carrega.
+## Situação atual
+- Toggle e título da vitrine já existem em `src/components/BrandThemeEditor.tsx` (seção "Modos de entrada"), salvando em `brand_settings_json.enable_ubiz_ofertas_mode` e `ubiz_ofertas_title`.
+- Rota pública `/ofertas` já registrada em `src/App.tsx`.
+- O painel **não mostra** o link público nem instruções de uso. O administrador não tem como descobrir/copiar a URL.
 
-A resolução atual do hook `useMarcaOfertas` só considera duas fontes:
-1. `?brandId=` na URL
-2. Hostname exato `app.valeresgate.com.br` (hardcoded)
+## Como configurar (passo a passo que será exibido na UI)
+1. Marca → Aparência/Tema → seção **"Modos de entrada"**.
+2. Ativar o toggle **"Ubiz Ofertas (vitrine pública)"**.
+3. Definir o **Título exibido na vitrine** (opcional).
+4. Salvar. A vitrine fica imediatamente disponível no link público da marca.
 
-Não considera: subdomínios reais (ex.: `marca.valeresgate.com.br`), `brand_domains` (domínios customizados publicados), nem o `BrandContext` já resolvido pelo app.
+## Mudanças no painel
 
-## Solução
+### 1. Card "Link público da vitrine" em `BrandThemeEditor.tsx`
+Logo abaixo do toggle/título do Ubiz Ofertas, adicionar um bloco que aparece apenas quando `enable_ubiz_ofertas_mode === true`:
 
-Alinhar a resolução da marca em `/ofertas` com o padrão do projeto (`BrandContext`), na ordem oficial:
+- Resolve o domínio público da marca via `getPublicOrigin(brandId)` (já existe em `src/lib/publicShareUrl.ts`) — usa `driver_public_base_url`, `brand_domains` primário ou domínio publicado, nessa ordem.
+- Monta a URL final: `{origin}/ofertas`.
+- Exibe:
+  - Campo `Input` readOnly com a URL.
+  - Botão **Copiar** (clipboard + toast).
+  - Botão **Abrir** (`window.open` em nova aba).
+  - Botão **Compartilhar** (usa `navigator.share` quando disponível, com fallback para copiar).
+- Texto auxiliar curto: "Use este link para divulgar a vitrine pública. Funciona sem login."
 
-1. **`?brandId=` na URL** (impersonation / preview com brand explícito)
-2. **`BrandContext`** já resolvido pelo app (cobre domínios publicados, portal universal logado, e o preview do Lovable quando o usuário está num contexto de marca)
-3. **Resolução por hostname** via `brand_domains` (subdomínio + domínio completo, mesma lógica de `resolveBrandByDomain` do `BrandContext.tsx`)
-4. Fallback hostname `app.valeresgate.com.br` → portal Ubiz Resgata (mantém comportamento atual)
+### 2. Componente novo `link_publico_ofertas.tsx`
+Seguindo a regra de feature-based + componentização, criar:
 
-Se nenhuma das fontes resolver, exibir uma mensagem amigável (e não o erro técnico) com orientação: "Acesse pelo domínio da sua marca ou use o link compartilhado".
+```text
+src/features/ubiz_ofertas/components/
+  link_publico_ofertas.tsx     ← novo componente (UI do bloco de link)
+src/features/ubiz_ofertas/hooks/
+  hook_link_publico_ofertas.ts ← novo hook (resolve URL via getPublicOrigin)
+```
 
-## Arquivos a alterar
+O `BrandThemeEditor.tsx` apenas importa e usa `<LinkPublicoOfertas brandId={...} />`, mantendo o editor enxuto.
 
-- **`src/features/ubiz_ofertas/hooks/hook_marca_ofertas.ts`**
-  - Importar e ler `useBrand()` do `BrandContext`.
-  - Se `brand` já existir no contexto e não houver `?brandId=` divergente, usá-lo direto sem nova query.
-  - Caso contrário, tentar resolução por hostname via `brand_domains` (extrair helper compartilhado ou replicar a lógica enxuta de `BrandContext.tsx` linhas 56–101).
-  - Mensagem de erro: trocar `"Parâmetro brandId é obrigatório"` por `"Não foi possível identificar a marca para esta vitrine."`.
+### 3. Mini "como configurar" inline
+Dentro do mesmo card, um pequeno bloco colapsável (`<details>` estilizado ou texto curto) com os 4 passos acima, em PT-BR, para o admin não precisar consultar documentação externa.
 
-- **`src/features/ubiz_ofertas/services/servico_ofertas_publicas.ts`** (se necessário)
-  - Adicionar `buscarBrandIdPorHostname(hostname)` consultando `brand_domains` (subdomain + domínio completo, `is_active = true`), espelhando `resolveBrandByDomain`.
+## Detalhes técnicos
+- O `BrandThemeEditor` recebe a marca atual via contexto/props; obter `brandId` de `useBrand()` (`src/contexts/BrandContext.tsx`).
+- Reutilizar `getPublicOrigin` de `src/lib/publicShareUrl.ts` (não duplicar lógica de resolução de domínio).
+- Toast via `@/hooks/use-toast` (já usado no projeto).
+- Sem novas dependências, sem migrações de banco.
 
-- **`src/App.tsx`** (verificação)
-  - Confirmar que `/ofertas` continua dentro do `BrandProvider` para que `useBrand()` funcione (já deve estar; só validar).
-
-## Observações
-
-- Não altera RLS nem schema. As queries de `brand_domains` já são acessíveis para anônimos no padrão atual (usadas pelo `BrandContext` antes do login).
-- Mantém o toggle `enable_ubiz_ofertas_mode` como gate final — resolver a marca não implica liberar a vitrine.
-- Não muda o comportamento do `?brandId=` (continua sendo prioridade máxima para impersonation).
+## Fora do escopo
+- Mudar a fonte de dados das ofertas (continua `affiliate_deals`, igual aos Achadinhos).
+- Criar QR code da URL (pode ser feito depois, se solicitado).
+- Mover o toggle para outro local do painel.
