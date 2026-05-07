@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Loader2, Sparkles, Tag } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, Tag } from "lucide-react";
 import { useBrandTheme } from "@/hooks/useBrandTheme";
 import DriverBannerCarousel from "@/components/driver/DriverBannerCarousel";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
@@ -9,6 +9,7 @@ import CabecalhoOfertas from "./components/cabecalho_ofertas";
 import GradeCategoriasOfertas from "./components/grade_categorias_ofertas";
 import VitrineOfertas from "./components/vitrine_ofertas";
 import GradeTodasOfertas from "./components/grade_todas_ofertas";
+import SecoesPorCategoria from "./components/secoes_por_categoria";
 import PortaoAcessoOfertas from "./components/portao_acesso_ofertas";
 import type { ModoAcessoOfertas } from "./components/controle_acesso_ofertas";
 import { useMarcaOfertas } from "./hooks/hook_marca_ofertas";
@@ -71,6 +72,11 @@ export default function PaginaUbizOfertas() {
     return categorias.filter((c) => ids.has(c.id));
   }, [categorias, ofertas]);
 
+  const categoriaAtiva = useMemo(
+    () => (categoriaSelecionadaId ? categorias.find((c) => c.id === categoriaSelecionadaId) ?? null : null),
+    [categorias, categoriaSelecionadaId],
+  );
+
   if (carregandoMarca) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -126,6 +132,41 @@ export default function PaginaUbizOfertas() {
           <div className="flex justify-center py-12">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
+        ) : categoriaAtiva ? (
+          <>
+            <div className="px-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div
+                  className="h-7 w-7 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: `${categoriaAtiva.color}20` }}
+                >
+                  <Tag className="h-4 w-4" style={{ color: categoriaAtiva.color }} />
+                </div>
+                <h2 className="text-base font-bold text-foreground" style={{ fontFamily: fontHeading }}>
+                  {categoriaAtiva.name}
+                </h2>
+              </div>
+              <button
+                onClick={() => setCategoriaSelecionadaId(null)}
+                className="text-xs font-semibold flex items-center gap-1 text-primary"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Mostrar todas
+              </button>
+            </div>
+            {ofertasFiltradas.length > 0 ? (
+              <GradeTodasOfertas
+                titulo="Ofertas da categoria"
+                ofertas={ofertasFiltradas}
+                fontHeading={fontHeading}
+                onClickOferta={(o) => setOfertaAberta(o)}
+              />
+            ) : (
+              <p className="text-center text-sm text-muted-foreground py-12 px-4">
+                Nenhuma oferta nesta categoria.
+              </p>
+            )}
+          </>
         ) : (
           <>
             {ofertasDestaque.length > 0 && (
@@ -164,10 +205,18 @@ export default function PaginaUbizOfertas() {
               />
             )}
 
-            {ofertasFiltradas.length > 0 && (
+            <SecoesPorCategoria
+              categorias={categoriasComOfertas}
+              ofertas={ofertas}
+              fontHeading={fontHeading}
+              onClickOferta={(o) => setOfertaAberta(o)}
+              onSelecionarCategoria={(id) => setCategoriaSelecionadaId(id)}
+            />
+
+            {ofertas.length > 0 && (
               <GradeTodasOfertas
                 titulo="Todas as ofertas"
-                ofertas={ofertasFiltradas}
+                ofertas={ofertas}
                 fontHeading={fontHeading}
                 onClickOferta={(o) => setOfertaAberta(o)}
               />
