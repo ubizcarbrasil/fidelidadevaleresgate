@@ -159,6 +159,7 @@ const PaginaPacotesPontos = lazyWithRetry(() => import("@/features/pacotes_ponto
 const PaginaLojaPacotes = lazyWithRetry(() => import("@/features/pacotes_pontos/pagina_loja_pacotes"));
 const PaginaLojaPublica = lazyWithRetry(() => import("@/features/loja_publica/pagina_loja_publica"));
 const PaginaUbizOfertas = lazyWithRetry(() => import("@/features/ubiz_ofertas/pagina_ubiz_ofertas"));
+const PaginaAdminUbizOfertas = lazyWithRetry(() => import("@/features/ubiz_ofertas_admin/pagina_admin_ubiz_ofertas"));
 const InstallPwaPage = lazyWithRetry(() => import("@/pages/InstallPwaPage"));
 
 // QueryClient is now centralized in src/lib/queryClient.ts
@@ -253,6 +254,7 @@ function AnimatedRoutes() {
               <Route path="affiliate-deals" element={<ModuleGuard moduleKey="affiliate_deals"><AffiliateDealsPage /></ModuleGuard>} />
               <Route path="affiliate-deals/import-mobile" element={<ModuleGuard moduleKey="affiliate_deals"><AchadinhosMobileImportPage /></ModuleGuard>} />
               <Route path="affiliate-categories" element={<ModuleGuard moduleKey="affiliate_deals"><AffiliateCategoriesPage /></ModuleGuard>} />
+              <Route path="ubiz-ofertas-admin" element={<ModuleGuard moduleKey="affiliate_deals"><PaginaAdminUbizOfertas /></ModuleGuard>} />
               <Route path="mirror-sync" element={<ModuleGuard moduleKey="affiliate_deals"><MirrorSyncPage /></ModuleGuard>} />
               <Route path="offer-governance" element={<ModuleGuard moduleKey="affiliate_deals"><OfferGovernancePage /></ModuleGuard>} />
               <Route path="product-redemption-orders" element={<ModuleGuard moduleKey="affiliate_deals|achadinhos_motorista"><ProductRedemptionOrdersPage /></ModuleGuard>} />
