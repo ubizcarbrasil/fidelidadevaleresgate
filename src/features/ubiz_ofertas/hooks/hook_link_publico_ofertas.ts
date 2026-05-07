@@ -2,6 +2,29 @@ import { useEffect, useState } from "react";
 import { getPublicOrigin } from "@/lib/publicShareUrl";
 
 /**
+ * Normaliza uma URL pública: força https, remove barras duplicadas
+ * (preservando o "//" do protocolo) e remove a barra final.
+ */
+function normalizarUrlPublica(bruta: string): string {
+  if (!bruta) return "";
+  let url = bruta.trim();
+  // Garante protocolo
+  if (url.startsWith("//")) url = `https:${url}`;
+  else if (!/^https?:\/\//i.test(url)) url = `https://${url.replace(/^\/+/, "")}`;
+  // Força https
+  url = url.replace(/^http:\/\//i, "https://");
+  // Separa protocolo do resto para colapsar barras
+  const match = url.match(/^(https:\/\/)(.*)$/i);
+  if (!match) return url;
+  const resto = match[2].replace(/\/{2,}/g, "/").replace(/\/+$/, "");
+  return `${match[1]}${resto}`;
+}
+
+function montarUrlOfertas(origin: string): string {
+  return normalizarUrlPublica(`${origin}/ofertas`);
+}
+
+/**
  * Retorna o origin atual quando o usuário está acessando por um domínio
  * "real" (custom domain ou published), ignorando previews do Lovable.
  */
@@ -37,7 +60,7 @@ export function useLinkPublicoOfertas(brandId?: string) {
     // 1) Se já estamos em um domínio público real, usa ele direto.
     const originAtual = obterOriginAtualSeProducao();
     if (originAtual) {
-      setUrl(`${originAtual}/ofertas`);
+      setUrl(montarUrlOfertas(originAtual));
       setCarregando(false);
       return;
     }
@@ -46,7 +69,7 @@ export function useLinkPublicoOfertas(brandId?: string) {
     getPublicOrigin(brandId)
       .then((origin) => {
         if (!ativo) return;
-        setUrl(`${origin}/ofertas`);
+        setUrl(montarUrlOfertas(origin));
       })
       .finally(() => {
         if (ativo) setCarregando(false);
