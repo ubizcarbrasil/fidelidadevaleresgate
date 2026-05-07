@@ -1,53 +1,49 @@
-## Objetivo
-Tornar o **Ubiz Ofertas** fácil de usar: explicar como configurar e exibir o **link público** dentro do painel da Marca, com botões para copiar e abrir.
+## Diagnóstico (com evidência)
 
-## Situação atual
-- Toggle e título da vitrine já existem em `src/components/BrandThemeEditor.tsx` (seção "Modos de entrada"), salvando em `brand_settings_json.enable_ubiz_ofertas_mode` e `ubiz_ofertas_title`.
-- Rota pública `/ofertas` já registrada em `src/App.tsx`.
-- O painel **não mostra** o link público nem instruções de uso. O administrador não tem como descobrir/copiar a URL.
+Baixei o bundle JavaScript que está servido em `https://app.valeresgate.com.br` (`assets/App-BnODURvJ.js`) e procurei pelas strings da rota nova:
 
-## Como configurar (passo a passo que será exibido na UI)
-1. Marca → Aparência/Tema → seção **"Modos de entrada"**.
-2. Ativar o toggle **"Ubiz Ofertas (vitrine pública)"**.
-3. Definir o **Título exibido na vitrine** (opcional).
-4. Salvar. A vitrine fica imediatamente disponível no link público da marca.
-
-## Mudanças no painel
-
-### 1. Card "Link público da vitrine" em `BrandThemeEditor.tsx`
-Logo abaixo do toggle/título do Ubiz Ofertas, adicionar um bloco que aparece apenas quando `enable_ubiz_ofertas_mode === true`:
-
-- Resolve o domínio público da marca via `getPublicOrigin(brandId)` (já existe em `src/lib/publicShareUrl.ts`) — usa `driver_public_base_url`, `brand_domains` primário ou domínio publicado, nessa ordem.
-- Monta a URL final: `{origin}/ofertas`.
-- Exibe:
-  - Campo `Input` readOnly com a URL.
-  - Botão **Copiar** (clipboard + toast).
-  - Botão **Abrir** (`window.open` em nova aba).
-  - Botão **Compartilhar** (usa `navigator.share` quando disponível, com fallback para copiar).
-- Texto auxiliar curto: "Use este link para divulgar a vitrine pública. Funciona sem login."
-
-### 2. Componente novo `link_publico_ofertas.tsx`
-Seguindo a regra de feature-based + componentização, criar:
-
-```text
-src/features/ubiz_ofertas/components/
-  link_publico_ofertas.tsx     ← novo componente (UI do bloco de link)
-src/features/ubiz_ofertas/hooks/
-  hook_link_publico_ofertas.ts ← novo hook (resolve URL via getPublicOrigin)
+```
+/ofertas         → não encontrado
+PaginaUbizOfertas → não encontrado
+Ubiz             → não encontrado
 ```
 
-O `BrandThemeEditor.tsx` apenas importa e usa `<LinkPublicoOfertas brandId={...} />`, mantendo o editor enxuto.
+Conclusão: a rota `/ofertas` **existe no código-fonte** (`src/App.tsx` linha 198 e 388‑416) mas **não existe na build publicada**. Por isso o domínio responde 404 / cai no `/auth`.
 
-### 3. Mini "como configurar" inline
-Dentro do mesmo card, um pequeno bloco colapsável (`<details>` estilizado ou texto curto) com os 4 passos acima, em PT-BR, para o admin não precisar consultar documentação externa.
+Isso é diferente do que eu havia dito antes: não é cache do PWA, é a publicação que ficou para trás.
 
-## Detalhes técnicos
-- O `BrandThemeEditor` recebe a marca atual via contexto/props; obter `brandId` de `useBrand()` (`src/contexts/BrandContext.tsx`).
-- Reutilizar `getPublicOrigin` de `src/lib/publicShareUrl.ts` (não duplicar lógica de resolução de domínio).
-- Toast via `@/hooks/use-toast` (já usado no projeto).
-- Sem novas dependências, sem migrações de banco.
+## Plano
 
-## Fora do escopo
-- Mudar a fonte de dados das ofertas (continua `affiliate_deals`, igual aos Achadinhos).
-- Criar QR code da URL (pode ser feito depois, se solicitado).
-- Mover o toggle para outro local do painel.
+### 1. Publicar a versão atual (ação principal)
+A rota `/ofertas` só vai funcionar em `app.valeresgate.com.br` depois que o botão **Publicar** (canto superior direito do editor) for clicado e a publicação concluída. Sem isso, qualquer ajuste extra é inútil — o domínio continuará servindo o bundle antigo.
+
+### 2. Melhorar a página `NotFound` para ajudar o diagnóstico
+Para o futuro, alterar `src/pages/NotFound.tsx` adicionando:
+- Mostrar o caminho que o usuário tentou (ex.: "Você tentou acessar `/ofertas`")
+- Botão "Tentar novamente" que força reload sem cache
+- Mensagem mais amigável em português
+
+### 3. Adicionar verificação de versão no boot
+Criar um pequeno utilitário em `src/lib/buildVersionCheck.ts` que:
+- Lê uma constante `BUILD_ID` injetada no build
+- A cada 5 minutos compara com o `BUILD_ID` do `index.html` remoto
+- Se diferente, mostra um toast "Nova versão disponível — recarregar"
+
+Isso evita que usuários do PWA fiquem presos numa build antiga depois de uma publicação.
+
+### 4. Ajustar mensagem do bloco "Link público" no painel
+Em `src/features/ubiz_ofertas/components/link_publico_ofertas.tsx`, adicionar um aviso amarelo abaixo do link:
+> "Após ativar este modo, lembre-se de clicar em **Publicar** para que o link funcione no domínio personalizado."
+
+## Sobre o link
+
+O link continua sendo `https://app.valeresgate.com.br/ofertas` — ele vai funcionar imediatamente após a publicação (passo 1). Você também pode testar agora mesmo no preview, que já está atualizado:
+
+`https://id-preview--3ff47979-b8b4-4666-bfef-7987c2d119c3.lovable.app/ofertas`
+
+## Arquivos a editar
+
+- `src/pages/NotFound.tsx` — mensagem amigável + botão de reload forçado
+- `src/lib/buildVersionCheck.ts` — novo, polling de versão
+- `src/main.tsx` — inicializar o checker
+- `src/features/ubiz_ofertas/components/link_publico_ofertas.tsx` — aviso de publicação
