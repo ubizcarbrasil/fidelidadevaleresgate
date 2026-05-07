@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ArrowLeft, Loader2, Sparkles, Tag } from "lucide-react";
 import { useBrandTheme } from "@/hooks/useBrandTheme";
@@ -45,14 +45,17 @@ export default function PaginaUbizOfertas() {
       },
       { replace: true }
     );
-    // Rolagem suave para o topo ao trocar/abrir categoria
-    if (typeof window !== "undefined") {
-      requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      });
-    }
   };
   const [ofertaAberta, setOfertaAberta] = useState<OfertaPublica | null>(null);
+  const cabecalhoCategoriaRef = useRef<HTMLDivElement | null>(null);
+
+  // Rolagem suave para o cabeçalho da categoria ao selecionar
+  useEffect(() => {
+    if (!categoriaSelecionadaId) return;
+    requestAnimationFrame(() => {
+      cabecalhoCategoriaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [categoriaSelecionadaId]);
 
   // Title da aba
   useEffect(() => {
@@ -140,7 +143,7 @@ export default function PaginaUbizOfertas() {
           </div>
         ) : categoriaAtiva ? (
           <>
-            <div className="px-4 flex items-center justify-between">
+            <div ref={cabecalhoCategoriaRef} className="px-4 flex items-center justify-between scroll-mt-4">
               <div className="flex items-center gap-2">
                 <div
                   className="h-7 w-7 rounded-lg flex items-center justify-center"
