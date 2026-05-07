@@ -7,6 +7,7 @@ import { shareDriverUrl } from "@/lib/publicShareUrl";
 import CabecalhoOfertas from "./components/cabecalho_ofertas";
 import GradeCategoriasOfertas from "./components/grade_categorias_ofertas";
 import VitrineOfertas from "./components/vitrine_ofertas";
+import GradeTodasOfertas from "./components/grade_todas_ofertas";
 import PortaoAcessoOfertas from "./components/portao_acesso_ofertas";
 import type { ModoAcessoOfertas } from "./components/controle_acesso_ofertas";
 import { useMarcaOfertas } from "./hooks/hook_marca_ofertas";
@@ -151,7 +152,7 @@ export default function PaginaUbizOfertas() {
             )}
 
             {ofertasFiltradas.length > 0 && (
-              <VitrineOfertas
+              <GradeTodasOfertas
                 titulo="Todas as ofertas"
                 ofertas={ofertasFiltradas}
                 fontHeading={fontHeading}
