@@ -1,84 +1,40 @@
-# Ubiz Ofertas — Modo Vitrine Pública
+## Problema
 
-Criar um novo "modo de entrada" público chamado **Ubiz Ofertas**, que é uma versão somente-vitrine do Achadinhos (mesma fonte `affiliate_deals`), sem nenhum elemento de pontuação ou gamificação.
+Ao abrir `/ofertas` no domínio de preview (lovable.app) ou em qualquer domínio que não seja `app.valeresgate.com.br` e sem `?brandId=` na URL, a página exibe **"Parâmetro brandId é obrigatório"** e não carrega.
 
-## O que fica visível
+A resolução atual do hook `useMarcaOfertas` só considera duas fontes:
+1. `?brandId=` na URL
+2. Hostname exato `app.valeresgate.com.br` (hardcoded)
 
-- Header com logo da marca
-- Banners (HomeSectionsRenderer)
-- Categorias ativas (mesma listagem do Achadinhos)
-- Vitrines de ofertas (Novas Ofertas, Em Destaque)
-- Página de categoria (lista de ofertas filtradas)
-- Detalhe da oferta com botão "Ver oferta" abrindo `affiliate_url` em nova aba
-- Busca de ofertas
-- Compartilhamento da página
+Não considera: subdomínios reais (ex.: `marca.valeresgate.com.br`), `brand_domains` (domínios customizados publicados), nem o `BrandContext` já resolvido pelo app.
 
-## O que NÃO aparece
+## Solução
 
-- Card de saldo/pontos
-- "Resgatar com Pontos" / `is_redeemable`
-- Botões "Resgate na Cidade", "Comprar Pontos", "Campeonato", "Duelos"
-- Botão flutuante de WhatsApp / suporte
-- Apostas, ranking, cinturão
-- Login / impersonação de motorista (rota 100% pública)
+Alinhar a resolução da marca em `/ofertas` com o padrão do projeto (`BrandContext`), na ordem oficial:
 
-## Arquitetura (feature-based, pt-BR)
+1. **`?brandId=` na URL** (impersonation / preview com brand explícito)
+2. **`BrandContext`** já resolvido pelo app (cobre domínios publicados, portal universal logado, e o preview do Lovable quando o usuário está num contexto de marca)
+3. **Resolução por hostname** via `brand_domains` (subdomínio + domínio completo, mesma lógica de `resolveBrandByDomain` do `BrandContext.tsx`)
+4. Fallback hostname `app.valeresgate.com.br` → portal Ubiz Resgata (mantém comportamento atual)
 
-Nova feature `src/features/ubiz_ofertas/`:
+Se nenhuma das fontes resolver, exibir uma mensagem amigável (e não o erro técnico) com orientação: "Acesse pelo domínio da sua marca ou use o link compartilhado".
 
-```text
-src/features/ubiz_ofertas/
-├── pagina_ubiz_ofertas.tsx          # rota pública /ofertas
-├── components/
-│   ├── cabecalho_ofertas.tsx        # logo + busca + share
-│   ├── vitrine_ofertas.tsx          # carrossel de ofertas
-│   ├── grade_categorias_ofertas.tsx # categorias clicáveis
-│   ├── pagina_categoria_ofertas.tsx # lista filtrada por categoria
-│   ├── detalhe_oferta.tsx           # modal/overlay de uma oferta
-│   └── card_oferta.tsx              # card visual reaproveitado
-├── hooks/
-│   ├── hook_ofertas_publicas.ts     # fetch affiliate_deals + categorias
-│   └── hook_marca_ofertas.ts        # resolve marca via ?brandId/hostname
-├── services/
-│   └── servico_ofertas_publicas.ts  # queries supabase (anon)
-├── types/
-│   └── tipos_ofertas.ts
-└── constants/
-    └── constantes_ofertas.ts
-```
+## Arquivos a alterar
 
-## Roteamento
+- **`src/features/ubiz_ofertas/hooks/hook_marca_ofertas.ts`**
+  - Importar e ler `useBrand()` do `BrandContext`.
+  - Se `brand` já existir no contexto e não houver `?brandId=` divergente, usá-lo direto sem nova query.
+  - Caso contrário, tentar resolução por hostname via `brand_domains` (extrair helper compartilhado ou replicar a lógica enxuta de `BrandContext.tsx` linhas 56–101).
+  - Mensagem de erro: trocar `"Parâmetro brandId é obrigatório"` por `"Não foi possível identificar a marca para esta vitrine."`.
 
-Em `src/App.tsx`:
-- Adicionar `<Route path="/ofertas" element={<PaginaUbizOfertas />} />`
-- Incluir `/ofertas` em `publicPaths`
+- **`src/features/ubiz_ofertas/services/servico_ofertas_publicas.ts`** (se necessário)
+  - Adicionar `buscarBrandIdPorHostname(hostname)` consultando `brand_domains` (subdomain + domínio completo, `is_active = true`), espelhando `resolveBrandByDomain`.
 
-Resolução da marca segue a regra padrão (`?brandId` > hostnames > `brand_domains`), reutilizando o helper já usado em `DriverPanelPage`.
+- **`src/App.tsx`** (verificação)
+  - Confirmar que `/ofertas` continua dentro do `BrandProvider` para que `useBrand()` funcione (já deve estar; só validar).
 
-## Toggle na Marca
+## Observações
 
-Adicionar flag em `brand_settings_json`:
-- `enable_ubiz_ofertas_mode: boolean`
-
-Editor: incluir um switch no `BrandSettingsPage` (seção "Modos de entrada"), descrevendo: "Ativa a vitrine pública /ofertas sem pontuação".
-
-Comportamento:
-- Quando **desativado**: a rota `/ofertas` redireciona para `/auth` (ou Ubiz Resgata fallback) — mesma política do Universal Login.
-- Quando **ativado**: rota acessível anonimamente.
-
-A flag é resolvida no carregamento da página via `brand.brand_settings_json.enable_ubiz_ofertas_mode === true` (regra `=== true`, missing = OFF).
-
-## Reuso e RLS
-
-- Reaproveitar a query existente do Achadinhos (`affiliate_deals` com `is_active = true`, ordenado por `is_featured` + `order_index`) — **sem** filtros de `visible_driver` ou `is_redeemable`.
-- Confirmar que `affiliate_deals` e `affiliate_deal_categories` possuem policy de leitura anônima por `brand_id` (já existe para o marketplace público — reutilizar). Se a policy atual exigir contexto de motorista, adicionar uma RLS análoga restrita a deals com a marca cuja flag `enable_ubiz_ofertas_mode = true` (validado por função SECURITY DEFINER).
-
-## Visual
-
-100% fiel ao `design_system.md` e idêntico ao Achadinhos público (cards, grids, cores), apenas removendo blocos de pontos. Tema da marca aplicado via `useBrandTheme` (cores, fonte, favicon, título).
-
-## Fora de escopo
-
-- Login / pontuação / resgate
-- Migração de Achadinhos atual
-- Painel admin de configuração de banners (usa o mesmo já existente)
+- Não altera RLS nem schema. As queries de `brand_domains` já são acessíveis para anônimos no padrão atual (usadas pelo `BrandContext` antes do login).
+- Mantém o toggle `enable_ubiz_ofertas_mode` como gate final — resolver a marca não implica liberar a vitrine.
+- Não muda o comportamento do `?brandId=` (continua sendo prioridade máxima para impersonation).

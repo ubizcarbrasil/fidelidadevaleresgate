@@ -11,6 +11,45 @@ export async function buscarMarcaPorId(brandId: string): Promise<MarcaOfertas | 
   return (data as any) ?? null;
 }
 
+/**
+ * Resolve um brand_id a partir do hostname, espelhando a lógica de
+ * `resolveBrandByDomain` do BrandContext: tenta subdomain match e depois
+ * domínio completo (com e sem www) na tabela `brand_domains`.
+ */
+export async function buscarBrandIdPorHostname(hostnameRaw: string): Promise<string | null> {
+  const hostname = hostnameRaw.replace(/^https?:\/\//, "").replace(/\/$/, "").toLowerCase().trim();
+
+  const parts = hostname.split(".");
+  if (parts.length >= 2) {
+    const subdomain = parts[0];
+    if (!["root", "www", "app", "localhost"].includes(subdomain)) {
+      const { data } = await supabase
+        .from("brand_domains")
+        .select("brand_id")
+        .eq("subdomain", subdomain)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (data?.brand_id) return data.brand_id;
+    }
+  }
+
+  const domainsToTry = [hostname];
+  if (hostname.startsWith("www.")) domainsToTry.push(hostname.replace("www.", ""));
+  else domainsToTry.push(`www.${hostname}`);
+
+  for (const domain of domainsToTry) {
+    const { data } = await supabase
+      .from("brand_domains")
+      .select("brand_id")
+      .eq("domain", domain)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (data?.brand_id) return data.brand_id;
+  }
+
+  return null;
+}
+
 export async function buscarOfertasAtivas(brandId: string): Promise<OfertaPublica[]> {
   const { data } = await supabase
     .from("affiliate_deals")
