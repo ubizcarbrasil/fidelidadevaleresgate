@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Loader2, Sparkles, Tag } from "lucide-react";
 import { useBrandTheme } from "@/hooks/useBrandTheme";
 import DriverBannerCarousel from "@/components/driver/DriverBannerCarousel";
@@ -31,7 +32,19 @@ export default function PaginaUbizOfertas() {
 
   const { ofertas, categorias, carregando: carregandoOfertas } = useOfertasPublicas(habilitado ? brandId : null);
 
-  const [categoriaSelecionadaId, setCategoriaSelecionadaId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoriaSelecionadaId = searchParams.get("categoria");
+  const setCategoriaSelecionadaId = (id: string | null) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (id) next.set("categoria", id);
+        else next.delete("categoria");
+        return next;
+      },
+      { replace: true }
+    );
+  };
   const [ofertaAberta, setOfertaAberta] = useState<OfertaPublica | null>(null);
 
   // Title da aba
