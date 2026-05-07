@@ -45,6 +45,12 @@ export default function PaginaUbizOfertas() {
       },
       { replace: true }
     );
+    // Rolagem suave para o topo ao trocar/abrir categoria
+    if (typeof window !== "undefined") {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
   };
   const [ofertaAberta, setOfertaAberta] = useState<OfertaPublica | null>(null);
 
