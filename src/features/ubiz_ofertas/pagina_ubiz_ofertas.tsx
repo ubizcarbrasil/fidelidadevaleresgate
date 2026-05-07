@@ -8,6 +8,8 @@ import { shareDriverUrl } from "@/lib/publicShareUrl";
 import CabecalhoOfertas from "./components/cabecalho_ofertas";
 import GradeCategoriasOfertas from "./components/grade_categorias_ofertas";
 import VitrineOfertas from "./components/vitrine_ofertas";
+import PortaoAcessoOfertas from "./components/portao_acesso_ofertas";
+import type { ModoAcessoOfertas } from "./components/controle_acesso_ofertas";
 import { useMarcaOfertas } from "./hooks/hook_marca_ofertas";
 import { useOfertasPublicas } from "./hooks/hook_ofertas_publicas";
 import type { CategoriaOferta, OfertaPublica } from "./types/tipos_ofertas";
@@ -24,6 +26,8 @@ export default function PaginaUbizOfertas() {
   const logoUrl = settings.logo_url as string | undefined;
   const titulo = (settings.ubiz_ofertas_title as string) || marca?.name || "Ubiz Ofertas";
   const habilitado = settings.enable_ubiz_ofertas_mode === true;
+  const modoAcesso = (settings.ubiz_ofertas_access_mode as ModoAcessoOfertas) || "public";
+  const whitelist = (settings.ubiz_ofertas_whitelist as string[]) || [];
 
   const { ofertas, categorias, carregando: carregandoOfertas } = useOfertasPublicas(habilitado ? brandId : null);
 
@@ -81,6 +85,7 @@ export default function PaginaUbizOfertas() {
   }
 
   return (
+    <PortaoAcessoOfertas modo={modoAcesso} whitelist={whitelist} fontHeading={fontHeading}>
     <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-lg mx-auto pb-8 space-y-4">
         <CabecalhoOfertas
@@ -182,5 +187,6 @@ export default function PaginaUbizOfertas() {
         />
       )}
     </div>
+    </PortaoAcessoOfertas>
   );
 }
