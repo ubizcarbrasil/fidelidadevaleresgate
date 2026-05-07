@@ -385,6 +385,7 @@ function AppContent() {
   // Partner landing page is a public route that works regardless of white-label mode
   const isPartnerLanding = /^\/[^/]+\/parceiro\/?$/.test(location.pathname);
   const isDriverPanel = location.pathname === "/driver" || location.pathname.startsWith("/driver/");
+  const isUbizOfertas = location.pathname === "/ofertas" || location.pathname.startsWith("/ofertas/");
 
   if (isPartnerLanding) {
     return (
@@ -404,8 +405,18 @@ function AppContent() {
     );
   }
 
+  if (isUbizOfertas) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/ofertas" element={<PaginaUbizOfertas />} />
+        </Routes>
+      </Suspense>
+    );
+  }
+
   // Public paths that don't need brand resolution
-  const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store", "/p/", "/driver", "/loja/", "/campeonato/"];
+  const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store", "/p/", "/driver", "/loja/", "/campeonato/", "/ofertas"];
   const isPublicPath = publicPaths.some(p => location.pathname.startsWith(p));
 
   // Portal domain: redirect unauthenticated users to /auth immediately (before loading guard)
