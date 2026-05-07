@@ -158,6 +158,7 @@ const GamificacaoAdminPage = lazyWithRetry(() => import("@/pages/GamificacaoAdmi
 const PaginaPacotesPontos = lazyWithRetry(() => import("@/features/pacotes_pontos/pagina_pacotes_pontos"));
 const PaginaLojaPacotes = lazyWithRetry(() => import("@/features/pacotes_pontos/pagina_loja_pacotes"));
 const PaginaLojaPublica = lazyWithRetry(() => import("@/features/loja_publica/pagina_loja_publica"));
+const PaginaUbizOfertas = lazyWithRetry(() => import("@/features/ubiz_ofertas/pagina_ubiz_ofertas"));
 const InstallPwaPage = lazyWithRetry(() => import("@/pages/InstallPwaPage"));
 
 // QueryClient is now centralized in src/lib/queryClient.ts
@@ -194,6 +195,7 @@ function AnimatedRoutes() {
             <Route path="/:slug/parceiro" element={<PartnerLandingPage />} />
             <Route path="/register-store" element={<StoreRegistrationWizard />} />
             <Route path="/loja/:slug" element={<PaginaLojaPublica />} />
+            <Route path="/ofertas" element={<PaginaUbizOfertas />} />
             <Route path="/campeonato/:brandSlug/hall-da-fama" element={<PaginaHallDaFama />} />
             <Route path="/install" element={<InstallPwaPage />} />
             <Route path="/store-panel" element={<ProtectedRoute><StoreOwnerPanel /></ProtectedRoute>} />
