@@ -1,6 +1,23 @@
 import { useEffect, useState } from "react";
 import { getPublicOrigin } from "@/lib/publicShareUrl";
 
+const FALLBACK_PUBLISHED_ORIGIN = "https://fidelidadevaleresgate.lovable.app";
+
+/**
+ * Valida se a string resolvida é um origin utilizável (https + host com ponto).
+ */
+function ehOriginValido(origin: string | null | undefined): origin is string {
+  if (!origin) return false;
+  try {
+    const u = new URL(origin);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+    if (!u.hostname || !u.hostname.includes(".")) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Normaliza uma URL pública: força https, remove barras duplicadas
  * (preservando o "//" do protocolo) e remove a barra final.
@@ -69,7 +86,12 @@ export function useLinkPublicoOfertas(brandId?: string) {
     getPublicOrigin(brandId)
       .then((origin) => {
         if (!ativo) return;
-        setUrl(montarUrlOfertas(origin));
+        const seguro = ehOriginValido(origin) ? origin : FALLBACK_PUBLISHED_ORIGIN;
+        setUrl(montarUrlOfertas(seguro));
+      })
+      .catch(() => {
+        if (!ativo) return;
+        setUrl(montarUrlOfertas(FALLBACK_PUBLISHED_ORIGIN));
       })
       .finally(() => {
         if (ativo) setCarregando(false);
