@@ -1,49 +1,58 @@
-## Diagnóstico (com evidência)
+# Tornar o módulo Ubiz Ofertas acessível
 
-Baixei o bundle JavaScript que está servido em `https://app.valeresgate.com.br` (`assets/App-BnODURvJ.js`) e procurei pelas strings da rota nova:
+Hoje a configuração da vitrine pública `/ofertas` existe apenas escondida dentro do editor de tema da marca (`Marca → Aparência → Modos de entrada`). O usuário não consegue encontrá-la. Vamos expor o módulo em dois lugares de fácil acesso.
 
-```
-/ofertas         → não encontrado
-PaginaUbizOfertas → não encontrado
-Ubiz             → não encontrado
-```
+## 1. Nova página dedicada no menu Achadinhos
 
-Conclusão: a rota `/ofertas` **existe no código-fonte** (`src/App.tsx` linha 198 e 388‑416) mas **não existe na build publicada**. Por isso o domínio responde 404 / cai no `/auth`.
+Criar a feature `src/features/ubiz_ofertas_admin/` com:
 
-Isso é diferente do que eu havia dito antes: não é cache do PWA, é a publicação que ficou para trás.
+- `pagina_admin_ubiz_ofertas.tsx` — tela completa de configuração contendo:
+  - Toggle "Ativar vitrine pública Ubiz Ofertas" (`enable_ubiz_ofertas_mode`)
+  - Campo "Título da vitrine" (`ubiz_ofertas_title`)
+  - Bloco `ControleAcessoOfertas` (público / autenticado / whitelist)
+  - Bloco `LinkPublicoOfertas` (Copiar / Abrir / Compartilhar) com o aviso de "Publicar"
+  - Card explicativo: "As ofertas exibidas são as mesmas cadastradas em **Achadinhos → Ofertas Afiliadas**" com botão atalho para `/affiliate-deals`
+  - Estado vazio claro quando o toggle estiver desligado
+- `components/secao_configuracao_ofertas.tsx` — extrai e reaproveita o bloco hoje embutido no `BrandThemeEditor.tsx` (linhas 445-492) para evitar duplicação. O `BrandThemeEditor` passa a importar este componente.
+- `hooks/hook_configuracao_ubiz_ofertas.ts` — leitura/escrita do `brand_settings_json` (campos `enable_ubiz_ofertas_mode`, `ubiz_ofertas_title`, `ubiz_ofertas_access_mode`, `ubiz_ofertas_whitelist`).
 
-## Plano
+### Registro na sidebar
 
-### 1. Publicar a versão atual (ação principal)
-A rota `/ofertas` só vai funcionar em `app.valeresgate.com.br` depois que o botão **Publicar** (canto superior direito do editor) for clicado e a publicação concluída. Sem isso, qualquer ajuste extra é inútil — o domínio continuará servindo o bundle antigo.
+- `src/compartilhados/constants/constantes_menu_sidebar.ts`: adicionar entrada
+  ```
+  "sidebar.ubiz_ofertas": {
+    key: "sidebar.ubiz_ofertas",
+    defaultTitle: "Ubiz Ofertas (Vitrine Pública)",
+    url: "/ubiz-ofertas-admin",
+    icon: Globe,
+    moduleKey: "affiliate_deals",
+  }
+  ```
+- `src/compartilhados/constants/constantes_grupos_sidebar_marca.ts`: incluir `"sidebar.ubiz_ofertas"` no grupo **Achadinhos** (logo após `sidebar.achadinhos`).
+- `src/App.tsx`: registrar a rota `/ubiz-ofertas-admin` dentro do bloco protegido (com `ModuleGuard moduleKey="affiliate_deals"`), reaproveitando o lazy import já existente do padrão `lazyWithRetry`.
 
-### 2. Melhorar a página `NotFound` para ajudar o diagnóstico
-Para o futuro, alterar `src/pages/NotFound.tsx` adicionando:
-- Mostrar o caminho que o usuário tentou (ex.: "Você tentou acessar `/ofertas`")
-- Botão "Tentar novamente" que força reload sem cache
-- Mensagem mais amigável em português
+## 2. Card no Dashboard
 
-### 3. Adicionar verificação de versão no boot
-Criar um pequeno utilitário em `src/lib/buildVersionCheck.ts` que:
-- Lê uma constante `BUILD_ID` injetada no build
-- A cada 5 minutos compara com o `BUILD_ID` do `index.html` remoto
-- Se diferente, mostra um toast "Nova versão disponível — recarregar"
+- `src/pages/Dashboard.tsx`: adicionar `CardUbizOfertasDashboard` (novo, em `src/features/ubiz_ofertas_admin/components/`) que:
+  - Aparece somente quando `enable_ubiz_ofertas_mode === true` no `brand_settings_json` da marca atual
+  - Mostra título "Vitrine Pública Ubiz Ofertas", o link público pronto, e botões **Copiar**, **Abrir**, **Compartilhar** e **Configurar** (atalho para `/ubiz-ofertas-admin`)
+  - Quando estiver desativado, mostra uma versão "call to action" simples ("Ative sua vitrine pública de ofertas") com botão para a página de configuração — visível apenas para administradores da marca
 
-Isso evita que usuários do PWA fiquem presos numa build antiga depois de uma publicação.
+## 3. Resumo dos arquivos
 
-### 4. Ajustar mensagem do bloco "Link público" no painel
-Em `src/features/ubiz_ofertas/components/link_publico_ofertas.tsx`, adicionar um aviso amarelo abaixo do link:
-> "Após ativar este modo, lembre-se de clicar em **Publicar** para que o link funcione no domínio personalizado."
+**Novos:**
+- `src/features/ubiz_ofertas_admin/pagina_admin_ubiz_ofertas.tsx`
+- `src/features/ubiz_ofertas_admin/components/secao_configuracao_ofertas.tsx`
+- `src/features/ubiz_ofertas_admin/components/card_ubiz_ofertas_dashboard.tsx`
+- `src/features/ubiz_ofertas_admin/hooks/hook_configuracao_ubiz_ofertas.ts`
 
-## Sobre o link
+**Editados:**
+- `src/App.tsx` (rota nova)
+- `src/compartilhados/constants/constantes_menu_sidebar.ts` (entrada nova)
+- `src/compartilhados/constants/constantes_grupos_sidebar_marca.ts` (grupo Achadinhos)
+- `src/components/BrandThemeEditor.tsx` (substitui bloco inline pelo componente compartilhado)
+- `src/pages/Dashboard.tsx` (insere card)
 
-O link continua sendo `https://app.valeresgate.com.br/ofertas` — ele vai funcionar imediatamente após a publicação (passo 1). Você também pode testar agora mesmo no preview, que já está atualizado:
+## Observação importante
 
-`https://id-preview--3ff47979-b8b4-4666-bfef-7987c2d119c3.lovable.app/ofertas`
-
-## Arquivos a editar
-
-- `src/pages/NotFound.tsx` — mensagem amigável + botão de reload forçado
-- `src/lib/buildVersionCheck.ts` — novo, polling de versão
-- `src/main.tsx` — inicializar o checker
-- `src/features/ubiz_ofertas/components/link_publico_ofertas.tsx` — aviso de publicação
+A rota pública `/ofertas` no domínio `app.valeresgate.com.br` só funcionará após **clicar em Publicar** no editor (o build atual ainda não contém essa rota). O aviso amarelo já existente em `LinkPublicoOfertas` continuará informando isso.
