@@ -4,8 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Palette, Type, Image, FileText, Smartphone, Sun, Moon, Wand2, MessageCircle, Plug, Tag } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
+import { Palette, Type, Image, FileText, Smartphone, Sun, Moon, Wand2, MessageCircle, Plug } from "lucide-react";
 import type { BrandTheme } from "@/hooks/useBrandTheme";
 import ImageUploadField from "@/components/ImageUploadField";
 import BrandThemePreview from "@/components/BrandThemePreview";
@@ -13,8 +12,8 @@ import OfferCardConfigSection from "@/components/OfferCardConfigSection";
 import type { OfferCardConfig } from "@/hooks/useOfferCardConfig";
 import FontSelect from "@/components/brand-theme/FontSelect";
 import LayoutDimensionsSection from "@/components/brand-theme/LayoutDimensionsSection";
-import LinkPublicoOfertas from "@/features/ubiz_ofertas/components/link_publico_ofertas";
-import ControleAcessoOfertas, { type ModoAcessoOfertas } from "@/features/ubiz_ofertas/components/controle_acesso_ofertas";
+import SecaoConfiguracaoOfertas from "@/features/ubiz_ofertas_admin/components/secao_configuracao_ofertas";
+import type { ModoAcessoOfertas } from "@/features/ubiz_ofertas/components/controle_acesso_ofertas";
 
 interface BrandThemeEditorProps {
   value: BrandTheme;
@@ -442,54 +441,16 @@ export default function BrandThemeEditor({ value, onChange, brandId, brandName, 
       </Card>
       )}
 
-      {/* Modos de entrada */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Tag className="h-4 w-4" /> Modos de entrada
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">Ubiz Ofertas (vitrine pública)</Label>
-              <p className="text-[11px] text-muted-foreground">
-                Ativa a rota pública <code>/ofertas</code> com a mesma vitrine dos Achadinhos, porém sem
-                pontuação, duelos, campeonato, apostas, comprar pontos ou WhatsApp.
-              </p>
-            </div>
-            <Switch
-              checked={(value as any).enable_ubiz_ofertas_mode === true}
-              onCheckedChange={(checked) =>
-                update({ enable_ubiz_ofertas_mode: checked === true ? true : false } as any)
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs">Título exibido na vitrine</Label>
-            <Input
-              value={(value as any).ubiz_ofertas_title || ""}
-              onChange={(e) => update({ ubiz_ofertas_title: e.target.value || undefined } as any)}
-              placeholder="Ubiz Ofertas"
-            />
-          </div>
-
-          {(value as any).enable_ubiz_ofertas_mode === true && (
-            <>
-              <ControleAcessoOfertas
-                modo={((value as any).ubiz_ofertas_access_mode as ModoAcessoOfertas) || "public"}
-                whitelist={((value as any).ubiz_ofertas_whitelist as string[]) || []}
-                onModoChange={(modo) => update({ ubiz_ofertas_access_mode: modo } as any)}
-                onWhitelistChange={(lista) => update({ ubiz_ofertas_whitelist: lista } as any)}
-              />
-              <LinkPublicoOfertas
-                brandId={brandId}
-                titulo={(value as any).ubiz_ofertas_title || brandName}
-              />
-            </>
-          )}
-        </CardContent>
-      </Card>
+      {/* Modos de entrada — Vitrine Ubiz Ofertas */}
+      <SecaoConfiguracaoOfertas
+        brandId={brandId}
+        brandName={brandName}
+        habilitado={(value as any).enable_ubiz_ofertas_mode === true}
+        titulo={(value as any).ubiz_ofertas_title || ""}
+        modoAcesso={((value as any).ubiz_ofertas_access_mode as ModoAcessoOfertas) || "public"}
+        whitelist={((value as any).ubiz_ofertas_whitelist as string[]) || []}
+        onChange={(parcial) => update(parcial as any)}
+      />
 
       {/* Layout & Dimensions */}
       {canShow("theme_layout") && (

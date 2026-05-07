@@ -27,6 +27,7 @@ const DashboardTasksSection = lazyWithRetry(() => import("@/components/dashboard
 const DashboardActivityFeed = lazyWithRetry(() => import("@/components/dashboard/ActivityFeed"));
 const DashboardChartsSection = lazyWithRetry(() => import("@/components/dashboard/DashboardChartsSection"));
 const BranchDashboardSection = lazyWithRetry(() => import("@/components/dashboard/BranchDashboardSection"));
+const CardUbizOfertasDashboard = lazyWithRetry(() => import("@/features/ubiz_ofertas_admin/components/card_ubiz_ofertas_dashboard"));
 
 type PeriodKey = "today" | "7d" | "30d";
 
@@ -384,6 +385,13 @@ export default function Dashboard() {
                 </Button>
               </CardContent>
             </Card>
+          )}
+
+          {/* Vitrine pública Ubiz Ofertas */}
+          {showBrand && !isRoot && currentBrandId && (
+            <Suspense fallback={null}>
+              <CardUbizOfertasDashboard brandId={currentBrandId} />
+            </Suspense>
           )}
 
           {/* Gamificação Banner */}
