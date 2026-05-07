@@ -94,6 +94,12 @@ export default function LinkPublicoOfertas({ brandId, titulo }: Props) {
         Use este link para divulgar a vitrine pública. Funciona sem login, sem pontos e sem WhatsApp.
       </p>
 
+      <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-2.5 text-[11px] text-amber-700 dark:text-amber-300">
+        <strong>Atenção:</strong> após ativar este modo ou alterar configurações, clique em{" "}
+        <strong>Publicar</strong> no canto superior direito do editor para que o link funcione no
+        domínio personalizado. Sem publicar, o link mostrará 404.
+      </div>
+
       <details className="text-[11px] text-muted-foreground">
         <summary className="cursor-pointer font-medium text-foreground/80 hover:text-foreground">
           Como configurar (passo a passo)
