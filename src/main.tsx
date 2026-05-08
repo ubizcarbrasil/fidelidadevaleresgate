@@ -37,6 +37,24 @@ const App = lazyWithRetry(() => {
   });
 });
 
+/**
+ * Prefetch agressivo dos chunks do DriverPanel quando o usuário entra
+ * via /driver ou /d/:brandId (link curto compartilhado em WebViews).
+ * Dispara em paralelo ao import do App para que, no momento do redirect
+ * de /d/:brandId → /driver, o bundle do painel já esteja em cache de rede.
+ */
+(function prefetchDriverPanel() {
+  if (typeof window === "undefined") return;
+  const p = window.location.pathname;
+  const isDriverRoute = p === "/driver" || p.startsWith("/driver/") || p.startsWith("/d/");
+  if (!isDriverRoute) return;
+  console.info("[boot] prefetch DriverPanelPage chunks");
+  void import("@/pages/DriverPanelPage").catch(() => {});
+  void import("@/components/driver/DriverMarketplace").catch(() => {});
+  void import("@/components/driver/home/DriverHomePage").catch(() => {});
+  void import("@/components/driver/DriverCpfLogin").catch(() => {});
+})();
+
 /* ── Error Boundary ── */
 
 interface BootErrorState { hasError: boolean; error: Error | null; }
