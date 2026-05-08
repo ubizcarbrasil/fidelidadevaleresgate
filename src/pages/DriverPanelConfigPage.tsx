@@ -353,23 +353,6 @@ export default function DriverPanelConfigPage() {
               </Button>
             </div>
           </details>
-          {driverWebviewUrl && (
-            <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
-              <div className="flex items-center gap-2">
-                <Smartphone className="h-4 w-4 text-amber-600" />
-                <span className="text-xs font-semibold">Link em modo WebView (cabeçalho + voltar)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <code className="flex-1 rounded-md border bg-background px-2 sm:px-3 py-2 text-xs sm:text-sm truncate min-w-0">{driverWebviewUrl}</code>
-                <Button variant="outline" size="icon" className="flex-shrink-0" onClick={() => handleCopy(driverWebviewUrl)}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-[11px] text-muted-foreground">
-                Use este link quando precisar embutir as ofertas dentro de outro app (in-app browser). Abre com cabeçalho próprio e botão de voltar.
-              </p>
-            </div>
-          )}
           <Button
             onClick={() => { window.location.href = driverUrl; }}
             disabled={!currentBrandId}
