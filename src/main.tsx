@@ -46,7 +46,8 @@ const App = lazyWithRetry(() => {
 (function prefetchDriverPanel() {
   if (typeof window === "undefined") return;
   const p = window.location.pathname;
-  const isDriverRoute = p === "/driver" || p.startsWith("/driver/") || p.startsWith("/d/");
+  // /d/<brandId> é redirect estático no index.html — só prefetch em /driver
+  const isDriverRoute = p === "/driver" || p.startsWith("/driver/");
   if (!isDriverRoute) return;
   console.info("[boot] prefetch DriverPanelPage chunks");
   void import("@/pages/DriverPanelPage").catch(() => {});
