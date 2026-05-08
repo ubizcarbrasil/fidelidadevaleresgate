@@ -1,45 +1,64 @@
-## Diagnóstico
+# Por que está lento (10s)
 
-O link `https://fidelidadevaleresgate.lovable.app/driver?brandId=...` funciona no navegador (testado: redireciona 302 para `app.valeresgate.com.br`), mas **não é clicável dentro do app da Ubiz Car**.
+O link `/driver?brandId=...` (e o curto `/d/:brandId`) é servido pelo **mesmo SPA gigante** que o painel admin. Cada abertura no WebView (Ubiz Car / WhatsApp / Instagram) executa esta cadeia em série:
 
-Causa provável: o WebView interno do app da Ubiz Car não detecta automaticamente URLs em texto simples como links clicáveis (comportamento comum de WebView Android sem `Linkify`). Isso é uma limitação do app cliente, não do nosso código.
+```text
+index.html
+  → main.tsx (boot shell)
+    → App.tsx (centenas de lazy imports, AuthProvider, BrandProvider, QueryClient, Sentry init etc.)
+      → resolve marca por ?brandId= (query Supabase)
+        → resolve tema/branches (mais queries)
+          → finalmente monta /driver
+            → /driver dispara queries de ofertas/categorias
+```
 
-## Solução
+Em rede 4G dentro de um in-app browser sem cache, isso somado fácil passa de 8-10s. Não é um único gargalo — é **arquitetura**: uma landing pública carregando um app inteiro de back-office.
 
-Não dá para mudar como o app da Ubiz Car renderiza texto. O que podemos fazer é:
+# Resposta direta à sua pergunta
 
-1. **Reduzir o tamanho/atrito do link** para que o motorista consiga copiar/colar mais facilmente, e
-2. **Já entregar o link no formato `/webview`** (que é o modo embarcado leve que construímos nas iterações anteriores) com `back=1&header=1`, para abrir bonito quando alguém abrir manualmente.
+**Não precisa criar projeto separado.** Dá para resolver dentro deste mesmo repo, com ganho equivalente, em duas frentes:
 
-### Mudanças propostas
+1. Tornar o `/d/:brandId` um **redirect estático** (HTML puro em `public/`), zero React.
+2. Fazer `/driver` virar uma **rota leve isolada** (sem AuthProvider / BrandProvider / Sentry / lazy do admin), nos moldes do que já fizemos com `/webview`.
 
-**1. Link curto canônico para drivers** (`src/lib/publicShareUrl.ts`)
-- Adicionar uma variante `buildDriverShortUrl(origin, brandId)` que retorna `${origin}/d/{brandId}` (rota curta).
-- Manter `buildDriverUrl` como fallback compatível.
+Só vale criar projeto separado se você quiser também **domínio próprio** (`ofertas.ubizcar.com.br`) com deploy independente — mas isso é decisão de marketing, não de performance.
 
-**2. Nova rota curta `/d/:brandId`** (`src/App.tsx`)
-- Adicionar rota pública que faz `Navigate` server-side equivalente para `/driver?brandId=...`.
-- Adicionar à lista de `publicPaths`.
+# Plano técnico (3 etapas)
 
-**3. Wrapper WebView automático na hora do compartilhamento** (`src/features/ubiz_ofertas/components/link_publico_ofertas.tsx` e qualquer painel admin que mostre o link `/driver`)
-- Já existe lógica similar em `link_publico_ofertas.tsx` (gera variante `/webview?url=...`). Replicar o mesmo padrão para o link `/driver` exibido nos painéis de compartilhamento, mostrando 2 links lado a lado:
-  - **Link direto (curto)**: `https://app.valeresgate.com.br/d/{brandId}`
-  - **Link WebView**: `https://app.valeresgate.com.br/webview?url=...&title=Ofertas&back=1&header=1`
-- Botões: copiar, abrir, compartilhar (Web Share API).
+### Etapa 1 — Redirect estático em `/d/:brandId` (ganho imediato)
+- Criar `public/d/index.html` minimalista (~1KB) com `<script>` que lê `location.pathname`, extrai o `brandId` e faz `location.replace('/driver?brandId=...')`.
+- Configurar fallback de rota para `/d/*` apontar para esse HTML (Vite/SPA já serve `index.html` por padrão; precisamos servir `d/index.html` para esse prefixo — usar `vite.config.ts` ou um pequeno arquivo `_redirects` se aplicável).
+- Remover a rota React `PaginaRedirecionamentoDriver` (vira morta).
+- Resultado: o redirect deixa de exigir boot do React (economiza 2-4s).
 
-**4. Instrução visual nos painéis admin**
-- Adicionar nota: *"Em apps que não detectam links automaticamente (ex.: WebView do Ubiz Car), copie e cole o link curto na barra de endereço, ou use o botão Compartilhar."*
+### Etapa 2 — Rota `/driver` em modo "lite" (ganho principal)
+Espelhar o padrão já existente do `/webview` (ver `isWebviewLitePath` em `bootMonitoring.ts` e o skip de Sentry/web-vitals em `main.tsx`):
+- Adicionar `/driver` ao conjunto de rotas "lite".
+- Criar um `App` enxuto (`AppDriver.tsx`) que monta apenas: `QueryClientProvider` + `BrandProvider` mínimo + `<DriverMarketplace />`. Sem `AuthProvider`, sem rotas admin, sem `lazy` desnecessário.
+- No `main.tsx`, escolher `App` vs `AppDriver` por `pathname` antes do `lazyWithRetry`.
+- Pré-resolver a marca via `?brandId=` direto (já é o caminho rápido — pular fallback por hostname para essa rota).
 
-### Detalhes técnicos
+### Etapa 3 — Cache e prefetch
+- Adicionar `<link rel="preconnect">` para o Supabase no `index.html` (se ainda não existe).
+- Cache HTTP forte para os assets do bundle do driver.
+- Service Worker: garantir que a rota `/driver` use `stale-while-revalidate` para a 2ª abertura ser instantânea (provavelmente já está, mas validar).
 
-- A rota `/d/:brandId` é apenas um redirect SPA para `/driver?brandId=...`, preservando o resto da query string.
-- Não há mudança de backend, edge function ou banco de dados.
-- Tudo permanece dentro de frontend/presentation, conforme regra do workspace.
+# Métricas alvo
+- 1ª abertura no WebView: **≤ 2,5s até primeiro conteúdo visível** (LCP).
+- 2ª abertura: **< 800ms** (cache + SW).
 
-### O que NÃO resolve este plano
+# Onde vou mexer
+- `public/d/index.html` (novo, redirect estático)
+- `vite.config.ts` (servir `public/d/index.html` para `/d/:brandId`) — só se necessário
+- `src/main.tsx` (roteador de App por path)
+- `src/AppDriver.tsx` (novo, app enxuto)
+- `src/App.tsx` (remover rota `/d/:brandId` e `/driver` quando em modo lite)
+- `src/lib/bootMonitoring.ts` (incluir `/driver` em `isWebviewLitePath`)
+- `src/features/driver_short_link/pagina_redirecionamento_driver.tsx` (remover)
 
-Se o problema for que o app da Ubiz Car **renderiza o link como texto plano** sem nenhuma forma de copiar, precisaremos coordenar com o time da Ubiz Car para que o app:
-- aplique `Linkify.addLinks()` (Android) nos textos recebidos, ou
-- envie a mensagem como HTML com `<a href>`.
+# Sobre criar um projeto separado
+Só recomendaria se você quiser:
+- Domínio dedicado (`ofertas.ubizcar.com.br`) com deploy independente, ou
+- Time/CI separado para iterar marketing sem mexer no admin.
 
-Esse ajuste é no app deles, não em código nosso.
+Para **só performance**, o plano acima entrega o mesmo resultado sem o custo de manter dois repos, dois deploys e duplicar lógica de marca/ofertas.
