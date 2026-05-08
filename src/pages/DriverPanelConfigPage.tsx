@@ -327,29 +327,33 @@ export default function DriverPanelConfigPage() {
           <CardDescription>Compartilhe este link com os motoristas. Não exige login.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex items-center gap-2">
-            <code className="flex-1 rounded-md border bg-muted px-2 sm:px-3 py-2 text-xs sm:text-sm truncate min-w-0">{driverUrl}</code>
-            <Button variant="outline" size="icon" className="flex-shrink-0" onClick={() => handleCopy()}>
-              {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-            </Button>
-          </div>
           {driverShortUrl && (
-            <div className="rounded-md border border-primary/20 bg-primary/5 p-3 space-y-2">
+            <div className="rounded-md border-2 border-primary/40 bg-primary/5 p-3 space-y-2">
               <div className="flex items-center gap-2">
                 <Link2 className="h-4 w-4 text-primary" />
-                <span className="text-xs font-semibold">Link curto (recomendado para WhatsApp e apps)</span>
+                <span className="text-xs font-semibold">Link curto (recomendado para divulgação)</span>
+                <Badge className="text-[10px] px-1.5 py-0">padrão</Badge>
               </div>
               <div className="flex items-center gap-2">
                 <code className="flex-1 rounded-md border bg-background px-2 sm:px-3 py-2 text-xs sm:text-sm truncate min-w-0">{driverShortUrl}</code>
                 <Button variant="outline" size="icon" className="flex-shrink-0" onClick={() => handleCopy(driverShortUrl)}>
-                  <Copy className="h-4 w-4" />
+                  {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
               <p className="text-[11px] text-muted-foreground">
-                Use este link curto quando o app de destino (ex.: Ubiz Car) não detectar URLs longas como clicáveis. É mais fácil copiar/colar e digitar.
+                Já é o link enviado nos compartilhamentos automáticos. Pequeno o suficiente para apps que não detectam URLs longas (ex.: Ubiz Car).
               </p>
             </div>
           )}
+          <details className="text-xs">
+            <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Ver link completo</summary>
+            <div className="mt-2 flex items-center gap-2">
+              <code className="flex-1 rounded-md border bg-muted px-2 sm:px-3 py-2 text-xs truncate min-w-0">{driverUrl}</code>
+              <Button variant="outline" size="icon" className="flex-shrink-0" onClick={() => handleCopy()}>
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </details>
           {driverWebviewUrl && (
             <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
               <div className="flex items-center gap-2">
