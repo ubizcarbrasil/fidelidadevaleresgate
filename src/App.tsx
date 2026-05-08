@@ -174,6 +174,39 @@ const PageLoader = forwardRef<HTMLDivElement>(function PageLoader(_props, ref) {
   );
 });
 
+/**
+ * Short-circuit para a vitrine pública /ofertas.
+ * Pula AuthProvider/BrandProvider/Sentry para abrir < 2s em in-app browsers
+ * (Instagram, Facebook, WhatsApp, iOS WebView), onde getSession() pode travar.
+ */
+function OfertasFastTrack({ children }: { children: React.ReactNode }) {
+  const isOfertas =
+    typeof window !== "undefined" &&
+    (window.location.pathname === "/ofertas" || window.location.pathname.startsWith("/ofertas/"));
+
+  if (!isOfertas) return <>{children}</>;
+
+  return (
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/ofertas" element={<PaginaUbizOfertas />} />
+            <Route path="*" element={<PaginaUbizOfertas />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </TooltipProvider>
+  );
+}
+
 function AnimatedRoutes() {
   return (
         <Suspense fallback={<PageLoader />}>
