@@ -13,6 +13,10 @@ export default function PaginaRedirecionamentoDriver() {
 
   useEffect(() => {
     document.title = "Abrindo ofertas...";
+    // Garantia extra: dispara o import do painel do motorista assim que a
+    // rota curta é montada, caso o prefetch do main.tsx não tenha sido
+    // executado (ex.: navegação SPA interna sem reload).
+    void import("@/pages/DriverPanelPage").catch(() => {});
   }, []);
 
   if (!brandId) return <Navigate to="/" replace />;
