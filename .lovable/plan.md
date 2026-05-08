@@ -1,64 +1,80 @@
-# Por que está lento (10s)
 
-O link `/driver?brandId=...` (e o curto `/d/:brandId`) é servido pelo **mesmo SPA gigante** que o painel admin. Cada abertura no WebView (Ubiz Car / WhatsApp / Instagram) executa esta cadeia em série:
+## Diagnóstico
+
+Confirmei pelo preview e pelas suas imagens que existem **3 problemas somados** que estão deixando pior:
+
+1. **O link compartilhado está sendo aberto dentro do `/webview` (iframe wrapper).** Nas imagens IMG_6985 e IMG_6988 aparece o cabeçalho "Ubiz Shop" — esse é o `WebviewPage`. Ou seja, o usuário abre o link e o app **carrega 2 SPAs em série**: primeiro o `/webview` (shell), depois um iframe com `/driver` (painel completo). Cada um faz boot do React, baixa chunks, providers, etc. Por isso 10s e por isso o "Algo deu errado" (o ErrorBoundary do iframe interno está disparando — provavelmente chunk antigo em cache do SW após o último deploy).
+
+2. **A rota curta `/d/:brandId` ainda é um componente React** (`PaginaRedirecionamentoDriver`) que precisa: baixar `App.tsx` (34 KB) + chunk-RPCDYKBN (139 KB) + 56 scripts (~585 KB no preview), montar `<BrowserRouter>` e só então fazer `<Navigate>` para `/driver?brandId=...`. Mesmo no FastTrack, o tempo até o redirect é de 1.5s–3s só para o React mountar.
+
+3. **O `DriverPanelPage` ainda é grande** (importa 25+ componentes do hub, overlays, gamificação, query client). Mesmo com prefetch, em rede móvel real (3G/4G no app Ubiz Car) isso é lento.
+
+O caminho que **funciona de verdade** é cortar etapas, não otimizar etapas inúteis.
+
+---
+
+## Plano de correção
+
+### 1. Parar de embrulhar o link do motorista no `/webview`
+
+O `/webview` faz sentido para abrir sites de terceiros (afiliados) — **nunca** deveria embrulhar o nosso próprio painel. Vou:
+
+- Auditar `src/lib/publicShareUrl.ts`, `src/components/driver/DriverMarketplace.tsx`, `src/pages/DriverPanelConfigPage.tsx` e qualquer ponto que use `buildWebviewWrapperUrl(...)` apontando para um destino interno (`/d/`, `/driver`, `/ofertas`).
+- Trocar todos esses pontos por `buildDriverShortUrl(...)` direto, sem o wrapper. O link compartilhado/copiado vai ser apenas `https://app.valeresgate.com.br/d/<brandId>`.
+- Resultado: **elimina um boot de SPA inteiro**, e some o cabeçalho "Ubiz Shop" do print.
+
+### 2. Tornar `/d/:brandId` realmente instantâneo (HTML estático, sem React)
+
+- Criar `public/d/index.html` (≈ 1 KB) com:
+  - `<meta http-equiv="refresh" content="0; url=/driver?brandId=...">` **dinâmico via JS inline** (lê o pathname, extrai o `brandId`, monta a URL final preservando query string e hash) e faz `location.replace`.
+  - Tela escura com spinner mínimo (CSS inline) caso o JS demore um frame.
+- O Lovable hosting faz fallback SPA, mas como o arquivo `public/d/index.html` existe, ele será servido **antes** do `index.html` principal.
+- Remover a rota React `<Route path="/d/:brandId" ...>` do `OfertasFastTrack` e do `AnimatedRoutes` em `src/App.tsx`.
+- Apagar `src/features/driver_short_link/pagina_redirecionamento_driver.tsx`.
+- Remover do `src/main.tsx` o branch `/d/` no `prefetchDriverPanel` (já não passa mais por React).
+
+Resultado: clicar no link curto → resposta < 200 ms → redirect → navegador entra direto no `/driver?brandId=...` (que aí sim carrega o React).
+
+### 3. Diagnosticar o "Algo deu errado" em produção
+
+Esse erro vem do `ErrorBoundary` interno (string "Algo deu errado" em `src/components/ErrorBoundary.tsx` linha 132). Hipótese forte: chunk antigo no Service Worker depois do último publish.
+
+- Adicionar um **kill-switch automático** no `public/d/index.html`: antes do redirect, fazer `navigator.serviceWorker.getRegistrations()` e `unregister()` + limpar `caches` **uma única vez por sessão** (flag em `sessionStorage`). Custo: < 50 ms. Garantia de que a primeira abertura no novo deploy não vai entregar bundle quebrado.
+- Manter o `installGlobalDomErrorRecovery` que já existe para os demais casos.
+- Pedir Sentry breadcrumbs no fluxo (já temos `reportError({source:"boundary"})`) para confirmar a causa após esse fix.
+
+### 4. Limpar o que ficou meio-feito nas tentativas anteriores
+
+- Manter o `OfertasFastTrack` (ele ajuda no `/driver` puro).
+- Manter o prefetch de `DriverPanelPage` em `main.tsx` apenas para `/driver` (remover o ramo `/d/`).
+- Atualizar `isWebviewLitePath()` se necessário.
+
+---
+
+## Métricas alvo (rede 4G real)
+
+- Clique no link curto → primeiro pixel do `/driver`: **≤ 1.5 s**
+- Carregamento total até CPF login: **≤ 3 s** (1ª vez), **≤ 800 ms** (2ª vez via cache)
+- Zero ocorrências de "Algo deu errado" após o 1º deploy pós-correção.
+
+---
+
+## Arquivos afetados
 
 ```text
-index.html
-  → main.tsx (boot shell)
-    → App.tsx (centenas de lazy imports, AuthProvider, BrandProvider, QueryClient, Sentry init etc.)
-      → resolve marca por ?brandId= (query Supabase)
-        → resolve tema/branches (mais queries)
-          → finalmente monta /driver
-            → /driver dispara queries de ofertas/categorias
+public/d/index.html                                       (novo, ~1 KB)
+src/App.tsx                                               (remove rota /d/:brandId)
+src/main.tsx                                              (remove ramo /d/ do prefetch)
+src/features/driver_short_link/                           (apaga pasta inteira)
+src/lib/publicShareUrl.ts                                 (auditoria de uso do webview wrapper)
+src/components/driver/DriverMarketplace.tsx               (idem)
+src/pages/DriverPanelConfigPage.tsx                       (idem)
 ```
 
-Em rede 4G dentro de um in-app browser sem cache, isso somado fácil passa de 8-10s. Não é um único gargalo — é **arquitetura**: uma landing pública carregando um app inteiro de back-office.
+---
 
-# Resposta direta à sua pergunta
+## Sobre criar um projeto separado
 
-**Não precisa criar projeto separado.** Dá para resolver dentro deste mesmo repo, com ganho equivalente, em duas frentes:
+**Não é necessário.** O gargalo não era "o projeto é grande demais para conviver com o painel", era arquitetural: 2 SPAs empilhados + chunk velho em cache. Resolver isso aqui é mais rápido, mais barato e não duplica regra de negócio (auth de motorista, ofertas, pontos, ledger). Só faria sentido um projeto separado se o time quisesse um **domínio próprio para marketing** (`ofertas.ubizcar.com.br`) com pipeline de deploy independente — mas isso é decisão de produto, não de performance.
 
-1. Tornar o `/d/:brandId` um **redirect estático** (HTML puro em `public/`), zero React.
-2. Fazer `/driver` virar uma **rota leve isolada** (sem AuthProvider / BrandProvider / Sentry / lazy do admin), nos moldes do que já fizemos com `/webview`.
-
-Só vale criar projeto separado se você quiser também **domínio próprio** (`ofertas.ubizcar.com.br`) com deploy independente — mas isso é decisão de marketing, não de performance.
-
-# Plano técnico (3 etapas)
-
-### Etapa 1 — Redirect estático em `/d/:brandId` (ganho imediato)
-- Criar `public/d/index.html` minimalista (~1KB) com `<script>` que lê `location.pathname`, extrai o `brandId` e faz `location.replace('/driver?brandId=...')`.
-- Configurar fallback de rota para `/d/*` apontar para esse HTML (Vite/SPA já serve `index.html` por padrão; precisamos servir `d/index.html` para esse prefixo — usar `vite.config.ts` ou um pequeno arquivo `_redirects` se aplicável).
-- Remover a rota React `PaginaRedirecionamentoDriver` (vira morta).
-- Resultado: o redirect deixa de exigir boot do React (economiza 2-4s).
-
-### Etapa 2 — Rota `/driver` em modo "lite" (ganho principal)
-Espelhar o padrão já existente do `/webview` (ver `isWebviewLitePath` em `bootMonitoring.ts` e o skip de Sentry/web-vitals em `main.tsx`):
-- Adicionar `/driver` ao conjunto de rotas "lite".
-- Criar um `App` enxuto (`AppDriver.tsx`) que monta apenas: `QueryClientProvider` + `BrandProvider` mínimo + `<DriverMarketplace />`. Sem `AuthProvider`, sem rotas admin, sem `lazy` desnecessário.
-- No `main.tsx`, escolher `App` vs `AppDriver` por `pathname` antes do `lazyWithRetry`.
-- Pré-resolver a marca via `?brandId=` direto (já é o caminho rápido — pular fallback por hostname para essa rota).
-
-### Etapa 3 — Cache e prefetch
-- Adicionar `<link rel="preconnect">` para o Supabase no `index.html` (se ainda não existe).
-- Cache HTTP forte para os assets do bundle do driver.
-- Service Worker: garantir que a rota `/driver` use `stale-while-revalidate` para a 2ª abertura ser instantânea (provavelmente já está, mas validar).
-
-# Métricas alvo
-- 1ª abertura no WebView: **≤ 2,5s até primeiro conteúdo visível** (LCP).
-- 2ª abertura: **< 800ms** (cache + SW).
-
-# Onde vou mexer
-- `public/d/index.html` (novo, redirect estático)
-- `vite.config.ts` (servir `public/d/index.html` para `/d/:brandId`) — só se necessário
-- `src/main.tsx` (roteador de App por path)
-- `src/AppDriver.tsx` (novo, app enxuto)
-- `src/App.tsx` (remover rota `/d/:brandId` e `/driver` quando em modo lite)
-- `src/lib/bootMonitoring.ts` (incluir `/driver` em `isWebviewLitePath`)
-- `src/features/driver_short_link/pagina_redirecionamento_driver.tsx` (remover)
-
-# Sobre criar um projeto separado
-Só recomendaria se você quiser:
-- Domínio dedicado (`ofertas.ubizcar.com.br`) com deploy independente, ou
-- Time/CI separado para iterar marketing sem mexer no admin.
-
-Para **só performance**, o plano acima entrega o mesmo resultado sem o custo de manter dois repos, dois deploys e duplicar lógica de marca/ofertas.
+Posso seguir e implementar?
