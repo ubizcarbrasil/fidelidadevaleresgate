@@ -1,62 +1,45 @@
-# Correção definitiva de `/ofertas` em WebViews / in-app browsers
+## Diagnóstico
 
-## Diagnóstico real (por que as tentativas anteriores falharam)
+O link `https://fidelidadevaleresgate.lovable.app/driver?brandId=...` funciona no navegador (testado: redireciona 302 para `app.valeresgate.com.br`), mas **não é clicável dentro do app da Ubiz Car**.
 
-As tentativas anteriores (denylist no SW, brandId imediato pelo hostname) atacavam sintomas. Os problemas reais são dois, e nenhum dos dois é o resolver de marca:
-
-### Problema 1 — "demora uma eternidade para abrir"
-A rota `/ofertas` carrega o **bundle inteiro do SPA admin**: `AuthProvider` chama `supabase.auth.getSession()`, `BrandProvider` resolve domínio, `queryClient` inicializa, Sentry/web-vitals carregam, e toda a árvore do `App.tsx` precisa montar antes do `__dismissBootstrap()` esconder o overlay azul "Carregando aplicativo…".
-
-Em WebViews de Instagram/Facebook/iOS Smart App Banner, `getSession()` frequentemente trava por 5–15s porque cookies de terceiros e storage estão restringidos. Como a vitrine `/ofertas` é **100% pública** (não usa auth nem brand context), essa espera é totalmente desnecessária.
-
-### Problema 2 — "volto, fica tudo branco e não abre mais"
-Esse é o bug clássico de **bfcache (back-forward cache) em in-app browsers iOS**. Quando o usuário toca em "Voltar" (seta `<`) do WebView do Instagram/iOS, a página é restaurada do bfcache em estado congelado: o React não re-monta, mas o Service Worker já invalidou os chunks antigos (cacheId `v10`). O resultado é DOM vazio + JS morto = tela branca permanente.
-
-A `navigateFallbackDenylist` não resolve isso porque o problema acontece **depois** que a página já carregou — é o pageshow restoration que falha.
-
----
+Causa provável: o WebView interno do app da Ubiz Car não detecta automaticamente URLs em texto simples como links clicáveis (comportamento comum de WebView Android sem `Linkify`). Isso é uma limitação do app cliente, não do nosso código.
 
 ## Solução
 
-### 1. Detecção precoce de rota pública pulando providers pesados
-Em `src/App.tsx`, antes de montar `AuthProvider`/`BrandProvider`, detectar `window.location.pathname === "/ofertas"` e renderizar uma árvore enxuta direto (`QueryClientProvider` + `BrowserRouter` + `<PaginaUbizOfertas />`), sem Auth, sem Brand, sem Sentry warm-up. Isso elimina o `getSession()` travado e corta dezenas de chunks lazy do caminho crítico.
+Não dá para mudar como o app da Ubiz Car renderiza texto. O que podemos fazer é:
 
-### 2. Handler de bfcache restoration na vitrine
-Adicionar em `src/features/ubiz_ofertas/pagina_ubiz_ofertas.tsx` um `useEffect` global:
-```
-window.addEventListener("pageshow", (e) => {
-  if (e.persisted) window.location.reload();
-});
-```
-Quando o usuário voltar via WebView e a página vier do bfcache, força reload limpo. Resolve a tela branca que impede reabrir.
+1. **Reduzir o tamanho/atrito do link** para que o motorista consiga copiar/colar mais facilmente, e
+2. **Já entregar o link no formato `/webview`** (que é o modo embarcado leve que construímos nas iterações anteriores) com `back=1&header=1`, para abrir bonito quando alguém abrir manualmente.
 
-### 3. Dismiss imediato do overlay de bootstrap em `/ofertas`
-No `index.html`, no script inline (que já roda antes de qualquer JS de módulo), checar `if (location.pathname === "/ofertas")` e:
-- Esconder `#bootstrap-fallback` mais cedo (sem aguardar `__APP_MOUNTED__`).
-- Mostrar um spinner mínimo só se demorar > 1.5s (evita "Carregando aplicativo…" piscando).
+### Mudanças propostas
 
-Isso elimina a tela "Carregando aplicativo… 🐷" que aparece nos screenshots.
+**1. Link curto canônico para drivers** (`src/lib/publicShareUrl.ts`)
+- Adicionar uma variante `buildDriverShortUrl(origin, brandId)` que retorna `${origin}/d/{brandId}` (rota curta).
+- Manter `buildDriverUrl` como fallback compatível.
 
-### 4. Garantir que SW não controle `/ofertas` em in-app browsers
-Em `src/main.tsx` (ou novo `src/lib/swGuardOfertas.ts`), se `pathname.startsWith("/ofertas")` E o user-agent for in-app browser (Instagram/FBAN/FBAV/Line/WhatsApp), chamar `navigator.serviceWorker.getRegistrations()` e `unregister()` antes do mount. Garante que cliques em "Voltar" não mostrem chunks fantasmas cacheados.
+**2. Nova rota curta `/d/:brandId`** (`src/App.tsx`)
+- Adicionar rota pública que faz `Navigate` server-side equivalente para `/driver?brandId=...`.
+- Adicionar à lista de `publicPaths`.
 
-### 5. Meta `Cache-Control` específico via headers no HTML
-Adicionar no `index.html` (head):
-```html
-<meta http-equiv="Cache-Control" content="no-store" />
-```
-Apenas como reforço — o efeito real vem do passo 4.
+**3. Wrapper WebView automático na hora do compartilhamento** (`src/features/ubiz_ofertas/components/link_publico_ofertas.tsx` e qualquer painel admin que mostre o link `/driver`)
+- Já existe lógica similar em `link_publico_ofertas.tsx` (gera variante `/webview?url=...`). Replicar o mesmo padrão para o link `/driver` exibido nos painéis de compartilhamento, mostrando 2 links lado a lado:
+  - **Link direto (curto)**: `https://app.valeresgate.com.br/d/{brandId}`
+  - **Link WebView**: `https://app.valeresgate.com.br/webview?url=...&title=Ofertas&back=1&header=1`
+- Botões: copiar, abrir, compartilhar (Web Share API).
 
----
+**4. Instrução visual nos painéis admin**
+- Adicionar nota: *"Em apps que não detectam links automaticamente (ex.: WebView do Ubiz Car), copie e cole o link curto na barra de endereço, ou use o botão Compartilhar."*
 
-## Arquivos alterados
+### Detalhes técnicos
 
-- `src/App.tsx` — short-circuit antes dos providers para `/ofertas`.
-- `src/features/ubiz_ofertas/pagina_ubiz_ofertas.tsx` — listener `pageshow` para bfcache.
-- `src/main.tsx` — desregistrar SW em in-app browsers na rota `/ofertas`.
-- `index.html` — dismiss precoce do overlay quando `pathname === "/ofertas"`.
+- A rota `/d/:brandId` é apenas um redirect SPA para `/driver?brandId=...`, preservando o resto da query string.
+- Não há mudança de backend, edge function ou banco de dados.
+- Tudo permanece dentro de frontend/presentation, conforme regra do workspace.
 
-## Resultado esperado
-- Abertura em WebView do Instagram/Facebook: **< 2s** até a vitrine aparecer (vs. 8–15s hoje).
-- Botão "Voltar" do WebView: ao reabrir o link, página recarrega limpa, sem tela branca.
-- Sem regressão nas rotas autenticadas (`/`, `/auth`, `/dashboard` etc.) — a otimização é exclusiva para `/ofertas`.
+### O que NÃO resolve este plano
+
+Se o problema for que o app da Ubiz Car **renderiza o link como texto plano** sem nenhuma forma de copiar, precisaremos coordenar com o time da Ubiz Car para que o app:
+- aplique `Linkify.addLinks()` (Android) nos textos recebidos, ou
+- envie a mensagem como HTML com `<a href>`.
+
+Esse ajuste é no app deles, não em código nosso.

@@ -114,6 +114,35 @@ export function buildDriverUrl(origin: string, brandId: string, opts?: { categor
 }
 
 /**
+ * Builds a short public driver URL using the `/d/:brandId` shortcut route.
+ * Útil para divulgar em apps cujo WebView não detecta URLs longas como
+ * clicáveis (ex.: Ubiz Car) — o motorista consegue copiar/digitar mais fácil.
+ */
+export function buildDriverShortUrl(origin: string, brandId: string, opts?: { categoryId?: string; dealId?: string }) {
+  const base = `${origin}/d/${brandId}`;
+  const params = new URLSearchParams();
+  if (opts?.dealId) params.set("dealId", opts.dealId);
+  if (opts?.categoryId) params.set("categoryId", opts.categoryId);
+  const qs = params.toString();
+  return qs ? `${base}?${qs}` : base;
+}
+
+/**
+ * Wrap a target URL in our `/webview` lightweight viewer with header + back.
+ * Use quando precisar embutir conteúdo dentro de outro app (in-app browser).
+ */
+export function buildWebviewWrapperUrl(origin: string, targetUrl: string, title?: string) {
+  const params = new URLSearchParams({
+    url: targetUrl,
+    title: title || "Ofertas",
+    header: "1",
+    back: "1",
+    share: "1",
+  });
+  return `${origin}/webview?${params.toString()}`;
+}
+
+/**
  * Share or copy a public driver URL, with clipboard fallback.
  */
 export async function shareDriverUrl(brandId: string, title: string, opts?: { categoryId?: string; dealId?: string }) {
