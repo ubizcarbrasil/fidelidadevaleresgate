@@ -25,6 +25,15 @@ export default function WebviewPage() {
     return () => clearTimeout(timer);
   }, [loading]);
 
+  // bfcache fix: in-app browsers restoram a página congelada ao voltar.
+  useEffect(() => {
+    const handler = (e: PageTransitionEvent) => {
+      if (e.persisted) window.location.reload();
+    };
+    window.addEventListener("pageshow", handler);
+    return () => window.removeEventListener("pageshow", handler);
+  }, []);
+
   const handleBack = () => {
     if (window.history.length > 1) {
       window.history.back();

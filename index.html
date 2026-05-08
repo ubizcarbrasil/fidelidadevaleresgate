@@ -117,7 +117,8 @@
       // a tela "Carregando aplicativo…" em in-app browsers (Instagram, FB, iOS WebView)
       // onde getSession() pode travar por 5–15s. A própria página renderiza seu loader.
       (function(){
-        if(window.location.pathname === "/ofertas" || window.location.pathname.indexOf("/ofertas/") === 0){
+        var pn = window.location.pathname;
+        if(pn === "/ofertas" || pn.indexOf("/ofertas/") === 0 || pn === "/webview" || pn.indexOf("/webview/") === 0){
           window.__OFERTAS_FAST_BOOT__ = true;
           var el = document.getElementById('bootstrap-fallback');
           if(el){
@@ -132,7 +133,8 @@
       // chunks fantasmas servindo tela branca após "Voltar".
       (function(){
         var p = window.location.pathname;
-        if(p !== "/ofertas" && p.indexOf("/ofertas/") !== 0) return;
+        var isPub = p === "/ofertas" || p.indexOf("/ofertas/") === 0 || p === "/webview" || p.indexOf("/webview/") === 0;
+        if(!isPub) return;
         var ua = navigator.userAgent || "";
         var isInApp = /Instagram|FBAN|FBAV|FB_IAB|Line|MicroMessenger|WhatsApp|Twitter|TikTok/i.test(ua);
         if(!isInApp) return;

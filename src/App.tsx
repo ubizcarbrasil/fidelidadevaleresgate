@@ -184,7 +184,11 @@ function OfertasFastTrack({ children }: { children: ReactNode }) {
     typeof window !== "undefined" &&
     (window.location.pathname === "/ofertas" || window.location.pathname.startsWith("/ofertas/"));
 
-  if (!isOfertas) return <>{children}</>;
+  const isWebview =
+    typeof window !== "undefined" &&
+    (window.location.pathname === "/webview" || window.location.pathname.startsWith("/webview/"));
+
+  if (!isOfertas && !isWebview) return <>{children}</>;
 
   return (
     <TooltipProvider>
@@ -198,6 +202,7 @@ function OfertasFastTrack({ children }: { children: ReactNode }) {
       >
         <Suspense fallback={<PageLoader />}>
           <Routes>
+            <Route path="/webview" element={<WebviewPage />} />
             <Route path="/ofertas" element={<PaginaUbizOfertas />} />
             <Route path="*" element={<PaginaUbizOfertas />} />
           </Routes>
