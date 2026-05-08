@@ -1,34 +1,62 @@
-# Plano: Link WebView para /ofertas
+# Correção definitiva de `/ofertas` em WebViews / in-app browsers
 
-## Objetivo
-Disponibilizar um link pronto que abra a rota `/ofertas` dentro da página `WebviewPage` (`/webview`), com cabeçalho fixo, botão de voltar, compartilhar e abrir externamente — ideal para uso em apps/in-app browsers.
+## Diagnóstico real (por que as tentativas anteriores falharam)
 
-## Como funciona
-A rota `/webview` já existe (`src/pages/customer/WebviewPage.tsx`) e aceita parâmetros via querystring:
-- `url` (obrigatório) — URL a ser carregada no iframe
-- `title` — título exibido no cabeçalho
-- `header=1` — mostra cabeçalho
-- `back=1` — mostra botão voltar
-- `share=1` — mostra botão compartilhar
+As tentativas anteriores (denylist no SW, brandId imediato pelo hostname) atacavam sintomas. Os problemas reais são dois, e nenhum dos dois é o resolver de marca:
 
-## Mudanças
+### Problema 1 — "demora uma eternidade para abrir"
+A rota `/ofertas` carrega o **bundle inteiro do SPA admin**: `AuthProvider` chama `supabase.auth.getSession()`, `BrandProvider` resolve domínio, `queryClient` inicializa, Sentry/web-vitals carregam, e toda a árvore do `App.tsx` precisa montar antes do `__dismissBootstrap()` esconder o overlay azul "Carregando aplicativo…".
 
-### 1. `src/features/ubiz_ofertas/components/link_publico_ofertas.tsx`
-Adicionar uma segunda seção no card chamada **"Link em modo WebView (cabeçalho + voltar)"**, exibindo um segundo input read-only com a URL no formato:
+Em WebViews de Instagram/Facebook/iOS Smart App Banner, `getSession()` frequentemente trava por 5–15s porque cookies de terceiros e storage estão restringidos. Como a vitrine `/ofertas` é **100% pública** (não usa auth nem brand context), essa espera é totalmente desnecessária.
 
+### Problema 2 — "volto, fica tudo branco e não abre mais"
+Esse é o bug clássico de **bfcache (back-forward cache) em in-app browsers iOS**. Quando o usuário toca em "Voltar" (seta `<`) do WebView do Instagram/iOS, a página é restaurada do bfcache em estado congelado: o React não re-monta, mas o Service Worker já invalidou os chunks antigos (cacheId `v10`). O resultado é DOM vazio + JS morto = tela branca permanente.
+
+A `navigateFallbackDenylist` não resolve isso porque o problema acontece **depois** que a página já carregou — é o pageshow restoration que falha.
+
+---
+
+## Solução
+
+### 1. Detecção precoce de rota pública pulando providers pesados
+Em `src/App.tsx`, antes de montar `AuthProvider`/`BrandProvider`, detectar `window.location.pathname === "/ofertas"` e renderizar uma árvore enxuta direto (`QueryClientProvider` + `BrowserRouter` + `<PaginaUbizOfertas />`), sem Auth, sem Brand, sem Sentry warm-up. Isso elimina o `getSession()` travado e corta dezenas de chunks lazy do caminho crítico.
+
+### 2. Handler de bfcache restoration na vitrine
+Adicionar em `src/features/ubiz_ofertas/pagina_ubiz_ofertas.tsx` um `useEffect` global:
 ```
-https://app.valeresgate.com.br/webview?url=<encoded /ofertas>&title=<titulo>&header=1&back=1&share=1
+window.addEventListener("pageshow", (e) => {
+  if (e.persisted) window.location.reload();
+});
 ```
+Quando o usuário voltar via WebView e a página vier do bfcache, força reload limpo. Resolve a tela branca que impede reabrir.
 
-Reutilizar os mesmos botões (Copiar, Abrir, Compartilhar) já existentes, agora atuando sobre essa URL WebView. Construir a URL a partir do `url` resolvido pelo hook `useLinkPublicoOfertas` (não duplicar lógica de domínio).
+### 3. Dismiss imediato do overlay de bootstrap em `/ofertas`
+No `index.html`, no script inline (que já roda antes de qualquer JS de módulo), checar `if (location.pathname === "/ofertas")` e:
+- Esconder `#bootstrap-fallback` mais cedo (sem aguardar `__APP_MOUNTED__`).
+- Mostrar um spinner mínimo só se demorar > 1.5s (evita "Carregando aplicativo…" piscando).
 
-Texto explicativo curto: *"Use este link quando precisar embutir a vitrine em apps. Abre dentro do nosso WebView com cabeçalho, voltar e compartilhar."*
+Isso elimina a tela "Carregando aplicativo… 🐷" que aparece nos screenshots.
 
-### 2. `src/lib/publicShareUrl.ts` (helper opcional)
-Adicionar função utilitária `buildWebviewUrl(targetUrl, { title, share })` que monta a URL do `/webview` com os params corretos. Usada pelo componente acima e disponível para reuso futuro (ex.: botão de compartilhar do `CabecalhoOfertas`).
+### 4. Garantir que SW não controle `/ofertas` em in-app browsers
+Em `src/main.tsx` (ou novo `src/lib/swGuardOfertas.ts`), se `pathname.startsWith("/ofertas")` E o user-agent for in-app browser (Instagram/FBAN/FBAV/Line/WhatsApp), chamar `navigator.serviceWorker.getRegistrations()` e `unregister()` antes do mount. Garante que cliques em "Voltar" não mostrem chunks fantasmas cacheados.
 
-### 3. (Opcional) `src/features/ubiz_ofertas/components/cabecalho_ofertas.tsx`
-Sem alteração agora — o botão Compartilhar atual continua compartilhando o link direto. O link WebView fica disponível apenas no painel admin (componente do item 1) para divulgação.
+### 5. Meta `Cache-Control` específico via headers no HTML
+Adicionar no `index.html` (head):
+```html
+<meta http-equiv="Cache-Control" content="no-store" />
+```
+Apenas como reforço — o efeito real vem do passo 4.
 
-## Resultado para o usuário
-No painel de configurações da marca, na seção **Link público da vitrine**, aparecerá um novo bloco com a URL em formato WebView, pronta para copiar e usar dentro do app — abrindo `/ofertas` com cabeçalho, botão voltar e compartilhar nativos da plataforma.
+---
+
+## Arquivos alterados
+
+- `src/App.tsx` — short-circuit antes dos providers para `/ofertas`.
+- `src/features/ubiz_ofertas/pagina_ubiz_ofertas.tsx` — listener `pageshow` para bfcache.
+- `src/main.tsx` — desregistrar SW em in-app browsers na rota `/ofertas`.
+- `index.html` — dismiss precoce do overlay quando `pathname === "/ofertas"`.
+
+## Resultado esperado
+- Abertura em WebView do Instagram/Facebook: **< 2s** até a vitrine aparecer (vs. 8–15s hoje).
+- Botão "Voltar" do WebView: ao reabrir o link, página recarrega limpa, sem tela branca.
+- Sem regressão nas rotas autenticadas (`/`, `/auth`, `/dashboard` etc.) — a otimização é exclusiva para `/ofertas`.

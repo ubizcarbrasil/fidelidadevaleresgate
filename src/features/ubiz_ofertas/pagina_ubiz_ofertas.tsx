@@ -20,6 +20,18 @@ const JANELA_NOVAS_OFERTAS_MS = 48 * 60 * 60 * 1000;
 
 export default function PaginaUbizOfertas() {
   const { brandId, marca, carregando: carregandoMarca, erro } = useMarcaOfertas();
+
+  // bfcache fix: in-app browsers (Instagram, Facebook, iOS Safari WebView)
+  // restoram a página congelada ao voltar, deixando a tela em branco com
+  // chunks já invalidados. Forçar reload limpo na restauração.
+  useEffect(() => {
+    const handler = (e: PageTransitionEvent) => {
+      if (e.persisted) window.location.reload();
+    };
+    window.addEventListener("pageshow", handler);
+    return () => window.removeEventListener("pageshow", handler);
+  }, []);
+
   const settings = (marca?.brand_settings_json || {}) as Record<string, any>;
   const theme = settings.theme || null;
   useBrandTheme(theme);
