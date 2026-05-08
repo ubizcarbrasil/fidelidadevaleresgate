@@ -11,6 +11,7 @@ import { Suspense, useEffect, Component, type ReactNode } from "react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import { installGlobalDomErrorRecovery } from "@/lib/pwaRecovery";
 import { installRadixPointerEventsFix } from "@/lib/radixPointerEventsFix";
+import { isWebviewLitePath, startMonitoring } from "@/lib/bootMonitoring";
 import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
 
 // Recuperação reativa apenas em erro real de chunk/import dinâmico.
@@ -82,17 +83,13 @@ function BootShell() {
     // Webview leve: pula Sentry + web-vitals em /webview para reduzir
     // ainda mais o tempo de carregamento dentro de in-app browsers.
     const path = window.location.pathname;
-    const isWebviewLite = path === "/webview" || path.startsWith("/webview/");
-    if (isWebviewLite) {
+    if (isWebviewLitePath(path)) {
       console.info("[boot] webview-lite mode — analytics/sentry desabilitados");
       return;
     }
 
     // Deferred: load Sentry + web-vitals after mount (non-blocking)
-    const loadMonitoring = () => {
-      import("@/lib/sentry").then(({ initSentry }) => initSentry()).catch(() => {});
-      import("@/lib/webVitals").then(({ reportWebVitals }) => reportWebVitals()).catch(() => {});
-    };
+    const loadMonitoring = () => startMonitoring(path);
     if ("requestIdleCallback" in window) {
       (window as any).requestIdleCallback(loadMonitoring);
     } else {
