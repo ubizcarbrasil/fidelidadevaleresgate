@@ -18,7 +18,6 @@ import RootGuard from "@/components/RootGuard";
 const AppLayout = lazyWithRetry(() => import("@/components/AppLayout"));
 const WhiteLabelLayout = lazyWithRetry(() => import("@/components/WhiteLabelLayout"));
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
-const PaginaRedirecionamentoDriver = lazyWithRetry(() => import("@/features/driver_short_link/pagina_redirecionamento_driver"));
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import TelaCarregamento, { TelaCarregamentoInline } from "@/compartilhados/components/tela_carregamento";
 // MountSignal moved to BootShell in main.tsx for instant bootstrap dismissal
@@ -194,7 +193,7 @@ function OfertasFastTrack({ children }: { children: ReactNode }) {
     (window.location.pathname === "/driver" || window.location.pathname.startsWith("/driver/"));
 
   const isDriverShort =
-    typeof window !== "undefined" && window.location.pathname.startsWith("/d/");
+    false; // /d/<brandId> agora é tratado como redirect estático no index.html
 
   if (!isOfertas && !isWebview && !isDriver && !isDriverShort) return <>{children}</>;
 
@@ -213,7 +212,6 @@ function OfertasFastTrack({ children }: { children: ReactNode }) {
             <Route path="/webview" element={<WebviewPage />} />
             <Route path="/ofertas" element={<PaginaUbizOfertas />} />
             <Route path="/driver" element={<DriverPanelPage />} />
-            <Route path="/d/:brandId" element={<PaginaRedirecionamentoDriver />} />
             <Route path="*" element={<PaginaUbizOfertas />} />
           </Routes>
         </Suspense>
@@ -240,7 +238,6 @@ function AnimatedRoutes() {
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/links" element={<PaginaLinks />} />
             <Route path="/driver" element={<DriverPanelPage />} />
-            <Route path="/d/:brandId" element={<PaginaRedirecionamentoDriver />} />
             <Route path="/mcp-dashboard" element={<McpDashboardPage />} />
             <Route path="/:slug/parceiro" element={<PartnerLandingPage />} />
             <Route path="/register-store" element={<StoreRegistrationWizard />} />
