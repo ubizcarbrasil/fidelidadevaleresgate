@@ -189,7 +189,14 @@ function OfertasFastTrack({ children }: { children: ReactNode }) {
     typeof window !== "undefined" &&
     (window.location.pathname === "/webview" || window.location.pathname.startsWith("/webview/"));
 
-  if (!isOfertas && !isWebview) return <>{children}</>;
+  const isDriver =
+    typeof window !== "undefined" &&
+    (window.location.pathname === "/driver" || window.location.pathname.startsWith("/driver/"));
+
+  const isDriverShort =
+    typeof window !== "undefined" && window.location.pathname.startsWith("/d/");
+
+  if (!isOfertas && !isWebview && !isDriver && !isDriverShort) return <>{children}</>;
 
   return (
     <TooltipProvider>
@@ -205,6 +212,8 @@ function OfertasFastTrack({ children }: { children: ReactNode }) {
           <Routes>
             <Route path="/webview" element={<WebviewPage />} />
             <Route path="/ofertas" element={<PaginaUbizOfertas />} />
+            <Route path="/driver" element={<DriverPanelPage />} />
+            <Route path="/d/:brandId" element={<PaginaRedirecionamentoDriver />} />
             <Route path="*" element={<PaginaUbizOfertas />} />
           </Routes>
         </Suspense>
