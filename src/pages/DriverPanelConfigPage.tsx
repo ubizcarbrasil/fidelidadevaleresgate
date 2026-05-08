@@ -10,8 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ExternalLink, Copy, Check, Car, Sparkles, Image, Minus, Plus, Trash2, GripVertical, Video, Gift, Home } from "lucide-react";
-import { buildDriverUrl } from "@/lib/publicShareUrl";
+import { ExternalLink, Copy, Check, Car, Sparkles, Image, Minus, Plus, Trash2, GripVertical, Video, Gift, Home, Smartphone, Link2 } from "lucide-react";
+import { buildDriverUrl, buildDriverShortUrl, buildWebviewWrapperUrl } from "@/lib/publicShareUrl";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import ImageUploadField from "@/components/ImageUploadField";
@@ -163,6 +163,8 @@ export default function DriverPanelConfigPage() {
   const configuredBaseUrl = brandSettings?.driver_public_base_url as string | undefined;
   const effectiveOrigin = configuredBaseUrl || window.location.origin;
   const driverUrl = buildDriverUrl(effectiveOrigin, currentBrandId || "");
+  const driverShortUrl = currentBrandId ? buildDriverShortUrl(effectiveOrigin, currentBrandId) : "";
+  const driverWebviewUrl = currentBrandId ? buildWebviewWrapperUrl(effectiveOrigin, driverShortUrl, "Ofertas") : "";
 
   const showBanners = brandSettings?.driver_show_banners !== false;
   const categoryLayout: Record<string, CategoryLayout> = brandSettings?.driver_category_layout || {};
@@ -212,8 +214,8 @@ export default function DriverPanelConfigPage() {
     },
   });
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(driverUrl);
+  const handleCopy = (valor?: string) => {
+    navigator.clipboard.writeText(valor ?? driverUrl);
     setCopied(true);
     toast({ title: "Link copiado!" });
     setTimeout(() => setCopied(false), 2000);
