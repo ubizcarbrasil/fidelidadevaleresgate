@@ -16,7 +16,16 @@ export function useMarcaOfertas() {
   const { brand: ctxBrand, loading: ctxLoading } = useBrand();
   const brandIdParam = searchParams.get("brandId");
 
-  const [brandId, setBrandId] = useState<string | null>(brandIdParam);
+  // Resolve hostname imediatamente para evitar esperar o BrandContext
+  // (acelera muito a abertura em in-app browsers / webviews).
+  const hostnameInicial = typeof window !== "undefined" ? window.location.hostname : "";
+  const brandIdInicial = brandIdParam
+    ? brandIdParam
+    : hostnameInicial === PORTAL_HOSTNAME
+    ? PORTAL_BRAND_ID
+    : null;
+
+  const [brandId, setBrandId] = useState<string | null>(brandIdInicial);
   const [marca, setMarca] = useState<MarcaOfertas | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -27,6 +36,7 @@ export function useMarcaOfertas() {
       setBrandId(brandIdParam);
       return;
     }
+    if (brandId) return;
     if (ctxLoading) return;
     if (ctxBrand?.id) {
       setBrandId(ctxBrand.id);
