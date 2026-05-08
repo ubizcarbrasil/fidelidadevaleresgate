@@ -5,7 +5,13 @@
  */
 
 export function isWebviewLitePath(pathname: string): boolean {
-  return pathname === "/webview" || pathname.startsWith("/webview/");
+  return (
+    pathname === "/webview" ||
+    pathname.startsWith("/webview/") ||
+    pathname === "/driver" ||
+    pathname.startsWith("/driver/") ||
+    pathname.startsWith("/d/")
+  );
 }
 
 export interface MonitoringLoaders {
