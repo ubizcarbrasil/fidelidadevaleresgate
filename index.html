@@ -3,6 +3,55 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <script>
+      // ── /d/<brandId> SHORT-CIRCUIT ────────────────────────────────────────
+      // Rota curta de divulgação (ex.: WebView do Ubiz Car). Redireciona
+      // INSTANTANEAMENTE para /driver?brandId=... sem inicializar React,
+      // providers, Sentry ou qualquer chunk pesado. Limpa SW antigo apenas
+      // na primeira abertura da sessão para evitar chunks fantasmas após
+      // novo deploy. Custo total: < 50 ms em condições normais.
+      (function(){
+        try {
+          var path = location.pathname.replace(/\/+$/,"");
+          if (path.indexOf("/d/") !== 0) return;
+          var parts = path.split("/").filter(Boolean); // ["d","<brandId>"]
+          var brandId = parts[1] || "";
+          var qs = new URLSearchParams(location.search);
+          if (brandId) qs.set("brandId", brandId);
+          var target = "/driver?" + qs.toString() + (location.hash || "");
+          var FLAG = "__d_sw_killed__";
+          var killed = sessionStorage.getItem(FLAG);
+          var done = false;
+          var go = function(){ if (done) return; done = true; location.replace(brandId ? target : "/"); };
+          if (!killed && "serviceWorker" in navigator) {
+            try { sessionStorage.setItem(FLAG, "1"); } catch(_){}
+            setTimeout(go, 400); // teto duro
+            Promise.resolve()
+              .then(function(){ return navigator.serviceWorker.getRegistrations(); })
+              .then(function(regs){ return Promise.all((regs||[]).map(function(r){ return r.unregister().catch(function(){}); })); })
+              .then(function(){
+                if (typeof caches !== "undefined") {
+                  return caches.keys().then(function(keys){
+                    return Promise.all(keys.map(function(k){ return caches.delete(k).catch(function(){}); }));
+                  });
+                }
+              })
+              .catch(function(){})
+              .then(go);
+          } else {
+            go();
+          }
+          // Aborta o boot do React enquanto o redirect acontece.
+          // (Throw é capturado pelo navegador e impede execução dos scripts seguintes
+          //  do mesmo bloco inline; o <script type="module"> ainda carrega, mas a
+          //  navegação location.replace já estará em curso.)
+          throw new Error("__d_redirect__");
+        } catch (e) {
+          if (e && e.message === "__d_redirect__") throw e;
+          /* fall through to normal boot */
+        }
+      })();
+    </script>
     <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
