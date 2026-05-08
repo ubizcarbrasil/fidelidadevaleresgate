@@ -18,6 +18,7 @@ import RootGuard from "@/components/RootGuard";
 const AppLayout = lazyWithRetry(() => import("@/components/AppLayout"));
 const WhiteLabelLayout = lazyWithRetry(() => import("@/components/WhiteLabelLayout"));
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
+const PaginaRedirecionamentoDriver = lazyWithRetry(() => import("@/features/driver_short_link/pagina_redirecionamento_driver"));
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import TelaCarregamento, { TelaCarregamentoInline } from "@/compartilhados/components/tela_carregamento";
 // MountSignal moved to BootShell in main.tsx for instant bootstrap dismissal
@@ -230,6 +231,7 @@ function AnimatedRoutes() {
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/links" element={<PaginaLinks />} />
             <Route path="/driver" element={<DriverPanelPage />} />
+            <Route path="/d/:brandId" element={<PaginaRedirecionamentoDriver />} />
             <Route path="/mcp-dashboard" element={<McpDashboardPage />} />
             <Route path="/:slug/parceiro" element={<PartnerLandingPage />} />
             <Route path="/register-store" element={<StoreRegistrationWizard />} />
@@ -458,7 +460,7 @@ function AppContent() {
   }
 
   // Public paths that don't need brand resolution
-  const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store", "/p/", "/driver", "/loja/", "/campeonato/", "/ofertas"];
+  const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store", "/p/", "/driver", "/d/", "/loja/", "/campeonato/", "/ofertas"];
   const isPublicPath = publicPaths.some(p => location.pathname.startsWith(p));
 
   // Portal domain: redirect unauthenticated users to /auth immediately (before loading guard)
