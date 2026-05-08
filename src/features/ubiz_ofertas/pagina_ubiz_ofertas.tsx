@@ -48,12 +48,20 @@ export default function PaginaUbizOfertas() {
   };
   const [ofertaAberta, setOfertaAberta] = useState<OfertaPublica | null>(null);
   const cabecalhoCategoriaRef = useRef<HTMLDivElement | null>(null);
+  const gradeCategoriasRef = useRef<HTMLDivElement | null>(null);
+  const jaInteragiuRef = useRef(false);
 
-  // Rolagem suave para o cabeçalho da categoria ao selecionar
+  // Rolagem suave: para o cabeçalho da categoria ao selecionar; para a grade ao limpar
   useEffect(() => {
-    if (!categoriaSelecionadaId) return;
+    if (!jaInteragiuRef.current) {
+      jaInteragiuRef.current = true;
+      return;
+    }
     requestAnimationFrame(() => {
-      cabecalhoCategoriaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      const alvo = categoriaSelecionadaId
+        ? cabecalhoCategoriaRef.current
+        : gradeCategoriasRef.current;
+      alvo?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }, [categoriaSelecionadaId]);
 
@@ -130,12 +138,14 @@ export default function PaginaUbizOfertas() {
 
         <DriverBannerCarousel brandId={marca.id} />
 
-        <GradeCategoriasOfertas
-          categorias={categoriasComOfertas}
-          fontHeading={fontHeading}
-          selecionadaId={categoriaSelecionadaId}
-          onSelecionar={(id) => setCategoriaSelecionadaId(id)}
-        />
+        <div ref={gradeCategoriasRef} className="scroll-mt-4">
+          <GradeCategoriasOfertas
+            categorias={categoriasComOfertas}
+            fontHeading={fontHeading}
+            selecionadaId={categoriaSelecionadaId}
+            onSelecionar={(id) => setCategoriaSelecionadaId(id)}
+          />
+        </div>
 
         {carregandoOfertas && ofertas.length === 0 ? (
           <div className="flex justify-center py-12">
