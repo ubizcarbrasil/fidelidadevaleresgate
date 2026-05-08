@@ -353,6 +353,7 @@ function PWABanners() {
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
+      <OfertasFastTrack>
       <AuthProvider>
         <BrandProvider>
           <TooltipProvider>
@@ -371,6 +372,7 @@ const App = () => (
           </TooltipProvider>
         </BrandProvider>
       </AuthProvider>
+      </OfertasFastTrack>
     </QueryClientProvider>
   </ErrorBoundary>
 );
