@@ -3,7 +3,7 @@ import React, { useState, useRef, useMemo, useCallback, useEffect, lazy, Suspens
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, icons, Tag, ShoppingBag, Search, X, Share2, MessageCircle, Gift, HelpCircle, Swords, ArrowLeft, Ticket, CreditCard } from "lucide-react";
-import { shareDriverUrl, buildDriverUrl } from "@/lib/publicShareUrl";
+import { shareDriverUrl, buildDriverShortUrl } from "@/lib/publicShareUrl";
 import DriverCategoryPage from "./DriverCategoryPage";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 import DriverRedeemCheckout from "./DriverRedeemCheckout";
@@ -73,7 +73,9 @@ interface Props {
 }
 
 function getPublicShareUrl(brandId: string, opts?: { categoryId?: string; dealId?: string }) {
-  return buildDriverUrl(window.location.origin, brandId, opts);
+  // Usa a rota curta `/d/:brandId` para gerar um link enxuto, ideal para
+  // WhatsApp, in-app browsers e apps com WebView que não detectam URLs longas.
+  return buildDriverShortUrl(window.location.origin, brandId, opts);
 }
 
 export { getPublicShareUrl };
