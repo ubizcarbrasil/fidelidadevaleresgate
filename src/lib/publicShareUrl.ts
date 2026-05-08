@@ -147,7 +147,9 @@ export function buildWebviewWrapperUrl(origin: string, targetUrl: string, title?
  */
 export async function shareDriverUrl(brandId: string, title: string, opts?: { categoryId?: string; dealId?: string }) {
   const origin = await getPublicOrigin(brandId);
-  const url = buildDriverUrl(origin, brandId, opts);
+  // Sempre usar a rota curta `/d/:brandId` para compartilhamento — links menores
+  // são clicáveis em mais apps (ex.: WebView do Ubiz Car) e mais fáceis de digitar.
+  const url = buildDriverShortUrl(origin, brandId, opts);
 
   if (navigator.share) {
     try {
