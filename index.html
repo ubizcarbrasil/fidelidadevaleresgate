@@ -113,6 +113,36 @@
         }
       })();
 
+      // /ofertas — vitrine pública. Esconder overlay imediatamente para evitar
+      // a tela "Carregando aplicativo…" em in-app browsers (Instagram, FB, iOS WebView)
+      // onde getSession() pode travar por 5–15s. A própria página renderiza seu loader.
+      (function(){
+        if(window.location.pathname === "/ofertas" || window.location.pathname.indexOf("/ofertas/") === 0){
+          window.__OFERTAS_FAST_BOOT__ = true;
+          var el = document.getElementById('bootstrap-fallback');
+          if(el){
+            el.style.background = '#0f1729';
+            var phaseEl = document.getElementById('bootstrap-phase');
+            if(phaseEl) phaseEl.textContent = '';
+          }
+        }
+      })();
+
+      // /ofertas em in-app browsers: desregistrar SW antes do mount para evitar
+      // chunks fantasmas servindo tela branca após "Voltar".
+      (function(){
+        var p = window.location.pathname;
+        if(p !== "/ofertas" && p.indexOf("/ofertas/") !== 0) return;
+        var ua = navigator.userAgent || "";
+        var isInApp = /Instagram|FBAN|FBAV|FB_IAB|Line|MicroMessenger|WhatsApp|Twitter|TikTok/i.test(ua);
+        if(!isInApp) return;
+        if('serviceWorker' in navigator){
+          navigator.serviceWorker.getRegistrations().then(function(regs){
+            regs.forEach(function(r){ try { r.unregister(); } catch(e){} });
+          }).catch(function(){});
+        }
+      })();
+
       // SW recovery: detect _sw_cleared param and clean URL without reload
       (function(){
         try {
