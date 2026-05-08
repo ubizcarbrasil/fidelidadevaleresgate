@@ -1,4 +1,4 @@
-import { Copy, ExternalLink, Share2, Link2, Loader2 } from "lucide-react";
+import { Copy, ExternalLink, Share2, Link2, Loader2, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,32 +13,52 @@ interface Props {
 export default function LinkPublicoOfertas({ brandId, titulo }: Props) {
   const { url, carregando } = useLinkPublicoOfertas(brandId);
 
-  const copiar = async () => {
-    if (!url) return;
+  const urlWebview = (() => {
+    if (!url) return "";
     try {
-      await navigator.clipboard.writeText(url);
+      const origem = new URL(url).origin;
+      const params = new URLSearchParams({
+        url,
+        title: titulo || "Ubiz Ofertas",
+        header: "1",
+        back: "1",
+        share: "1",
+      });
+      return `${origem}/webview?${params.toString()}`;
+    } catch {
+      return "";
+    }
+  })();
+
+  const copiar = async (valor?: string) => {
+    const alvo = valor ?? url;
+    if (!alvo) return;
+    try {
+      await navigator.clipboard.writeText(alvo);
       toast.success("Link copiado!");
     } catch {
       toast.error("Não foi possível copiar");
     }
   };
 
-  const abrir = () => {
-    if (!url) return;
-    window.open(url, "_blank", "noopener,noreferrer");
+  const abrir = (valor?: string) => {
+    const alvo = valor ?? url;
+    if (!alvo) return;
+    window.open(alvo, "_blank", "noopener,noreferrer");
   };
 
-  const compartilhar = async () => {
-    if (!url) return;
+  const compartilhar = async (valor?: string) => {
+    const alvo = valor ?? url;
+    if (!alvo) return;
     if (navigator.share) {
       try {
-        await navigator.share({ title: titulo || "Ubiz Ofertas", url });
+        await navigator.share({ title: titulo || "Ubiz Ofertas", url: alvo });
         return;
       } catch (e: any) {
         if (e?.name === "AbortError") return;
       }
     }
-    copiar();
+    copiar(alvo);
   };
 
   return (
@@ -60,7 +80,7 @@ export default function LinkPublicoOfertas({ brandId, titulo }: Props) {
           variant="outline"
           size="icon"
           className="h-9 w-9 shrink-0"
-          onClick={copiar}
+          onClick={() => copiar()}
           disabled={!url}
           title="Copiar"
         >
@@ -71,7 +91,7 @@ export default function LinkPublicoOfertas({ brandId, titulo }: Props) {
           variant="outline"
           size="icon"
           className="h-9 w-9 shrink-0"
-          onClick={abrir}
+          onClick={() => abrir()}
           disabled={!url}
           title="Abrir"
         >
@@ -82,7 +102,7 @@ export default function LinkPublicoOfertas({ brandId, titulo }: Props) {
           variant="outline"
           size="icon"
           className="h-9 w-9 shrink-0"
-          onClick={compartilhar}
+          onClick={() => compartilhar()}
           disabled={!url}
           title="Compartilhar"
         >
@@ -93,6 +113,57 @@ export default function LinkPublicoOfertas({ brandId, titulo }: Props) {
       <p className="text-[11px] text-muted-foreground">
         Use este link para divulgar a vitrine pública. Funciona sem login, sem pontos e sem WhatsApp.
       </p>
+
+      <div className="pt-2 border-t border-border/50 space-y-2">
+        <div className="flex items-center gap-2">
+          <Smartphone className="h-4 w-4 text-primary" />
+          <Label className="text-xs font-semibold">Link em modo WebView (cabeçalho + voltar)</Label>
+        </div>
+        <div className="flex gap-2">
+          <Input
+            readOnly
+            value={carregando ? "Resolvendo domínio..." : urlWebview || "—"}
+            className="h-9 font-mono text-xs"
+            onFocus={(e) => e.currentTarget.select()}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            onClick={() => copiar(urlWebview)}
+            disabled={!urlWebview}
+            title="Copiar"
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            onClick={() => abrir(urlWebview)}
+            disabled={!urlWebview}
+            title="Abrir"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            onClick={() => compartilhar(urlWebview)}
+            disabled={!urlWebview}
+            title="Compartilhar"
+          >
+            <Share2 className="h-4 w-4" />
+          </Button>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Use este link quando precisar embutir a vitrine em apps. Abre dentro do nosso WebView com cabeçalho, botão de voltar e compartilhar.
+        </p>
+      </div>
 
       <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-2.5 text-[11px] text-amber-700 dark:text-amber-300">
         <strong>Atenção:</strong> após ativar este modo ou alterar configurações, clique em{" "}

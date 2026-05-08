@@ -1,28 +1,34 @@
-## Problema
+# Plano: Link WebView para /ofertas
 
-Ao clicar em **"Todos"** na grade de categorias (após já ter selecionado uma categoria), a página realmente troca para a visão geral (Destaques, Novas, Seções por categoria, Todas as ofertas), mas **não há rolagem visual**. Como o usuário está no meio da página (na seção da categoria filtrada), parece que "nada abriu" — o conteúdo de cima fica fora da tela.
+## Objetivo
+Disponibilizar um link pronto que abra a rota `/ofertas` dentro da página `WebviewPage` (`/webview`), com cabeçalho fixo, botão de voltar, compartilhar e abrir externamente — ideal para uso em apps/in-app browsers.
 
-Hoje em `pagina_ubiz_ofertas.tsx` o `useEffect` de rolagem só age quando há categoria selecionada:
+## Como funciona
+A rota `/webview` já existe (`src/pages/customer/WebviewPage.tsx`) e aceita parâmetros via querystring:
+- `url` (obrigatório) — URL a ser carregada no iframe
+- `title` — título exibido no cabeçalho
+- `header=1` — mostra cabeçalho
+- `back=1` — mostra botão voltar
+- `share=1` — mostra botão compartilhar
 
-```ts
-useEffect(() => {
-  if (!categoriaSelecionadaId) return; // ← ignora "Todos"
-  ...scrollIntoView(cabecalhoCategoriaRef)
-}, [categoriaSelecionadaId]);
+## Mudanças
+
+### 1. `src/features/ubiz_ofertas/components/link_publico_ofertas.tsx`
+Adicionar uma segunda seção no card chamada **"Link em modo WebView (cabeçalho + voltar)"**, exibindo um segundo input read-only com a URL no formato:
+
+```
+https://app.valeresgate.com.br/webview?url=<encoded /ofertas>&title=<titulo>&header=1&back=1&share=1
 ```
 
-## Solução
+Reutilizar os mesmos botões (Copiar, Abrir, Compartilhar) já existentes, agora atuando sobre essa URL WebView. Construir a URL a partir do `url` resolvido pelo hook `useLinkPublicoOfertas` (não duplicar lógica de domínio).
 
-Quando `categoriaSelecionadaId` voltar a `null` (clique em "Todos" ou em "Mostrar todas"), rolar suavemente para o topo da vitrine (logo abaixo do cabeçalho/banner — na grade de categorias), para que o usuário veja imediatamente as seções de Destaques / Novas / etc.
+Texto explicativo curto: *"Use este link quando precisar embutir a vitrine em apps. Abre dentro do nosso WebView com cabeçalho, voltar e compartilhar."*
 
-### Mudanças
+### 2. `src/lib/publicShareUrl.ts` (helper opcional)
+Adicionar função utilitária `buildWebviewUrl(targetUrl, { title, share })` que monta a URL do `/webview` com os params corretos. Usada pelo componente acima e disponível para reuso futuro (ex.: botão de compartilhar do `CabecalhoOfertas`).
 
-Arquivo: `src/features/ubiz_ofertas/pagina_ubiz_ofertas.tsx`
+### 3. (Opcional) `src/features/ubiz_ofertas/components/cabecalho_ofertas.tsx`
+Sem alteração agora — o botão Compartilhar atual continua compartilhando o link direto. O link WebView fica disponível apenas no painel admin (componente do item 1) para divulgação.
 
-1. Adicionar um `useRef` adicional `gradeCategoriasRef` e prendê-lo no wrapper do `<GradeCategoriasOfertas />` (com `scroll-mt-4`).
-2. Atualizar o `useEffect` de rolagem para tratar os dois casos:
-   - Se `categoriaSelecionadaId` definido → rola para `cabecalhoCategoriaRef` (comportamento atual).
-   - Se `null` → rola suavemente para `gradeCategoriasRef` (mostra Categorias + seções abaixo).
-3. Garantir que o efeito só dispare em mudança real (e não no primeiro mount sem filtro), usando uma flag `useRef(false)` que marca após a primeira interação, evitando rolagem indesejada ao abrir a página.
-
-Sem mudanças em outros arquivos. Sem alteração de URL/lógica de filtro — apenas UX de rolagem.
+## Resultado para o usuário
+No painel de configurações da marca, na seção **Link público da vitrine**, aparecerá um novo bloco com a URL em formato WebView, pronta para copiar e usar dentro do app — abrindo `/ofertas` com cabeçalho, botão voltar e compartilhar nativos da plataforma.
