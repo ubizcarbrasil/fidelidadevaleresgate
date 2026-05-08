@@ -69,7 +69,7 @@ return ({
         // PWA após múltiplas builds (seletor de plano no BrandForm, distribuição em lote
         // do Campeonato, etc.) que estavam causando "Importing a module script failed"
         // por chunk-YQECZGAV.js fantasma cacheado pelo SW v8.
-        cacheId: "vale-resgate-v9",
+        cacheId: "vale-resgate-v10",
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,jpg,jpeg,webp}"],
@@ -86,6 +86,7 @@ return ({
           /^\/install/,
           /^\/auth/,
           /^\/reset-password/,
+          /^\/ofertas/,
         ],
         skipWaiting: true,
         clientsClaim: true,
