@@ -79,6 +79,15 @@ function BootShell() {
       (window as any).__dismissBootstrap();
     }
 
+    // Webview leve: pula Sentry + web-vitals em /webview para reduzir
+    // ainda mais o tempo de carregamento dentro de in-app browsers.
+    const path = window.location.pathname;
+    const isWebviewLite = path === "/webview" || path.startsWith("/webview/");
+    if (isWebviewLite) {
+      console.info("[boot] webview-lite mode — analytics/sentry desabilitados");
+      return;
+    }
+
     // Deferred: load Sentry + web-vitals after mount (non-blocking)
     const loadMonitoring = () => {
       import("@/lib/sentry").then(({ initSentry }) => initSentry()).catch(() => {});
