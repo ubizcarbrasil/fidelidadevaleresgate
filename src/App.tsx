@@ -1,5 +1,5 @@
 // rebuild-trigger v2026-04-02a
-import { Suspense, lazy, forwardRef } from "react";
+import { Suspense, lazy, forwardRef, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -179,7 +179,7 @@ const PageLoader = forwardRef<HTMLDivElement>(function PageLoader(_props, ref) {
  * Pula AuthProvider/BrandProvider/Sentry para abrir < 2s em in-app browsers
  * (Instagram, Facebook, WhatsApp, iOS WebView), onde getSession() pode travar.
  */
-function OfertasFastTrack({ children }: { children: React.ReactNode }) {
+function OfertasFastTrack({ children }: { children: ReactNode }) {
   const isOfertas =
     typeof window !== "undefined" &&
     (window.location.pathname === "/ofertas" || window.location.pathname.startsWith("/ofertas/"));
