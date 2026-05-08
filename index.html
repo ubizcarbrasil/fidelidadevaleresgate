@@ -7,9 +7,10 @@
       // ── /d/<brandId> SHORT-CIRCUIT ────────────────────────────────────────
       // Rota curta de divulgação (ex.: WebView do Ubiz Car). Redireciona
       // INSTANTANEAMENTE para /driver?brandId=... sem inicializar React,
-      // providers, Sentry ou qualquer chunk pesado. Limpa SW antigo apenas
-      // na primeira abertura da sessão para evitar chunks fantasmas após
-      // novo deploy. Custo total: < 50 ms em condições normais.
+      // providers, Sentry ou qualquer chunk pesado. Limpa SW antigo SOMENTE
+      // quando a versão do build (BUILD_VERSION) muda — assim, em aberturas
+      // normais (mesma versão) o redirect roda em < 30 ms sem tocar caches.
+      // Custo total: < 50 ms em condições normais.
       (function(){
         try {
           var path = location.pathname.replace(/\/+$/,"");
@@ -19,12 +20,22 @@
           var qs = new URLSearchParams(location.search);
           if (brandId) qs.set("brandId", brandId);
           var target = "/driver?" + qs.toString() + (location.hash || "");
-          var FLAG = "__d_sw_killed__";
-          var killed = sessionStorage.getItem(FLAG);
+          // Versão atual do build, lida do <meta name="app-version">.
+          // Quando o deploy muda essa string, forçamos UMA limpeza de SW/caches
+          // para evitar chunks fantasmas. Persistido em localStorage para
+          // sobreviver entre sessões — limpamos no máximo uma vez por deploy.
+          var BUILD_VERSION = (function(){
+            var m = document.querySelector('meta[name="app-version"]');
+            return (m && m.getAttribute("content")) || "unknown";
+          })();
+          var KEY = "__d_sw_build__";
+          var lastSeen = null;
+          try { lastSeen = localStorage.getItem(KEY); } catch(_){}
+          var versionChanged = lastSeen !== BUILD_VERSION;
           var done = false;
           var go = function(){ if (done) return; done = true; location.replace(brandId ? target : "/"); };
-          if (!killed && "serviceWorker" in navigator) {
-            try { sessionStorage.setItem(FLAG, "1"); } catch(_){}
+          if (versionChanged && "serviceWorker" in navigator) {
+            try { localStorage.setItem(KEY, BUILD_VERSION); } catch(_){}
             setTimeout(go, 400); // teto duro
             Promise.resolve()
               .then(function(){ return navigator.serviceWorker.getRegistrations(); })
