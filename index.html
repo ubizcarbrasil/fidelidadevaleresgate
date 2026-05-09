@@ -17,6 +17,15 @@
           if (path.indexOf("/d/") !== 0) return;
           var parts = path.split("/").filter(Boolean); // ["d","<brandId>"]
           var brandId = parts[1] || "";
+          // Valida UUID v4-ish. Se vier "<brandId>" (template não substituído)
+          // ou qualquer string inválida, NÃO propaga para /driver — manda
+          // para a home da marca (resolução por hostname) e evita o erro
+          // "invalid input syntax for type uuid".
+          var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          if (!UUID_RE.test(brandId)) {
+            location.replace("/");
+            throw new Error("__d_redirect__");
+          }
           var qs = new URLSearchParams(location.search);
           if (brandId) qs.set("brandId", brandId);
           var target = "/driver?" + qs.toString() + (location.hash || "");
