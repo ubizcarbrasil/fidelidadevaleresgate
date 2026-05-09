@@ -281,11 +281,19 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
 export default function DriverPanelPage() {
   const PORTAL_HOSTNAME = "app.valeresgate.com.br";
   const PORTAL_BRAND_ID = "db15bd21-9137-4965-a0fb-540d8e8b26f1";
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   const [searchParams] = useSearchParams();
   const isPortalDomain = window.location.hostname === PORTAL_HOSTNAME;
-  const brandId = searchParams.get("brandId") || (isPortalDomain ? PORTAL_BRAND_ID : null);
-  const branchId = searchParams.get("branchId") || null;
+  const rawBrandId = searchParams.get("brandId");
+  const rawBranchId = searchParams.get("branchId");
+  const brandId =
+    rawBrandId && UUID_RE.test(rawBrandId)
+      ? rawBrandId
+      : isPortalDomain
+      ? PORTAL_BRAND_ID
+      : null;
+  const branchId = rawBranchId && UUID_RE.test(rawBranchId) ? rawBranchId : null;
   const initialCategoryId = searchParams.get("categoryId") || null;
   const initialDealId = searchParams.get("dealId") || null;
   const sessionRequestKey = searchParams.get("sessionKey") || null;
@@ -306,11 +314,16 @@ export default function DriverPanelPage() {
 
   useEffect(() => {
     if (!brandId) {
-      setError("Parâmetro brandId é obrigatório");
+      setError(
+        rawBrandId
+          ? "Link inválido. Peça um novo link à sua cidade."
+          : "Não foi possível identificar a marca. Abra pelo link oficial."
+      );
       setLoading(false);
       return;
     }
     const load = async () => {
+      try {
       // Use public view to allow anonymous access (Android/mobile without session)
       const { data: b, error: brandError } = await supabase
         .from("public_brands_safe")
@@ -348,13 +361,22 @@ export default function DriverPanelPage() {
 
       setBrand(b);
       if (branchId) {
-        const { data: br } = await supabase.from("branches").select("*").eq("id", branchId).single();
-        setBranch(br);
+        const { data: br } = await supabase
+          .from("branches")
+          .select("*")
+          .eq("id", branchId)
+          .maybeSingle();
+        if (br) setBranch(br);
       }
       setLoading(false);
+      } catch (e: any) {
+        console.error("[DriverPanelPage] load error", e);
+        setError("Não foi possível carregar o painel. Tente novamente em instantes.");
+        setLoading(false);
+      }
     };
     load();
-  }, [brandId, branchId]);
+  }, [brandId, branchId, rawBrandId]);
 
   const settings = brand?.brand_settings_json as any;
   const theme = settings?.theme || null;
