@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useBrand } from "@/contexts/BrandContext";
 import { buscarBrandIdPorHostname, buscarMarcaPorId } from "../services/servico_ofertas_publicas";
 import type { MarcaOfertas } from "../types/tipos_ofertas";
 
@@ -13,7 +12,6 @@ const PORTAL_BRAND_ID = "db15bd21-9137-4965-a0fb-540d8e8b26f1";
  */
 export function useMarcaOfertas() {
   const [searchParams] = useSearchParams();
-  const { brand: ctxBrand, loading: ctxLoading } = useBrand();
   const brandIdParam = searchParams.get("brandId");
 
   // Resolve hostname imediatamente para evitar esperar o BrandContext
@@ -37,28 +35,29 @@ export function useMarcaOfertas() {
       return;
     }
     if (brandId) return;
-    if (ctxLoading) return;
-    if (ctxBrand?.id) {
-      setBrandId(ctxBrand.id);
-      return;
-    }
     const hostname = typeof window !== "undefined" ? window.location.hostname : "";
     if (hostname === PORTAL_HOSTNAME) {
       setBrandId(PORTAL_BRAND_ID);
       return;
     }
-    buscarBrandIdPorHostname(hostname).then((id) => {
-      if (!ativo) return;
-      if (id) setBrandId(id);
-      else {
+    buscarBrandIdPorHostname(hostname)
+      .then((id) => {
+        if (!ativo) return;
+        if (id) setBrandId(id);
+        else {
+          setErro("Não foi possível identificar a marca para esta vitrine.");
+          setCarregando(false);
+        }
+      })
+      .catch(() => {
+        if (!ativo) return;
         setErro("Não foi possível identificar a marca para esta vitrine.");
         setCarregando(false);
-      }
-    });
+      });
     return () => {
       ativo = false;
     };
-  }, [brandIdParam, ctxBrand?.id, ctxLoading]);
+  }, [brandIdParam]);
 
   useEffect(() => {
     let ativo = true;
