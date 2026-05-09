@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { Lock, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import type { ModoAcessoOfertas } from "./controle_acesso_ofertas";
 
@@ -23,7 +23,19 @@ function normalizar(v: string): string {
 }
 
 export default function PortaoAcessoOfertas({ modo, whitelist, fontHeading, children }: Props) {
-  const { user, loading } = useAuth();
+  // useAuth() lança erro se não houver AuthProvider. Na rota fast-track
+  // /ofertas, o provider não é montado para acelerar a abertura, então
+  // tratamos como visitante anônimo nesse caso.
+  let user: { email?: string | null } | null = null;
+  let loading = false;
+  try {
+    const ctx = useAuth();
+    user = ctx.user;
+    loading = ctx.loading;
+  } catch {
+    user = null;
+    loading = false;
+  }
   const [valor, setValor] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [liberadoLocal, setLiberadoLocal] = useState(() => {
