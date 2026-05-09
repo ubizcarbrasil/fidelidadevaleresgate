@@ -68,6 +68,22 @@ export default function WebviewPage() {
   const showShare = params.get("share") === "1";
   const showBack = params.get("back") !== "0";
 
+  // Defesa em profundidade: links antigos no formato
+  // /webview?url=<mesmo-dominio>/... devem abrir direto, sem iframe.
+  // O iframe re-monta o SPA inteiro e dobra o tempo de carregamento.
+  if (url) {
+    try {
+      const target = new URL(url, window.location.origin);
+      if (target.origin === window.location.origin) {
+        const path = `${target.pathname}${target.search}${target.hash}`;
+        window.location.replace(path);
+        return null;
+      }
+    } catch {
+      // URL malformada — segue fluxo normal e mostra erro abaixo
+    }
+  }
+
   const [loading, setLoading] = useState(true);
   const [blocked, setBlocked] = useState(false);
 
