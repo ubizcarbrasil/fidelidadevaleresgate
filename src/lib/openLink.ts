@@ -46,6 +46,21 @@ export async function openLink(options: OpenLinkOptions, navigate?: (path: strin
   }
 
   if (mode === "WEBVIEW") {
+    // Optimization: if the URL is internal (same origin as the app), skip the
+    // iframe wrapper and navigate directly. The webview iframe re-mounts the
+    // entire SPA, doubling load time on in-app browsers (~10s on Instagram/FB).
+    try {
+      const target = new URL(url, window.location.origin);
+      if (target.origin === window.location.origin) {
+        const path = `${target.pathname}${target.search}${target.hash}`;
+        if (navigate) navigate(path);
+        else window.location.href = path;
+        return;
+      }
+    } catch {
+      // fall through to webview behavior on malformed URLs
+    }
+
     // Navigate to internal webview page
     const params = new URLSearchParams({ url });
     if (title) params.set("title", title);
