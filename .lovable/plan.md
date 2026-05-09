@@ -1,35 +1,42 @@
 ## Problema
 
-Após o Publish, `/ofertas` continua mostrando "Não conseguimos carregar essa página". O console do domínio `app.valeresgate.com.br` revela o erro real:
+O link que está demorando ~10s é:
 
 ```
-Error: useAuth must be used within AuthProvider
-  at xe (pagina_ubiz_ofertas...)
+/webview?url=https://fidelidadevaleresgate.lovable.app/ofertas&...
 ```
 
-## Causa raiz
+O `WebviewPage` renderiza um `<iframe>` apontando para `/ofertas`. Como a URL é do **mesmo domínio do app**, o navegador acaba carregando o SPA inteiro **duas vezes**:
 
-O `OfertasFastTrack` em `src/App.tsx` renderiza `PaginaUbizOfertas` **sem** `AuthProvider` (e sem `BrandProvider`) para acelerar o carregamento em in-app browsers. Mas o componente `PortaoAcessoOfertas` (`src/features/ubiz_ofertas/components/portao_acesso_ofertas.tsx` linha 26) chama `useAuth()` incondicionalmente. Como hooks rodam antes do early-return `if (modo === "public") return children`, o erro é lançado mesmo na configuração padrão (modo público).
+1. Primeiro o `index.html` + bundle do app para montar o `WebviewPage` (shell com header)
+2. Depois, dentro do iframe, **outro** `index.html` + bundle + `PaginaUbizOfertas` + queries do Supabase
 
-A correção anterior removeu a dependência de `useBrand`, mas `useAuth` ficou esquecida no portão de acesso.
+Isso explica os ~10s, principalmente em in-app browsers (Instagram, etc.) onde cada boot do React custa caro. O iframe aqui não agrega nada — é uma página interna, não um site externo que precise de sandbox.
 
-## Correção
+## Solução
 
-Tornar `PortaoAcessoOfertas` resiliente à ausência do `AuthProvider`, lendo o contexto de forma defensiva — quando não houver provider, tratar como visitante anônimo (sem `user`, `loading=false`). Modos `authenticated` e `whitelist` continuam funcionando quando o provider existe; em fast-track, modo público segue funcionando normalmente.
+Detectar links internos (mesmo host) no `openLink` / `WebviewPage` e, nesses casos, **navegar direto** para a rota (`/ofertas`) em vez de abrir o webview com iframe. O webview continua existindo para URLs **externas** (afiliados, parceiros), que é o caso de uso real.
 
-### Mudanças
+## Mudanças
 
-1. **`src/features/ubiz_ofertas/components/portao_acesso_ofertas.tsx`**
-   - Remover `import { useAuth } from "@/contexts/AuthContext"`.
-   - Importar `AuthContext` diretamente e usar `useContext(AuthContext)`.
-   - Se o contexto for `undefined` (sem provider), assumir `{ user: null, loading: false }`.
-   - Manter toda a lógica atual de `public` / `authenticated` / `whitelist`.
+### 1. `src/lib/openLink.ts`
+No bloco `if (mode === "WEBVIEW")`, antes de montar `/webview?...`, verificar se `url` aponta para o mesmo `window.location.origin`. Se sim:
+- extrair `pathname + search + hash` da URL
+- usar `navigate(path)` (ou `window.location.href = path` como fallback)
+- pular completamente o iframe
 
-2. **Validação**
-   - `app.valeresgate.com.br/ofertas` deve carregar a vitrine sem cair no ErrorBoundary.
-   - Console deve ficar limpo (sem o erro de `useAuth`).
-   - Preview com brand em modo `authenticated` ou `whitelist` (com AuthProvider montado) continua exigindo login/whitelist como antes.
+Tracking continua sendo gravado normalmente antes do branch.
 
-## Escopo
+### 2. `src/pages/customer/WebviewPage.tsx` (defesa em profundidade)
+No topo do componente, se `url` for do mesmo `origin`, fazer `window.location.replace(pathname+search+hash)` imediatamente. Isso cobre links já compartilhados/salvos com o formato antigo `/webview?url=...mesmo-dominio.../ofertas` para que eles também passem a abrir direto.
 
-Mudança mínima, apenas frontend, em um único arquivo da feature `ubiz_ofertas`. Não toca em rotas, providers globais, ErrorBoundary nem em outras features.
+### 3. Validação
+- Abrir o link problemático: `/webview?url=...%2Fofertas...` deve redirecionar instantaneamente para `/ofertas`, sem montar iframe.
+- Abrir um link **externo** via `openLink({mode:"WEBVIEW", url:"https://exemplo.com"})` deve continuar usando o iframe normalmente.
+- Conferir no DevTools/Network que o app só carrega o bundle uma vez no caminho interno.
+
+## O que NÃO muda
+
+- `/ofertas` em si não é alterada (já está enxuta na correção anterior do `AuthProvider`).
+- O `WebviewPage` continua existindo e funcional para URLs externas.
+- Nenhuma mudança de banco, RLS ou edge function.
