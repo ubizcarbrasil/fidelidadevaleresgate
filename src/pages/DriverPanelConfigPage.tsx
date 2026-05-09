@@ -339,6 +339,26 @@ export default function DriverPanelConfigPage() {
                   {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
+              <Button
+                onClick={() => {
+                  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                  if (!currentBrandId || !UUID_RE.test(currentBrandId)) {
+                    toast({ title: "ID da marca inválido", description: "Não foi possível gerar o link.", variant: "destructive" });
+                    return;
+                  }
+                  const link = buildDriverShortUrl(effectiveOrigin, currentBrandId);
+                  if (link.includes("<") || link.includes("{")) {
+                    toast({ title: "Link contém placeholders", variant: "destructive" });
+                    return;
+                  }
+                  handleCopy(link);
+                }}
+                disabled={!currentBrandId}
+                className="gap-2 w-full sm:w-auto"
+              >
+                <Link2 className="h-4 w-4" />
+                Gerar e copiar link /d/ da marca
+              </Button>
               <p className="text-[11px] text-muted-foreground">
                 Já é o link enviado nos compartilhamentos automáticos. Pequeno o suficiente para apps que não detectam URLs longas (ex.: Ubiz Car).
               </p>
