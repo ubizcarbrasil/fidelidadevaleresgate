@@ -30,7 +30,11 @@ function isRotaPublica(): boolean {
     path.startsWith("/trial") ||
     path.startsWith("/p/") ||
     path.startsWith("/landing") ||
-    path.startsWith("/register-store")
+    path.startsWith("/register-store") ||
+    path.startsWith("/driver") ||
+    path.startsWith("/d/") ||
+    path.startsWith("/ofertas") ||
+    path.startsWith("/loja/")
   );
 }
 
