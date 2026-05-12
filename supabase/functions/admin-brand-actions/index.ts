@@ -70,7 +70,26 @@ Deno.serve(async (req) => {
       const { error } = await adminClient.auth.admin.updateUserById(user_id, {
         password: new_password,
       });
-      if (error) throw error;
+      if (error) {
+        const code = (error as any).code || "";
+        const isWeak =
+          code === "weak_password" ||
+          /weak|pwned|known to be weak/i.test(error.message || "");
+        if (isWeak) {
+          return new Response(
+            JSON.stringify({
+              error:
+                "Senha muito fraca ou já vazada em bases públicas. Escolha uma senha mais forte (use letras, números e símbolos).",
+              code: "weak_password",
+            }),
+            {
+              status: 422,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            },
+          );
+        }
+        throw error;
+      }
       return new Response(JSON.stringify({ ok: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
