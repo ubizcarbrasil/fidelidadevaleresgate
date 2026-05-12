@@ -744,8 +744,8 @@ describe("Integração — estado de carregamento e revelação do badge", () =>
     let callCount = 0;
     rpcMock.mockImplementation(() => {
       callCount++;
-      if (callCount === 2) return promiseA; // 7 dias
-      if (callCount === 3) return promiseB; // 15 dias
+      if (callCount === 1) return promiseA; // 7 dias
+      if (callCount === 2) return promiseB; // 15 dias
       return Promise.resolve({ data: [], error: null });
     });
 
