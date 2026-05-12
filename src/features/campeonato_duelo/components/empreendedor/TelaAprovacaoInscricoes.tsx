@@ -373,10 +373,7 @@ export default function TelaAprovacaoInscricoes({
 function CardInscricaoSimples({ inscricao }: { inscricao: Inscricao }) {
   return (
     <div className="flex items-center gap-3 rounded-md border border-border bg-muted/20 p-3">
-      <Avatar className="h-10 w-10">
-        {inscricao.photo_url && <AvatarImage src={inscricao.photo_url} />}
-        <AvatarFallback>{iniciais(inscricao.driver_name)}</AvatarFallback>
-      </Avatar>
+      <AvatarMotorista nome={inscricao.driver_name} url={inscricao.photo_url} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">
           {inscricao.driver_name ?? "(sem nome)"}
@@ -428,10 +425,7 @@ function CardInscricaoPendente({
         onCheckedChange={(v) => onToggleSelecionado(!!v)}
         className="mt-1"
       />
-      <Avatar className="h-10 w-10">
-        {inscricao.photo_url && <AvatarImage src={inscricao.photo_url} />}
-        <AvatarFallback>{iniciais(inscricao.driver_name)}</AvatarFallback>
-      </Avatar>
+      <AvatarMotorista nome={inscricao.driver_name} url={inscricao.photo_url} />
       <div className="min-w-0 flex-1 space-y-2">
         <div>
           <p className="truncate text-sm font-medium">
