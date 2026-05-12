@@ -139,8 +139,27 @@ export default function SecaoPremiosArtilharia({ seasonId }: Props) {
         </p>
 
         {isLoading ? (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Carregando...
+          <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Carregando
+            configurações...
+          </div>
+        ) : isError ? (
+          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 space-y-2">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+              <p className="text-xs text-destructive leading-relaxed">
+                {mensagemErroCarregamento()}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => refetch()}
+              className="h-7 text-xs"
+            >
+              <RefreshCw className="mr-1.5 h-3 w-3" />
+              Tentar novamente
+            </Button>
           </div>
         ) : (
           <>
@@ -185,6 +204,15 @@ export default function SecaoPremiosArtilharia({ seasonId }: Props) {
                 );
               })}
             </div>
+
+            {erroSalvar && (
+              <div className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-2.5">
+                <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-xs text-destructive leading-relaxed">
+                  {erroSalvar}
+                </p>
+              </div>
+            )}
 
             <div className="flex justify-end">
               <Button size="sm" onClick={salvar} disabled={salvando}>
