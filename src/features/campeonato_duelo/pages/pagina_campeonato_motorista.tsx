@@ -26,6 +26,7 @@ import { useFotoPerfilMotorista } from "../hooks/useFotoPerfilMotorista";
 import { AvatarMotorista } from "../components/shared/AvatarMotorista";
 import BadgeFaseTemporada from "../components/badge_fase_temporada";
 import AbaTabelaDuelos from "../components/motorista/aba_tabela_duelos";
+import AbaClassificacao from "../components/motorista/AbaClassificacao";
 import type { FaseCampeonato } from "../types/tipos_campeonato";
 
 type AbaId =
@@ -127,6 +128,7 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
     queryClient.invalidateQueries({ queryKey: ["foto-perfil-motorista"] });
     queryClient.invalidateQueries({ queryKey: ["tabela-duelos-rodadas", seasonId] });
     queryClient.invalidateQueries({ queryKey: ["tabela-duelos-confrontos", seasonId] });
+    queryClient.invalidateQueries({ queryKey: ["campeonato-classificacao-tier", seasonId] });
   }
 
   function selecionarAba(aba: AbaId) {
@@ -181,6 +183,14 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
       )}
 
       <main className="max-w-lg mx-auto px-4 py-6">
+        {serieVisualizando &&
+          temporada?.tier_id &&
+          serieVisualizando !== temporada.tier_id && (
+            <div className="mb-3 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+              Você está vendo a {serieAtualNome}
+            </div>
+          )}
+
         {abaAtiva === "duelos" ? (
           <AbaTabelaDuelos
             seasonId={seasonId}
@@ -191,6 +201,12 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
               setTotalRodadas(total);
               setRotulosRodadas(labels);
             }}
+          />
+        ) : abaAtiva === "classificacao" ? (
+          <AbaClassificacao
+            seasonId={seasonId}
+            tierId={serieVisualizando ?? temporada?.tier_id ?? null}
+            driverId={driverId}
           />
         ) : (
           <PlaceholderAba
