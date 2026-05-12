@@ -168,6 +168,12 @@ export interface CriarTemporadaCompletaInput {
   prizesPerTier: Record<string, TemplatePremio[]>;
   scoringMode?: "total_points" | "daily_matchup";
   scoringConfig?: { win: number; draw: number; loss: number };
+  enrollmentMode?: "auto" | "manual";
+  entryFeeCents?: number;
+  enrollmentOpensAt?: string | null;
+  enrollmentClosesAt?: string | null;
+  defaultMatchHours?: number;
+  publishToDrivers?: boolean;
 }
 
 export interface CancelarTemporadaInput {
