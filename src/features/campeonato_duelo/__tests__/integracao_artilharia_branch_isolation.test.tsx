@@ -549,6 +549,7 @@ describe("Integração — origem e condições do prize_label", () => {
 describe("Integração — estado de carregamento e revelação do badge", () => {
   beforeEach(() => {
     rpcMock.mockReset();
+    toastMock.mockClear();
   });
 
   it("exibe spinner (Skeleton) enquanto o RPC está pendente e nenhum badge é mostrado", async () => {
