@@ -850,4 +850,54 @@ describe("Integração — estado de carregamento e revelação do badge", () =>
       screen.getByText("Não foi possível carregar a artilharia."),
     ).toBeInTheDocument();
   });
+
+  it("clicar em 'Tentar novamente' após erro dispara novo RPC e depois exibe badge/prize_label corretamente", async () => {
+    // Primeira chamada: falha
+    rpcMock.mockRejectedValueOnce(new Error("Falha na conexão com o servidor"));
+
+    // Segunda chamada (após refetch): sucesso com prêmio
+    let resolverRetry!: (value: { data: any[]; error: null }) => void;
+    const promiseRetry = new Promise<{ data: any[]; error: null }>((resolve) => {
+      resolverRetry = resolve;
+    });
+    rpcMock.mockReturnValueOnce(promiseRetry);
+
+    renderizar();
+
+    // Estado de erro inicial com botão de retry
+    await waitFor(() =>
+      expect(
+        screen.getByText("Não foi possível carregar a artilharia."),
+      ).toBeInTheDocument(),
+    );
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+    expect(screen.queryByText(/R\$/)).not.toBeInTheDocument();
+
+    // Clica em "Tentar novamente"
+    const btnRetry = screen.getByRole("button", { name: /Tentar novamente/i });
+    fireEvent.click(btnRetry);
+
+    // Resolve o retry com sucesso
+    resolverRetry({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 50,
+          has_prize: true,
+          prize_label: "R$ 500",
+        },
+      ],
+      error: null,
+    });
+
+    // Após sucesso, mensagem de erro some e badge aparece
+    await waitFor(() => expect(screen.getByText("R$ 500")).toBeInTheDocument());
+    expect(
+      screen.queryByText("Não foi possível carregar a artilharia."),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("R$ 500").closest("span")).toHaveClass("bg-emerald-500/15");
+  });
 });
