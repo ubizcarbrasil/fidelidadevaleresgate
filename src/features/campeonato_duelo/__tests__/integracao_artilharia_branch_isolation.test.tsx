@@ -348,6 +348,50 @@ describe("Integração — origem e condições do prize_label", () => {
     expect(pedroRow).not.toHaveTextContent("R$ 100 (residual incorreto)");
     expect(pedroRow).not.toHaveTextContent("Prêmio");
   });
+
+  it("exibe o badge e o texto Prêmio apenas quando motorista é rank 1 e has_prize=true, mostrando o prize_label correspondente", async () => {
+    rpcMock.mockResolvedValue({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 50,
+          has_prize: true,
+          prize_label: "Vale-combustível R$ 100",
+        },
+        {
+          rank: 2,
+          driver_id: "drv-2",
+          driver_name: "Maria",
+          photo_url: null,
+          total_rides: 40,
+          has_prize: false,
+          prize_label: null,
+        },
+      ],
+      error: null,
+    });
+
+    renderizar();
+
+    await waitFor(() => expect(screen.getByText("João Silva")).toBeInTheDocument());
+
+    // Rank 1 + has_prize=true deve exibir badge com "Prêmio" e prize_label
+    expect(screen.getByText("Prêmio")).toBeInTheDocument();
+    expect(screen.getByText("Vale-combustível R$ 100")).toBeInTheDocument();
+
+    // Verifica que o badge está no contexto do 1º colocado
+    const joaoRow = screen.getByText("João Silva").closest("button");
+    expect(joaoRow).toHaveTextContent("Prêmio");
+    expect(joaoRow).toHaveTextContent("Vale-combustível R$ 100");
+
+    // Rank 2 não deve ter badge nem texto "Prêmio"
+    const mariaRow = screen.getByText("Maria").closest("button");
+    expect(mariaRow).not.toHaveTextContent("Prêmio");
+    expect(mariaRow).not.toHaveTextContent("Vale-combustível R$ 100");
+  });
 });
 
 describe("Integração — estado de carregamento e revelação do badge", () => {
