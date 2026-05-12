@@ -122,7 +122,21 @@ export default function Brands() {
       body,
       headers: { Authorization: `Bearer ${session?.access_token}` },
     });
-    if (res.error) throw new Error(res.error.message || "Erro na operação");
+    if (res.error) {
+      // supabase-js v2 retorna FunctionsHttpError com response acessível via context
+      let serverMsg: string | undefined;
+      try {
+        const ctx: any = (res.error as any).context;
+        if (ctx && typeof ctx.json === "function") {
+          const j = await ctx.json();
+          serverMsg = j?.error || j?.message;
+        } else if (ctx && typeof ctx.text === "function") {
+          const t = await ctx.text();
+          try { serverMsg = JSON.parse(t)?.error; } catch { serverMsg = t; }
+        }
+      } catch { /* ignore parse errors */ }
+      throw new Error(serverMsg || res.error.message || "Erro na operação");
+    }
     if (res.data?.error) throw new Error(res.data.error);
     return res.data;
   };
