@@ -75,6 +75,7 @@ export default function SecaoPremiosArtilharia({ seasonId }: Props) {
   }
 
   async function salvar() {
+    setErroSalvar(null);
     setSalvando(true);
     try {
       const rows = linhas.map((l) => ({
@@ -89,7 +90,9 @@ export default function SecaoPremiosArtilharia({ seasonId }: Props) {
         .select();
       if (error) throw error;
       if (!ups || ups.length === 0) {
-        toast.error("Nada foi salvo — verifique suas permissões.");
+        const msg = "Nada foi salvo — verifique suas permissões (RLS).";
+        setErroSalvar(msg);
+        toast.error(msg);
         return;
       }
       toast.success("Prêmios da artilharia salvos");
@@ -98,10 +101,28 @@ export default function SecaoPremiosArtilharia({ seasonId }: Props) {
       });
       qc.invalidateQueries({ queryKey: ["campeonato-artilharia", seasonId] });
     } catch (e: any) {
-      toast.error(e?.message ?? "Erro ao salvar");
+      const raw = e?.message ?? "";
+      const isRls = /row-level security|violates.*policy|RLS/i.test(raw);
+      const isNetwork = /network|fetch|offline|timeout|failed to fetch/i.test(raw);
+      let msg = raw || "Erro ao salvar";
+      if (isRls) msg = "Permissão negada (RLS). Verifique se você é administrador da marca.";
+      else if (isNetwork) msg = "Erro de rede. Verifique sua conexão e tente novamente.";
+      setErroSalvar(msg);
+      toast.error(msg);
     } finally {
       setSalvando(false);
     }
+  }
+
+  function mensagemErroCarregamento(): string {
+    const raw = (error as any)?.message ?? "";
+    if (/row-level security|violates.*policy|RLS/i.test(raw)) {
+      return "Você não tem permissão para visualizar estas configurações (RLS).";
+    }
+    if (/network|fetch|offline|timeout|failed to fetch/i.test(raw)) {
+      return "Erro de rede ao carregar configurações. Verifique sua conexão.";
+    }
+    return raw || "Erro ao carregar configurações.";
   }
 
   return (
