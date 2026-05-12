@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { Gift } from "lucide-react";
+import { Gift, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { AvatarMotorista } from "../shared/AvatarMotorista";
 import { useTopRiders } from "../../hooks/hook_artilharia";
-import type { JanelaArtilharia } from "../../types/tipos_artilharia";
+import type { JanelaArtilharia, TopRider } from "../../types/tipos_artilharia";
+import ModalDetalhesMotorista from "./ModalDetalhesMotorista";
 
 interface Props {
+  brandId: string;
   seasonId: string | null;
   driverId: string | null;
 }
@@ -33,14 +35,19 @@ function medalha(rank: number): string | null {
   return null;
 }
 
-export default function AbaArtilharia({ seasonId, driverId }: Props) {
+export default function AbaArtilharia({ brandId, seasonId, driverId }: Props) {
   const [janelaAtiva, setJanelaAtiva] = useState<JanelaArtilharia>("24h");
+  const [riderSelecionado, setRiderSelecionado] = useState<TopRider | null>(
+    null,
+  );
   const { data, isLoading, isError, refetch } = useTopRiders(
     seasonId,
     janelaAtiva,
   );
 
   const top = (data ?? []).slice(0, 20);
+  const janelaLabel =
+    JANELAS.find((j) => j.id === janelaAtiva)?.label ?? janelaAtiva;
 
   return (
     <div className="space-y-3">
@@ -108,11 +115,14 @@ export default function AbaArtilharia({ seasonId, driverId }: Props) {
                   {mostrarSeparador && (
                     <div className="h-1 bg-muted/50" aria-hidden />
                   )}
-                  <div
+                  <button
+                    type="button"
+                    onClick={() => setRiderSelecionado(r)}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5",
+                      "w-full text-left flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted/40 active:bg-muted/60",
                       isMe && "bg-muted/50",
                     )}
+                    aria-label={`Ver detalhes de ${r.driver_name ?? "motorista"}`}
                   >
                     <div className="w-6 text-center">
                       {med ? (
@@ -153,7 +163,8 @@ export default function AbaArtilharia({ seasonId, driverId }: Props) {
                         Prêmio
                       </span>
                     )}
-                  </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0" />
+                  </button>
                 </div>
               );
             })}
@@ -164,6 +175,19 @@ export default function AbaArtilharia({ seasonId, driverId }: Props) {
       <p className="text-xs text-muted-foreground text-center pt-1">
         Apenas corridas realizadas neste campeonato são contabilizadas.
       </p>
+
+      <ModalDetalhesMotorista
+        open={!!riderSelecionado}
+        onOpenChange={(o) => !o && setRiderSelecionado(null)}
+        brandId={brandId}
+        rider={riderSelecionado}
+        janelaLabel={janelaLabel}
+        isMe={
+          !!driverId &&
+          !!riderSelecionado &&
+          riderSelecionado.driver_id === driverId
+        }
+      />
     </div>
   );
 }
