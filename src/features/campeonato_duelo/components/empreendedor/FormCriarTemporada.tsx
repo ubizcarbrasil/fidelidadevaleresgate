@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles, Settings, Trophy, ListChecks } from "lucide-react";
+import { toast } from "sonner";
 import { schemaCriarTemporada, type FormCriarTemporadaInput } from "../../schemas/schema_criar_temporada";
 import {
   obterTemplatePorChave,
@@ -174,7 +175,16 @@ export default function FormCriarTemporada({
         defaultMatchHours: values.defaultMatchHours,
         publishToDrivers: values.publishToDrivers,
       },
-      { onSuccess: () => onClose() },
+      {
+        onSuccess: () => {
+          if (!values.publishToDrivers) {
+            toast.info(
+              "Temporada criada! Lembre de publicá-la para os motoristas.",
+            );
+          }
+          onClose();
+        },
+      },
     );
   }
 
