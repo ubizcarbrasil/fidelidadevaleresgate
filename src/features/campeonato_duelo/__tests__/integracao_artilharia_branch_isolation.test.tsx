@@ -37,6 +37,7 @@ function renderizar(seasonId = "season-A") {
 describe("Integração — isolamento por branch_id na Artilharia", () => {
   beforeEach(() => {
     rpcMock.mockReset();
+    toastMock.mockClear();
   });
 
   it("o serviço chama o RPC apenas com season_id e window — sem permitir override de branch_id pelo cliente", async () => {
