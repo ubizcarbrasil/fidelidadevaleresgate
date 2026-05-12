@@ -47,19 +47,6 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
     tier_name: string;
   } | null>(null);
 
-  if (loadingHabilitacao || loadingFormato || isLoading) {
-    return <Skeleton className="h-64 w-full rounded-lg" />;
-  }
-
-  // Camada 2 OFF: marca ainda não ativou o campeonato. Mostra só o card de ativação.
-  if (!campeonatoHabilitado) {
-    return (
-      <div className="space-y-4 p-1">
-        <CardAtivarCampeonato brandId={brandId} />
-      </div>
-    );
-  }
-
   const ativa = dashboard?.active_season ?? null;
   const tiers = dashboard?.tiers ?? [];
   const tiersResumo = tiers.map((t) => ({
@@ -68,6 +55,7 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
   }));
 
   // Carrega enrollment_mode da temporada ativa (não vem na RPC do dashboard)
+  // IMPORTANTE: hooks SEMPRE antes de qualquer early return — não mover para baixo.
   const { data: configTemporada } = useQuery({
     queryKey: ["duelo-season-enrollment-config", ativa?.id],
     enabled: !!ativa?.id,
@@ -100,6 +88,19 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
     },
     refetchInterval: 30_000,
   });
+
+  if (loadingHabilitacao || loadingFormato || isLoading) {
+    return <Skeleton className="h-64 w-full rounded-lg" />;
+  }
+
+  // Camada 2 OFF: marca ainda não ativou o campeonato. Mostra só o card de ativação.
+  if (!campeonatoHabilitado) {
+    return (
+      <div className="space-y-4 p-1">
+        <CardAtivarCampeonato brandId={brandId} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 p-1">
