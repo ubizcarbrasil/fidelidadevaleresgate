@@ -54,7 +54,7 @@ describe("AbaArtilharia — badge de prêmio", () => {
     expect(screen.queryByText("R$ 500")).not.toBeInTheDocument();
   });
 
-  it("não mostra o badge para motoristas que não são o 1º colocado, mesmo que has_prize seja true", () => {
+  it("mostra o badge para qualquer motorista com has_prize = true (backend já filtra 1º colocado)", () => {
     mockRiders([
       { ...BASE_RIDER, rank: 1, has_prize: true, prize_label: "R$ 500" },
       { ...BASE_RIDER, driver_id: "drv-2", rank: 2, has_prize: true, prize_label: "Vale-combustível" },
@@ -63,7 +63,7 @@ describe("AbaArtilharia — badge de prêmio", () => {
     render(<AbaArtilharia brandId="b1" seasonId="s1" driverId={null} />);
 
     expect(screen.getByText("R$ 500")).toBeInTheDocument();
-    expect(screen.queryByText("Vale-combustível")).not.toBeInTheDocument();
+    expect(screen.getByText("Vale-combustível")).toBeInTheDocument();
   });
 
   it("exibe o texto 'Prêmio' como fallback quando prize_label está vazio ou null", () => {
