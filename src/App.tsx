@@ -139,6 +139,9 @@ const AchadinhosMobileImportPage = lazyWithRetry(() => import("@/pages/Achadinho
 const MirrorSyncPage = lazyWithRetry(() => import("@/pages/MirrorSyncPage"));
 const DriverPanelConfigPage = lazyWithRetry(() => import("@/pages/DriverPanelConfigPage"));
 const DriverPanelPage = lazyWithRetry(() => import("@/pages/DriverPanelPage"));
+const RotaCampeonatoMotorista = lazyWithRetry(
+  () => import("@/features/campeonato_duelo/pages/rota_campeonato_motorista"),
+);
 const McpDashboardPage = lazyWithRetry(() => import("@/pages/McpDashboardPage"));
 const OfferGovernancePage = lazyWithRetry(() => import("@/pages/OfferGovernancePage"));
 const ProductRedemptionOrdersPage = lazyWithRetry(() => import("@/pages/ProductRedemptionOrdersPage"));
@@ -238,6 +241,10 @@ function AnimatedRoutes() {
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/links" element={<PaginaLinks />} />
             <Route path="/driver" element={<DriverPanelPage />} />
+            <Route
+              path="/motorista/campeonato"
+              element={<RotaCampeonatoMotorista />}
+            />
             <Route path="/mcp-dashboard" element={<McpDashboardPage />} />
             <Route path="/:slug/parceiro" element={<PartnerLandingPage />} />
             <Route path="/register-store" element={<StoreRegistrationWizard />} />
