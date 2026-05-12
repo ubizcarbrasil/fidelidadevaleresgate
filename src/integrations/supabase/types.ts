@@ -2915,6 +2915,7 @@ export type Database = {
           money_balance: number
           name: string
           phone: string | null
+          photo_url: string | null
           points_balance: number
           ride_count: number | null
           scoring_disabled: boolean
@@ -2939,6 +2940,7 @@ export type Database = {
           money_balance?: number
           name: string
           phone?: string | null
+          photo_url?: string | null
           points_balance?: number
           ride_count?: number | null
           scoring_disabled?: boolean
@@ -2963,6 +2965,7 @@ export type Database = {
           money_balance?: number
           name?: string
           phone?: string | null
+          photo_url?: string | null
           points_balance?: number
           ride_count?: number | null
           scoring_disabled?: boolean
@@ -4015,6 +4018,7 @@ export type Database = {
           last_os_at: string | null
           link_type: string | null
           mother_name: string | null
+          photo_url: string | null
           pix_key: string | null
           rating: number | null
           raw_import_json: Json | null
@@ -4085,6 +4089,7 @@ export type Database = {
           last_os_at?: string | null
           link_type?: string | null
           mother_name?: string | null
+          photo_url?: string | null
           pix_key?: string | null
           rating?: number | null
           raw_import_json?: Json | null
@@ -4155,6 +4160,7 @@ export type Database = {
           last_os_at?: string | null
           link_type?: string | null
           mother_name?: string | null
+          photo_url?: string | null
           pix_key?: string | null
           rating?: number | null
           raw_import_json?: Json | null
@@ -5146,6 +5152,140 @@ export type Database = {
           },
         ]
       }
+      duelo_season_enrollments: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string | null
+          driver_id: string
+          id: string
+          notes: string | null
+          season_id: string
+          status: string
+          tier_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string | null
+          driver_id: string
+          id?: string
+          notes?: string | null
+          season_id: string
+          status?: string
+          tier_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string | null
+          driver_id?: string
+          id?: string
+          notes?: string | null
+          season_id?: string
+          status?: string
+          tier_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duelo_season_enrollments_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_season_enrollments_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_season_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      duelo_season_phase_config: {
+        Row: {
+          created_at: string | null
+          duration_hours: number
+          id: string
+          phase: string
+          season_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          duration_hours?: number
+          id?: string
+          phase: string
+          season_id: string
+        }
+        Update: {
+          created_at?: string | null
+          duration_hours?: number
+          id?: string
+          phase?: string
+          season_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duelo_season_phase_config_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      duelo_season_prizes: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          position: number
+          prize_kind: string
+          prize_value: number
+          season_id: string
+          tier_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          position: number
+          prize_kind?: string
+          prize_value?: number
+          season_id: string
+          tier_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          position?: number
+          prize_kind?: string
+          prize_value?: number
+          season_id?: string
+          tier_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duelo_season_prizes_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duelo_season_prizes_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_season_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       duelo_season_standings: {
         Row: {
           driver_id: string
@@ -5280,6 +5420,12 @@ export type Database = {
           classification_starts_at: string
           created_at: string
           created_by: string | null
+          default_match_hours: number
+          enrollment_closes_at: string | null
+          enrollment_mode: string
+          enrollment_opens_at: string | null
+          entry_fee_cents: number
+          entry_fee_currency: string
           id: string
           knockout_ends_at: string
           knockout_starts_at: string
@@ -5288,6 +5434,7 @@ export type Database = {
           paused_at: string | null
           phase: string
           promotion_applied_at: string | null
+          published_at: string | null
           relegation_policy: string
           scoring_config_json: Json
           scoring_mode: string
@@ -5306,6 +5453,12 @@ export type Database = {
           classification_starts_at: string
           created_at?: string
           created_by?: string | null
+          default_match_hours?: number
+          enrollment_closes_at?: string | null
+          enrollment_mode?: string
+          enrollment_opens_at?: string | null
+          entry_fee_cents?: number
+          entry_fee_currency?: string
           id?: string
           knockout_ends_at: string
           knockout_starts_at: string
@@ -5314,6 +5467,7 @@ export type Database = {
           paused_at?: string | null
           phase?: string
           promotion_applied_at?: string | null
+          published_at?: string | null
           relegation_policy?: string
           scoring_config_json?: Json
           scoring_mode?: string
@@ -5332,6 +5486,12 @@ export type Database = {
           classification_starts_at?: string
           created_at?: string
           created_by?: string | null
+          default_match_hours?: number
+          enrollment_closes_at?: string | null
+          enrollment_mode?: string
+          enrollment_opens_at?: string | null
+          entry_fee_cents?: number
+          entry_fee_currency?: string
           id?: string
           knockout_ends_at?: string
           knockout_starts_at?: string
@@ -5340,6 +5500,7 @@ export type Database = {
           paused_at?: string | null
           phase?: string
           promotion_applied_at?: string | null
+          published_at?: string | null
           relegation_policy?: string
           scoring_config_json?: Json
           scoring_mode?: string
@@ -10240,6 +10401,10 @@ export type Database = {
       }
     }
     Functions: {
+      _campeonato_check_tier_capacity: {
+        Args: { p_new_target: number; p_tier_id: string }
+        Returns: boolean
+      }
       _duelo_log_attempt: {
         Args: {
           p_actor: string
@@ -10434,6 +10599,7 @@ export type Database = {
         Args: { p_brand_id: string; p_driver_id: string }
         Returns: boolean
       }
+      driver_enroll_season: { Args: { p_season_id: string }; Returns: Json }
       driver_get_active_season: {
         Args: { p_brand_id: string; p_driver_id: string }
         Returns: Json
@@ -10470,6 +10636,33 @@ export type Database = {
       driver_get_pending_or_active_season: {
         Args: { p_brand_id: string; p_driver_id: string }
         Returns: Json
+      }
+      driver_get_top_riders: {
+        Args: { p_season_id: string; p_window: string }
+        Returns: {
+          driver_id: string
+          driver_name: string
+          has_prize: boolean
+          photo_url: string
+          rank: number
+          total_rides: number
+        }[]
+      }
+      driver_list_upcoming_seasons: {
+        Args: { p_branch_id: string }
+        Returns: {
+          enrollment_closes_at: string
+          enrollment_opens_at: string
+          entry_fee_cents: number
+          entry_fee_currency: string
+          month: number
+          my_enrollment_status: string
+          name: string
+          prizes_summary: Json
+          season_id: string
+          tiers_count: number
+          year: number
+        }[]
       }
       driver_mark_all_read: {
         Args: { p_brand_id: string; p_driver_id: string }
