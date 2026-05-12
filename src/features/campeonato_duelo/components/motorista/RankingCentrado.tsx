@@ -3,6 +3,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { useRankingCentrado } from "../../hooks/hook_campeonato_motorista";
+import { useFotoPerfilMotorista } from "../../hooks/useFotoPerfilMotorista";
+import { AvatarMotorista } from "../shared/AvatarMotorista";
 
 interface Props {
   seasonId: string;
@@ -18,6 +20,7 @@ export default function RankingCentrado({
   onVerTabelaCompleta,
 }: Props) {
   const { data, isLoading } = useRankingCentrado(seasonId, driverId, 2);
+  const { photoUrl } = useFotoPerfilMotorista();
 
   return (
     <Card>
@@ -55,6 +58,11 @@ export default function RankingCentrado({
                 <span className="w-6 text-center text-muted-foreground">
                   {linha.position}º
                 </span>
+                <AvatarMotorista
+                  nome={linha.is_me ? "VOCÊ" : linha.driver_name}
+                  url={linha.is_me ? photoUrl : null}
+                  size={28}
+                />
                 <span className="flex-1 truncate">
                   {linha.is_me ? "VOCÊ" : (linha.driver_name ?? "—")}
                 </span>

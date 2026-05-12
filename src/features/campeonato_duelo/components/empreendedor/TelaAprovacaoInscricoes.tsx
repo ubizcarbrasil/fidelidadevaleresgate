@@ -33,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Check, X, Users } from "lucide-react";
+import { AvatarMotorista } from "../shared/AvatarMotorista";
 
 type StatusInscricao = "pending" | "approved" | "rejected";
 
@@ -59,39 +60,6 @@ interface Props {
   brandId: string;
   branchId: string;
   tiers: TierResumo[];
-}
-
-function iniciais(nome?: string | null) {
-  if (!nome) return "?";
-  return nome
-    .replace(/\[MOTORISTA\]/gi, "")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((p) => p.charAt(0).toUpperCase())
-    .join("");
-}
-
-function AvatarMotorista({
-  nome,
-  url,
-}: {
-  nome?: string | null;
-  url?: string | null;
-}) {
-  return (
-    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-muted text-xs font-medium text-foreground/70 flex items-center justify-center">
-      {url ? (
-        <img
-          src={url}
-          alt={nome ?? "motorista"}
-          className="h-full w-full object-cover"
-        />
-      ) : (
-        <span>{iniciais(nome)}</span>
-      )}
-    </div>
-  );
 }
 
 function formatarDataPtBr(iso: string) {

@@ -4,6 +4,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { useTemporadaAtivaDoMotorista } from "@/features/campeonato_duelo/hooks/hook_campeonato_motorista";
+import { useFotoPerfilMotorista } from "@/features/campeonato_duelo/hooks/useFotoPerfilMotorista";
+import BloqueioInscricaoSemFoto from "@/features/campeonato_duelo/components/motorista/BloqueioInscricaoSemFoto";
 import CardTemporadaAtual from "@/features/campeonato_duelo/components/motorista/CardTemporadaAtual";
 import RankingCentrado from "@/features/campeonato_duelo/components/motorista/RankingCentrado";
 import CardConfrontoAtual from "@/features/campeonato_duelo/components/motorista/CardConfrontoAtual";
@@ -30,12 +32,20 @@ export default function CampeonatoMotoristaPanel({
     brandId,
     driverId,
   );
+  const {
+    temFoto,
+    isLoading: loadingFoto,
+    refetch: refetchFoto,
+  } = useFotoPerfilMotorista();
+  const [fotoConfirmada, setFotoConfirmada] = useState(false);
 
   const [overlay, setOverlay] = useState<SubOverlay>(null);
   const isPendingSeeding = !!temporada?.is_pending_seeding;
   const hasTier = !!temporada && !!temporada.tier_id && !!temporada.tier_name;
   const isClassification = temporada?.phase === "classification";
   const isFirstSeason = temporada !== null && temporada !== undefined;
+
+  const precisaFoto = !temFoto && !fotoConfirmada;
 
   return (
     <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
@@ -62,12 +72,20 @@ export default function CampeonatoMotoristaPanel({
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
-        {isLoading ? (
+        {loadingFoto || isLoading ? (
           <>
             <Skeleton className="h-32 w-full" />
             <Skeleton className="h-48 w-full" />
             <Skeleton className="h-32 w-full" />
           </>
+        ) : precisaFoto ? (
+          <BloqueioInscricaoSemFoto
+            fontHeading={fontHeading}
+            onFotoCadastrada={() => {
+              setFotoConfirmada(true);
+              refetchFoto();
+            }}
+          />
         ) : !temporada ? (
           <div className="text-center py-12 space-y-2">
             <Trophy className="h-12 w-12 mx-auto text-muted-foreground/40" />
