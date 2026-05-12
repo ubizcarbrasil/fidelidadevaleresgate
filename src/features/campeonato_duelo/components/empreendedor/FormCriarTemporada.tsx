@@ -163,6 +163,16 @@ export default function FormCriarTemporada({
         prizesPerTier: prizesObj,
         scoringMode: values.scoringMode,
         scoringConfig: values.scoringConfig,
+        enrollmentMode: values.enrollmentMode,
+        entryFeeCents: values.entryFeeCents,
+        enrollmentOpensAt: values.enrollmentOpensAt
+          ? new Date(values.enrollmentOpensAt).toISOString()
+          : null,
+        enrollmentClosesAt: values.enrollmentClosesAt
+          ? new Date(values.enrollmentClosesAt).toISOString()
+          : null,
+        defaultMatchHours: values.defaultMatchHours,
+        publishToDrivers: values.publishToDrivers,
       },
       { onSuccess: () => onClose() },
     );
