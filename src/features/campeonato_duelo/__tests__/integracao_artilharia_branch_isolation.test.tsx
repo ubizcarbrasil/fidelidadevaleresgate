@@ -644,4 +644,70 @@ describe("Integração — estado de carregamento e revelação do badge", () =>
     expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
     expect(screen.queryByText("R$ 500")).not.toBeInTheDocument();
   });
+
+  it("ao alternar entre janelas, exibe spinner durante loading e só revela badge após RPC confirmar has_prize=true", async () => {
+    // Primeira chamada (24h) — janela desabilitada
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 50,
+          has_prize: false,
+          prize_label: null,
+        },
+      ],
+      error: null,
+    });
+
+    // Segunda chamada (7d) — janela habilitada, mas delay para simular loading
+    let resolver!: (value: { data: any[]; error: null }) => void;
+    const promise = new Promise<{ data: any[]; error: null }>((resolve) => {
+      resolver = resolve;
+    });
+    rpcMock.mockReturnValueOnce(promise);
+
+    renderizar();
+
+    await waitFor(() => expect(screen.getByText("João Silva")).toBeInTheDocument());
+    // Janela 24h sem badge
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+    expect(screen.queryByText(/R\$/)).not.toBeInTheDocument();
+
+    // Troca para aba "7 dias"
+    const aba7d = screen.getByRole("button", { name: /7 dias/i });
+    fireEvent.click(aba7d);
+
+    // Durante loading deve haver skeleton e nenhum badge
+    expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+    expect(screen.queryByText("R$ 300 (semanal)")).not.toBeInTheDocument();
+
+    // Agora resolve com has_prize=true
+    resolver({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 120,
+          has_prize: true,
+          prize_label: "R$ 300 (semanal)",
+        },
+      ],
+      error: null,
+    });
+
+    // Após resolução, badge aparece e skeleton some
+    await waitFor(() =>
+      expect(screen.getByText("R$ 300 (semanal)")).toBeInTheDocument(),
+    );
+    expect(document.querySelector(".animate-pulse")).not.toBeInTheDocument();
+    expect(screen.getByText("R$ 300 (semanal)").closest("span")).toHaveClass(
+      "bg-emerald-500/15",
+    );
+  });
 });
