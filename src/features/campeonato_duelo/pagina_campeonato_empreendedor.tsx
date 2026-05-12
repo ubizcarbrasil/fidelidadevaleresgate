@@ -326,6 +326,17 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
           fase={ativa.phase}
         />
       )}
+
+      {ativa && (
+        <TelaAprovacaoInscricoes
+          open={sheetInscricoes}
+          onClose={() => setSheetInscricoes(false)}
+          seasonId={ativa.id}
+          brandId={brandId}
+          branchId={branchId}
+          tiers={tiersResumo}
+        />
+      )}
     </div>
   );
 }
