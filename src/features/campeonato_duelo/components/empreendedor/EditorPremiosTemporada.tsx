@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Plus, Trophy, X } from "lucide-react";
+import SecaoPremiosArtilharia from "./SecaoPremiosArtilharia";
 
 interface TierResumo {
   tier_id: string;
@@ -149,6 +150,7 @@ export default function EditorPremiosTemporada({ seasonId, tiers }: Props) {
   if (tiers.length === 0) return null;
 
   return (
+    <div className="space-y-4">
     <Card>
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between gap-2">
@@ -297,5 +299,7 @@ export default function EditorPremiosTemporada({ seasonId, tiers }: Props) {
         )}
       </CardContent>
     </Card>
+    <SecaoPremiosArtilharia seasonId={seasonId} />
+    </div>
   );
 }

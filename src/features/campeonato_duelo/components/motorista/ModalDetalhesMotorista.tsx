@@ -69,7 +69,7 @@ export default function ModalDetalhesMotorista({
               {rider.has_prize && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
                   <Gift className="h-3 w-3" />
-                  Prêmio
+                  {rider.prize_label?.trim() || "Prêmio"}
                 </span>
               )}
             </div>
