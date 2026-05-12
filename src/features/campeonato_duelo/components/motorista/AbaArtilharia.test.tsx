@@ -11,6 +11,10 @@ vi.mock("./ModalDetalhesMotorista", () => ({
   default: () => null,
 }));
 
+vi.mock("sonner", () => ({
+  toast: { error: vi.fn() },
+}));
+
 import { useTopRiders } from "../../hooks/hook_artilharia";
 
 function mockRiders(riders: any[]) {
