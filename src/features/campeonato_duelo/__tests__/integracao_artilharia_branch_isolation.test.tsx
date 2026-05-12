@@ -292,6 +292,58 @@ describe("Integração — origem e condições do prize_label", () => {
     expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
   });
 
+  it("ao alternar de janela com prêmio habilitado para desabilitada, o prize_label anterior desaparece da tela", async () => {
+    // Primeira chamada (24h) — com prêmio habilitado
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 50,
+          has_prize: true,
+          prize_label: "R$ 500 (diário)",
+        },
+      ],
+      error: null,
+    });
+
+    // Segunda chamada (7d) — janela desabilitada
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 120,
+          has_prize: false,
+          prize_label: null,
+        },
+      ],
+      error: null,
+    });
+
+    renderizar();
+
+    await waitFor(() =>
+      expect(screen.getByText("R$ 500 (diário)")).toBeInTheDocument(),
+    );
+
+    // Troca para aba "7 dias" (desabilitada)
+    const aba7d = screen.getByRole("button", { name: /7 dias/i });
+    fireEvent.click(aba7d);
+
+    await waitFor(() =>
+      expect(screen.getByText("120")).toBeInTheDocument(),
+    );
+
+    // Prize_label anterior deve ter sumido
+    expect(screen.queryByText("R$ 500 (diário)")).not.toBeInTheDocument();
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+  });
+
   it("prize_label vazado de outra filial não é renderizado quando has_prize=false (janela desabilitada)", async () => {
     rpcMock.mockResolvedValue({
       data: [
