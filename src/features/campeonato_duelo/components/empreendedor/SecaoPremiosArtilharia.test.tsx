@@ -3,16 +3,12 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import SecaoPremiosArtilharia from "./SecaoPremiosArtilharia";
 
-const mockSelect = vi.fn().mockResolvedValue({ data: [], error: null });
-const mockEq = vi.fn().mockReturnThis();
-const mockUpsert = vi.fn().mockReturnThis();
-
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: vi.fn(() => ({
-      select: mockSelect,
-      eq: mockEq,
-      upsert: mockUpsert,
+      select: vi.fn().mockResolvedValue({ data: [], error: null }),
+      eq: vi.fn().mockReturnThis(),
+      upsert: vi.fn().mockReturnThis(),
     })),
   },
 }));
@@ -35,13 +31,14 @@ function createWrapper() {
 describe("SecaoPremiosArtilharia — estados de erro e carregamento", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSelect.mockReset().mockResolvedValue({ data: [], error: null });
-    mockEq.mockReset().mockReturnThis();
-    mockUpsert.mockReset().mockReturnThis();
   });
 
   it("exibe spinner de carregamento inicial", () => {
-    mockSelect.mockReturnValue(new Promise(() => {}));
+    const { supabase } = require("@/integrations/supabase/client");
+    supabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue(new Promise(() => {})),
+      eq: vi.fn().mockReturnThis(),
+    });
 
     render(<SecaoPremiosArtilharia seasonId="season-1" />, {
       wrapper: createWrapper(),
@@ -51,8 +48,12 @@ describe("SecaoPremiosArtilharia — estados de erro e carregamento", () => {
   });
 
   it("exibe mensagem de erro RLS quando o carregamento falha por permissão", async () => {
-    mockSelect.mockRejectedValue({
-      message: "new row violates row-level security policy",
+    const { supabase } = require("@/integrations/supabase/client");
+    supabase.from.mockReturnValue({
+      select: vi.fn().mockRejectedValue({
+        message: "new row violates row-level security policy",
+      }),
+      eq: vi.fn().mockReturnThis(),
     });
 
     render(<SecaoPremiosArtilharia seasonId="season-1" />, {
@@ -70,8 +71,12 @@ describe("SecaoPremiosArtilharia — estados de erro e carregamento", () => {
   });
 
   it("exibe mensagem de erro de rede quando o carregamento falha por conexão", async () => {
-    mockSelect.mockRejectedValue({
-      message: "Failed to fetch",
+    const { supabase } = require("@/integrations/supabase/client");
+    supabase.from.mockReturnValue({
+      select: vi.fn().mockRejectedValue({
+        message: "Failed to fetch",
+      }),
+      eq: vi.fn().mockReturnThis(),
     });
 
     render(<SecaoPremiosArtilharia seasonId="season-1" />, {
