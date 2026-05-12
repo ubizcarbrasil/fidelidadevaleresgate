@@ -908,4 +908,20 @@ describe("Integração — estado de carregamento e revelação do badge", () =>
     ).not.toBeInTheDocument();
     expect(screen.getByText("R$ 500").closest("span")).toHaveClass("bg-emerald-500/15");
   });
+
+  it("dispara toast de erro quando o RPC falha e mantém área de badge vazia", async () => {
+    rpcMock.mockRejectedValue(new Error("Erro no servidor"));
+
+    renderizar();
+
+    // Toast de erro deve ser disparado
+    await waitFor(() => expect(toastMock).toHaveBeenCalled());
+    expect(toastMock).toHaveBeenCalledWith("Erro ao carregar artilharia", {
+      description: "Não foi possível atualizar o ranking. Tente novamente.",
+    });
+
+    // Badge/prize_label não devem aparecer
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+    expect(screen.queryByText(/R\$/)).not.toBeInTheDocument();
+  });
 });
