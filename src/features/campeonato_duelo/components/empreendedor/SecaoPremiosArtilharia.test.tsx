@@ -3,15 +3,15 @@ import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import SecaoPremiosArtilharia from "./SecaoPremiosArtilharia";
 
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      select: vi.fn().mockResolvedValue({ data: [], error: null }),
-      eq: vi.fn().mockReturnThis(),
-      upsert: vi.fn().mockReturnThis(),
-    })),
-  },
-}));
+const mockedUseQuery = vi.fn();
+
+vi.mock("@tanstack/react-query", async () => {
+  const actual = await vi.importActual("@tanstack/react-query");
+  return {
+    ...actual,
+    useQuery: (...args: any[]) => mockedUseQuery(...args),
+  };
+});
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -29,7 +29,20 @@ function createWrapper() {
 }
 
 describe("SecaoPremiosArtilharia — estados de erro e carregamento", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockedUseQuery.mockReset();
+  });
+
   it("exibe spinner de carregamento inicial", () => {
+    mockedUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
     render(<SecaoPremiosArtilharia seasonId="season-1" />, {
       wrapper: createWrapper(),
     });
@@ -37,38 +50,42 @@ describe("SecaoPremiosArtilharia — estados de erro e carregamento", () => {
     expect(screen.getByText(/Carregando configurações/i)).toBeInTheDocument();
   });
 
-  it("exibe mensagem de erro RLS quando o carregamento falha por permissão", async () => {
-    const { supabase } = await import("@/integrations/supabase/client");
-    vi.mocked(supabase.from).mockReturnValue({
-      select: vi.fn().mockRejectedValue({
-        message: "new row violates row-level security policy",
-      }),
-      eq: vi.fn().mockReturnThis(),
-    } as any);
+  it("exibe mensagem de erro RLS quando o carregamento falha por permissão", () => {
+    mockedUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: { message: "new row violates row-level security policy" },
+      refetch: vi.fn(),
+    });
 
-    const { findByText, findByRole } = render(
-      <SecaoPremiosArtilharia seasonId="season-1" />,
-      { wrapper: createWrapper() },
-    );
+    render(<SecaoPremiosArtilharia seasonId="season-1" />, {
+      wrapper: createWrapper(),
+    });
 
-    expect(await findByText(/Você não tem permissão para visualizar/i)).toBeInTheDocument();
-    expect(await findByRole("button", { name: /Tentar novamente/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(/Você não tem permissão para visualizar/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Tentar novamente/i }),
+    ).toBeInTheDocument();
   });
 
-  it("exibe mensagem de erro de rede quando o carregamento falha por conexão", async () => {
-    const { supabase } = await import("@/integrations/supabase/client");
-    vi.mocked(supabase.from).mockReturnValue({
-      select: vi.fn().mockRejectedValue({
-        message: "Failed to fetch",
-      }),
-      eq: vi.fn().mockReturnThis(),
-    } as any);
+  it("exibe mensagem de erro de rede quando o carregamento falha por conexão", () => {
+    mockedUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: { message: "Failed to fetch" },
+      refetch: vi.fn(),
+    });
 
-    const { findByText } = render(
-      <SecaoPremiosArtilharia seasonId="season-1" />,
-      { wrapper: createWrapper() },
-    );
+    render(<SecaoPremiosArtilharia seasonId="season-1" />, {
+      wrapper: createWrapper(),
+    });
 
-    expect(await findByText(/Erro de rede ao carregar configurações/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Erro de rede ao carregar configurações/i),
+    ).toBeInTheDocument();
   });
 });
