@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Loader2, Gift } from "lucide-react";
+import { Loader2, Gift, AlertTriangle, RefreshCw } from "lucide-react";
 
 type JanelaKey = "24h" | "7d" | "15d" | "30d";
 
