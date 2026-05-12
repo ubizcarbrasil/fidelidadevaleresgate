@@ -10637,6 +10637,10 @@ export type Database = {
         Args: { p_brand_id: string; p_driver_id: string }
         Returns: Json
       }
+      driver_get_tier_standings_v2: {
+        Args: { p_driver_id: string; p_season_id: string; p_tier_id: string }
+        Returns: Json
+      }
       driver_get_top_riders: {
         Args: { p_season_id: string; p_window: string }
         Returns: {
