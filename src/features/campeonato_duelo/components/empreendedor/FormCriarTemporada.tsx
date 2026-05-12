@@ -75,6 +75,12 @@ function gerarValoresIniciais(template: TemplateKey): FormCriarTemporadaInput {
     })),
     scoringMode: "total_points",
     scoringConfig: { win: 3, draw: 1, loss: 0 },
+    enrollmentMode: "auto",
+    entryFeeCents: 0,
+    enrollmentOpensAt: "",
+    enrollmentClosesAt: "",
+    defaultMatchHours: 24,
+    publishToDrivers: false,
   };
 }
 
@@ -157,6 +163,16 @@ export default function FormCriarTemporada({
         prizesPerTier: prizesObj,
         scoringMode: values.scoringMode,
         scoringConfig: values.scoringConfig,
+        enrollmentMode: values.enrollmentMode,
+        entryFeeCents: values.entryFeeCents,
+        enrollmentOpensAt: values.enrollmentOpensAt
+          ? new Date(values.enrollmentOpensAt).toISOString()
+          : null,
+        enrollmentClosesAt: values.enrollmentClosesAt
+          ? new Date(values.enrollmentClosesAt).toISOString()
+          : null,
+        defaultMatchHours: values.defaultMatchHours,
+        publishToDrivers: values.publishToDrivers,
       },
       { onSuccess: () => onClose() },
     );

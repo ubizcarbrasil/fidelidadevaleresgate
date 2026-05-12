@@ -58,6 +58,18 @@ export const schemaCriarTemporada = z
         loss: z.coerce.number().int().min(0, "≥ 0").max(100, "≤ 100"),
       })
       .default({ win: 3, draw: 1, loss: 0 }),
+    // Inscrições e publicação (Etapa 2)
+    enrollmentMode: z.enum(["auto", "manual"]).default("auto"),
+    entryFeeCents: z.coerce.number().int().min(0).default(0),
+    enrollmentOpensAt: z.string().optional().default(""),
+    enrollmentClosesAt: z.string().optional().default(""),
+    defaultMatchHours: z.coerce
+      .number()
+      .int()
+      .min(1, "Mínimo 1 hora")
+      .max(168, "Máximo 168 horas (7 dias)")
+      .default(24),
+    publishToDrivers: z.boolean().default(false),
   })
   .superRefine((val, ctx) => {
     // 1. Datas: classificação antes do mata-mata
@@ -133,6 +145,42 @@ export const schemaCriarTemporada = z
           code: "custom",
           message: `A Classificação precisa de no mínimo ${duracaoMinima} dias ${motivo}.`,
           path: ["classificationEndsAt"],
+        });
+      }
+    }
+
+    // 5. Janelas de inscrição
+    if (val.enrollmentOpensAt && val.enrollmentClosesAt) {
+      const eo = new Date(val.enrollmentOpensAt);
+      const ec = new Date(val.enrollmentClosesAt);
+      if (eo >= ec) {
+        ctx.addIssue({
+          code: "custom",
+          message: "O encerramento das inscrições deve ser depois da abertura.",
+          path: ["enrollmentClosesAt"],
+        });
+      }
+      if (val.classificationStartsAt) {
+        const cs2 = new Date(val.classificationStartsAt);
+        if (eo >= cs2) {
+          ctx.addIssue({
+            code: "custom",
+            message:
+              "A abertura das inscrições deve ser antes do início da Classificação.",
+            path: ["enrollmentOpensAt"],
+          });
+        }
+      }
+    }
+
+    // 6. Para publicar é obrigatório ter as duas janelas de inscrição
+    if (val.publishToDrivers) {
+      if (!val.enrollmentOpensAt || !val.enrollmentClosesAt) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "Para publicar a temporada é necessário definir abertura e encerramento das inscrições.",
+          path: ["publishToDrivers"],
         });
       }
     }

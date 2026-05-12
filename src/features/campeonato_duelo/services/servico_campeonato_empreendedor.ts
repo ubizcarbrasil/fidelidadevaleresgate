@@ -285,6 +285,12 @@ export async function criarTemporadaCompleta(
         input.scoringMode === "daily_matchup"
           ? (input.scoringConfig ?? { win: 3, draw: 1, loss: 0 })
           : { win: 3, draw: 1, loss: 0 },
+      enrollment_mode: input.enrollmentMode ?? "auto",
+      entry_fee_cents: input.entryFeeCents ?? 0,
+      enrollment_opens_at: input.enrollmentOpensAt || null,
+      enrollment_closes_at: input.enrollmentClosesAt || null,
+      default_match_hours: input.defaultMatchHours ?? 24,
+      published_at: input.publishToDrivers ? new Date().toISOString() : null,
     } as any)
     .select()
     .maybeSingle();
