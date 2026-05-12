@@ -344,6 +344,62 @@ describe("Integração — origem e condições do prize_label", () => {
     expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
   });
 
+  it("ao alternar de janela desabilitada para habilitada, o prize_label aparece sem misturar valores anteriores", async () => {
+    // Primeira chamada (24h) — janela desabilitada
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 50,
+          has_prize: false,
+          prize_label: null,
+        },
+      ],
+      error: null,
+    });
+
+    // Segunda chamada (7d) — janela habilitada com prêmio
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 120,
+          has_prize: true,
+          prize_label: "R$ 300 (semanal)",
+        },
+      ],
+      error: null,
+    });
+
+    renderizar();
+
+    await waitFor(() => expect(screen.getByText("João Silva")).toBeInTheDocument());
+    // Inicialmente sem badge (janela desabilitada)
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+    expect(screen.queryByText(/R\$/)).not.toBeInTheDocument();
+
+    // Troca para aba "7 dias" (habilitada)
+    const aba7d = screen.getByRole("button", { name: /7 dias/i });
+    fireEvent.click(aba7d);
+
+    await waitFor(() =>
+      expect(screen.getByText("R$ 300 (semanal)")).toBeInTheDocument(),
+    );
+
+    // Verifica que o badge aparece com o novo prize_label correto
+    const joaoRow = screen.getByText("João Silva").closest("button");
+    expect(joaoRow).toHaveTextContent("R$ 300 (semanal)");
+
+    // Confirma que nenhum valor residual ou texto fallback "Prêmio" misturou
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+  });
+
   it("prize_label vazado de outra filial não é renderizado quando has_prize=false (janela desabilitada)", async () => {
     rpcMock.mockResolvedValue({
       data: [
