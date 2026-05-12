@@ -3,18 +3,19 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import SecaoPremiosArtilharia from "./SecaoPremiosArtilharia";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: { retry: false },
-  },
-});
-
-function wrapper({ children }: { children: React.ReactNode }) {
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  );
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+  return function wrapper({ children }: { children: React.ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    );
+  };
 }
 
 vi.mock("@/integrations/supabase/client", () => ({
@@ -30,7 +31,6 @@ vi.mock("@/integrations/supabase/client", () => ({
 describe("SecaoPremiosArtilharia — estados de erro e carregamento", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    queryClient.clear();
   });
 
   it("exibe spinner de carregamento inicial", async () => {
@@ -39,7 +39,9 @@ describe("SecaoPremiosArtilharia — estados de erro e carregamento", () => {
       select: vi.fn().mockReturnValue(new Promise(() => {})),
     });
 
-    render(<SecaoPremiosArtilharia seasonId="season-1" />, { wrapper });
+    render(<SecaoPremiosArtilharia seasonId="season-1" />, {
+      wrapper: createWrapper(),
+    });
 
     expect(screen.getByText(/Carregando configurações/i)).toBeInTheDocument();
   });
@@ -52,14 +54,18 @@ describe("SecaoPremiosArtilharia — estados de erro e carregamento", () => {
       }),
     });
 
-    render(<SecaoPremiosArtilharia seasonId="season-1" />, { wrapper });
+    render(<SecaoPremiosArtilharia seasonId="season-1" />, {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() =>
       expect(
         screen.getByText(/Você não tem permissão para visualizar/i),
       ).toBeInTheDocument(),
     );
-    expect(screen.getByRole("button", { name: /Tentar novamente/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Tentar novamente/i }),
+    ).toBeInTheDocument();
   });
 
   it("exibe mensagem de erro de rede quando o carregamento falha por conexão", async () => {
@@ -70,7 +76,9 @@ describe("SecaoPremiosArtilharia — estados de erro e carregamento", () => {
       }),
     });
 
-    render(<SecaoPremiosArtilharia seasonId="season-1" />, { wrapper });
+    render(<SecaoPremiosArtilharia seasonId="season-1" />, {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() =>
       expect(
