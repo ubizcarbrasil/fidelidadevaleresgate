@@ -524,3 +524,29 @@ html, body {
   background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.15), transparent);
   margin: 0.25rem 0;
 }
+
+/* ── Tema Campeonato (escopo: rota /motorista/campeonato) ── */
+/* Override apenas dos tokens semânticos consumidos pelo shell visual.
+   Ativado via className="tema-campeonato" no wrapper raiz da página. */
+.tema-campeonato {
+  --background: 150 41% 9%;
+  --foreground: 120 38% 93%;
+  --card: 150 41% 12%;
+  --card-foreground: 120 38% 93%;
+  --popover: 150 41% 12%;
+  --popover-foreground: 120 38% 93%;
+  --primary: 142 71% 45%;
+  --primary-foreground: 150 41% 9%;
+  --secondary: 150 41% 16%;
+  --secondary-foreground: 120 38% 93%;
+  --muted: 150 41% 16%;
+  --muted-foreground: 142 76% 73%;
+  --accent: 142 71% 36%;
+  --accent-foreground: 120 38% 93%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 120 38% 93%;
+  --border: 150 41% 21%;
+  --input: 150 41% 21%;
+  --ring: 142 71% 45%;
+  --series-promotion: 217 91% 60%;
+}
