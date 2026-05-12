@@ -25,6 +25,7 @@ import { useTemporadaAtivaDoMotorista } from "../hooks/hook_campeonato_motorista
 import { useFotoPerfilMotorista } from "../hooks/useFotoPerfilMotorista";
 import { AvatarMotorista } from "../components/shared/AvatarMotorista";
 import BadgeFaseTemporada from "../components/badge_fase_temporada";
+import AbaTabelaDuelos from "../components/motorista/aba_tabela_duelos";
 import type { FaseCampeonato } from "../types/tipos_campeonato";
 
 type AbaId =
@@ -101,6 +102,8 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
   const [drawerAberto, setDrawerAberto] = useState(false);
   const [bottomSheetAberto, setBottomSheetAberto] = useState(false);
   const [rodadaAtiva, setRodadaAtiva] = useState(1);
+  const [totalRodadas, setTotalRodadas] = useState(0);
+  const [rotulosRodadas, setRotulosRodadas] = useState<string[]>([]);
   const [serieVisualizando, setSerieVisualizando] = useState<string | null>(null);
 
   // Hidrata a série visualizada com a série do motorista assim que disponível
@@ -122,6 +125,8 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
     queryClient.invalidateQueries({ queryKey: ["driver-active-season", brandId, driverId] });
     queryClient.invalidateQueries({ queryKey: ["campeonato-series", seasonId] });
     queryClient.invalidateQueries({ queryKey: ["foto-perfil-motorista"] });
+    queryClient.invalidateQueries({ queryKey: ["tabela-duelos-rodadas", seasonId] });
+    queryClient.invalidateQueries({ queryKey: ["tabela-duelos-confrontos", seasonId] });
   }
 
   function selecionarAba(aba: AbaId) {
@@ -131,6 +136,24 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
       setRodadaAtiva(1);
     }
   }
+
+  // Reseta rodada ao trocar de série visualizada
+  useEffect(() => {
+    setRodadaAtiva(1);
+  }, [serieVisualizando]);
+
+  const rotuloRodadaAtual = useMemo(() => {
+    if (rotulosRodadas.length === 0) return `Rodada ${rodadaAtiva}`;
+    const idx = Math.min(Math.max(0, rodadaAtiva - 1), rotulosRodadas.length - 1);
+    const raw = rotulosRodadas[idx];
+    const map: Record<string, string> = {
+      r16: "Oitavas",
+      qf: "Quartas",
+      sf: "Semifinal",
+      final: "Final",
+    };
+    return map[raw] ?? `Rodada ${idx + 1}`;
+  }, [rotulosRodadas, rodadaAtiva]);
 
   return (
     <div className="tema-campeonato min-h-screen bg-background text-foreground">
@@ -147,18 +170,35 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
 
       {showSubHeader && (
         <SubHeaderRodada
-          rodada={rodadaAtiva}
+          rotulo={rotuloRodadaAtual}
           onAnterior={() => setRodadaAtiva((n) => Math.max(1, n - 1))}
-          onProxima={() => setRodadaAtiva((n) => n + 1)}
+          onProxima={() =>
+            setRodadaAtiva((n) =>
+              totalRodadas > 0 ? Math.min(totalRodadas, n + 1) : n + 1,
+            )
+          }
         />
       )}
 
       <main className="max-w-lg mx-auto px-4 py-6">
-        <PlaceholderAba
-          label={PLACEHOLDERS[abaAtiva].label}
-          descricao={PLACEHOLDERS[abaAtiva].descricao}
-          fontHeading={fontHeading}
-        />
+        {abaAtiva === "duelos" ? (
+          <AbaTabelaDuelos
+            seasonId={seasonId}
+            tierId={serieVisualizando}
+            driverId={driverId}
+            rodadaIndex={rodadaAtiva}
+            onRodadasResolvidas={(total, labels) => {
+              setTotalRodadas(total);
+              setRotulosRodadas(labels);
+            }}
+          />
+        ) : (
+          <PlaceholderAba
+            label={PLACEHOLDERS[abaAtiva].label}
+            descricao={PLACEHOLDERS[abaAtiva].descricao}
+            fontHeading={fontHeading}
+          />
+        )}
       </main>
 
       <DrawerNavegacao
