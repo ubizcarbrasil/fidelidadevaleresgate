@@ -75,6 +75,12 @@ function gerarValoresIniciais(template: TemplateKey): FormCriarTemporadaInput {
     })),
     scoringMode: "total_points",
     scoringConfig: { win: 3, draw: 1, loss: 0 },
+    enrollmentMode: "auto",
+    entryFeeCents: 0,
+    enrollmentOpensAt: "",
+    enrollmentClosesAt: "",
+    defaultMatchHours: 24,
+    publishToDrivers: false,
   };
 }
 
