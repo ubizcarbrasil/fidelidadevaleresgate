@@ -33,8 +33,15 @@ export default function SecaoPremiosArtilharia({ seasonId }: Props) {
     JANELAS.map((j) => ({ window_key: j.key, enabled: false, label: "" })),
   );
   const [salvando, setSalvando] = useState(false);
+  const [erroSalvar, setErroSalvar] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["duelo-artilharia-window-prizes", seasonId],
     enabled: !!seasonId,
     queryFn: async () => {
