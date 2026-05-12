@@ -160,7 +160,7 @@ export default function AbaArtilharia({ brandId, seasonId, driverId }: Props) {
                     {r.has_prize && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
                         <Gift className="h-3 w-3" />
-                        Prêmio
+                        {r.prize_label?.trim() || "Prêmio"}
                       </span>
                     )}
                     <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0" />
