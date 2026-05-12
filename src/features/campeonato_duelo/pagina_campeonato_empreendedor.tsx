@@ -21,6 +21,8 @@ import CardPremiosADistribuir from "./components/empreendedor/CardPremiosADistri
 import CardAtivarCampeonato from "./components/empreendedor/CardAtivarCampeonato";
 import DashboardOperacaoCampeonato from "./components/empreendedor/dashboard/DashboardOperacaoCampeonato";
 import DistribuicaoManualView from "./components/empreendedor/DistribuicaoManualView";
+import EditorFasesMataMata from "./components/empreendedor/EditorFasesMataMata";
+import EditorPremiosTemporada from "./components/empreendedor/EditorPremiosTemporada";
 
 interface Props {
   brandId: string;
@@ -231,6 +233,16 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
                 />
               ))}
             </div>
+          )}
+
+          {tiers.length > 0 && (
+            <>
+              <EditorFasesMataMata seasonId={ativa.id} />
+              <EditorPremiosTemporada
+                seasonId={ativa.id}
+                tiers={tiersResumo}
+              />
+            </>
           )}
         </>
       )}
