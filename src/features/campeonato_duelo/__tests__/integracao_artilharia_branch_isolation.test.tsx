@@ -348,6 +348,8 @@ describe("Integração — origem e condições do prize_label", () => {
     expect(pedroRow).not.toHaveTextContent("R$ 100 (residual incorreto)");
     expect(pedroRow).not.toHaveTextContent("Prêmio");
   });
+});
+
 describe("Integração — estado de carregamento e revelação do badge", () => {
   beforeEach(() => {
     rpcMock.mockReset();
