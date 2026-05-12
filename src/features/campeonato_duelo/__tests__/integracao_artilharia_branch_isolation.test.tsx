@@ -164,6 +164,7 @@ describe("Integração — isolamento por branch_id na Artilharia", () => {
 describe("Integração — origem e condições do prize_label", () => {
   beforeEach(() => {
     rpcMock.mockReset();
+    toastMock.mockClear();
   });
 
   it("não exibe badge quando motorista é rank 2 e backend retorna has_prize=false (prêmio só para 1º)", async () => {
