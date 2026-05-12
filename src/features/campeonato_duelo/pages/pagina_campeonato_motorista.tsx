@@ -28,6 +28,7 @@ import BadgeFaseTemporada from "../components/badge_fase_temporada";
 import AbaTabelaDuelos from "../components/motorista/aba_tabela_duelos";
 import AbaClassificacao from "../components/motorista/AbaClassificacao";
 import AbaChaveamento from "../components/motorista/AbaChaveamento";
+import AbaArtilharia from "../components/motorista/AbaArtilharia";
 import type { FaseCampeonato } from "../types/tipos_campeonato";
 
 type AbaId =
@@ -138,6 +139,7 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
     queryClient.invalidateQueries({ queryKey: ["tabela-duelos-confrontos", seasonId] });
     queryClient.invalidateQueries({ queryKey: ["campeonato-classificacao-tier", seasonId] });
     queryClient.invalidateQueries({ queryKey: ["campeonato-bracket-v2", seasonId] });
+    queryClient.invalidateQueries({ queryKey: ["campeonato-artilharia", seasonId] });
   }
 
   function selecionarAba(aba: AbaId) {
@@ -224,6 +226,8 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
             driverId={driverId}
             faseDestaque={faseDestaqueChaveamento}
           />
+        ) : abaAtiva === "artilharia" ? (
+          <AbaArtilharia seasonId={seasonId} driverId={driverId} />
         ) : (
           <PlaceholderAba
             label={PLACEHOLDERS[abaAtiva].label}
