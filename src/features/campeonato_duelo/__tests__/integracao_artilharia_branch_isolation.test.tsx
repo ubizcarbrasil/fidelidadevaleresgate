@@ -712,58 +712,8 @@ describe("Integração — estado de carregamento e revelação do badge", () =>
   });
 
   it("ao alternar rapidamente entre abas, ignora resultado de RPC atrasado e renderiza apenas o mais recente", async () => {
-    // Primeira chamada (24h inicial) — com prêmio
+    // Inicial (24h) — sem prêmio, para evitar cache de badge
     rpcMock.mockResolvedValueOnce({
-      data: [
-        {
-          rank: 1,
-          driver_id: "drv-1",
-          driver_name: "João Silva",
-          photo_url: null,
-          total_rides: 50,
-          has_prize: true,
-          prize_label: "R$ 100 (24h)",
-        },
-      ],
-      error: null,
-    });
-
-    // Segunda chamada (7 dias) — promise pendente (lenta)
-    let resolverA!: (value: { data: any[]; error: null }) => void;
-    const promiseA = new Promise<{ data: any[]; error: null }>((resolve) => {
-      resolverA = resolve;
-    });
-
-    // Terceira chamada (24h) — promise pendente (rápida)
-    let resolverB!: (value: { data: any[]; error: null }) => void;
-    const promiseB = new Promise<{ data: any[]; error: null }>((resolve) => {
-      resolverB = resolve;
-    });
-
-    rpcMock
-      .mockResolvedValueOnce({ data: [], error: null }) // placeholder, será override
-      .mockImplementationOnce(() => promiseA)
-      .mockImplementationOnce(() => promiseB);
-
-    renderizar();
-
-    await waitFor(() =>
-      expect(screen.getByText("R$ 100 (24h)")).toBeInTheDocument(),
-    );
-
-    // Clica em "7 dias" → inicia RPC lento (promise A)
-    const aba7d = screen.getByRole("button", { name: /7 dias/i });
-    fireEvent.click(aba7d);
-
-    // Skeleton deve aparecer
-    expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
-
-    // Antes de resolver, clica de volta em "24h" → inicia RPC rápido (promise B)
-    const aba24h = screen.getByRole("button", { name: /24h/i });
-    fireEvent.click(aba24h);
-
-    // Resolve B primeiro (24h sem prêmio)
-    resolverB({
       data: [
         {
           rank: 1,
@@ -778,10 +728,67 @@ describe("Integração — estado de carregamento e revelação do badge", () =>
       error: null,
     });
 
+    // Promise A — 7 dias (lenta, com prêmio)
+    let resolverA!: (value: { data: any[]; error: null }) => void;
+    const promiseA = new Promise<{ data: any[]; error: null }>((resolve) => {
+      resolverA = resolve;
+    });
+
+    // Promise B — 15 dias (rápida, sem prêmio)
+    let resolverB!: (value: { data: any[]; error: null }) => void;
+    const promiseB = new Promise<{ data: any[]; error: null }>((resolve) => {
+      resolverB = resolve;
+    });
+
+    // Override para retornar as promises nas chamadas corretas
+    let callCount = 0;
+    rpcMock.mockImplementation(() => {
+      callCount++;
+      if (callCount === 2) return promiseA; // 7 dias
+      if (callCount === 3) return promiseB; // 15 dias
+      return Promise.resolve({ data: [], error: null });
+    });
+
+    renderizar();
+
     await waitFor(() => expect(screen.getByText("João Silva")).toBeInTheDocument());
-    // UI deve mostrar 24h sem badge
-    expect(screen.queryByText("R$ 100 (24h)")).not.toBeInTheDocument();
+    // 24h sem badge
     expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+    expect(screen.queryByText(/R\$/)).not.toBeInTheDocument();
+
+    // Clica em "7 dias" → inicia RPC lento (promise A)
+    const aba7d = screen.getByRole("button", { name: /7 dias/i });
+    fireEvent.click(aba7d);
+
+    // Skeleton deve aparecer
+    expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+
+    // Antes de resolver, clica em "15 dias" → inicia RPC B
+    const aba15d = screen.getByRole("button", { name: /15 dias/i });
+    fireEvent.click(aba15d);
+
+    // Resolve B primeiro (15 dias sem prêmio)
+    resolverB({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 80,
+          has_prize: false,
+          prize_label: null,
+        },
+      ],
+      error: null,
+    });
+
+    await waitFor(() =>
+      expect(screen.getByText((content) => content.includes("80") && content.includes("corridas"))).toBeInTheDocument(),
+    );
+    // UI deve mostrar 15 dias sem badge
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+    expect(screen.queryByText(/R\$/)).not.toBeInTheDocument();
 
     // Agora resolve A (7 dias com prêmio) — deve ser ignorado
     resolverA({
@@ -802,9 +809,12 @@ describe("Integração — estado de carregamento e revelação do badge", () =>
     // Aguarda um tick para garantir que não há atualização atrasada
     await new Promise((r) => setTimeout(r, 50));
 
-    // Badge de 7 dias NÃO deve aparecer — UI mantém estado de 24h
+    // Badge de 7 dias NÃO deve aparecer — UI mantém estado de 15 dias
     expect(screen.queryByText("R$ 500 (7d)")).not.toBeInTheDocument();
     expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
-    expect(screen.queryByText("R$ 100 (24h)")).not.toBeInTheDocument();
+    // Corridas de 15 dias permanecem
+    expect(
+      screen.getByText((content) => content.includes("80") && content.includes("corridas")),
+    ).toBeInTheDocument();
   });
 });
