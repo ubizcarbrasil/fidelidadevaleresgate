@@ -41,10 +41,18 @@ export default function AbaArtilharia({ brandId, seasonId, driverId }: Props) {
   const [riderSelecionado, setRiderSelecionado] = useState<TopRider | null>(
     null,
   );
-  const { data, isLoading, isError, refetch } = useTopRiders(
+  const { data, isLoading, isError, error, refetch } = useTopRiders(
     seasonId,
     janelaAtiva,
   );
+
+  useEffect(() => {
+    if (isError) {
+      toast.error("Erro ao carregar artilharia", {
+        description: "Não foi possível atualizar o ranking. Tente novamente.",
+      });
+    }
+  }, [isError]);
 
   const top = (data ?? []).slice(0, 20);
   const janelaLabel =
