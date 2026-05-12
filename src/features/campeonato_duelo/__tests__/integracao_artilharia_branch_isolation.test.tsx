@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 
@@ -18,13 +18,13 @@ vi.mock("../components/motorista/ModalDetalhesMotorista", () => ({
 
 import AbaArtilharia from "../components/motorista/AbaArtilharia";
 
-function renderizar() {
+function renderizar(seasonId = "season-A") {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
   });
   return render(
     <QueryClientProvider client={qc}>
-      <AbaArtilharia brandId="brand-A" seasonId="season-A" driverId={null} />
+      <AbaArtilharia brandId="brand-A" seasonId={seasonId} driverId={null} />
     </QueryClientProvider>,
   );
 }
@@ -152,5 +152,200 @@ describe("Integração — isolamento por branch_id na Artilharia", () => {
     );
     expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
     expect(screen.queryByText(/R\$/)).not.toBeInTheDocument();
+  });
+});
+
+describe("Integração — origem e condições do prize_label", () => {
+  beforeEach(() => {
+    rpcMock.mockReset();
+  });
+
+  it("não exibe badge quando motorista é rank 2 e backend retorna has_prize=false (prêmio só para 1º)", async () => {
+    rpcMock.mockResolvedValue({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 50,
+          has_prize: true,
+          prize_label: "R$ 500",
+        },
+        {
+          rank: 2,
+          driver_id: "drv-2",
+          driver_name: "Maria",
+          photo_url: null,
+          total_rides: 40,
+          has_prize: false,
+          prize_label: null,
+        },
+      ],
+      error: null,
+    });
+
+    renderizar();
+
+    await waitFor(() => expect(screen.getByText("Maria")).toBeInTheDocument());
+    // Rank 2 não deve ter badge, mesmo que o 1º tenha.
+    const mariaRow = screen.getByText("Maria").closest("button");
+    expect(mariaRow).not.toHaveTextContent("Prêmio");
+    expect(mariaRow).not.toHaveTextContent("R$ 500");
+  });
+
+  it("o prize_label exibido vem do registro de prêmio habilitado da janela ativa", async () => {
+    rpcMock.mockResolvedValue({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 50,
+          has_prize: true,
+          prize_label: "Vale-combustível R$ 100",
+        },
+      ],
+      error: null,
+    });
+
+    renderizar();
+
+    await waitFor(() =>
+      expect(screen.getByText("Vale-combustível R$ 100")).toBeInTheDocument(),
+    );
+    expect(screen.queryByText("R$ 500")).not.toBeInTheDocument();
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+  });
+
+  it("prize_label fica null / não renderizado quando a janela está desabilitada (has_prize=false para rank 1)", async () => {
+    rpcMock.mockResolvedValue({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 50,
+          has_prize: false,
+          prize_label: null,
+        },
+      ],
+      error: null,
+    });
+
+    renderizar();
+
+    await waitFor(() => expect(screen.getByText("João Silva")).toBeInTheDocument());
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Vale-combustível/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/R\$/)).not.toBeInTheDocument();
+  });
+
+  it("ao trocar de janela, o prize_label reflete o valor da nova janela (se houver prêmio habilitado)", async () => {
+
+    // Primeira chamada (24h) — sem prêmio
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 50,
+          has_prize: false,
+          prize_label: null,
+        },
+      ],
+      error: null,
+    });
+
+    // Segunda chamada (7d) — com prêmio habilitado
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 120,
+          has_prize: true,
+          prize_label: "R$ 200 (semanal)",
+        },
+      ],
+      error: null,
+    });
+
+    renderizar();
+
+    await waitFor(() => expect(screen.getByText("João Silva")).toBeInTheDocument());
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+
+    // Troca para aba "7 dias"
+    const aba7d = screen.getByRole("button", { name: /7 dias/i });
+    fireEvent.click(aba7d);
+
+    await waitFor(() =>
+      expect(screen.getByText("R$ 200 (semanal)")).toBeInTheDocument(),
+    );
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+  });
+
+  it("prize_label vazado de outra filial não é renderizado quando has_prize=false (janela desabilitada)", async () => {
+    rpcMock.mockResolvedValue({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 50,
+          has_prize: false,
+          prize_label: "R$ 500 (filial B)",
+        },
+      ],
+      error: null,
+    });
+
+    renderizar();
+
+    await waitFor(() => expect(screen.getByText("João Silva")).toBeInTheDocument());
+    // Label de outra filial NÃO deve aparecer quando janela está desabilitada.
+    expect(screen.queryByText("R$ 500 (filial B)")).not.toBeInTheDocument();
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+  });
+
+  it("não exibe badge para motorista rank 3 mesmo que payload contenha prize_label residual", async () => {
+    rpcMock.mockResolvedValue({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 50,
+          has_prize: true,
+          prize_label: "R$ 500",
+        },
+        {
+          rank: 3,
+          driver_id: "drv-3",
+          driver_name: "Pedro",
+          photo_url: null,
+          total_rides: 30,
+          has_prize: false,
+          prize_label: "R$ 100 (residual incorreto)",
+        },
+      ],
+      error: null,
+    });
+
+    renderizar();
+
+    await waitFor(() => expect(screen.getByText("Pedro")).toBeInTheDocument());
+    const pedroRow = screen.getByText("Pedro").closest("button");
+    expect(pedroRow).not.toHaveTextContent("R$ 100 (residual incorreto)");
+    expect(pedroRow).not.toHaveTextContent("Prêmio");
   });
 });
