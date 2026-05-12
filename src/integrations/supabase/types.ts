@@ -10648,6 +10648,19 @@ export type Database = {
           total_rides: number
         }[]
       }
+      driver_list_tier_round_matches: {
+        Args: {
+          p_driver_id: string
+          p_round: string
+          p_season_id: string
+          p_tier_id: string
+        }
+        Returns: Json
+      }
+      driver_list_tier_rounds: {
+        Args: { p_driver_id: string; p_season_id: string; p_tier_id: string }
+        Returns: Json
+      }
       driver_list_upcoming_seasons: {
         Args: { p_branch_id: string }
         Returns: {
