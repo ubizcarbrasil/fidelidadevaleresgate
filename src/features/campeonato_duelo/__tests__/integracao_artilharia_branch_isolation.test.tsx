@@ -378,19 +378,56 @@ describe("Integração — origem e condições do prize_label", () => {
 
     await waitFor(() => expect(screen.getByText("João Silva")).toBeInTheDocument());
 
-    // Rank 1 + has_prize=true deve exibir badge com "Prêmio" e prize_label
-    expect(screen.getByText("Prêmio")).toBeInTheDocument();
+    // Rank 1 + has_prize=true deve exibir badge com prize_label
     expect(screen.getByText("Vale-combustível R$ 100")).toBeInTheDocument();
 
     // Verifica que o badge está no contexto do 1º colocado
     const joaoRow = screen.getByText("João Silva").closest("button");
-    expect(joaoRow).toHaveTextContent("Prêmio");
     expect(joaoRow).toHaveTextContent("Vale-combustível R$ 100");
+
+    // Rank 2 não deve ter badge
+    const mariaRow = screen.getByText("Maria").closest("button");
+    expect(mariaRow).not.toHaveTextContent("Vale-combustível R$ 100");
+  });
+
+  it("exibe o texto 'Prêmio' como fallback quando rank 1 tem has_prize=true mas prize_label é nulo", async () => {
+    rpcMock.mockResolvedValue({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 50,
+          has_prize: true,
+          prize_label: null,
+        },
+        {
+          rank: 2,
+          driver_id: "drv-2",
+          driver_name: "Maria",
+          photo_url: null,
+          total_rides: 40,
+          has_prize: false,
+          prize_label: null,
+        },
+      ],
+      error: null,
+    });
+
+    renderizar();
+
+    await waitFor(() => expect(screen.getByText("João Silva")).toBeInTheDocument());
+
+    // Rank 1 + has_prize=true sem prize_label deve exibir "Prêmio"
+    expect(screen.getByText("Prêmio")).toBeInTheDocument();
+
+    const joaoRow = screen.getByText("João Silva").closest("button");
+    expect(joaoRow).toHaveTextContent("Prêmio");
 
     // Rank 2 não deve ter badge nem texto "Prêmio"
     const mariaRow = screen.getByText("Maria").closest("button");
     expect(mariaRow).not.toHaveTextContent("Prêmio");
-    expect(mariaRow).not.toHaveTextContent("Vale-combustível R$ 100");
   });
 });
 
