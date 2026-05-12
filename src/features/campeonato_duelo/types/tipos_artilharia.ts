@@ -7,4 +7,5 @@ export interface TopRider {
   photo_url: string | null;
   total_rides: number;
   has_prize: boolean;
+  prize_label: string | null;
 }
