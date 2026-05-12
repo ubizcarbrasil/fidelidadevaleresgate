@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Loader2, Gift } from "lucide-react";
+import { Loader2, Gift, AlertTriangle, RefreshCw } from "lucide-react";
 
 type JanelaKey = "24h" | "7d" | "15d" | "30d";
 
@@ -33,8 +33,15 @@ export default function SecaoPremiosArtilharia({ seasonId }: Props) {
     JANELAS.map((j) => ({ window_key: j.key, enabled: false, label: "" })),
   );
   const [salvando, setSalvando] = useState(false);
+  const [erroSalvar, setErroSalvar] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["duelo-artilharia-window-prizes", seasonId],
     enabled: !!seasonId,
     queryFn: async () => {
@@ -68,6 +75,7 @@ export default function SecaoPremiosArtilharia({ seasonId }: Props) {
   }
 
   async function salvar() {
+    setErroSalvar(null);
     setSalvando(true);
     try {
       const rows = linhas.map((l) => ({
@@ -82,7 +90,9 @@ export default function SecaoPremiosArtilharia({ seasonId }: Props) {
         .select();
       if (error) throw error;
       if (!ups || ups.length === 0) {
-        toast.error("Nada foi salvo — verifique suas permissões.");
+        const msg = "Nada foi salvo — verifique suas permissões (RLS).";
+        setErroSalvar(msg);
+        toast.error(msg);
         return;
       }
       toast.success("Prêmios da artilharia salvos");
@@ -91,10 +101,28 @@ export default function SecaoPremiosArtilharia({ seasonId }: Props) {
       });
       qc.invalidateQueries({ queryKey: ["campeonato-artilharia", seasonId] });
     } catch (e: any) {
-      toast.error(e?.message ?? "Erro ao salvar");
+      const raw = e?.message ?? "";
+      const isRls = /row-level security|violates.*policy|RLS/i.test(raw);
+      const isNetwork = /network|fetch|offline|timeout|failed to fetch/i.test(raw);
+      let msg = raw || "Erro ao salvar";
+      if (isRls) msg = "Permissão negada (RLS). Verifique se você é administrador da marca.";
+      else if (isNetwork) msg = "Erro de rede. Verifique sua conexão e tente novamente.";
+      setErroSalvar(msg);
+      toast.error(msg);
     } finally {
       setSalvando(false);
     }
+  }
+
+  function mensagemErroCarregamento(): string {
+    const raw = (error as any)?.message ?? "";
+    if (/row-level security|violates.*policy|RLS/i.test(raw)) {
+      return "Você não tem permissão para visualizar estas configurações (RLS).";
+    }
+    if (/network|fetch|offline|timeout|failed to fetch/i.test(raw)) {
+      return "Erro de rede ao carregar configurações. Verifique sua conexão.";
+    }
+    return raw || "Erro ao carregar configurações.";
   }
 
   return (
@@ -111,8 +139,27 @@ export default function SecaoPremiosArtilharia({ seasonId }: Props) {
         </p>
 
         {isLoading ? (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Carregando...
+          <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Carregando
+            configurações...
+          </div>
+        ) : isError ? (
+          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 space-y-2">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+              <p className="text-xs text-destructive leading-relaxed">
+                {mensagemErroCarregamento()}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => refetch()}
+              className="h-7 text-xs"
+            >
+              <RefreshCw className="mr-1.5 h-3 w-3" />
+              Tentar novamente
+            </Button>
           </div>
         ) : (
           <>
@@ -157,6 +204,15 @@ export default function SecaoPremiosArtilharia({ seasonId }: Props) {
                 );
               })}
             </div>
+
+            {erroSalvar && (
+              <div className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-2.5">
+                <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-xs text-destructive leading-relaxed">
+                  {erroSalvar}
+                </p>
+              </div>
+            )}
 
             <div className="flex justify-end">
               <Button size="sm" onClick={salvar} disabled={salvando}>
