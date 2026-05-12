@@ -227,7 +227,7 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
             faseDestaque={faseDestaqueChaveamento}
           />
         ) : abaAtiva === "artilharia" ? (
-          <AbaArtilharia seasonId={seasonId} driverId={driverId} />
+          <AbaArtilharia brandId={brandId} seasonId={seasonId} driverId={driverId} />
         ) : (
           <PlaceholderAba
             label={PLACEHOLDERS[abaAtiva].label}
