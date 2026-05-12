@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,6 +25,24 @@ interface Props {
 export default function ListaTemporadasAnteriores({ brandId }: Props) {
   const [filtro, setFiltro] = useState<StatusFiltroSeason>("all");
   const { data, isLoading } = useTemporadasMarca(brandId, filtro);
+
+  const ids = useMemo(() => (data ?? []).map((s) => s.id), [data]);
+  const { data: publicadoMap } = useQuery({
+    queryKey: ["duelo-seasons-published-map", brandId, ids.join(",")],
+    enabled: ids.length > 0,
+    queryFn: async () => {
+      const { data: rows, error } = await supabase
+        .from("duelo_seasons")
+        .select("id, published_at")
+        .in("id", ids);
+      if (error) throw error;
+      const map: Record<string, string | null> = {};
+      (rows ?? []).forEach((r: any) => {
+        map[r.id] = r.published_at;
+      });
+      return map;
+    },
+  });
 
   return (
     <Card>
@@ -77,6 +97,21 @@ export default function ListaTemporadasAnteriores({ brandId }: Props) {
                     <Badge variant="secondary" className="text-xs">
                       {s.tiers_count} série{s.tiers_count === 1 ? "" : "s"}
                     </Badge>
+                    {publicadoMap?.[s.id] ? (
+                      <Badge
+                        variant="outline"
+                        className="text-xs bg-emerald-500/10 text-emerald-700 border-emerald-500/40 dark:text-emerald-300"
+                      >
+                        Publicada
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className="text-xs bg-muted text-muted-foreground"
+                      >
+                        Não publicada
+                      </Badge>
+                    )}
                   </div>
                 </li>
               );
