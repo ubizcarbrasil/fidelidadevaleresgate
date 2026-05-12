@@ -285,7 +285,7 @@ describe("Integração — origem e condições do prize_label", () => {
 
     // Troca para aba "7 dias"
     const aba7d = screen.getByRole("button", { name: /7 dias/i });
-    await user.click(aba7d);
+    fireEvent.click(aba7d);
 
     await waitFor(() =>
       expect(screen.getByText("R$ 200 (semanal)")).toBeInTheDocument(),
