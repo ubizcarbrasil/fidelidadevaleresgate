@@ -817,4 +817,37 @@ describe("Integração — estado de carregamento e revelação do badge", () =>
       screen.getByText((content) => content.includes("80") && content.includes("corridas")),
     ).toBeInTheDocument();
   });
+
+  it("remove spinner/skeleton e não exibe badge ou prize_label quando o RPC falha", async () => {
+    let rejecter!: (reason: any) => void;
+    const promise = new Promise<{ data: any[]; error: null }>((_, reject) => {
+      rejecter = reject;
+    });
+    rpcMock.mockReturnValue(promise);
+
+    renderizar();
+
+    // Durante o loading deve haver skeleton
+    expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+    // Badge não deve existir durante o loading
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+    expect(screen.queryByText(/R\$/)).not.toBeInTheDocument();
+
+    // Rejeita a promise simulando erro no RPC
+    rejecter(new Error("Falha na conexão com o servidor"));
+
+    // Após a falha, skeleton deve sumir
+    await waitFor(() =>
+      expect(document.querySelector(".animate-pulse")).not.toBeInTheDocument(),
+    );
+
+    // Badge/prize_label não deve aparecer
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+    expect(screen.queryByText(/R\$/)).not.toBeInTheDocument();
+
+    // Mensagem de erro deve ser exibida
+    expect(
+      screen.getByText("Não foi possível carregar a artilharia."),
+    ).toBeInTheDocument();
+  });
 });
