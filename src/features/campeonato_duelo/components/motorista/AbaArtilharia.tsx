@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Gift, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -40,10 +41,18 @@ export default function AbaArtilharia({ brandId, seasonId, driverId }: Props) {
   const [riderSelecionado, setRiderSelecionado] = useState<TopRider | null>(
     null,
   );
-  const { data, isLoading, isError, refetch } = useTopRiders(
+  const { data, isLoading, isError, error, refetch } = useTopRiders(
     seasonId,
     janelaAtiva,
   );
+
+  useEffect(() => {
+    if (isError) {
+      toast.error("Erro ao carregar artilharia", {
+        description: "Não foi possível atualizar o ranking. Tente novamente.",
+      });
+    }
+  }, [isError]);
 
   const top = (data ?? []).slice(0, 20);
   const janelaLabel =

@@ -16,6 +16,11 @@ vi.mock("../components/motorista/ModalDetalhesMotorista", () => ({
   default: () => null,
 }));
 
+const toastMock = vi.fn();
+vi.mock("sonner", () => ({
+  toast: { error: (...args: any[]) => toastMock(...args) },
+}));
+
 import AbaArtilharia from "../components/motorista/AbaArtilharia";
 
 function renderizar(seasonId = "season-A") {
@@ -32,6 +37,7 @@ function renderizar(seasonId = "season-A") {
 describe("Integração — isolamento por branch_id na Artilharia", () => {
   beforeEach(() => {
     rpcMock.mockReset();
+    toastMock.mockClear();
   });
 
   it("o serviço chama o RPC apenas com season_id e window — sem permitir override de branch_id pelo cliente", async () => {
@@ -158,6 +164,7 @@ describe("Integração — isolamento por branch_id na Artilharia", () => {
 describe("Integração — origem e condições do prize_label", () => {
   beforeEach(() => {
     rpcMock.mockReset();
+    toastMock.mockClear();
   });
 
   it("não exibe badge quando motorista é rank 2 e backend retorna has_prize=false (prêmio só para 1º)", async () => {
@@ -542,6 +549,7 @@ describe("Integração — origem e condições do prize_label", () => {
 describe("Integração — estado de carregamento e revelação do badge", () => {
   beforeEach(() => {
     rpcMock.mockReset();
+    toastMock.mockClear();
   });
 
   it("exibe spinner (Skeleton) enquanto o RPC está pendente e nenhum badge é mostrado", async () => {
@@ -899,5 +907,21 @@ describe("Integração — estado de carregamento e revelação do badge", () =>
       screen.queryByText("Não foi possível carregar a artilharia."),
     ).not.toBeInTheDocument();
     expect(screen.getByText("R$ 500").closest("span")).toHaveClass("bg-emerald-500/15");
+  });
+
+  it("dispara toast de erro quando o RPC falha e mantém área de badge vazia", async () => {
+    rpcMock.mockRejectedValue(new Error("Erro no servidor"));
+
+    renderizar();
+
+    // Toast de erro deve ser disparado
+    await waitFor(() => expect(toastMock).toHaveBeenCalled());
+    expect(toastMock).toHaveBeenCalledWith("Erro ao carregar artilharia", {
+      description: "Não foi possível atualizar o ranking. Tente novamente.",
+    });
+
+    // Badge/prize_label não devem aparecer
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+    expect(screen.queryByText(/R\$/)).not.toBeInTheDocument();
   });
 });
