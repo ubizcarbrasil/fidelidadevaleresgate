@@ -535,6 +535,143 @@ export default function EditorInformacoesBasicas({ brandId, branchId }: Props = 
           </div>
         )}
       </div>
+
+      {/* ============== Inscrições ============== */}
+      <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          Inscrições
+        </p>
+
+        <div className="space-y-1.5">
+          <LabelComAjuda ajuda="Automático: motorista entra direto. Manual: precisa ser aprovado pelo administrador.">
+            Modo de inscrição
+          </LabelComAjuda>
+          <RadioGroup
+            value={form.watch("enrollmentMode") ?? "auto"}
+            onValueChange={(v) =>
+              form.setValue("enrollmentMode", v as "auto" | "manual", {
+                shouldValidate: true,
+              })
+            }
+            className="grid grid-cols-2 gap-2"
+          >
+            <label className="flex items-center gap-2 rounded-md border border-border bg-background p-2 text-sm cursor-pointer">
+              <RadioGroupItem value="auto" id="enr-auto" />
+              <span>Automático</span>
+            </label>
+            <label className="flex items-center gap-2 rounded-md border border-border bg-background p-2 text-sm cursor-pointer">
+              <RadioGroupItem value="manual" id="enr-manual" />
+              <span>Com aprovação manual</span>
+            </label>
+          </RadioGroup>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs">Taxa de inscrição (R$)</Label>
+          <Input
+            type="text"
+            value="R$ 0,00"
+            disabled
+            readOnly
+            className="bg-muted/40"
+          />
+          <p className="text-[11px] text-muted-foreground">
+            Pagamento de inscrição será ativado em versão futura.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <LabelComAjuda ajuda="Quando os motoristas poderão começar a se inscrever na temporada.">
+              Abertura das inscrições
+            </LabelComAjuda>
+            <Input
+              type="datetime-local"
+              value={form.watch("enrollmentOpensAt") ?? ""}
+              onChange={(e) =>
+                form.setValue("enrollmentOpensAt", e.target.value, {
+                  shouldValidate: true,
+                })
+              }
+            />
+          </div>
+          <div className="space-y-1">
+            <LabelComAjuda ajuda="Prazo final para inscrição. Deve ser antes do início da Classificação.">
+              Encerramento das inscrições
+            </LabelComAjuda>
+            <Input
+              type="datetime-local"
+              value={form.watch("enrollmentClosesAt") ?? ""}
+              onChange={(e) =>
+                form.setValue("enrollmentClosesAt", e.target.value, {
+                  shouldValidate: true,
+                })
+              }
+            />
+          </div>
+        </div>
+        {errors.enrollmentOpensAt && (
+          <p className="text-xs text-destructive">
+            {errors.enrollmentOpensAt.message as string}
+          </p>
+        )}
+        {errors.enrollmentClosesAt && (
+          <p className="text-xs text-destructive">
+            {errors.enrollmentClosesAt.message as string}
+          </p>
+        )}
+      </div>
+
+      {/* ============== Duração dos duelos ============== */}
+      <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          Duração dos duelos
+        </p>
+        <div className="space-y-1">
+          <LabelComAjuda ajuda="Duração de cada duelo da fase de classificação. As fases do mata-mata são configuradas separadamente.">
+            Horas por duelo (fase de classificação)
+          </LabelComAjuda>
+          <Input
+            type="number"
+            min={1}
+            max={168}
+            {...form.register("defaultMatchHours", { valueAsNumber: true })}
+          />
+          {errors.defaultMatchHours && (
+            <p className="text-xs text-destructive">
+              {errors.defaultMatchHours.message as string}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* ============== Publicação ============== */}
+      <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          Publicação
+        </p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <Label className="text-sm">Publicar para os motoristas</Label>
+            <p className="text-[11px] text-muted-foreground">
+              {form.watch("publishToDrivers")
+                ? "Será marcada como publicada ao salvar — visível no app."
+                : "Não publicada — invisível no app do motorista."}
+            </p>
+          </div>
+          <Switch
+            checked={!!form.watch("publishToDrivers")}
+            onCheckedChange={(v) =>
+              form.setValue("publishToDrivers", v, { shouldValidate: true })
+            }
+          />
+        </div>
+        {errors.publishToDrivers && (
+          <p className="text-xs text-destructive">
+            {errors.publishToDrivers.message as string}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
