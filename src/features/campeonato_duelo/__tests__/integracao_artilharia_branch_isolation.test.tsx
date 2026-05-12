@@ -244,7 +244,6 @@ describe("Integração — origem e condições do prize_label", () => {
   });
 
   it("ao trocar de janela, o prize_label reflete o valor da nova janela (se houver prêmio habilitado)", async () => {
-    const user = userEvent.setup();
 
     // Primeira chamada (24h) — sem prêmio
     rpcMock.mockResolvedValueOnce({
