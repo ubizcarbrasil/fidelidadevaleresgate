@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Swords, ChevronRight, Clock } from "lucide-react";
 import { useConfrontoAtual } from "../../hooks/hook_campeonato_motorista";
+import { useFotoPerfilMotorista } from "../../hooks/useFotoPerfilMotorista";
+import { AvatarMotorista } from "../shared/AvatarMotorista";
 import { formatarTempoRestante, nomeRodada } from "./utilitarios_motorista";
 
 interface Props {
@@ -20,6 +22,7 @@ export default function CardConfrontoAtual({
   onVerChaveamento,
 }: Props) {
   const { data, isLoading } = useConfrontoAtual(seasonId, driverId);
+  const { photoUrl } = useFotoPerfilMotorista();
 
   if (isLoading) {
     return (
@@ -63,7 +66,8 @@ export default function CardConfrontoAtual({
         </div>
 
         <div className="flex items-center justify-between gap-3">
-          <div className="text-center flex-1 min-w-0">
+          <div className="flex flex-col items-center flex-1 min-w-0 gap-1">
+            <AvatarMotorista nome="VOCÊ" url={photoUrl} size={48} />
             <p className="text-xs font-bold truncate">{eu.name}</p>
             <p
               className="text-3xl font-bold text-primary"
@@ -73,7 +77,8 @@ export default function CardConfrontoAtual({
             </p>
           </div>
           <span className="text-muted-foreground text-sm font-bold">×</span>
-          <div className="text-center flex-1 min-w-0">
+          <div className="flex flex-col items-center flex-1 min-w-0 gap-1">
+            <AvatarMotorista nome={adv.name} url={null} size={48} />
             <p className="text-xs font-bold truncate">{adv.name}</p>
             <p
               className="text-3xl font-bold"
