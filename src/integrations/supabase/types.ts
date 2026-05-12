@@ -10604,6 +10604,10 @@ export type Database = {
         Args: { p_brand_id: string; p_driver_id: string }
         Returns: Json
       }
+      driver_get_bracket_v2: {
+        Args: { p_driver_id: string; p_season_id: string; p_tier_id: string }
+        Returns: Json
+      }
       driver_get_centered_ranking: {
         Args: { p_driver_id: string; p_range?: number; p_season_id: string }
         Returns: Json
