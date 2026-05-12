@@ -27,7 +27,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -71,6 +70,28 @@ function iniciais(nome?: string | null) {
     .slice(0, 2)
     .map((p) => p.charAt(0).toUpperCase())
     .join("");
+}
+
+function AvatarMotorista({
+  nome,
+  url,
+}: {
+  nome?: string | null;
+  url?: string | null;
+}) {
+  return (
+    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-muted text-xs font-medium text-foreground/70 flex items-center justify-center">
+      {url ? (
+        <img
+          src={url}
+          alt={nome ?? "motorista"}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <span>{iniciais(nome)}</span>
+      )}
+    </div>
+  );
 }
 
 function formatarDataPtBr(iso: string) {
