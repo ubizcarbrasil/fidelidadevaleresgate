@@ -17,7 +17,7 @@ describe("SecaoPremiosArtilharia — estados de erro e carregamento", () => {
     vi.clearAllMocks();
   });
 
-  it("exibe spinner de carregamento inicial", () => {
+  it("exibe spinner de carregamento inicial", async () => {
     const { supabase } = await import("@/integrations/supabase/client");
     (supabase.from as any).mockReturnValue({
       select: vi.fn().mockReturnValue(new Promise(() => {})),
