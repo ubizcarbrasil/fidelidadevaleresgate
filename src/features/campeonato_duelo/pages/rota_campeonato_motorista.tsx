@@ -3,7 +3,6 @@ import { Navigate, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandTheme } from "@/hooks/useBrandTheme";
-import { CustomerProvider } from "@/contexts/CustomerContext";
 import {
   DriverSessionProvider,
   useDriverSession,
@@ -117,9 +116,5 @@ function GuardSessaoMotorista({
     return <Navigate to={`/driver?brandId=${brandId}`} replace />;
   }
 
-  return (
-    <CustomerProvider>
-      <PaginaCampeonatoMotorista brandId={brandId} fontHeading={fontHeading} />
-    </CustomerProvider>
-  );
+  return <PaginaCampeonatoMotorista brandId={brandId} fontHeading={fontHeading} />;
 }
