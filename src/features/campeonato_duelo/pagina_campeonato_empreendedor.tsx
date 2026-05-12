@@ -202,6 +202,20 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
                   >
                     <Plus className="mr-2 h-4 w-4" /> Nova
                   </Button>
+                  {modoManual && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSheetInscricoes(true)}
+                    >
+                      <Users className="mr-2 h-4 w-4" /> Gerenciar inscrições
+                      {!!pendentesCount && pendentesCount > 0 && (
+                        <Badge variant="secondary" className="ml-2">
+                          {pendentesCount}
+                        </Badge>
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
               <BannerStatusTemporada
