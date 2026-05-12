@@ -336,7 +336,7 @@ describe("Integração — origem e condições do prize_label", () => {
     fireEvent.click(aba7d);
 
     await waitFor(() =>
-      expect(screen.getByText("120")).toBeInTheDocument(),
+      expect(screen.getByText((content) => content.includes("120") && content.includes("corridas"))).toBeInTheDocument(),
     );
 
     // Prize_label anterior deve ter sumido
