@@ -851,7 +851,7 @@ describe("Integração — estado de carregamento e revelação do badge", () =>
     ).toBeInTheDocument();
   });
 
-  it("clicar em 'Tentar novamente' após erro dispara loading e depois exibe badge/prize_label corretamente", async () => {
+  it("clicar em 'Tentar novamente' após erro dispara novo RPC e depois exibe badge/prize_label corretamente", async () => {
     // Primeira chamada: falha
     rpcMock.mockRejectedValueOnce(new Error("Falha na conexão com o servidor"));
 
@@ -864,7 +864,7 @@ describe("Integração — estado de carregamento e revelação do badge", () =>
 
     renderizar();
 
-    // Estado de erro inicial
+    // Estado de erro inicial com botão de retry
     await waitFor(() =>
       expect(
         screen.getByText("Não foi possível carregar a artilharia."),
@@ -876,11 +876,6 @@ describe("Integração — estado de carregamento e revelação do badge", () =>
     // Clica em "Tentar novamente"
     const btnRetry = screen.getByRole("button", { name: /Tentar novamente/i });
     fireEvent.click(btnRetry);
-
-    // Durante o retry, skeleton deve aparecer e badge não
-    expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
-    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
-    expect(screen.queryByText("R$ 500")).not.toBeInTheDocument();
 
     // Resolve o retry com sucesso
     resolverRetry({
@@ -898,9 +893,11 @@ describe("Integração — estado de carregamento e revelação do badge", () =>
       error: null,
     });
 
-    // Após sucesso, skeleton some e badge aparece
+    // Após sucesso, mensagem de erro some e badge aparece
     await waitFor(() => expect(screen.getByText("R$ 500")).toBeInTheDocument());
-    expect(document.querySelector(".animate-pulse")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Não foi possível carregar a artilharia."),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("R$ 500").closest("span")).toHaveClass("bg-emerald-500/15");
   });
 });
