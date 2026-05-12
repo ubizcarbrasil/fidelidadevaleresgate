@@ -27,6 +27,7 @@ import { AvatarMotorista } from "../components/shared/AvatarMotorista";
 import BadgeFaseTemporada from "../components/badge_fase_temporada";
 import AbaTabelaDuelos from "../components/motorista/aba_tabela_duelos";
 import AbaClassificacao from "../components/motorista/AbaClassificacao";
+import AbaChaveamento from "../components/motorista/AbaChaveamento";
 import type { FaseCampeonato } from "../types/tipos_campeonato";
 
 type AbaId =
@@ -121,6 +122,13 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
 
   const showSubHeader = abaAtiva === "duelos" || abaAtiva === "chaveamento";
 
+  const faseDestaqueChaveamento = useMemo<
+    "r16" | "qf" | "sf" | "final" | undefined
+  >(() => {
+    const map: Array<"r16" | "qf" | "sf" | "final"> = ["r16", "qf", "sf", "final"];
+    return map[Math.min(Math.max(0, rodadaAtiva - 1), 3)];
+  }, [rodadaAtiva]);
+
   function handleRefresh() {
     // Invalida apenas as queries usadas pelo shell (não o queryClient inteiro)
     queryClient.invalidateQueries({ queryKey: ["driver-active-season", brandId, driverId] });
@@ -129,6 +137,7 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
     queryClient.invalidateQueries({ queryKey: ["tabela-duelos-rodadas", seasonId] });
     queryClient.invalidateQueries({ queryKey: ["tabela-duelos-confrontos", seasonId] });
     queryClient.invalidateQueries({ queryKey: ["campeonato-classificacao-tier", seasonId] });
+    queryClient.invalidateQueries({ queryKey: ["campeonato-bracket-v2", seasonId] });
   }
 
   function selecionarAba(aba: AbaId) {
@@ -207,6 +216,13 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
             seasonId={seasonId}
             tierId={serieVisualizando ?? temporada?.tier_id ?? null}
             driverId={driverId}
+          />
+        ) : abaAtiva === "chaveamento" ? (
+          <AbaChaveamento
+            seasonId={seasonId}
+            tierId={serieVisualizando ?? temporada?.tier_id ?? null}
+            driverId={driverId}
+            faseDestaque={faseDestaqueChaveamento}
           />
         ) : (
           <PlaceholderAba

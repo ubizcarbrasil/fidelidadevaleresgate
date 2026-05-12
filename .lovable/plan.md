@@ -1,66 +1,124 @@
-# Etapa 5 — Aba "Tabela de Duelos"
+## Pré-check
 
-Substituir o placeholder da aba `duelos` em `pagina_campeonato_motorista.tsx` pela listagem real dos confrontos da rodada selecionada, da série visualizada, com placar em tempo real.
+**`driver_get_full_bracket(p_season_id, p_driver_id)`** retorna por confronto:
+`bracket_id, round, slot, starts_at, ends_at, driver_a_id, driver_a_name, driver_a_rides, driver_b_id, driver_b_name, driver_b_rides, winner_id, is_me_involved`.
 
-## Premissas
+**Faltam:** `driver_a_photo_url`, `driver_b_photo_url`, info da temporada (`knockout_starts_at/ends_at`) e `phase_config` (de `duelo_season_phase_config`). Também não aceita `p_tier_id` (auto-resolvido pelo membership do driver — não permite ver outra série).
 
-- Reusar `CardConfronto` (já implementado, tem placar, barra de progresso, destaque de vencedor e pulso em tempo real).
-- A fonte de verdade é `duelo_brackets` (filtrado por `season_id` + `tier_id` + `round`).
-- Rodadas vêm da própria tabela: cada `(season_id, tier_id)` tem N rodadas distintas em `round`, ordenadas por `starts_at`. O `SubHeaderRodada` já existente passa a navegar entre essas rodadas reais (não números arbitrários).
-- Sem migration nova (a tabela `duelo_brackets` já tem todos os campos). Apenas 1 RPC nova de leitura para juntar nomes/fotos.
+**Conclusão:** criar `driver_get_bracket_v2`. Não alterar `driver_get_full_bracket` nem `BracketCompleto.tsx`.
 
-## Blocos (na ordem de commit)
+**`BracketCompleto.tsx`:** props `seasonId, driverId, fontHeading`; lista vertical agrupada por rodada, sem fotos, sem tap → detalhe. Não reaproveitável diretamente — manter intocado.
 
-### Bloco A — RPC `driver_list_tier_round_matches`
+**`duelo_season_phase_config`:** `(season_id, phase, duration_hours)` com `phase IN ('R16','QF','SF','Final')`. Tem RLS que permite leitura ao motorista da brand+branch.
 
-Migration nova com:
-- `driver_list_tier_round_matches(p_season_id uuid, p_tier_id uuid, p_round text) RETURNS jsonb`
-- `driver_list_tier_rounds(p_season_id uuid, p_tier_id uuid) RETURNS jsonb` — retorna `[{ round, label, starts_at, ends_at, status }]` ordenado por `starts_at`.
-- Ambas `SECURITY DEFINER`, validam que o motorista logado pertence ao `brand_id` da season (`driver_belongs_to_brand`).
-- `driver_list_tier_round_matches` retorna `[{ id, slot, round, driver_a_id, driver_a_name, driver_a_photo_url, driver_a_rides, driver_b_id, driver_b_name, driver_b_photo_url, driver_b_rides, winner_id, starts_at, ends_at }]`.
-- LEFT JOIN com `customers.photo_url` (fallback `driver_profiles.photo_url`).
-- `REVOKE ... FROM PUBLIC; GRANT EXECUTE ... TO authenticated`.
+**`customers.photo_url`** existe; fallback via `driver_profiles.photo_url` (mesmo padrão do `driver_get_tier_standings_v2`).
 
-### Bloco B — Camada de dados
+---
 
-- `services/servico_tabela_duelos.ts`: funções `listarRodadasDoTier` e `listarConfrontosDaRodada`.
-- `types/tipos_tabela_duelos.ts`: `RodadaResumo` e `ConfrontoListagem` (estende `ConfrontoMataMata` com `*_photo_url`).
-- `hooks/hook_tabela_duelos.ts`:
-  - `useRodadasDoTier(seasonId, tierId)` — `staleTime: 60s`.
-  - `useConfrontosDaRodada(seasonId, tierId, round)` — `refetchInterval: 30s`.
-  - Realtime: canal `duelo:matches:{seasonId}:{tierId}` em `postgres_changes` (UPDATE em `duelo_brackets` filtrado por `tier_id`) → invalida a query da rodada.
+## Commit A — RPC `driver_get_bracket_v2`
 
-### Bloco C — Componentes da aba
+Migration nova. Função `SECURITY DEFINER`, `SET search_path = public`, `STABLE`, `REVOKE ALL FROM PUBLIC`, `GRANT EXECUTE TO authenticated`.
 
-Criar em `components/motorista/`:
-- `aba_tabela_duelos.tsx` — orquestra dados + estados (loading/vazio/erro) e renderiza a lista.
-- `lista_confrontos_rodada.tsx` — recebe `confrontos[]` + `driverIdLogado` e renderiza `CardConfronto` para cada um, marcando `destacado` quando o motorista logado participa.
-- `cabecalho_rodada.tsx` (opcional) — mostra janela da rodada (`starts_at → ends_at`) e contador "encerra em X h" abaixo do `SubHeaderRodada`.
-- `vazio_sem_rodada.tsx` — estado quando não há rodada disponível na série (ex.: classificação ainda não começou).
+Assinatura:
+```
+driver_get_bracket_v2(p_season_id uuid, p_tier_id uuid, p_driver_id uuid) RETURNS jsonb
+```
 
-### Bloco D — Integração na página
+Lógica:
+1. Resolve `v_brand_id` / `v_branch_id` a partir de `duelo_seasons`.
+2. Valida `driver_belongs_to_brand(p_driver_id, v_brand_id)` → senão retorna `'{"season_info":null,"brackets":[]}'::jsonb`.
+3. Carrega `season_info`: `knockout_starts_at`, `knockout_ends_at`, `phase_config` = `jsonb_agg({phase, duration_hours})` ordenado por R16→Final.
+4. Carrega `brackets` filtrando por `season_id = p_season_id AND tier_id = p_tier_id`, com LEFT JOIN em `customers ca/cb` e `driver_profiles dpa/dpb` para `COALESCE(ca.photo_url, dpa.photo_url)`.
+5. Campos retornados por bracket: `id, phase (=round), bracket_position (=slot), driver_a_id, driver_a_name, driver_a_photo_url, driver_b_id, driver_b_name, driver_b_photo_url, driver_a_rides, driver_b_rides, winner_id, starts_at, ends_at, is_my_match`.
+6. Ordena por `CASE round` (r16=1, qf=2, sf=3, final=4), `slot`.
 
-Em `pagina_campeonato_motorista.tsx`:
-- Substituir `<PlaceholderAba>` da aba `duelos` por `<AbaTabelaDuelos seasonId tierId={serieVisualizando} driverId />`.
-- Refatorar o estado `rodadaAtiva` para indexar a lista real de rodadas vinda do hook (clamp ao tamanho do array). Os botões `< >` do `SubHeaderRodada` continuam controlando o índice; o label exibe o nome amigável da rodada (ex.: "Rodada 1", "Oitavas", "Quartas").
-- Adicionar `seasonId` + `tierId` ao `queryKey` invalidado pelo botão de refresh do header.
+---
 
-## Detalhes técnicos
+## Commit B — `AbaChaveamento.tsx`
 
-- Toda query Supabase isolada por `branch_id` via RPC (que já filtra por brand do motorista).
-- Toda escrita futura nesse fluxo (não há nesta etapa) usa `.select()`.
-- Tema mantém `tema-campeonato` (dark verde) — somente tokens semânticos.
-- Sem alterações em arquivos das Etapas 1–4 fora do necessário em `pagina_campeonato_motorista.tsx` (substituição do placeholder + binding do `SubHeaderRodada`).
+Arquivos novos:
+- `src/features/campeonato_duelo/types/tipos_chaveamento_motorista.ts` — tipos `BracketSlotV2`, `SeasonInfoBracket`, `BracketResponseV2`, `FasePhase = 'r16'|'qf'|'sf'|'final'`.
+- `src/features/campeonato_duelo/services/servico_chaveamento_motorista.ts` — `obterBracketV2(seasonId, tierId, driverId)` chama RPC.
+- `src/features/campeonato_duelo/hooks/hook_chaveamento_motorista.ts` — `useBracketCampeonatoV2(seasonId, tierId, driverId)` (`enabled` quando todos truthy, `staleTime: 30s`, `refetchInterval: 60s`, queryKey `['campeonato-bracket-v2', seasonId, tierId, driverId]`).
+- `src/features/campeonato_duelo/components/motorista/AbaChaveamento.tsx`.
 
-## Commits
+Componente `AbaChaveamento`:
+- Props: `{ seasonId, tierId, driverId, faseDestaque?: 'r16'|'qf'|'sf'|'final' }` (faseDestaque vem do SubHeaderRodada via index).
+- Estados: loading (skeletons), erro (mensagem + retry via refetch), vazio (`brackets.length === 0` → "O chaveamento ainda não foi gerado. Aguarde o fim da fase de classificação.").
 
-1. `feat(campeonato): RPCs driver_list_tier_rounds e driver_list_tier_round_matches`
-2. `feat(campeonato): camada de dados da Tabela de Duelos (service/types/hooks)`
-3. `feat(campeonato): componentes aba_tabela_duelos com CardConfronto e estados`
-4. `feat(campeonato): plugar AbaTabelaDuelos na pagina_campeonato_motorista`
+**Seção 1 — Painel de regras (colapsável, default aberto):**
+- Card `bg-card border-border` com `Collapsible` (shadcn) ou `details/summary`.
+- Título "Regras do Mata-Mata".
+- Para cada item de `phase_config` (mapear `R16→Oitavas`, `QF→Quartas`, `SF→Semifinal`, `Final→Final`): linha `⚔️ {label} — {duration_hours}h por confronto`. Final usa `🏆`.
+- `📅 Início: {format(knockout_starts_at, dd/MM/yyyy)}`.
+- `🏁 Final estimada: {format(knockout_ends_at, dd/MM/yyyy)}` (usa o campo da season; mais confiável que somar fases).
+- Se `phase_config` vazio → mostrar só as datas.
 
-## Fora de escopo
+**Seção 2 — Bracket interativo:**
+- Wrapper `overflow-x-auto` com `min-w` calculado.
+- 4 colunas (R16, QF, SF, Final) lado a lado; cada coluna `flex flex-col justify-around gap-y-{...}` com espaçamento crescente para alinhar verticalmente os pares (R16: gap-2, QF: gap-12, SF: gap-32, Final: gap-0 centralizado).
+- Cada coluna oculta se não houver brackets daquela fase.
+- Card de confronto (`button` clicável):
+  - Slot superior e inferior, cada um: `[AvatarMotorista url={photo} nome={name} size={28}] <span truncate>{name ?? "A definir"}</span> <span tabular-nums>{rides ?? "—"}</span>`.
+  - Vencedor (winner_id === driver_X_id): `font-bold` + `bg-primary/10`.
+  - Slot vazio: avatar com `animate-pulse bg-muted`, texto `text-muted-foreground italic "A definir"`.
+  - Borda padrão `border-border/40`; quando `is_my_match`: `border-primary ring-1 ring-primary/40`.
+  - Coluna Final destacada com `🏆` acima.
+- Linhas de conexão: SVG simples ou `border-r border-border/30` em pseudo-elementos (estrutura mínima, sem animação).
+- `faseDestaque` aplica `ring-2 ring-accent/40` nos cards daquela fase.
+- Tap em card com `driver_a_id && driver_b_id` (definido) → `setConfrontoSelecionado(bracket)` abre modal.
 
-- Conteúdo das demais abas (Classificação, Artilharia, Chaveamento, etc.) — Etapas 6–11.
-- Filtros/ordenação na lista (entrega mínima viável só com a lista pura).
-- Compartilhamento social ou deep-link de confronto.
+---
+
+## Commit C — `ModalConfrontoChaveamento.tsx`
+
+Arquivo novo: `src/features/campeonato_duelo/components/motorista/ModalConfrontoChaveamento.tsx`.
+
+Props: `{ open, onOpenChange, confronto: BracketSlotV2 | null, phaseConfig: SeasonInfoBracket['phase_config'] }`.
+
+Conteúdo do `Dialog` (shadcn, semantic tokens apenas):
+- `DialogHeader` com `<Badge>` da fase (label legível: Oitavas/Quartas/Semifinal/Final).
+- Linha central: `[AvatarMotorista 56px] NOME A` — `<span>VS</span>` — `[AvatarMotorista 56px] NOME B`.
+- Placar: `{rides_a} corridas × {rides_b} corridas` (ou `— × —` se ambos zero e ainda não iniciado).
+- `<Progress>` com `value = rides_a/(rides_a+rides_b) × 100` (50 se total=0). Acima do `<Progress>`, segunda barra invertida representando o lado B (ou usar dois divs com `flex` e width %).
+- "Confronto de {duration_hours}h" buscando em `phaseConfig` pela `phase` correspondente. Se não houver config → omitir linha.
+- Estado:
+  - `winner_id` definido: `🏆 Vencedor: {nome do vencedor}` em `text-primary`.
+  - `now < starts_at`: `Início: {format(starts_at, "dd/MM HH:mm")}`.
+  - Em andamento (`now ≥ starts_at && now < ends_at && !winner_id`): countdown `Encerra em Xh Ym` via `setInterval` 60s.
+- `DialogFooter` com botão "Fechar".
+
+Sem cores hardcoded; tudo via tokens (`text-primary`, `text-muted-foreground`, `bg-card`, etc.).
+
+---
+
+## Commit D — Plugar em `pagina_campeonato_motorista.tsx`
+
+Edição mínima:
+1. Import `AbaChaveamento`.
+2. Mapear `rodadaIndex → faseDestaque` (`1→'r16'`, `2→'qf'`, `3→'sf'`, `4→'final'`).
+3. No bloco `'chaveamento'`, substituir `<PlaceholderAba>` por:
+   ```tsx
+   <AbaChaveamento
+     seasonId={seasonId}
+     tierId={serieVisualizando ?? temporada?.tier_id ?? null}
+     driverId={driverId}
+     faseDestaque={faseDestaqueChaveamento}
+   />
+   ```
+   (renderizar somente se os 3 ids truthy; senão skeleton/empty).
+4. No `handleRefresh`, adicionar:
+   ```ts
+   queryClient.invalidateQueries({ queryKey: ['campeonato-bracket-v2', seasonId] });
+   ```
+5. Não alterar `SubHeaderRodada` nem outras abas.
+
+---
+
+## Não fazer
+
+- Não alterar `BracketCompleto.tsx`, `quadro_chaveamento.tsx`, `driver_get_full_bracket`.
+- Sem migrations de tabela, sem escrita Supabase.
+- Sem cores hardcoded — apenas tokens semânticos.
+- Sem tocar arquivos das Etapas 1–6 além do `pagina_campeonato_motorista.tsx` (Commit D).
+- Sem animações complexas — só estrutura e interação funcionais.
