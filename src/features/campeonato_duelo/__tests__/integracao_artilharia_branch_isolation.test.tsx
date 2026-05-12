@@ -349,3 +349,110 @@ describe("Integração — origem e condições do prize_label", () => {
     expect(pedroRow).not.toHaveTextContent("Prêmio");
   });
 });
+
+describe("Integração — estado de carregamento e revelação do badge", () => {
+  beforeEach(() => {
+    rpcMock.mockReset();
+  });
+
+  it("exibe spinner (Skeleton) enquanto o RPC está pendente e nenhum badge é mostrado", async () => {
+    // Cria uma promise que fica pendente para simular loading.
+    let resolver!: (value: { data: any[]; error: null }) => void;
+    const promise = new Promise<{ data: any[]; error: null }>((resolve) => {
+      resolver = resolve;
+    });
+    rpcMock.mockReturnValue(promise);
+
+    renderizar();
+
+    // Durante o loading deve haver skeletons (aria-busy implícito ou classes de skeleton).
+    expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+    // Badge NÃO deve existir durante o loading.
+    expect(screen.queryByText("R$ 500")).not.toBeInTheDocument();
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+
+    // Agora resolve com has_prize=true.
+    resolver({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 50,
+          has_prize: true,
+          prize_label: "R$ 500",
+        },
+      ],
+      error: null,
+    });
+
+    await waitFor(() => expect(screen.getByText("R$ 500")).toBeInTheDocument());
+    // Após a resolução, skeleton some.
+    expect(document.querySelector(".animate-pulse")).not.toBeInTheDocument();
+  });
+
+  it("mantém badge oculto durante loading mesmo se o payload futuro contiver has_prize=true", async () => {
+    let resolver!: (value: { data: any[]; error: null }) => void;
+    const promise = new Promise<{ data: any[]; error: null }>((resolve) => {
+      resolver = resolve;
+    });
+    rpcMock.mockReturnValue(promise);
+
+    renderizar();
+
+    // Loading ativo.
+    expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+    expect(screen.queryByText("R$ 500")).not.toBeInTheDocument();
+
+    resolver({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 50,
+          has_prize: true,
+          prize_label: "R$ 500",
+        },
+      ],
+      error: null,
+    });
+
+    await waitFor(() => expect(screen.getByText("R$ 500")).toBeInTheDocument());
+    expect(screen.getByText("R$ 500").closest("span")).toHaveClass("bg-emerald-500/15");
+  });
+
+  it("mantém badge oculto após carregamento quando backend retorna has_prize=false", async () => {
+    let resolver!: (value: { data: any[]; error: null }) => void;
+    const promise = new Promise<{ data: any[]; error: null }>((resolve) => {
+      resolver = resolve;
+    });
+    rpcMock.mockReturnValue(promise);
+
+    renderizar();
+
+    expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+
+    resolver({
+      data: [
+        {
+          rank: 1,
+          driver_id: "drv-1",
+          driver_name: "João Silva",
+          photo_url: null,
+          total_rides: 50,
+          has_prize: false,
+          prize_label: null,
+        },
+      ],
+      error: null,
+    });
+
+    await waitFor(() => expect(screen.getByText("João Silva")).toBeInTheDocument());
+    // Após carregamento, sem badge.
+    expect(screen.queryByText("Prêmio")).not.toBeInTheDocument();
+    expect(screen.queryByText("R$ 500")).not.toBeInTheDocument();
+  });
+});
