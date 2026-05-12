@@ -16,6 +16,11 @@ vi.mock("../components/motorista/ModalDetalhesMotorista", () => ({
   default: () => null,
 }));
 
+const toastMock = vi.fn();
+vi.mock("sonner", () => ({
+  toast: { error: (...args: any[]) => toastMock(...args) },
+}));
+
 import AbaArtilharia from "../components/motorista/AbaArtilharia";
 
 function renderizar(seasonId = "season-A") {
