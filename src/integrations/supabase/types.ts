@@ -4572,6 +4572,44 @@ export type Database = {
           },
         ]
       }
+      duelo_artilharia_window_prizes: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          label: string | null
+          season_id: string
+          updated_at: string
+          window_key: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          label?: string | null
+          season_id: string
+          updated_at?: string
+          window_key: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          label?: string | null
+          season_id?: string
+          updated_at?: string
+          window_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duelo_artilharia_window_prizes_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "duelo_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       duelo_attempts_log: {
         Row: {
           branch_id: string | null
@@ -10652,6 +10690,7 @@ export type Database = {
           driver_name: string
           has_prize: boolean
           photo_url: string
+          prize_label: string
           rank: number
           total_rides: number
         }[]
