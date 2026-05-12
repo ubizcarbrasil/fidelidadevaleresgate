@@ -305,11 +305,11 @@ function HeaderCampeonato({
 /* ──────────────────────── SUB-HEADER ─────────────────────── */
 
 function SubHeaderRodada({
-  rodada,
+  rotulo,
   onAnterior,
   onProxima,
 }: {
-  rodada: number;
+  rotulo: string;
   onAnterior: () => void;
   onProxima: () => void;
 }) {
@@ -324,7 +324,7 @@ function SubHeaderRodada({
           <ChevronLeft className="h-4 w-4" />
         </button>
         <p className="text-sm font-bold tracking-wide uppercase text-muted-foreground">
-          Rodada {rodada}
+          {rotulo}
         </p>
         <button
           onClick={onProxima}
