@@ -41,6 +41,7 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
   const seedingMutation = useExecutarSeedingTemporada(brandId);
   const [modalCriar, setModalCriar] = useState(false);
   const [modalDistribuicao, setModalDistribuicao] = useState(false);
+  const [sheetInscricoes, setSheetInscricoes] = useState(false);
   const [serieAberta, setSerieAberta] = useState<{
     tier_id: string;
     tier_name: string;
@@ -65,6 +66,40 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
     tier_id: t.tier_id,
     tier_name: t.tier_name,
   }));
+
+  // Carrega enrollment_mode da temporada ativa (não vem na RPC do dashboard)
+  const { data: configTemporada } = useQuery({
+    queryKey: ["duelo-season-enrollment-config", ativa?.id],
+    enabled: !!ativa?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("duelo_seasons")
+        .select("enrollment_mode, published_at")
+        .eq("id", ativa!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const modoManual = configTemporada?.enrollment_mode === "manual";
+
+  // Conta inscrições pendentes para o badge
+  const { data: pendentesCount } = useQuery({
+    queryKey: ["duelo-pending-enrollments-count", ativa?.id],
+    enabled: !!ativa?.id && modoManual,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("duelo_season_enrollments")
+        .select("id", { count: "exact", head: true })
+        .eq("season_id", ativa!.id)
+        .eq("brand_id", brandId)
+        .eq("branch_id", branchId)
+        .eq("status", "pending");
+      if (error) throw error;
+      return count ?? 0;
+    },
+    refetchInterval: 30_000,
+  });
 
   return (
     <div className="space-y-4 p-1">
