@@ -26,6 +26,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles, Settings, Trophy, ListChecks } from "lucide-react";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import FormCriarTemporadaAutomatico from "./FormCriarTemporadaAutomatico";
 import { schemaCriarTemporada, type FormCriarTemporadaInput } from "../../schemas/schema_criar_temporada";
 import {
   obterTemplatePorChave,
@@ -194,12 +196,27 @@ export default function FormCriarTemporada({
         <DialogHeader>
           <DialogTitle>Nova Temporada</DialogTitle>
           <DialogDescription>
-            Escolha um template para acelerar o processo. Você pode editar
-            qualquer campo antes de criar.
+            Use o modo automático para criar em segundos a partir da data de
+            início e da duração de cada fase, ou alterne para o modo avançado
+            para ajuste fino.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <Tabs defaultValue="automatico" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="automatico">Automático</TabsTrigger>
+            <TabsTrigger value="avancado">Avançado</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="automatico" className="mt-0">
+            <FormCriarTemporadaAutomatico
+              brandId={brandId}
+              branchId={branchId}
+              onClose={onClose}
+            />
+          </TabsContent>
+
+          <TabsContent value="avancado" className="mt-0 space-y-4">
           <div>
             <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Template inicial
@@ -293,7 +310,8 @@ export default function FormCriarTemporada({
               </DialogFooter>
             </form>
           </FormProvider>
-        </div>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
