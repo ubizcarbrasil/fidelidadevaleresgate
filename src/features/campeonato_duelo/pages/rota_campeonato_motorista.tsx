@@ -7,7 +7,40 @@ import {
   DriverSessionProvider,
   useDriverSession,
 } from "@/contexts/DriverSessionContext";
+import { useDueloCampeonatoHabilitado } from "@/compartilhados/hooks/hook_duelo_campeonato_habilitado";
 import PaginaCampeonatoMotorista from "./pagina_campeonato_motorista";
+
+/**
+ * ──────────────────────────────────────────────────────────────────
+ * CHECKLIST DE ATIVAÇÃO EM PRODUÇÃO — /motorista/campeonato
+ * ──────────────────────────────────────────────────────────────────
+ * Antes de divulgar a rota a motoristas reais, confirmar item a item:
+ *
+ *  1. Feature flag global `USE_DUELO_CAMPEONATO` está ON em
+ *     src/compartilhados/constants/constantes_features.ts
+ *  2. `brand_settings_json.duelo_campeonato_enabled === true` na marca-alvo
+ *     (verificar via admin → Configurações da Marca)
+ *  3. (Opcional) `duelo_series_enabled === true` se a marca usar séries A/B/C/D
+ *  4. RPCs publicadas e com GRANT EXECUTE ao role `anon` ou `authenticated`:
+ *     - driver_list_upcoming_seasons(p_branch_id uuid)
+ *     - driver_enroll_season(p_season_id uuid)
+ *     - get_driver_active_season(p_brand_id, p_driver_id)
+ *     - + as RPCs já existentes de classificação/artilharia/bracket
+ *  5. Tabela `duelo_season_enrollments` com RLS isolando por driver_id e
+ *     branch_id (cross-brand bloqueado — validado via testes)
+ *  6. Bucket `avatars` existente e público; edge function
+ *     `driver-upload-photo` deployada (verify_jwt = false já que usa
+ *     impersonação por CPF, não Supabase Auth)
+ *  7. Pelo menos uma temporada ativa OU uma futura cadastrada para a marca
+ *  8. Rota `/driver?brandId=...` funcional (gate de login por CPF)
+ *     — esta rota redireciona para lá quando não há sessão impersonada
+ *  9. Domínio publicado (`app.valeresgate.com.br` ou
+ *     `?brandId=<UUID>` em preview) resolve a marca corretamente
+ * 10. Smoke test em viewport 430×761 (mobile-first):
+ *     drawer abre, todas as 7 abas trocam, voltar funciona,
+ *     guard de foto aparece quando o motorista não tem photo_url
+ * ──────────────────────────────────────────────────────────────────
+ */
 
 const PORTAL_HOSTNAME = "app.valeresgate.com.br";
 const PORTAL_BRAND_ID = "db15bd21-9137-4965-a0fb-540d8e8b26f1";
@@ -78,6 +111,10 @@ export default function RotaCampeonatoMotorista() {
   const theme = settings?.theme || null;
   useBrandTheme(theme);
 
+  // Gate de feature: respeita USE_DUELO_CAMPEONATO + brand_settings_json
+  const { campeonatoHabilitado, isLoading: loadingFlag } =
+    useDueloCampeonatoHabilitado(brand?.id ?? null);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -90,6 +127,30 @@ export default function RotaCampeonatoMotorista() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <p className="text-muted-foreground text-sm">{error || "Erro ao carregar"}</p>
+      </div>
+    );
+  }
+
+  if (loadingFlag) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!campeonatoHabilitado) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-6">
+        <div className="text-center space-y-2 max-w-sm">
+          <p className="font-bold text-base text-foreground">
+            Campeonato indisponível
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Este recurso ainda não foi liberado para a sua cidade. Fale com o
+            empreendedor responsável para mais informações.
+          </p>
+        </div>
       </div>
     );
   }
