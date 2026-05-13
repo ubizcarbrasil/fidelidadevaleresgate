@@ -1,19 +1,76 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBrandInfo } from "@/hooks/useBrandName";
 import PlatformLogo from "@/components/PlatformLogo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Store, Coins, ReceiptText, TrendingUp, ShoppingBag, Car } from "lucide-react";
+import { Users, Store, Coins, ReceiptText, TrendingUp, ShoppingBag, Car, Trophy } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import {
+  CAMPEONATO_STANDALONE_KEY,
+} from "@/products/campeonato/constants/constantes_campeonato";
+import {
+  useCampeonatoStandalone,
+  useInvalidarCampeonatoStandalone,
+} from "@/products/campeonato/hooks/hook_campeonato_standalone";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
 export default function BrandSettingsPage() {
   const { currentBrandId } = useBrandGuard();
   const { name: brandName, logoUrl: brandLogoUrl } = useBrandInfo();
+  const { standalone: campeonatoStandalone, isLoading: loadingStandalone } =
+    useCampeonatoStandalone(currentBrandId);
+  const invalidarStandalone = useInvalidarCampeonatoStandalone();
+  const [savingStandalone, setSavingStandalone] = useState(false);
+
+  async function alterarCampeonatoStandalone(novo: boolean) {
+    if (!currentBrandId) return;
+    setSavingStandalone(true);
+    try {
+      const { data: atual, error: errLeitura } = await supabase
+        .from("brands")
+        .select("brand_settings_json")
+        .eq("id", currentBrandId)
+        .maybeSingle();
+      if (errLeitura) throw errLeitura;
+
+      const settingsAtuais =
+        (atual?.brand_settings_json as Record<string, unknown> | null) ?? {};
+      const novosSettings = {
+        ...settingsAtuais,
+        [CAMPEONATO_STANDALONE_KEY]: novo,
+      };
+
+      const { data, error } = await supabase
+        .from("brands")
+        .update({ brand_settings_json: novosSettings })
+        .eq("id", currentBrandId)
+        .select("id, brand_settings_json")
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) {
+        throw new Error(
+          "Não foi possível atualizar. Verifique suas permissões.",
+        );
+      }
+
+      await invalidarStandalone(currentBrandId);
+      toast.success(
+        novo ? "Campeonato standalone ativado" : "Campeonato standalone desativado",
+      );
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erro ao atualizar";
+      toast.error(msg);
+    } finally {
+      setSavingStandalone(false);
+    }
+  }
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["brand-settings-metrics", currentBrandId],
@@ -154,6 +211,33 @@ export default function BrandSettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Toggles de produtos / módulos da marca */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-primary" /> Produtos da marca
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="toggle-campeonato-standalone" className="text-sm font-medium">
+                Campeonato como produto independente
+              </Label>
+              <p className="text-xs text-muted-foreground max-w-xl">
+                Exibe o Campeonato separado no menu, sem depender do módulo de Gamificação.
+              </p>
+            </div>
+            <Switch
+              id="toggle-campeonato-standalone"
+              checked={campeonatoStandalone}
+              onCheckedChange={alterarCampeonatoStandalone}
+              disabled={loadingStandalone || savingStandalone || !currentBrandId}
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
