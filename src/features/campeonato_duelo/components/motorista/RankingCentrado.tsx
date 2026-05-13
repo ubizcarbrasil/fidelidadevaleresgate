@@ -20,7 +20,7 @@ export default function RankingCentrado({
   onVerTabelaCompleta,
 }: Props) {
   const { data, isLoading } = useRankingCentrado(seasonId, driverId, 2);
-  const { photoUrl } = useFotoPerfilMotorista();
+  const { photoUrl } = useFotoPerfilMotorista(driverId);
 
   return (
     <Card>
