@@ -9,13 +9,16 @@ export interface RetornoInscricaoTemporada {
 
 /**
  * Wrapper da RPC `driver_enroll_season`. A RPC é SECURITY DEFINER e
- * resolve o motorista internamente via auth.uid().
+ * recebe o `driverId` explicitamente — sessão do motorista é impersonada
+ * por CPF, portanto não há `auth.uid()` disponível.
  */
 export async function inscreverMotoristaTemporada(
   seasonId: string,
+  driverId: string,
 ): Promise<RetornoInscricaoTemporada> {
   const { data, error } = await (supabase as any).rpc("driver_enroll_season", {
     p_season_id: seasonId,
+    p_driver_id: driverId,
   });
   if (error) {
     return { success: false, error: error.message ?? "Erro ao inscrever-se." };
