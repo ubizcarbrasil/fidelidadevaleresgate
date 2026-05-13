@@ -10557,6 +10557,10 @@ export type Database = {
         Returns: boolean
       }
       campeonato_advance_phases: { Args: never; Returns: Json }
+      campeonato_apply_promotion_relegation: {
+        Args: { p_season_id: string }
+        Returns: Json
+      }
       campeonato_backfill_standings: {
         Args: { p_season_id: string }
         Returns: Json
@@ -10575,6 +10579,10 @@ export type Database = {
       }
       campeonato_change_engagement_format: {
         Args: { p_brand_id: string; p_new_format: string }
+        Returns: Json
+      }
+      campeonato_confirm_prize_distribution: {
+        Args: { p_season_id: string }
         Returns: Json
       }
       campeonato_create_brackets_within_tier: {
@@ -10604,9 +10612,30 @@ export type Database = {
         Args: { p_caller?: string; p_season_id: string }
         Returns: Json
       }
+      campeonato_move_driver_to_tier: {
+        Args: {
+          p_driver_id: string
+          p_reason?: string
+          p_season_id: string
+          p_target_tier_id: string
+        }
+        Returns: Json
+      }
+      campeonato_mover_motoristas_em_lote: {
+        Args: {
+          p_driver_ids: string[]
+          p_season_id: string
+          p_target_tier_id: string
+        }
+        Returns: Json
+      }
       campeonato_pause_season: { Args: { p_season_id: string }; Returns: Json }
       campeonato_reconcile_standings: {
         Args: { p_hours?: number }
+        Returns: Json
+      }
+      campeonato_remove_driver_from_season: {
+        Args: { p_driver_id: string; p_reason?: string; p_season_id: string }
         Returns: Json
       }
       campeonato_resume_season: { Args: { p_season_id: string }; Returns: Json }

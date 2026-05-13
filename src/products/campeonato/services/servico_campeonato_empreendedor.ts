@@ -420,7 +420,7 @@ export async function confirmarDistribuicaoPremios(
   seasonId: string,
 ): Promise<ResumoDistribuicaoConfirmada> {
   const { data, error } = await supabase.rpc(
-    "duelo_confirm_prize_distribution",
+    "campeonato_confirm_prize_distribution",
     { p_season_id: seasonId },
   );
   if (error) throw error;
@@ -448,7 +448,7 @@ export async function calcularPremiosManualmente(seasonId: string) {
 
 export async function moverMotoristaParaSerie(input: MoverMotoristaInput) {
   const { data, error } = await supabase.rpc(
-    "duelo_move_driver_to_tier" as any,
+    "campeonato_move_driver_to_tier" as any,
     {
       p_season_id: input.seasonId,
       p_driver_id: input.driverId,
@@ -462,7 +462,7 @@ export async function moverMotoristaParaSerie(input: MoverMotoristaInput) {
 
 export async function removerMotoristaDaSeason(input: RemoverMotoristaInput) {
   const { data, error } = await supabase.rpc(
-    "duelo_remove_driver_from_season" as any,
+    "campeonato_remove_driver_from_season" as any,
     {
       p_season_id: input.seasonId,
       p_driver_id: input.driverId,
@@ -481,7 +481,7 @@ export async function moverMotoristasEmLote(
   input: MoverEmLoteInput,
 ): Promise<MoverEmLoteResultado> {
   const { data, error } = await supabase.rpc(
-    "duelo_mover_motoristas_em_lote" as any,
+    "campeonato_mover_motoristas_em_lote" as any,
     {
       p_season_id: input.seasonId,
       p_driver_ids: input.driverIds,

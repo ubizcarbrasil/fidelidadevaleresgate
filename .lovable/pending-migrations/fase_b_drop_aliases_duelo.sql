@@ -25,4 +25,11 @@
 -- DROP FUNCTION IF EXISTS public.duelo_resume_season(uuid);
 -- DROP FUNCTION IF EXISTS public.duelo_update_prize(uuid, text, text, integer);
 
+-- Bloco B (Fase B-Cleanup) — aliases adicionados em 2026-05-13:
+-- DROP FUNCTION IF EXISTS public.duelo_confirm_prize_distribution(uuid);
+-- DROP FUNCTION IF EXISTS public.duelo_apply_promotion_relegation(uuid);
+-- DROP FUNCTION IF EXISTS public.duelo_move_driver_to_tier(uuid, uuid, uuid, text);
+-- DROP FUNCTION IF EXISTS public.duelo_remove_driver_from_season(uuid, uuid, text);
+-- DROP FUNCTION IF EXISTS public.duelo_mover_motoristas_em_lote(uuid, uuid[], uuid);
+
 -- COMMIT;
