@@ -14,18 +14,17 @@ export function useMinhasInscricoes(driverId?: string | null) {
     enabled: !!driverId,
     staleTime: 60_000,
     queryFn: async (): Promise<MinhaInscricao[]> => {
-      const { data, error } = await (supabase as any)
-        .from("duelo_season_enrollments")
-        .select("id, status, created_at, season:duelo_seasons(name)")
-        .eq("driver_id", driverId)
-        .order("created_at", { ascending: false })
-        .limit(10);
+      // Sessão impersonada: lemos via RPC SECURITY DEFINER (auth.uid() = NULL)
+      const { data, error } = await (supabase as any).rpc(
+        "driver_get_my_enrollments",
+        { p_driver_id: driverId },
+      );
       if (error) throw error;
       return ((data ?? []) as any[]).map((row) => ({
         id: row.id,
         status: row.status,
         created_at: row.created_at,
-        season_name: row.season?.name ?? null,
+        season_name: row.season_name ?? null,
       }));
     },
   });
