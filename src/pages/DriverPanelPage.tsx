@@ -7,7 +7,6 @@ import { Loader2 } from "lucide-react";
 import DriverMarketplace from "@/components/driver/DriverMarketplace";
 import DriverCpfLogin from "@/components/driver/DriverCpfLogin";
 import { useBrandTheme } from "@/hooks/useBrandTheme";
-import { CustomerProvider } from "@/contexts/CustomerContext";
 import { DriverSessionProvider, useDriverSession } from "@/contexts/DriverSessionContext";
 import { resolveCanonicalOriginFromSettings } from "@/lib/publicShareUrl";
 import DriverHomePage from "@/components/driver/home/DriverHomePage";
@@ -119,8 +118,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   }
 
   return (
-    <CustomerProvider>
-      <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
         {driverHubEnabled && showHub ? (
           <DriverHomePage
             brand={brand}
@@ -274,8 +272,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             }
           }}
         />
-      </div>
-    </CustomerProvider>
+    </div>
   );
 }
 export default function DriverPanelPage() {
