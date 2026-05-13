@@ -54,7 +54,7 @@ export async function listarClassificacao(
 ): Promise<ClassificacaoMotorista[]> {
   const { data, error } = await supabase
     .from("campeonato_season_standings")
-    .select("*, customers!duelo_season_standings_driver_id_fkey(name)")
+    .select("*, customers!campeonato_season_standings_driver_id_fkey(name)")
     .eq("season_id", seasonId)
     .order("points", { ascending: false })
     .order("weekend_rides_count", { ascending: false })
@@ -79,7 +79,7 @@ export async function listarConfrontos(
   const { data, error } = await supabase
     .from("campeonato_brackets")
     .select(
-      "*, driver_a:customers!duelo_brackets_driver_a_id_fkey(name), driver_b:customers!duelo_brackets_driver_b_id_fkey(name)",
+      "*, driver_a:customers!campeonato_brackets_driver_a_id_fkey(name), driver_b:customers!campeonato_brackets_driver_b_id_fkey(name)",
     )
     .eq("season_id", seasonId)
     .order("round")

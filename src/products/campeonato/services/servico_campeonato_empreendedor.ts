@@ -391,7 +391,7 @@ export async function listarDistribuicoesPendentes(
   const { data, error } = await supabase
     .from("campeonato_prize_distributions")
     .select(
-      "id, season_id, driver_id, brand_id, branch_id, tier_id, tier_name, position, points_awarded, status, confirmed_at, cancelled_reason, created_at, customers!duelo_prize_distributions_driver_id_fkey(name)",
+      "id, season_id, driver_id, brand_id, branch_id, tier_id, tier_name, position, points_awarded, status, confirmed_at, cancelled_reason, created_at, customers!campeonato_prize_distributions_driver_id_fkey(name)",
     )
     .eq("season_id", seasonId)
     .order("tier_name", { ascending: true })
