@@ -43,11 +43,14 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
     queryFn: async () => {
       const { data } = await supabase
         .from("public_brand_modules_safe")
-        .select("module_key, is_enabled")
+        .select("is_enabled, module_definitions!inner(key)")
         .eq("brand_id", brand.id)
-        .in("module_key", ["driver_hub", "affiliate_deals"]);
+        .in("module_definitions.key", ["driver_hub", "affiliate_deals"]);
       const map: Record<string, boolean> = {};
-      (data || []).forEach((r: any) => { map[r.module_key] = r.is_enabled; });
+      (data || []).forEach((r: any) => {
+        const key = r.module_definitions?.key;
+        if (key) map[key] = !!r.is_enabled;
+      });
       return map;
     },
   });
