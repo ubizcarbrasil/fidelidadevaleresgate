@@ -30,15 +30,12 @@ import AbaClassificacao from "../components/motorista/AbaClassificacao";
 import AbaChaveamento from "../components/motorista/AbaChaveamento";
 import AbaArtilharia from "../components/motorista/AbaArtilharia";
 import type { FaseCampeonato } from "../types/tipos_campeonato";
+import AbaProximosCampeonatos from "../components/motorista/AbaProximosCampeonatos";
+import AbaNoticias from "../components/motorista/AbaNoticias";
+import AbaConfiguracoes from "../components/motorista/AbaConfiguracoes";
+import type { AbaId as AbaIdShared } from "../types/tipos_navegacao_motorista";
 
-type AbaId =
-  | "duelos"
-  | "noticias"
-  | "classificacao"
-  | "artilharia"
-  | "chaveamento"
-  | "proximos"
-  | "configuracoes";
+type AbaId = AbaIdShared;
 
 interface ItemNavegacao {
   id: AbaId;
@@ -80,6 +77,7 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
   const queryClient = useQueryClient();
   const { driver } = useDriverSession();
   const driverId = driver?.id ?? null;
+  const branchId = driver?.branch_id ?? null;
 
   const { data: temporada, isLoading: loadingTemporada } =
     useTemporadaAtivaDoMotorista(brandId, driverId);
@@ -140,6 +138,9 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
     queryClient.invalidateQueries({ queryKey: ["campeonato-classificacao-tier", seasonId] });
     queryClient.invalidateQueries({ queryKey: ["campeonato-bracket-v2", seasonId] });
     queryClient.invalidateQueries({ queryKey: ["campeonato-artilharia", seasonId] });
+    queryClient.invalidateQueries({ queryKey: ["campeonato-proximos", branchId] });
+    queryClient.invalidateQueries({ queryKey: ["campeonato-noticias", seasonId] });
+    queryClient.invalidateQueries({ queryKey: ["campeonato-minhas-inscricoes", driverId] });
   }
 
   function selecionarAba(aba: AbaId) {
@@ -228,6 +229,33 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
           />
         ) : abaAtiva === "artilharia" ? (
           <AbaArtilharia brandId={brandId} seasonId={seasonId} driverId={driverId} />
+        ) : abaAtiva === "proximos" ? (
+          branchId && driverId ? (
+            <AbaProximosCampeonatos branchId={branchId} driverId={driverId} />
+          ) : (
+            <PlaceholderAba
+              label="Próximos Campeonatos"
+              descricao="Carregando dados da sua cidade…"
+              fontHeading={fontHeading}
+            />
+          )
+        ) : abaAtiva === "noticias" ? (
+          <AbaNoticias seasonId={seasonId} />
+        ) : abaAtiva === "configuracoes" ? (
+          driverId && branchId ? (
+            <AbaConfiguracoes
+              driverId={driverId}
+              seasonId={seasonId}
+              branchId={branchId}
+              onNavegar={(aba) => selecionarAba(aba)}
+            />
+          ) : (
+            <PlaceholderAba
+              label="Configurações"
+              descricao="Carregando sua sessão…"
+              fontHeading={fontHeading}
+            />
+          )
         ) : (
           <PlaceholderAba
             label={PLACEHOLDERS[abaAtiva].label}
