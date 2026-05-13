@@ -10637,7 +10637,10 @@ export type Database = {
         Args: { p_brand_id: string; p_driver_id: string }
         Returns: boolean
       }
-      driver_enroll_season: { Args: { p_season_id: string }; Returns: Json }
+      driver_enroll_season: {
+        Args: { p_driver_id: string; p_season_id: string }
+        Returns: Json
+      }
       driver_get_active_season: {
         Args: { p_brand_id: string; p_driver_id: string }
         Returns: Json
@@ -10665,6 +10668,18 @@ export type Database = {
       driver_get_history: {
         Args: { p_brand_id: string; p_driver_id: string; p_limit?: number }
         Returns: Json
+      }
+      driver_get_my_enrollments: {
+        Args: { p_driver_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          notes: string
+          season_id: string
+          season_name: string
+          status: string
+          tier_id: string
+        }[]
       }
       driver_get_notifications: {
         Args: {
@@ -10709,7 +10724,7 @@ export type Database = {
         Returns: Json
       }
       driver_list_upcoming_seasons: {
-        Args: { p_branch_id: string }
+        Args: { p_branch_id: string; p_driver_id: string }
         Returns: {
           enrollment_closes_at: string
           enrollment_opens_at: string

@@ -65,10 +65,10 @@ function classificarFase(t: ProximaTemporada): {
   return { label: "Em breve", variant: "secondary" };
 }
 
-export default function AbaProximosCampeonatos({ branchId, driverId: _driverId }: Props) {
+export default function AbaProximosCampeonatos({ branchId, driverId }: Props) {
   const queryClient = useQueryClient();
   const { data, isLoading, isError, refetch, isFetching } =
-    useProximosCampeonatos(branchId);
+    useProximosCampeonatos(branchId, driverId);
 
   if (isLoading) {
     return (
@@ -119,9 +119,10 @@ export default function AbaProximosCampeonatos({ branchId, driverId: _driverId }
         <CardProximaTemporada
           key={t.season_id}
           temporada={t}
+          driverId={driverId}
           onInscricaoOk={() =>
             queryClient.invalidateQueries({
-              queryKey: ["campeonato-proximos", branchId],
+              queryKey: ["campeonato-proximos", branchId, driverId],
             })
           }
         />
@@ -132,9 +133,11 @@ export default function AbaProximosCampeonatos({ branchId, driverId: _driverId }
 
 function CardProximaTemporada({
   temporada,
+  driverId,
   onInscricaoOk,
 }: {
   temporada: ProximaTemporada;
+  driverId: string;
   onInscricaoOk: () => void;
 }) {
   const [erroLocal, setErroLocal] = useState<string | null>(null);
@@ -142,7 +145,7 @@ function CardProximaTemporada({
   const ehPaga = (temporada.entry_fee_cents ?? 0) > 0;
 
   const inscrever = useMutation({
-    mutationFn: () => inscreverMotoristaTemporada(temporada.season_id),
+    mutationFn: () => inscreverMotoristaTemporada(temporada.season_id, driverId),
     onSuccess: (res) => {
       if (!res.success) {
         const msg = res.error || "Não foi possível inscrever-se.";

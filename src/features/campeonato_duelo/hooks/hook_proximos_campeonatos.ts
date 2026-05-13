@@ -26,15 +26,18 @@ export interface ProximaTemporada {
  * Lista temporadas futuras publicadas para a cidade do motorista,
  * incluindo o status atual da inscrição dele em cada uma.
  */
-export function useProximosCampeonatos(branchId?: string | null) {
+export function useProximosCampeonatos(
+  branchId?: string | null,
+  driverId?: string | null,
+) {
   return useQuery({
-    queryKey: ["campeonato-proximos", branchId],
-    enabled: !!branchId,
+    queryKey: ["campeonato-proximos", branchId, driverId],
+    enabled: !!branchId && !!driverId,
     staleTime: 60_000,
     queryFn: async (): Promise<ProximaTemporada[]> => {
       const { data, error } = await (supabase as any).rpc(
         "driver_list_upcoming_seasons",
-        { p_branch_id: branchId },
+        { p_branch_id: branchId, p_driver_id: driverId },
       );
       if (error) throw error;
       return ((data ?? []) as any[]).map((row) => ({
