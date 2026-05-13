@@ -31,7 +31,6 @@ import {
 } from "../../utils/utilitarios_campeonato";
 import { useCriarTemporadaCompleta } from "../../hooks/hook_mutations_campeonato";
 import { useCheckSeasonOverlap } from "../../hooks/hook_overlap_temporada";
-import { formatarDataHora as fmtDH } from "../../utils/utilitarios_campeonato";
 import type { TemplateKey } from "../../types/tipos_empreendedor";
 
 interface Props {
@@ -287,8 +286,8 @@ export default function FormCriarTemporadaAutomatico({
         <p className="text-xs text-destructive">
           Conflito de período: a temporada{" "}
           <strong>{temporadaSobreposta.name}</strong> ocupa{" "}
-          {fmtDH(temporadaSobreposta.classification_starts_at)} →{" "}
-          {fmtDH(temporadaSobreposta.knockout_ends_at)} nesta cidade. Ajuste o
+          {formatarDataHora(temporadaSobreposta.classification_starts_at)} →{" "}
+          {formatarDataHora(temporadaSobreposta.knockout_ends_at)} nesta cidade. Ajuste o
           início ou as durações para não sobrepor.
         </p>
       )}
