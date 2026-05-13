@@ -257,11 +257,7 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
             />
           )
         ) : (
-          <PlaceholderAba
-            label={PLACEHOLDERS[abaAtiva].label}
-            descricao={PLACEHOLDERS[abaAtiva].descricao}
-            fontHeading={fontHeading}
-          />
+          <PlaceholderAba label="" descricao="" fontHeading={fontHeading} />
         )}
       </main>
 
