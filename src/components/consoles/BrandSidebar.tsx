@@ -1,5 +1,5 @@
 import React from "react";
-import { LogOut, ChevronRight, LayoutDashboard } from "lucide-react";
+import { LogOut, ChevronRight, LayoutDashboard, Trophy } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
@@ -13,6 +13,7 @@ import { useResolvedModules } from "@/compartilhados/hooks/hook_modulos_resolvid
 import { USE_RESOLVED_MODULES } from "@/compartilhados/constants/constantes_features";
 import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
 import { useFormatoEngajamento } from "@/compartilhados/hooks/hook_formato_engajamento";
+import { useCampeonatoStandalone } from "@/products/campeonato/hooks/hook_campeonato_standalone";
 import { useProductScope } from "@/features/city_onboarding/hooks/hook_escopo_produto";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { supabase } from "@/integrations/supabase/client";
@@ -113,6 +114,8 @@ export function BrandSidebar() {
   const { currentBrandId, consoleScope } = useBrandGuard();
   const { isDriverEnabled, isPassengerEnabled } = useBrandScoringModels();
   const { isCampeonato } = useFormatoEngajamento(currentBrandId);
+  const { standalone: campeonatoStandalone } =
+    useCampeonatoStandalone(currentBrandId);
   const escopoProduto = useProductScope();
   // Audiência do plano (produto contratado) tem precedência sobre o scoring_model das branches.
   // Se o plano não cobre a audiência, esconde mesmo que alguma cidade esteja como BOTH (legado).
@@ -242,6 +245,31 @@ export function BrandSidebar() {
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              {campeonatoStandalone && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname.startsWith("/campeonato")}
+                    tooltip="Campeonato"
+                  >
+                    <NavLink
+                      to="/campeonato"
+                      className={`transition-colors rounded-md ${
+                        location.pathname.startsWith("/campeonato")
+                          ? "bg-primary/10 text-primary border-l-2 border-primary"
+                          : "text-foreground hover:bg-accent/40"
+                      }`}
+                      activeClassName=""
+                      onClick={() => setOpenMobile(false)}
+                    >
+                      <Trophy className="h-4 w-4" />
+                      {!collapsed && (
+                        <span className="flex-1 font-medium">Campeonato</span>
+                      )}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
