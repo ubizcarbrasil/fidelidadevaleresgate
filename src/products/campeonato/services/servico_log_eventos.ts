@@ -12,7 +12,7 @@ export async function listarEventosTemporada(
   limite = 200,
 ): Promise<EventoLogConfronto[]> {
   const { data, error } = await supabase
-    .from("duelo_match_events")
+    .from("campeonato_match_events")
     .select(
       `
         id,
@@ -22,7 +22,7 @@ export async function listarEventosTemporada(
         event_ref_id,
         occurred_at,
         driver:customers!duelo_match_events_driver_id_fkey(name),
-        bracket:duelo_brackets!inner(
+        bracket:campeonato_brackets!inner(
           season_id,
           round,
           slot,

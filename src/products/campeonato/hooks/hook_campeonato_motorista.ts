@@ -36,7 +36,7 @@ export function useTemporadaAtivaDoMotorista(
         {
           event: "INSERT",
           schema: "public",
-          table: "duelo_tier_memberships",
+          table: "campeonato_tier_memberships",
           filter: `driver_id=eq.${driverId}`,
         },
         () => {

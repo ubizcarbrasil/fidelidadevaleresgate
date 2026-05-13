@@ -146,7 +146,7 @@ describe("Integração — isolamento por branch_id na Artilharia", () => {
   it("propaga erro do RPC sem renderizar badges de outras branches em fallback", async () => {
     rpcMock.mockResolvedValue({
       data: null,
-      error: { message: "permission denied for relation duelo_seasons" },
+      error: { message: "permission denied for relation campeonato_seasons" },
     });
 
     renderizar();

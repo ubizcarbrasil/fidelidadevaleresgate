@@ -47,7 +47,7 @@ export default function EditorPremiosTemporada({ seasonId, tiers }: Props) {
     enabled: !!seasonId && !!tierId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("duelo_season_prizes")
+        .from("campeonato_season_prizes")
         .select("position, prize_kind, prize_value, description")
         .eq("season_id", seasonId)
         .eq("tier_id", tierId)
@@ -105,7 +105,7 @@ export default function EditorPremiosTemporada({ seasonId, tiers }: Props) {
     try {
       // delete + insert (atômico do ponto de vista do tier)
       const { error: delErr } = await supabase
-        .from("duelo_season_prizes")
+        .from("campeonato_season_prizes")
         .delete()
         .eq("season_id", seasonId)
         .eq("tier_id", tierId)
@@ -122,7 +122,7 @@ export default function EditorPremiosTemporada({ seasonId, tiers }: Props) {
           description: l.description?.trim() || null,
         }));
         const { data: ins, error: insErr } = await supabase
-          .from("duelo_season_prizes")
+          .from("campeonato_season_prizes")
           .insert(rows)
           .select();
         if (insErr) throw insErr;

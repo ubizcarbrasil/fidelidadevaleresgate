@@ -32,7 +32,7 @@ export default function ListaTemporadasAnteriores({ brandId }: Props) {
     enabled: ids.length > 0,
     queryFn: async () => {
       const { data: rows, error } = await supabase
-        .from("duelo_seasons")
+        .from("campeonato_seasons")
         .select("id, published_at")
         .in("id", ids);
       if (error) throw error;

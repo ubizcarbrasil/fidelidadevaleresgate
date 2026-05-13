@@ -13,8 +13,8 @@ import { resolve } from "node:path";
  *     dados sem essa restrição.
  *
  *  2. Camada de banco: validar estaticamente que a migração que cria a
- *     tabela `duelo_artilharia_window_prizes` aplica RLS e que as políticas
- *     amarram o acesso ao `branch_id` da `duelo_seasons`.
+ *     tabela `campeonato_artilharia_window_prizes` aplica RLS e que as políticas
+ *     amarram o acesso ao `branch_id` da `campeonato_seasons`.
  */
 
 vi.mock("@/integrations/supabase/client", () => ({
@@ -72,9 +72,9 @@ describe("Artilharia — isolamento branch_id (RLS policies)", () => {
   );
   const sql = readFileSync(migrationPath, "utf8");
 
-  it("habilita RLS na tabela duelo_artilharia_window_prizes", () => {
+  it("habilita RLS na tabela campeonato_artilharia_window_prizes", () => {
     expect(sql).toMatch(
-      /ALTER TABLE\s+public\.duelo_artilharia_window_prizes\s+ENABLE ROW LEVEL SECURITY/i,
+      /ALTER TABLE\s+public\.campeonato_artilharia_window_prizes\s+ENABLE ROW LEVEL SECURITY/i,
     );
   });
 

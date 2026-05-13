@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Subscreve às mudanças em duelo_brackets e duelo_season_standings
+ * Subscreve às mudanças em campeonato_brackets e campeonato_season_standings
  * para a temporada selecionada e invalida as queries do React Query
  * sempre que houver INSERT/UPDATE/DELETE — assim o quadro de mata-mata
  * e a tabela de classificação refletem o progresso em tempo real.
@@ -28,7 +28,7 @@ export function useRealtimeCampeonato(seasonId: string | null | undefined) {
         {
           event: "*",
           schema: "public",
-          table: "duelo_brackets",
+          table: "campeonato_brackets",
           filter: `season_id=eq.${seasonId}`,
         },
         () => {
@@ -41,7 +41,7 @@ export function useRealtimeCampeonato(seasonId: string | null | undefined) {
         {
           event: "*",
           schema: "public",
-          table: "duelo_season_standings",
+          table: "campeonato_season_standings",
           filter: `season_id=eq.${seasonId}`,
         },
         () => {

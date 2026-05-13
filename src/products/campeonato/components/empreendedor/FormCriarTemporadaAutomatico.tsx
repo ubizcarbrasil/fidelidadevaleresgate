@@ -80,7 +80,7 @@ export default function FormCriarTemporadaAutomatico({
     enabled: !!brandId && !!branchId && !!datasCalculadas,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("duelo_seasons")
+        .from("campeonato_seasons")
         .select("id, name")
         .eq("brand_id", brandId)
         .eq("branch_id", branchId)

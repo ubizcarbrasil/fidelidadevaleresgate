@@ -8,7 +8,7 @@ import type {
 
 /**
  * Camada de acesso a dados do Campeonato Duelo Motorista.
- * Consulta direta a duelo_seasons / duelo_season_standings / duelo_brackets.
+ * Consulta direta a campeonato_seasons / campeonato_season_standings / campeonato_brackets.
  * RPCs de avanço automático de fase ficam para sub-fase C.2.
  */
 
@@ -16,7 +16,7 @@ export async function listarTemporadasPorCidade(
   branchId: string,
 ): Promise<TemporadaCampeonato[]> {
   const { data, error } = await supabase
-    .from("duelo_seasons")
+    .from("campeonato_seasons")
     .select("*")
     .eq("branch_id", branchId)
     .order("year", { ascending: false })
@@ -30,7 +30,7 @@ export async function criarTemporada(
 ): Promise<TemporadaCampeonato> {
   const { data: userData } = await supabase.auth.getUser();
   const { data, error } = await supabase
-    .from("duelo_seasons")
+    .from("campeonato_seasons")
     .insert({
       brand_id: input.brandId,
       branch_id: input.branchId,
@@ -53,7 +53,7 @@ export async function listarClassificacao(
   seasonId: string,
 ): Promise<ClassificacaoMotorista[]> {
   const { data, error } = await supabase
-    .from("duelo_season_standings")
+    .from("campeonato_season_standings")
     .select("*, customers!duelo_season_standings_driver_id_fkey(name)")
     .eq("season_id", seasonId)
     .order("points", { ascending: false })
@@ -77,7 +77,7 @@ export async function listarConfrontos(
   seasonId: string,
 ): Promise<ConfrontoMataMata[]> {
   const { data, error } = await supabase
-    .from("duelo_brackets")
+    .from("campeonato_brackets")
     .select(
       "*, driver_a:customers!duelo_brackets_driver_a_id_fkey(name), driver_b:customers!duelo_brackets_driver_b_id_fkey(name)",
     )

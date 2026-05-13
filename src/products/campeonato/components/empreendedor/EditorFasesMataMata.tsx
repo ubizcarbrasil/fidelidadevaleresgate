@@ -38,7 +38,7 @@ export default function EditorFasesMataMata({ seasonId }: Props) {
     enabled: !!seasonId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("duelo_season_phase_config")
+        .from("campeonato_season_phase_config")
         .select("phase, duration_hours")
         .eq("season_id", seasonId);
       if (error) throw error;
@@ -69,7 +69,7 @@ export default function EditorFasesMataMata({ seasonId }: Props) {
         duration_hours: Math.max(1, Math.min(240, Number(valores[f.chave]) || DURACAO_PADRAO)),
       }));
       const { data: salvos, error } = await supabase
-        .from("duelo_season_phase_config")
+        .from("campeonato_season_phase_config")
         .upsert(rows, { onConflict: "season_id,phase" })
         .select();
       if (error) throw error;

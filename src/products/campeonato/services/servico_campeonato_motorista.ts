@@ -17,7 +17,7 @@ import type {
 export async function obterFormatoEngajamento(
   brandId: string,
 ): Promise<FormatoEngajamento> {
-  const { data, error } = await supabase.rpc("duelo_get_engagement_format", {
+  const { data, error } = await supabase.rpc("campeonato_get_engagement_format", {
     p_brand_id: brandId,
   });
   if (error) throw error;

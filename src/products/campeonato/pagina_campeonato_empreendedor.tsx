@@ -63,7 +63,7 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
     enabled: !!ativa?.id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("duelo_seasons")
+        .from("campeonato_seasons")
         .select("enrollment_mode, published_at")
         .eq("id", ativa!.id)
         .maybeSingle();
@@ -79,7 +79,7 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
     enabled: !!ativa?.id && modoManual,
     queryFn: async () => {
       const { count, error } = await supabase
-        .from("duelo_season_enrollments")
+        .from("campeonato_season_enrollments")
         .select("id", { count: "exact", head: true })
         .eq("season_id", ativa!.id)
         .eq("brand_id", brandId)

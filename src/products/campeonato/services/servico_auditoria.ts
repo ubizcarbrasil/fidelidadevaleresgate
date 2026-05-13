@@ -12,8 +12,8 @@ export async function listarAuditoriaClassificacao(
   filtros: FiltrosAuditoria,
 ): Promise<RegistroAuditoria[]> {
   let query = supabase
-    .from("duelo_classificacao_auditoria")
-    .select("*, duelo_seasons(name)")
+    .from("campeonato_classificacao_auditoria")
+    .select("*, campeonato_seasons(name)")
     .eq("branch_id", filtros.branchId)
     .order("created_at", { ascending: false })
     .limit(filtros.limit ?? 100);
@@ -45,6 +45,6 @@ export async function listarAuditoriaClassificacao(
       : [],
     details_json: row.details_json ?? {},
     created_at: row.created_at,
-    season_name: row.duelo_seasons?.name ?? null,
+    season_name: row.campeonato_seasons?.name ?? null,
   })) as RegistroAuditoria[];
 }

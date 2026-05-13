@@ -26,7 +26,7 @@ export function useCheckSeasonOverlap(
     enabled: !!brandId && !!branchId && !!startISO && !!endISO,
     queryFn: async (): Promise<TemporadaSobreposta | null> => {
       const { data, error } = await supabase
-        .from("duelo_seasons")
+        .from("campeonato_seasons")
         .select("id, name, classification_starts_at, knockout_ends_at")
         .eq("brand_id", brandId!)
         .eq("branch_id", branchId!)
