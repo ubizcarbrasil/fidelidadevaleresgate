@@ -142,6 +142,9 @@ const DriverPanelPage = lazyWithRetry(() => import("@/pages/DriverPanelPage"));
 const RotaCampeonatoMotorista = lazyWithRetry(
   () => import("@/products/campeonato/pages/rota_campeonato_motorista"),
 );
+const PaginaCampeonatoStandalone = lazyWithRetry(
+  () => import("@/products/campeonato/pages/pagina_campeonato_standalone"),
+);
 const McpDashboardPage = lazyWithRetry(() => import("@/pages/McpDashboardPage"));
 const OfferGovernancePage = lazyWithRetry(() => import("@/pages/OfferGovernancePage"));
 const ProductRedemptionOrdersPage = lazyWithRetry(() => import("@/pages/ProductRedemptionOrdersPage"));
@@ -379,6 +382,7 @@ function AnimatedRoutes() {
               <Route path="configuracao-cidade" element={<PaginaConfiguracaoCidade />} />
               <Route path="configuracao-modulos-cidade" element={<PaginaConfiguracaoModulosCidade />} />
               <Route path="gamificacao-admin" element={<ModuleGuard moduleKey="achadinhos_motorista"><GamificacaoAdminPage /></ModuleGuard>} />
+              <Route path="campeonato" element={<PaginaCampeonatoStandalone />} />
               <Route path="points-packages" element={<PaginaPacotesPontos />} />
               <Route path="points-packages-store" element={<PaginaLojaPacotes />} />
             </Route>
