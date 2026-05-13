@@ -8,7 +8,7 @@ import { TrendingUp, Smartphone, Swords } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
 import { useProductScope } from "@/features/city_onboarding/hooks/hook_escopo_produto";
-import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
+import { useFormatoEngajamento } from "@/compartilhados/hooks/hook_formato_engajamento";
 import { useStoreOwnerRedirect } from "@/hooks/useStoreOwnerRedirect";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

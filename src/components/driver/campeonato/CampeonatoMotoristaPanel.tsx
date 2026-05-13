@@ -3,15 +3,15 @@ import { ArrowLeft, Trophy, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
-import { useTemporadaAtivaDoMotorista } from "@/features/campeonato_duelo/hooks/hook_campeonato_motorista";
-import { useFotoPerfilMotorista } from "@/features/campeonato_duelo/hooks/useFotoPerfilMotorista";
-import BloqueioInscricaoSemFoto from "@/features/campeonato_duelo/components/motorista/BloqueioInscricaoSemFoto";
-import CardTemporadaAtual from "@/features/campeonato_duelo/components/motorista/CardTemporadaAtual";
-import RankingCentrado from "@/features/campeonato_duelo/components/motorista/RankingCentrado";
-import CardConfrontoAtual from "@/features/campeonato_duelo/components/motorista/CardConfrontoAtual";
-import ListaHistorico from "@/features/campeonato_duelo/components/motorista/ListaHistorico";
-import TabelaCompletaSerie from "@/features/campeonato_duelo/components/motorista/TabelaCompletaSerie";
-import BracketCompleto from "@/features/campeonato_duelo/components/motorista/BracketCompleto";
+import { useTemporadaAtivaDoMotorista } from "@/products/campeonato/hooks/hook_campeonato_motorista";
+import { useFotoPerfilMotorista } from "@/products/campeonato/hooks/useFotoPerfilMotorista";
+import BloqueioInscricaoSemFoto from "@/products/campeonato/components/motorista/BloqueioInscricaoSemFoto";
+import CardTemporadaAtual from "@/products/campeonato/components/motorista/CardTemporadaAtual";
+import RankingCentrado from "@/products/campeonato/components/motorista/RankingCentrado";
+import CardConfrontoAtual from "@/products/campeonato/components/motorista/CardConfrontoAtual";
+import ListaHistorico from "@/products/campeonato/components/motorista/ListaHistorico";
+import TabelaCompletaSerie from "@/products/campeonato/components/motorista/TabelaCompletaSerie";
+import BracketCompleto from "@/products/campeonato/components/motorista/BracketCompleto";
 
 interface Props {
   brandId: string;

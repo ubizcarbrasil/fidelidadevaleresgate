@@ -21,8 +21,8 @@ import DriverCityRedemptionHistory from "@/components/driver/DriverCityRedemptio
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 import DriverCategoryPage from "@/components/driver/DriverCategoryPage";
 import CampeonatoMotoristaPanel from "@/components/driver/campeonato/CampeonatoMotoristaPanel";
-import BadgeNotificacoes from "@/features/campeonato_duelo/components/notificacoes/BadgeNotificacoes";
-import OverlayNotificacoes from "@/features/campeonato_duelo/components/notificacoes/OverlayNotificacoes";
+import BadgeNotificacoes from "@/products/campeonato/components/notificacoes/BadgeNotificacoes";
+import OverlayNotificacoes from "@/products/campeonato/components/notificacoes/OverlayNotificacoes";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
 
 function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, initialDealId, isAdminSession }: {

@@ -14,7 +14,7 @@ import {
   useFormatosPermitidos,
   type FormatoEngajamentoChave,
 } from "@/compartilhados/hooks/hook_formatos_permitidos";
-import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
+import { useFormatoEngajamento } from "@/compartilhados/hooks/hook_formato_engajamento";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ROTULOS_FORMATO } from "@/features/campeonato_duelo/constants/constantes_templates";
+import { ROTULOS_FORMATO } from "@/products/campeonato/constants/constantes_templates";
 
 interface Props {
   brandId: string;

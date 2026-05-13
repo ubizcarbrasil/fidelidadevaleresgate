@@ -14,7 +14,7 @@
  * estiver salvo nas flags da cidade.
  */
 import { useBranchFeature } from "@/compartilhados/hooks/hook_brand_feature";
-import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
+import { useFormatoEngajamento } from "@/compartilhados/hooks/hook_formato_engajamento";
 
 export interface DueloFeatures {
   duelosAtivos: boolean;
