@@ -83,7 +83,7 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
 
   const { data: temporada, isLoading: loadingTemporada } =
     useTemporadaAtivaDoMotorista(brandId, driverId);
-  const { photoUrl } = useFotoPerfilMotorista();
+  const { photoUrl } = useFotoPerfilMotorista(driverId);
 
   const seasonId = temporada?.season_id ?? null;
 
