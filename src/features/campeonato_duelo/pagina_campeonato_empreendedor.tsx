@@ -43,7 +43,7 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
   const [modalCriar, setModalCriar] = useState(false);
   const [modalDistribuicao, setModalDistribuicao] = useState(false);
   const [sheetInscricoes, setSheetInscricoes] = useState(false);
-  const [wizardAberto, setWizardAberto] = useState(false);
+  const [wizardAberto, setWizardAberto] = useState(true);
   const [serieAberta, setSerieAberta] = useState<{
     tier_id: string;
     tier_name: string;
