@@ -1501,7 +1501,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "duelo_artilharia_window_prizes_season_id_fkey"
+            foreignKeyName: "campeonato_artilharia_window_prizes_season_id_fkey"
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "campeonato_seasons"
@@ -1593,56 +1593,56 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "duelo_brackets_driver_a_id_fkey"
+            foreignKeyName: "campeonato_brackets_driver_a_id_fkey"
             columns: ["driver_a_id"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_brackets_driver_a_id_fkey"
+            foreignKeyName: "campeonato_brackets_driver_a_id_fkey"
             columns: ["driver_a_id"]
             isOneToOne: false
             referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_brackets_driver_b_id_fkey"
+            foreignKeyName: "campeonato_brackets_driver_b_id_fkey"
             columns: ["driver_b_id"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_brackets_driver_b_id_fkey"
+            foreignKeyName: "campeonato_brackets_driver_b_id_fkey"
             columns: ["driver_b_id"]
             isOneToOne: false
             referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_brackets_season_id_fkey"
+            foreignKeyName: "campeonato_brackets_season_id_fkey"
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "campeonato_seasons"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_brackets_tier_id_fkey"
+            foreignKeyName: "campeonato_brackets_tier_id_fkey"
             columns: ["tier_id"]
             isOneToOne: false
             referencedRelation: "campeonato_season_tiers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_brackets_winner_id_fkey"
+            foreignKeyName: "campeonato_brackets_winner_id_fkey"
             columns: ["winner_id"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_brackets_winner_id_fkey"
+            foreignKeyName: "campeonato_brackets_winner_id_fkey"
             columns: ["winner_id"]
             isOneToOne: false
             referencedRelation: "customers_safe"
@@ -1692,35 +1692,35 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "duelo_champions_champion_driver_id_fkey"
+            foreignKeyName: "campeonato_champions_champion_driver_id_fkey"
             columns: ["champion_driver_id"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_champions_champion_driver_id_fkey"
+            foreignKeyName: "campeonato_champions_champion_driver_id_fkey"
             columns: ["champion_driver_id"]
             isOneToOne: false
             referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_champions_runner_up_driver_id_fkey"
+            foreignKeyName: "campeonato_champions_runner_up_driver_id_fkey"
             columns: ["runner_up_driver_id"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_champions_runner_up_driver_id_fkey"
+            foreignKeyName: "campeonato_champions_runner_up_driver_id_fkey"
             columns: ["runner_up_driver_id"]
             isOneToOne: false
             referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_champions_season_id_fkey"
+            foreignKeyName: "campeonato_champions_season_id_fkey"
             columns: ["season_id"]
             isOneToOne: true
             referencedRelation: "campeonato_seasons"
@@ -1779,7 +1779,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "duelo_classificacao_auditoria_season_id_fkey"
+            foreignKeyName: "campeonato_classificacao_auditoria_season_id_fkey"
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "campeonato_seasons"
@@ -1829,21 +1829,21 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "duelo_driver_tier_history_ending_tier_id_fkey"
+            foreignKeyName: "campeonato_driver_tier_history_ending_tier_id_fkey"
             columns: ["ending_tier_id"]
             isOneToOne: false
             referencedRelation: "campeonato_season_tiers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_driver_tier_history_season_id_fkey"
+            foreignKeyName: "campeonato_driver_tier_history_season_id_fkey"
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "campeonato_seasons"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_driver_tier_history_starting_tier_id_fkey"
+            foreignKeyName: "campeonato_driver_tier_history_starting_tier_id_fkey"
             columns: ["starting_tier_id"]
             isOneToOne: false
             referencedRelation: "campeonato_season_tiers"
@@ -1878,21 +1878,21 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "duelo_match_events_bracket_id_fkey"
+            foreignKeyName: "campeonato_match_events_bracket_id_fkey"
             columns: ["bracket_id"]
             isOneToOne: false
             referencedRelation: "campeonato_brackets"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_match_events_driver_id_fkey"
+            foreignKeyName: "campeonato_match_events_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_match_events_driver_id_fkey"
+            foreignKeyName: "campeonato_match_events_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "customers_safe"
@@ -1939,35 +1939,35 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "duelo_notifications_brand_id_fkey"
+            foreignKeyName: "campeonato_notifications_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_notifications_brand_id_fkey"
+            foreignKeyName: "campeonato_notifications_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_notifications_driver_id_fkey"
+            foreignKeyName: "campeonato_notifications_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_notifications_driver_id_fkey"
+            foreignKeyName: "campeonato_notifications_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_notifications_season_id_fkey"
+            foreignKeyName: "campeonato_notifications_season_id_fkey"
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "campeonato_seasons"
@@ -2032,56 +2032,56 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "duelo_prize_distributions_branch_id_fkey"
+            foreignKeyName: "campeonato_prize_distributions_branch_id_fkey"
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_prize_distributions_brand_id_fkey"
+            foreignKeyName: "campeonato_prize_distributions_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_prize_distributions_brand_id_fkey"
+            foreignKeyName: "campeonato_prize_distributions_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "public_brands_safe"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_prize_distributions_driver_id_fkey"
+            foreignKeyName: "campeonato_prize_distributions_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_prize_distributions_driver_id_fkey"
+            foreignKeyName: "campeonato_prize_distributions_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_prize_distributions_points_ledger_id_fkey"
+            foreignKeyName: "campeonato_prize_distributions_points_ledger_id_fkey"
             columns: ["points_ledger_id"]
             isOneToOne: false
             referencedRelation: "points_ledger"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_prize_distributions_season_id_fkey"
+            foreignKeyName: "campeonato_prize_distributions_season_id_fkey"
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "campeonato_seasons"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_prize_distributions_tier_id_fkey"
+            foreignKeyName: "campeonato_prize_distributions_tier_id_fkey"
             columns: ["tier_id"]
             isOneToOne: false
             referencedRelation: "campeonato_season_tiers"
@@ -2128,14 +2128,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "duelo_season_enrollments_season_id_fkey"
+            foreignKeyName: "campeonato_season_enrollments_season_id_fkey"
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "campeonato_seasons"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_season_enrollments_tier_id_fkey"
+            foreignKeyName: "campeonato_season_enrollments_tier_id_fkey"
             columns: ["tier_id"]
             isOneToOne: false
             referencedRelation: "campeonato_season_tiers"
@@ -2167,7 +2167,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "duelo_season_phase_config_season_id_fkey"
+            foreignKeyName: "campeonato_season_phase_config_season_id_fkey"
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "campeonato_seasons"
@@ -2208,14 +2208,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "duelo_season_prizes_season_id_fkey"
+            foreignKeyName: "campeonato_season_prizes_season_id_fkey"
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "campeonato_seasons"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_season_prizes_tier_id_fkey"
+            foreignKeyName: "campeonato_season_prizes_tier_id_fkey"
             columns: ["tier_id"]
             isOneToOne: false
             referencedRelation: "campeonato_season_tiers"
@@ -2265,28 +2265,28 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "duelo_season_standings_driver_id_fkey"
+            foreignKeyName: "campeonato_season_standings_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_season_standings_driver_id_fkey"
+            foreignKeyName: "campeonato_season_standings_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_season_standings_season_id_fkey"
+            foreignKeyName: "campeonato_season_standings_season_id_fkey"
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "campeonato_seasons"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_season_standings_tier_id_fkey"
+            foreignKeyName: "campeonato_season_standings_tier_id_fkey"
             columns: ["tier_id"]
             isOneToOne: false
             referencedRelation: "campeonato_season_tiers"
@@ -2339,7 +2339,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "duelo_season_tiers_season_id_fkey"
+            foreignKeyName: "campeonato_season_tiers_season_id_fkey"
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "campeonato_seasons"
@@ -2449,21 +2449,21 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "duelo_seasons_branch_id_fkey"
+            foreignKeyName: "campeonato_seasons_branch_id_fkey"
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_seasons_brand_id_fkey"
+            foreignKeyName: "campeonato_seasons_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_seasons_brand_id_fkey"
+            foreignKeyName: "campeonato_seasons_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "public_brands_safe"
@@ -2504,14 +2504,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "duelo_tier_memberships_season_id_fkey"
+            foreignKeyName: "campeonato_tier_memberships_season_id_fkey"
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "campeonato_seasons"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "duelo_tier_memberships_tier_id_fkey"
+            foreignKeyName: "campeonato_tier_memberships_tier_id_fkey"
             columns: ["tier_id"]
             isOneToOne: false
             referencedRelation: "campeonato_season_tiers"
