@@ -28,6 +28,8 @@ import { Loader2, Sparkles, Settings, Trophy, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FormCriarTemporadaAutomatico from "./FormCriarTemporadaAutomatico";
+import { useCheckSeasonOverlap } from "../../hooks/hook_overlap_temporada";
+import { formatarDataHora } from "../../utils/utilitarios_campeonato";
 import { schemaCriarTemporada, type FormCriarTemporadaInput } from "../../schemas/schema_criar_temporada";
 import {
   obterTemplatePorChave,
@@ -135,6 +137,23 @@ export default function FormCriarTemporada({
     staleTime: 10_000,
   });
   const temConflitoMesAno = !!temporadaConflitante;
+
+  // Checagem de SOBREPOSIÇÃO de período com outra temporada não cancelada.
+  const classStartWatch = form.watch("classificationStartsAt");
+  const knockEndWatch = form.watch("knockoutEndsAt");
+  const overlapStartISO = classStartWatch
+    ? deInputDate(classStartWatch)
+    : null;
+  const overlapEndISO = knockEndWatch
+    ? deInputDate(knockEndWatch, true)
+    : null;
+  const { data: temporadaSobreposta } = useCheckSeasonOverlap(
+    brandId,
+    branchId,
+    overlapStartISO,
+    overlapEndISO,
+  );
+  const temSobreposicao = !!temporadaSobreposta;
 
   function aoSubmeter(values: FormCriarTemporadaInput) {
     const prizesObj = values.prizesPerTier.reduce<
@@ -276,6 +295,16 @@ export default function FormCriarTemporada({
                 </AccordionItem>
               </Accordion>
 
+              {temSobreposicao && temporadaSobreposta && (
+                <p className="text-xs text-destructive">
+                  Conflito de período: a temporada{" "}
+                  <strong>{temporadaSobreposta.name}</strong> ocupa{" "}
+                  {formatarDataHora(temporadaSobreposta.classification_starts_at)} →{" "}
+                  {formatarDataHora(temporadaSobreposta.knockout_ends_at)} nesta
+                  cidade. Ajuste as datas para não sobrepor.
+                </p>
+              )}
+
               <DialogFooter>
                 <Button
                   type="button"
@@ -291,7 +320,12 @@ export default function FormCriarTemporada({
                       <span>
                         <Button
                           type="submit"
-                          disabled={isPending || conflitoFases || temConflitoMesAno}
+                          disabled={
+                            isPending ||
+                            conflitoFases ||
+                            temConflitoMesAno ||
+                            temSobreposicao
+                          }
                         >
                           {isPending && (
                             <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />

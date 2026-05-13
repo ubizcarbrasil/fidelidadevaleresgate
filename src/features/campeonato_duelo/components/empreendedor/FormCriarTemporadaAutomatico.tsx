@@ -30,6 +30,7 @@ import {
   type DuracoesFasesHoras,
 } from "../../utils/utilitarios_campeonato";
 import { useCriarTemporadaCompleta } from "../../hooks/hook_mutations_campeonato";
+import { useCheckSeasonOverlap } from "../../hooks/hook_overlap_temporada";
 import type { TemplateKey } from "../../types/tipos_empreendedor";
 
 interface Props {
@@ -93,6 +94,14 @@ export default function FormCriarTemporadaAutomatico({
   });
   const temConflitoMesAno = !!temporadaConflitante;
 
+  const { data: temporadaSobreposta } = useCheckSeasonOverlap(
+    brandId,
+    branchId,
+    datasCalculadas?.classificationStartsAt,
+    datasCalculadas?.knockoutEndsAt,
+  );
+  const temSobreposicao = !!temporadaSobreposta;
+
   function atualizarHoras(campo: keyof DuracoesFasesHoras, valor: string) {
     const n = Math.max(1, Math.min(720, Math.floor(Number(valor) || 0)));
     setHoras((h) => ({ ...h, [campo]: n }));
@@ -111,6 +120,12 @@ export default function FormCriarTemporadaAutomatico({
   function aoCriar() {
     if (!datasCalculadas) {
       toast.error("Informe uma data de início válida.");
+      return;
+    }
+    if (temSobreposicao) {
+      toast.error(
+        "As datas calculadas se sobrepõem a outra temporada existente desta cidade.",
+      );
       return;
     }
     const tpl = obterTemplatePorChave(templateKey);
@@ -267,6 +282,16 @@ export default function FormCriarTemporadaAutomatico({
         </p>
       )}
 
+      {temSobreposicao && temporadaSobreposta && (
+        <p className="text-xs text-destructive">
+          Conflito de período: a temporada{" "}
+          <strong>{temporadaSobreposta.name}</strong> ocupa{" "}
+          {formatarDataHora(temporadaSobreposta.classification_starts_at)} →{" "}
+          {formatarDataHora(temporadaSobreposta.knockout_ends_at)} nesta cidade. Ajuste o
+          início ou as durações para não sobrepor.
+        </p>
+      )}
+
       <DialogFooter>
         <Button
           type="button"
@@ -280,7 +305,11 @@ export default function FormCriarTemporadaAutomatico({
           type="button"
           onClick={aoCriar}
           disabled={
-            isPending || inicioInvalido || horasInvalidas || temConflitoMesAno
+            isPending ||
+            inicioInvalido ||
+            horasInvalidas ||
+            temConflitoMesAno ||
+            temSobreposicao
           }
         >
           {isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
