@@ -23,7 +23,7 @@ export function useDueloCampeonatoHabilitado(brandId?: string | null) {
     queryFn: async () => {
       if (!brandId) return { campeonato: false, series: false };
       const { data, error } = await supabase
-        .from("brands")
+        .from("public_brands_safe")
         .select("brand_settings_json")
         .eq("id", brandId)
         .maybeSingle();
