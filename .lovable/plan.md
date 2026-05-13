@@ -1,27 +1,35 @@
 ## Diagnóstico
 
-O app do motorista não mostra o card **Campeonato** porque há dois problemas separados:
+A tela "Foto obrigatória" do Campeonato falha porque o motorista usa **sessão impersonada** (`DriverSessionContext`), ou seja, `auth.uid()` é `null`. As duas operações que o componente `BloqueioInscricaoSemFoto` tenta executar exigem usuário autenticado:
 
-1. A consulta de módulos do painel do motorista usa `public_brand_modules_safe.module_key`, mas essa coluna não existe na view atual. Isso gera erro 400 e pode impedir o hub do motorista de carregar corretamente.
-2. A função que busca a temporada do motorista (`driver_get_pending_or_active_season`) ainda considera temporadas `cancelled` como ativas quando o motorista já foi distribuído. No caso verificado, ela retorna **Junho 2026** com fase `cancelled`, em vez de ignorar essa temporada e cair na temporada válida.
+1. **Upload no bucket `avatars`** → políticas `avatars_insert_own` / `avatars_update_own` exigem role `authenticated` + `customers.user_id = auth.uid()`. A sessão anônima do motorista é bloqueada.
+2. **`UPDATE customers SET photo_url`** → RLS de `customers` também exige autenticação/admin, então a atualização retorna 0 linhas mesmo se o upload passasse.
 
-## Plano de correção
+Por isso aparece o erro genérico "Não foi possível enviar a foto. Tente novamente.".
 
-1. **Ajustar a leitura de módulos no `DriverPanelPage`**
-   - Trocar a query atual de `public_brand_modules_safe` para buscar os módulos com join em `module_definitions`.
-   - Resolver corretamente as chaves `driver_hub` e `affiliate_deals`.
-   - Garantir fallback seguro: se a leitura pública falhar, o hub não deve esconder o app inteiro.
+## Plano
 
-2. **Corrigir a função de temporada do motorista no banco**
-   - Atualizar `driver_get_pending_or_active_season` para ignorar sempre temporadas com `phase = 'cancelled'` e `cancelled_at` preenchido, tanto no caminho normal quanto no fallback de “distribuição pendente”.
-   - Isso impede que temporada cancelada apareça como ativa no app do motorista.
+### 1. Edge Function `driver-upload-photo` (nova)
+- Aceita `multipart/form-data` (ou JSON com base64) contendo `driver_id`, `brand_id` e o arquivo da foto.
+- Valida que existe um `customers.id = driver_id` cujo `name` contém `[MOTORISTA]` e pertence ao `brand_id` (mesmo padrão das demais RPCs de motorista impersonado).
+- Valida MIME (`image/jpeg|png|webp`) e tamanho (≤ 5 MB).
+- Faz upload no bucket `avatars` em `motoristas/{customer_id}/{timestamp}.{ext}` usando **service role** (bypass RLS), com `upsert: true`.
+- Atualiza `customers.photo_url` com a URL pública.
+- Retorna `{ photo_url }` ou erro estruturado (`bucket_missing`, `invalid_file`, `driver_not_found`, `upload_failed`, `update_failed`).
+- `verify_jwt = false` em `supabase/config.toml` (sessão de motorista é anônima).
 
-3. **Corrigir bloqueios de “temporada ativa” que ainda contam canceladas**
-   - Revisar as RPCs de troca de formato que usam `phase <> 'finished'` e ajustar para `phase NOT IN ('finished','cancelled')` com `cancelled_at IS NULL`.
-   - Isso corrige a mensagem incorreta de “já tem temporada ativa” quando só há temporada cancelada.
+### 2. Frontend — `BloqueioInscricaoSemFoto.tsx`
+- Substituir o upload direto via `supabase.storage` + `update` por chamada à Edge Function `driver-upload-photo` via `supabase.functions.invoke`, passando `driver_id` (já recebido por prop) e o arquivo.
+- Tratar os códigos de erro da função para mostrar mensagem específica (bucket não configurado, arquivo inválido, etc.) mantendo o fallback genérico atual.
+- Após sucesso: `refetchFoto()` (passando callback) e `onFotoCadastrada()`.
 
-4. **Validar no preview**
-   - Abrir o app do motorista para a marca Ubiz/Leme.
-   - Confirmar que o hub carrega sem erro 400.
-   - Confirmar que o card **Campeonato** aparece quando a flag e o formato estão ativos.
-   - Confirmar que a tela do campeonato não mostra temporada cancelada como ativa.
+### 3. Validação
+- Testar no preview com o motorista impersonado do brand "Leme":
+  - selecionar foto → confirmar → confirmar que sobe sem erro.
+  - recarregar a tela do Campeonato → o bloqueio some e o card de temporada/duelo aparece.
+- Confirmar via SQL que `customers.photo_url` foi populado.
+
+## Arquivos afetados
+- `supabase/functions/driver-upload-photo/index.ts` (novo)
+- `supabase/config.toml` (registrar a function com `verify_jwt = false`)
+- `src/features/campeonato_duelo/components/motorista/BloqueioInscricaoSemFoto.tsx`
