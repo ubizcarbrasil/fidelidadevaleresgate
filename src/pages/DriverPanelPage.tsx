@@ -100,10 +100,17 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   const rawWhatsappNumber = settings?.whatsapp_number as string | undefined;
   const whatsappNumber = branchWhatsappEnabled ? rawWhatsappNumber : undefined;
 
-  // When deep-link params exist, go straight to marketplace — but only if module is on
+  // When deep-link params exist, go straight to marketplace/campeonato — but only if module is on
   useEffect(() => {
     if (achadinhosEnabled && (initialCategoryId || initialDealId)) setShowHub(false);
   }, [initialCategoryId, initialDealId, achadinhosEnabled]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("campeonato") === "1") {
+      setHubOverlay({ type: "campeonato" });
+    }
+  }, []);
 
   if (loading || loadingBranch) {
     return (
