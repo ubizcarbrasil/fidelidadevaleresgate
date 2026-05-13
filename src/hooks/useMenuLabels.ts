@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MENU_REGISTRY } from "@/compartilhados/constants/constantes_menu_sidebar";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
-import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
+import { useFormatoEngajamento } from "@/compartilhados/hooks/hook_formato_engajamento";
 
 export interface LabelGroup {
   groupLabel: string;

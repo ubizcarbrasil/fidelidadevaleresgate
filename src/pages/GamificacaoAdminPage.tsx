@@ -16,9 +16,9 @@ import ModeracaoApelidos from "@/components/admin/gamificacao/ModeracaoApelidos"
 import DuelosAoVivoAdmin from "@/components/admin/gamificacao/DuelosAoVivoAdmin";
 import ModalCriarDueloAdmin from "@/components/admin/gamificacao/ModalCriarDueloAdmin";
 import ApostasAdminView from "@/components/admin/gamificacao/ApostasAdminView";
-import PaginaCampeonatoEmpreendedor from "@/features/campeonato_duelo/pagina_campeonato_empreendedor";
-import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
-import AlertaModoCampeonato from "@/features/campeonato_duelo/components/alerta_modo_campeonato";
+import PaginaCampeonatoEmpreendedor from "@/products/campeonato/pagina_campeonato_empreendedor";
+import { useFormatoEngajamento } from "@/compartilhados/hooks/hook_formato_engajamento";
+import AlertaModoCampeonato from "@/products/campeonato/components/alerta_modo_campeonato";
 
 export default function GamificacaoAdminPage() {
   const { currentBranchId, currentBrandId, consoleScope } = useBrandGuard();

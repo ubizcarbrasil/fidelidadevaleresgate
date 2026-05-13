@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Gift, Sparkles, MapPin } from "lucide-react";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { useDueloCampeonatoHabilitado } from "@/compartilhados/hooks/hook_duelo_campeonato_habilitado";
-import { useFormatoEngajamento } from "@/features/campeonato_duelo/hooks/hook_formato_engajamento";
+import { useFormatoEngajamento } from "@/compartilhados/hooks/hook_formato_engajamento";
 import { shareDriverUrl } from "@/lib/publicShareUrl";
 import HomeHeader from "./HomeHeader";
 import UserPointsCard from "./UserPointsCard";

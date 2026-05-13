@@ -140,7 +140,7 @@ const MirrorSyncPage = lazyWithRetry(() => import("@/pages/MirrorSyncPage"));
 const DriverPanelConfigPage = lazyWithRetry(() => import("@/pages/DriverPanelConfigPage"));
 const DriverPanelPage = lazyWithRetry(() => import("@/pages/DriverPanelPage"));
 const RotaCampeonatoMotorista = lazyWithRetry(
-  () => import("@/features/campeonato_duelo/pages/rota_campeonato_motorista"),
+  () => import("@/products/campeonato/pages/rota_campeonato_motorista"),
 );
 const McpDashboardPage = lazyWithRetry(() => import("@/pages/McpDashboardPage"));
 const OfferGovernancePage = lazyWithRetry(() => import("@/pages/OfferGovernancePage"));
