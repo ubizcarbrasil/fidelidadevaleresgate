@@ -295,6 +295,16 @@ export default function FormCriarTemporada({
                 </AccordionItem>
               </Accordion>
 
+              {temSobreposicao && temporadaSobreposta && (
+                <p className="text-xs text-destructive">
+                  Conflito de período: a temporada{" "}
+                  <strong>{temporadaSobreposta.name}</strong> ocupa{" "}
+                  {formatarDataHora(temporadaSobreposta.classification_starts_at)} →{" "}
+                  {formatarDataHora(temporadaSobreposta.knockout_ends_at)} nesta
+                  cidade. Ajuste as datas para não sobrepor.
+                </p>
+              )}
+
               <DialogFooter>
                 <Button
                   type="button"
@@ -310,7 +320,12 @@ export default function FormCriarTemporada({
                       <span>
                         <Button
                           type="submit"
-                          disabled={isPending || conflitoFases || temConflitoMesAno}
+                          disabled={
+                            isPending ||
+                            conflitoFases ||
+                            temConflitoMesAno ||
+                            temSobreposicao
+                          }
                         >
                           {isPending && (
                             <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
