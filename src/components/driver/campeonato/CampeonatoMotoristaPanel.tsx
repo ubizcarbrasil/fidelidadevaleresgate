@@ -34,9 +34,10 @@ export default function CampeonatoMotoristaPanel({
   );
   const {
     temFoto,
+    statusDisponivel,
     isLoading: loadingFoto,
     refetch: refetchFoto,
-  } = useFotoPerfilMotorista();
+  } = useFotoPerfilMotorista(driverId);
   const [fotoConfirmada, setFotoConfirmada] = useState(false);
 
   const [overlay, setOverlay] = useState<SubOverlay>(null);
@@ -45,7 +46,7 @@ export default function CampeonatoMotoristaPanel({
   const isClassification = temporada?.phase === "classification";
   const isFirstSeason = temporada !== null && temporada !== undefined;
 
-  const precisaFoto = !temFoto && !fotoConfirmada;
+  const precisaFoto = statusDisponivel && !temFoto && !fotoConfirmada;
 
   return (
     <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
@@ -81,6 +82,7 @@ export default function CampeonatoMotoristaPanel({
         ) : precisaFoto ? (
           <BloqueioInscricaoSemFoto
             fontHeading={fontHeading}
+            driverId={driverId}
             onFotoCadastrada={() => {
               setFotoConfirmada(true);
               refetchFoto();

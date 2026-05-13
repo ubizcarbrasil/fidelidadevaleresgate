@@ -11,10 +11,34 @@ interface FotoPerfilResultado {
  * Prioridade: customers.photo_url -> driver_profiles.photo_url.
  * Apenas leitura.
  */
-export function useFotoPerfilMotorista() {
+export function useFotoPerfilMotorista(driverCustomerId?: string | null) {
   const query = useQuery({
-    queryKey: ["foto-perfil-motorista"],
+    queryKey: ["foto-perfil-motorista", driverCustomerId ?? "auth"],
     queryFn: async (): Promise<FotoPerfilResultado> => {
+      if (driverCustomerId) {
+        const { data: driverCustomer } = await supabase
+          .from("customers")
+          .select("id, photo_url")
+          .eq("id", driverCustomerId)
+          .maybeSingle<{ id: string; photo_url: string | null }>();
+
+        if (!driverCustomer) return { customerId: null, photoUrl: null };
+        if (driverCustomer.photo_url) {
+          return { customerId: driverCustomer.id, photoUrl: driverCustomer.photo_url };
+        }
+
+        const { data: profile } = await (supabase as any)
+          .from("driver_profiles")
+          .select("photo_url")
+          .eq("customer_id", driverCustomer.id)
+          .maybeSingle();
+
+        return {
+          customerId: driverCustomer.id,
+          photoUrl: (profile?.photo_url as string | null) ?? null,
+        };
+      }
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -53,6 +77,7 @@ export function useFotoPerfilMotorista() {
     customerId: data.customerId,
     photoUrl: data.photoUrl,
     temFoto: !!data.photoUrl,
+    statusDisponivel: !!data.customerId,
     isLoading: query.isLoading,
     refetch: query.refetch,
   };

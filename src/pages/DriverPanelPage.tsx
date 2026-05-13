@@ -7,7 +7,6 @@ import { Loader2 } from "lucide-react";
 import DriverMarketplace from "@/components/driver/DriverMarketplace";
 import DriverCpfLogin from "@/components/driver/DriverCpfLogin";
 import { useBrandTheme } from "@/hooks/useBrandTheme";
-import { CustomerProvider } from "@/contexts/CustomerContext";
 import { DriverSessionProvider, useDriverSession } from "@/contexts/DriverSessionContext";
 import { resolveCanonicalOriginFromSettings } from "@/lib/publicShareUrl";
 import DriverHomePage from "@/components/driver/home/DriverHomePage";
@@ -101,10 +100,17 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   const rawWhatsappNumber = settings?.whatsapp_number as string | undefined;
   const whatsappNumber = branchWhatsappEnabled ? rawWhatsappNumber : undefined;
 
-  // When deep-link params exist, go straight to marketplace — but only if module is on
+  // When deep-link params exist, go straight to marketplace/campeonato — but only if module is on
   useEffect(() => {
     if (achadinhosEnabled && (initialCategoryId || initialDealId)) setShowHub(false);
   }, [initialCategoryId, initialDealId, achadinhosEnabled]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("campeonato") === "1") {
+      setHubOverlay({ type: "campeonato" });
+    }
+  }, []);
 
   if (loading || loadingBranch) {
     return (
@@ -119,8 +125,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   }
 
   return (
-    <CustomerProvider>
-      <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
         {driverHubEnabled && showHub ? (
           <DriverHomePage
             brand={brand}
@@ -274,8 +279,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             }
           }}
         />
-      </div>
-    </CustomerProvider>
+    </div>
   );
 }
 export default function DriverPanelPage() {
