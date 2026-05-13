@@ -40,7 +40,7 @@ export async function aplicarPromocaoRebaixamento(
   seasonId: string,
 ): Promise<ResultadoPromocaoRebaixamento> {
   const { data, error } = await supabase.rpc(
-    "duelo_apply_promotion_relegation",
+    "campeonato_apply_promotion_relegation",
     { p_season_id: seasonId },
   );
   if (error) throw error;
