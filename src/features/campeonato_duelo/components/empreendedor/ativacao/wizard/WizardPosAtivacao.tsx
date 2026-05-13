@@ -66,7 +66,9 @@ export default function WizardPosAtivacao({
           <StepperWizard passos={PASSOS} passoAtual={passo} />
         </DialogHeader>
 
-        <div className="px-5 pb-5">
+        <div className="space-y-3 px-5 pb-5">
+          <ResumoTemporadaAtivaWizard brandId={brandId} branchId={branchId} />
+
           {passo === 0 && (
             <PassoFormato
               brandId={brandId}
