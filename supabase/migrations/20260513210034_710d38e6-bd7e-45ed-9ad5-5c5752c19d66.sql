@@ -1,0 +1,1 @@
+-- conteúdo carregado de /tmp/migration_body.sql (placeholder — substituído pelo arquivo real abaixo)

@@ -16,7 +16,7 @@ export function useFormatosPermitidos(brandId?: string | null) {
     enabled: !!brandId,
     staleTime: 30_000,
     queryFn: async (): Promise<FormatoEngajamentoChave[]> => {
-      const { data, error } = await supabase.rpc("duelo_get_allowed_formats", {
+      const { data, error } = await supabase.rpc("campeonato_get_allowed_formats", {
         p_brand_id: brandId!,
       });
       if (error) throw error;
@@ -44,7 +44,7 @@ export function useDefinirFormatosPermitidos() {
       brandId: string;
       formatos: FormatoEngajamentoChave[];
     }) => {
-      const { data, error } = await supabase.rpc("duelo_set_allowed_formats", {
+      const { data, error } = await supabase.rpc("campeonato_set_allowed_formats", {
         p_brand_id: input.brandId,
         p_formats: input.formatos,
       });

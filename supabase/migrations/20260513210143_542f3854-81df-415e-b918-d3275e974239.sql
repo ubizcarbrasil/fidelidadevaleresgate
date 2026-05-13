@@ -1,0 +1,24 @@
+-- BLOCO A.1: TRIGGERS
+ALTER TRIGGER trg_duelo_artilharia_window_prizes_updated_at ON public.campeonato_artilharia_window_prizes RENAME TO trg_campeonato_artilharia_window_prizes_updated_at;
+ALTER TRIGGER trg_duelo_driver_tier_history_updated_at ON public.campeonato_driver_tier_history RENAME TO trg_campeonato_driver_tier_history_updated_at;
+ALTER TRIGGER trg_duelo_prize_dist_updated_at ON public.campeonato_prize_distributions RENAME TO trg_campeonato_prize_dist_updated_at;
+ALTER TRIGGER trg_duelo_validate_tier_config ON public.campeonato_season_tiers RENAME TO trg_campeonato_validate_tier_config;
+ALTER TRIGGER trg_duelo_seasons_updated_at ON public.campeonato_seasons RENAME TO trg_campeonato_seasons_updated_at;
+ALTER TRIGGER trg_duelo_guard_tier_membership_insert ON public.campeonato_tier_memberships RENAME TO trg_campeonato_guard_tier_membership_insert;
+ALTER TRIGGER trg_duelo_notif_season_created ON public.campeonato_tier_memberships RENAME TO trg_campeonato_notif_season_created;
+ALTER TRIGGER trg_duelo_sync_tier_history ON public.campeonato_tier_memberships RENAME TO trg_campeonato_sync_tier_history;
+
+-- BLOCO A.2: FUNÇÕES INTERNAS
+ALTER FUNCTION public.tg_duelo_artilharia_window_prizes_updated_at() RENAME TO tg_campeonato_artilharia_window_prizes_updated_at;
+ALTER FUNCTION public.duelo_prize_dist_set_updated_at() RENAME TO campeonato_prize_dist_set_updated_at;
+ALTER FUNCTION public.duelo_validate_tier_config() RENAME TO campeonato_validate_tier_config;
+ALTER FUNCTION public.duelo_guard_tier_membership_insert() RENAME TO campeonato_guard_tier_membership_insert;
+ALTER FUNCTION public.duelo_notify_season_created() RENAME TO campeonato_notify_season_created;
+ALTER FUNCTION public.duelo_sync_tier_history() RENAME TO campeonato_sync_tier_history;
+ALTER FUNCTION public._duelo_log_attempt(uuid,uuid,uuid,uuid,text,text,text,integer,integer,integer,jsonb,jsonb) RENAME TO _campeonato_log_attempt;
+ALTER FUNCTION public.duelo_admin_can_manage(uuid) RENAME TO campeonato_admin_can_manage;
+ALTER FUNCTION public.duelo_create_brackets_within_tier(uuid,uuid,text,integer,timestamptz,timestamptz) RENAME TO campeonato_create_brackets_within_tier;
+ALTER FUNCTION public.duelo_get_allowed_formats(uuid) RENAME TO campeonato_get_allowed_formats;
+ALTER FUNCTION public.duelo_is_weekend_at(timestamptz,uuid) RENAME TO campeonato_is_weekend_at;
+ALTER FUNCTION public.duelo_seed_initial_tier_memberships(uuid) RENAME TO campeonato_seed_initial_tier_memberships;
+ALTER FUNCTION public.duelo_set_allowed_formats(uuid,text[]) RENAME TO campeonato_set_allowed_formats;

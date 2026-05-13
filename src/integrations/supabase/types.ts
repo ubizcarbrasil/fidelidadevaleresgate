@@ -10443,7 +10443,7 @@ export type Database = {
         Args: { p_new_target: number; p_tier_id: string }
         Returns: boolean
       }
-      _duelo_log_attempt: {
+      _campeonato_log_attempt: {
         Args: {
           p_actor: string
           p_branch_id: string
@@ -10552,6 +10552,10 @@ export type Database = {
         }
         Returns: Json
       }
+      campeonato_admin_can_manage: {
+        Args: { p_brand_id: string }
+        Returns: boolean
+      }
       campeonato_advance_phases: { Args: never; Returns: Json }
       campeonato_backfill_standings: {
         Args: { p_season_id: string }
@@ -10573,9 +10577,28 @@ export type Database = {
         Args: { p_brand_id: string; p_new_format: string }
         Returns: Json
       }
+      campeonato_create_brackets_within_tier: {
+        Args: {
+          p_ends_at: string
+          p_round: string
+          p_season_id: string
+          p_starts_at: string
+          p_tier_id: string
+          p_top_n: number
+        }
+        Returns: number
+      }
+      campeonato_get_allowed_formats: {
+        Args: { p_brand_id: string }
+        Returns: string[]
+      }
       campeonato_get_engagement_format: {
         Args: { p_brand_id: string }
         Returns: string
+      }
+      campeonato_is_weekend_at: {
+        Args: { p_branch_id: string; p_finalized_at: string }
+        Returns: boolean
       }
       campeonato_materialize_and_seed_season: {
         Args: { p_caller?: string; p_season_id: string }
@@ -10587,6 +10610,14 @@ export type Database = {
         Returns: Json
       }
       campeonato_resume_season: { Args: { p_season_id: string }; Returns: Json }
+      campeonato_seed_initial_tier_memberships: {
+        Args: { p_season_id: string }
+        Returns: Json
+      }
+      campeonato_set_allowed_formats: {
+        Args: { p_brand_id: string; p_formats: string[] }
+        Returns: Json
+      }
       campeonato_update_prize: {
         Args: {
           p_brand_id: string
@@ -10811,7 +10842,6 @@ export type Database = {
         }
         Returns: Json
       }
-      duelo_admin_can_manage: { Args: { p_brand_id: string }; Returns: boolean }
       duelo_advance_phases: { Args: never; Returns: Json }
       duelo_apply_promotion_relegation: {
         Args: { p_season_id: string }
@@ -10835,28 +10865,9 @@ export type Database = {
         Args: { p_season_id: string }
         Returns: Json
       }
-      duelo_create_brackets_within_tier: {
-        Args: {
-          p_ends_at: string
-          p_round: string
-          p_season_id: string
-          p_starts_at: string
-          p_tier_id: string
-          p_top_n: number
-        }
-        Returns: number
-      }
-      duelo_get_allowed_formats: {
-        Args: { p_brand_id: string }
-        Returns: string[]
-      }
       duelo_get_engagement_format: {
         Args: { p_brand_id: string }
         Returns: string
-      }
-      duelo_is_weekend_at: {
-        Args: { p_branch_id: string; p_finalized_at: string }
-        Returns: boolean
       }
       duelo_materialize_and_seed_season: {
         Args: { p_caller?: string; p_season_id: string }
@@ -10886,14 +10897,6 @@ export type Database = {
         Returns: Json
       }
       duelo_resume_season: { Args: { p_season_id: string }; Returns: Json }
-      duelo_seed_initial_tier_memberships: {
-        Args: { p_season_id: string }
-        Returns: Json
-      }
-      duelo_set_allowed_formats: {
-        Args: { p_brand_id: string; p_formats: string[] }
-        Returns: Json
-      }
       duelo_update_prize: {
         Args: {
           p_brand_id: string
