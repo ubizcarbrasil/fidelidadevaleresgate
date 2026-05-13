@@ -19,6 +19,17 @@ const UUID_RE =
  * Resolve a marca pelo mesmo padrão da DriverPanelPage e protege com o
  * mesmo gate de sessão de motorista (login por CPF). Se não houver sessão,
  * redireciona para /driver preservando o brandId atual.
+ *
+ * NÃO ENVOLVER COM `CustomerProvider`.
+ * Motivo: `CustomerProvider` depende de `useAuth()` para resolver o
+ * customer via `auth.uid()`. Esta rota usa sessão impersonada de motorista
+ * (login por CPF, sem Supabase Auth), então `auth.uid()` é nulo e o provider
+ * não traria nada útil. Os hooks usados aqui
+ * (`useFotoPerfilMotorista`, `useTemporadaAtivaDoMotorista`,
+ *  `useProximosCampeonatos`, `useMinhasInscricoes`)
+ * recebem o `driverId` por prop a partir de `useDriverSession()`.
+ * Reintroduzir `CustomerProvider` aqui causaria queries quebradas e
+ * regressão silenciosa.
  */
 export default function RotaCampeonatoMotorista() {
   const [searchParams] = useSearchParams();
