@@ -796,7 +796,7 @@ Deno.serve(async (req) => {
 
       const { data, error } = await adminClient.rpc(
         "duelo_materialize_and_seed_season",
-        { p_season_id: season_id },
+        { p_season_id: season_id, p_caller: user.id },
       );
       if (error) throw error;
       return new Response(JSON.stringify({ ok: true, result: data }), {
