@@ -31,3 +31,15 @@ export const NOMES_MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ];
+
+/**
+ * Duração padrão (em horas) de cada fase no modo de criação automática.
+ * Exemplo do produto: Duelo 24h, Oitavas 48h, Quartas 72h, Semi 96h, Final 120h.
+ */
+export const DURACOES_FASES_PADRAO_HORAS = {
+  duelo: 24,
+  oitavas: 48,
+  quartas: 72,
+  semi: 96,
+  final: 120,
+} as const;
