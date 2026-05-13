@@ -30,7 +30,7 @@ export default function ComoFuncionaCards() {
           className="rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary/40"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10">
-            <Icone className="h-4.5 w-4.5 text-primary" />
+            <Icone className="h-5 w-5 text-primary" />
           </div>
           <p className="mt-3 text-sm font-semibold">{titulo}</p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
