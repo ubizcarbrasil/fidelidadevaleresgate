@@ -10789,9 +10789,10 @@ export type Database = {
         Args: { p_branch_id: string; p_finalized_at: string }
         Returns: boolean
       }
-      duelo_materialize_and_seed_season:
-        | { Args: { p_season_id: string }; Returns: Json }
-        | { Args: { p_caller?: string; p_season_id: string }; Returns: Json }
+      duelo_materialize_and_seed_season: {
+        Args: { p_caller?: string; p_season_id: string }
+        Returns: Json
+      }
       duelo_move_driver_to_tier: {
         Args: {
           p_driver_id: string
