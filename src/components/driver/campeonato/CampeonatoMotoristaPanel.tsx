@@ -164,7 +164,14 @@ export default function CampeonatoMotoristaPanel({
           side="right"
           className="w-full sm:max-w-lg p-0 overflow-y-auto"
         >
-          <div className="sticky top-0 bg-background border-b border-border px-4 py-3 z-10">
+          <div className="sticky top-0 bg-background border-b border-border px-4 py-3 z-10 flex items-center gap-3">
+            <button
+              onClick={() => setOverlay(null)}
+              className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
+              aria-label="Voltar"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
             <p
               className="font-bold text-base"
               style={{ fontFamily: fontHeading }}
@@ -192,7 +199,14 @@ export default function CampeonatoMotoristaPanel({
           side="right"
           className="w-full sm:max-w-lg p-0 overflow-y-auto"
         >
-          <div className="sticky top-0 bg-background border-b border-border px-4 py-3 z-10">
+          <div className="sticky top-0 bg-background border-b border-border px-4 py-3 z-10 flex items-center gap-3">
+            <button
+              onClick={() => setOverlay(null)}
+              className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
+              aria-label="Voltar"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
             <p
               className="font-bold text-base"
               style={{ fontFamily: fontHeading }}
@@ -219,7 +233,14 @@ export default function CampeonatoMotoristaPanel({
           side="right"
           className="w-full sm:max-w-lg p-0 overflow-y-auto"
         >
-          <div className="sticky top-0 bg-background border-b border-border px-4 py-3 z-10">
+          <div className="sticky top-0 bg-background border-b border-border px-4 py-3 z-10 flex items-center gap-3">
+            <button
+              onClick={() => setOverlay(null)}
+              className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
+              aria-label="Voltar"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
             <p
               className="font-bold text-base"
               style={{ fontFamily: fontHeading }}
