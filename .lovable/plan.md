@@ -1,46 +1,27 @@
-Diagnóstico encontrado:
+## Diagnóstico
 
-- Existe temporada criada no banco para Leme:
-  - Maio 2026: não cancelada, séries distribuídas, 2407 motoristas.
-  - Julho 2026: não cancelada, sem séries, 0 motoristas.
-- A tela mostra informações contraditórias porque usa duas fontes diferentes:
-  - `brand_get_campeonato_dashboard` encontra uma temporada, mas escolhe pela marca inteira e pela mais recente criada.
-  - `brand_get_campeonato_kpis` está quebrando com `relation "public.duelo_tiers" does not exist`, então o bloco operacional cai em “Sem temporada ativa”.
-- A criação de nova temporada também está bloqueando meses já criados mesmo quando a temporada for cancelada, porque a regra única atual considera também temporadas canceladas.
-- No app do motorista, o atalho do campeonato depende de leitura da tabela `brands`; para motorista/anon isso pode falhar. Além disso, quando abre pelo hub, ainda usa o painel legado `CampeonatoMotoristaPanel`, não o layout novo de campeonato (`PaginaCampeonatoMotorista`).
+O app do motorista não mostra o card **Campeonato** porque há dois problemas separados:
 
-Do I know what the issue is? Sim. O problema é combinação de escopo errado por cidade, KPI quebrado, regra de duplicidade rígida demais e app do motorista ainda apontando para o painel antigo.
+1. A consulta de módulos do painel do motorista usa `public_brand_modules_safe.module_key`, mas essa coluna não existe na view atual. Isso gera erro 400 e pode impedir o hub do motorista de carregar corretamente.
+2. A função que busca a temporada do motorista (`driver_get_pending_or_active_season`) ainda considera temporadas `cancelled` como ativas quando o motorista já foi distribuído. No caso verificado, ela retorna **Junho 2026** com fase `cancelled`, em vez de ignorar essa temporada e cair na temporada válida.
 
-Plano de correção:
+## Plano de correção
 
-1. Corrigir backend do campeonato por cidade
-   - Criar/ajustar RPCs branch-scoped para dashboard e KPIs do campeonato.
-   - Filtrar por `brand_id` + `branch_id`, ignorando temporadas canceladas.
-   - Corrigir o KPI para usar `duelo_season_tiers` em vez de `duelo_tiers`.
-   - Retornar um estado consistente: temporada ativa/próxima, séries e KPIs sempre da mesma cidade.
+1. **Ajustar a leitura de módulos no `DriverPanelPage`**
+   - Trocar a query atual de `public_brand_modules_safe` para buscar os módulos com join em `module_definitions`.
+   - Resolver corretamente as chaves `driver_hub` e `affiliate_deals`.
+   - Garantir fallback seguro: se a leitura pública falhar, o hub não deve esconder o app inteiro.
 
-2. Corrigir regra de duplicidade de temporada
-   - Trocar a regra única atual para permitir recriar o mesmo mês/ano depois que a temporada antiga for cancelada.
-   - Ajustar as checagens do formulário para ignorar temporadas canceladas.
-   - Manter bloqueio contra sobreposição de períodos apenas para temporadas não canceladas.
+2. **Corrigir a função de temporada do motorista no banco**
+   - Atualizar `driver_get_pending_or_active_season` para ignorar sempre temporadas com `phase = 'cancelled'` e `cancelled_at` preenchido, tanto no caminho normal quanto no fallback de “distribuição pendente”.
+   - Isso impede que temporada cancelada apareça como ativa no app do motorista.
 
-3. Ajustar painel do empreendedor
-   - Passar `branchId` para os hooks/serviços de dashboard e KPIs.
-   - Fazer o topo operacional e o card da temporada usarem a mesma temporada resolvida.
-   - Garantir que o botão/ação de encerrar temporada fique acessível quando houver uma temporada criada por engano.
-   - Corrigir o aviso de chave duplicada em `ListaTemporadasAnteriores`.
+3. **Corrigir bloqueios de “temporada ativa” que ainda contam canceladas**
+   - Revisar as RPCs de troca de formato que usam `phase <> 'finished'` e ajustar para `phase NOT IN ('finished','cancelled')` com `cancelled_at IS NULL`.
+   - Isso corrige a mensagem incorreta de “já tem temporada ativa” quando só há temporada cancelada.
 
-4. Corrigir app do motorista
-   - Fazer `useDueloCampeonatoHabilitado` ler a fonte pública segura da marca, para o motorista conseguir ver o atalho do campeonato.
-   - Substituir o overlay legado do hub pelo layout novo de campeonato.
-   - Adicionar estado correto no layout novo para: carregando, sem temporada, temporada criada aguardando distribuição, motorista sem série e campeonato operacional.
-   - Preservar botão de voltar quando aberto pelo hub.
-
-5. Validar
-   - Conferir chamadas de rede para `brand_get_campeonato_kpis` sem erro 404.
-   - Conferir que Leme não mostra mais “Sem temporada ativa” junto com uma temporada logo abaixo.
-   - Conferir que o motorista vê o atalho “Campeonato” e abre o layout novo.
-
-<presentation-actions>
-<presentation-link url="https://docs.lovable.dev/tips-tricks/troubleshooting">Troubleshooting docs</presentation-link>
-</presentation-actions>
+4. **Validar no preview**
+   - Abrir o app do motorista para a marca Ubiz/Leme.
+   - Confirmar que o hub carrega sem erro 400.
+   - Confirmar que o card **Campeonato** aparece quando a flag e o formato estão ativos.
+   - Confirmar que a tela do campeonato não mostra temporada cancelada como ativa.

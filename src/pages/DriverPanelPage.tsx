@@ -41,13 +41,27 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   const { data: brandModulesFlags } = useQuery({
     queryKey: ["driver-brand-modules", brand.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("public_brand_modules_safe")
-        .select("module_key, is_enabled")
-        .eq("brand_id", brand.id)
-        .in("module_key", ["driver_hub", "affiliate_deals"]);
+      const wanted = ["driver_hub", "affiliate_deals"];
+      const { data: defs } = await supabase
+        .from("module_definitions")
+        .select("id, key")
+        .in("key", wanted);
+      const ids = (defs || []).map((d: any) => d.id);
+      const idToKey = new Map<string, string>(
+        (defs || []).map((d: any) => [d.id, d.key]),
+      );
       const map: Record<string, boolean> = {};
-      (data || []).forEach((r: any) => { map[r.module_key] = r.is_enabled; });
+      if (ids.length > 0) {
+        const { data: rows } = await supabase
+          .from("public_brand_modules_safe")
+          .select("module_definition_id, is_enabled")
+          .eq("brand_id", brand.id)
+          .in("module_definition_id", ids);
+        (rows || []).forEach((r: any) => {
+          const key = idToKey.get(r.module_definition_id);
+          if (key) map[key] = !!r.is_enabled;
+        });
+      }
       return map;
     },
   });
