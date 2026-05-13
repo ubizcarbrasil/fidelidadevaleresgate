@@ -48,41 +48,27 @@ export default function BloqueioInscricaoSemFoto({
     setErro(null);
 
     try {
-      const ext = (arquivo.name.split(".").pop() || "jpg").toLowerCase();
-      const path = `motoristas/${customerId}/${Date.now()}.${ext}`;
+      const formData = new FormData();
+      formData.append("driver_id", customerId);
+      formData.append("file", arquivo);
 
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(path, arquivo, {
-          upsert: true,
-          contentType: arquivo.type || "image/jpeg",
-        });
+      const { data, error } = await supabase.functions.invoke(
+        "driver-upload-photo",
+        { body: formData },
+      );
 
-      if (uploadError) {
-        const msg = uploadError.message || "";
-        if (/bucket.*not.*found/i.test(msg)) {
-          setErro(
-            "O armazenamento de fotos ainda não foi configurado. Avise o suporte do app.",
-          );
+      if (error || (data as any)?.error) {
+        const code = (data as any)?.error ?? "";
+        const msg = (data as any)?.message ?? "";
+        if (code === "bucket_missing") {
+          setErro("O armazenamento de fotos ainda não foi configurado. Avise o suporte do app.");
+        } else if (code === "invalid_file") {
+          setErro(msg || "Arquivo inválido.");
+        } else if (code === "driver_not_found" || code === "not_a_driver") {
+          setErro("Sua sessão expirou. Faça login novamente.");
         } else {
           setErro("Não foi possível enviar a foto. Tente novamente.");
         }
-        return;
-      }
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("avatars").getPublicUrl(path);
-
-      const { data: updated, error: updateError } = await supabase
-        .from("customers")
-        .update({ photo_url: publicUrl })
-        .eq("id", customerId)
-        .select("id");
-
-      if (updateError || !updated || updated.length === 0) {
-        toast.error("Erro ao salvar foto");
-        setErro("Não conseguimos salvar sua foto. Tente novamente.");
         return;
       }
 
