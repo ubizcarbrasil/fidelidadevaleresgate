@@ -10,6 +10,7 @@ import StepperWizard from "./StepperWizard";
 import PassoFormato from "./PassoFormato";
 import PassoCriarTemporada from "./PassoCriarTemporada";
 import PassoDistribuir from "./PassoDistribuir";
+import ResumoTemporadaAtivaWizard from "./ResumoTemporadaAtivaWizard";
 import { useDashboardCampeonato } from "../../../../hooks/hook_campeonato_empreendedor";
 
 interface Props {
