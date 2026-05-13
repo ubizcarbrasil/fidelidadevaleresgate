@@ -43,3 +43,13 @@ export const DURACOES_FASES_PADRAO_HORAS = {
   semi: 96,
   final: 120,
 } as const;
+
+/**
+ * Chave em `brands.brand_settings_json` que ativa o Campeonato como
+ * produto independente (standalone), exibido no menu principal fora
+ * do módulo de Gamificação.
+ *
+ * - `true`  → Campeonato aparece no menu como produto próprio.
+ * - `false` (default / ausente) → comportamento atual (dentro de Gamificação).
+ */
+export const CAMPEONATO_STANDALONE_KEY = "campeonato_standalone_enabled";
