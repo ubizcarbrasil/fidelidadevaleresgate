@@ -122,3 +122,84 @@ export function diferencaEmDiasInclusiva(inicio: string, fim: string): number {
   const diff = Math.round((b - a) / (1000 * 60 * 60 * 24));
   return diff + 1;
 }
+
+/**
+ * Duração (em horas) de cada fase para o modo "Criação Automática".
+ * - duelo: corresponde à fase de Classificação (pontos corridos)
+ * - oitavas/quartas/semi/final: rodadas do mata-mata
+ */
+export interface DuracoesFasesHoras {
+  duelo: number;
+  oitavas: number;
+  quartas: number;
+  semi: number;
+  final: number;
+}
+
+export interface DatasAutomaticasResultado {
+  classificationStartsAt: string; // ISO UTC
+  classificationEndsAt: string;
+  knockoutStartsAt: string;
+  knockoutEndsAt: string;
+  year: number;
+  month: number;
+}
+
+/**
+ * A partir de uma data/hora de início e da duração em horas de cada fase,
+ * calcula as datas completas da temporada.
+ *
+ * @param inicio Data/hora local (formato `datetime-local`: `YYYY-MM-DDTHH:mm`)
+ *               ou ISO. Será interpretada no timezone do navegador.
+ */
+export function calcularDatasAutomaticas(
+  inicio: string,
+  horas: DuracoesFasesHoras,
+): DatasAutomaticasResultado {
+  const inicioDate = new Date(inicio);
+  const HORA_MS = 60 * 60 * 1000;
+
+  const classStart = inicioDate;
+  const classEnd = new Date(classStart.getTime() + horas.duelo * HORA_MS);
+  const knockStart = classEnd;
+  const knockEnd = new Date(
+    knockStart.getTime() +
+      (horas.oitavas + horas.quartas + horas.semi + horas.final) * HORA_MS,
+  );
+
+  return {
+    classificationStartsAt: classStart.toISOString(),
+    classificationEndsAt: classEnd.toISOString(),
+    knockoutStartsAt: knockStart.toISOString(),
+    knockoutEndsAt: knockEnd.toISOString(),
+    year: classStart.getFullYear(),
+    month: classStart.getMonth() + 1,
+  };
+}
+
+/**
+ * Converte uma `Date` para o formato exigido pelo input `datetime-local`
+ * (`YYYY-MM-DDTHH:mm`) no timezone local.
+ */
+export function paraInputDateTimeLocal(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+    `T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  );
+}
+
+export function formatarDataHora(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "—";
+  }
+}
