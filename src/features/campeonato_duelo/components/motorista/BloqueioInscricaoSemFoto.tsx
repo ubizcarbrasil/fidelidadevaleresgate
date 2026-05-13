@@ -8,13 +8,15 @@ import { useFotoPerfilMotorista } from "../../hooks/useFotoPerfilMotorista";
 interface Props {
   onFotoCadastrada: () => void;
   fontHeading?: string;
+  driverId?: string | null;
 }
 
 export default function BloqueioInscricaoSemFoto({
   onFotoCadastrada,
   fontHeading,
+  driverId,
 }: Props) {
-  const { customerId } = useFotoPerfilMotorista();
+  const { customerId } = useFotoPerfilMotorista(driverId);
   const inputRef = useRef<HTMLInputElement>(null);
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
