@@ -18,7 +18,7 @@ export function useLogEventosTemporada(seasonId: string | null | undefined, limi
         {
           event: "INSERT",
           schema: "public",
-          table: "duelo_match_events",
+          table: "campeonato_match_events",
         },
         () => {
           qc.invalidateQueries({ queryKey: [CHAVE_LOG, seasonId] });

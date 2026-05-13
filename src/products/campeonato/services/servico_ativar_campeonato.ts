@@ -92,7 +92,7 @@ export async function alterarStatusAtivacao(
   // Best-effort audit trail (não bloqueia em caso de falha).
   try {
     const { data: userData } = await supabase.auth.getUser();
-    await supabase.from("duelo_attempts_log").insert({
+    await supabase.from("campeonato_attempts_log").insert({
       brand_id: brandId,
       code: "brand_campeonato_toggled",
       message: habilitado ? "Campeonato ativado" : "Campeonato desativado",

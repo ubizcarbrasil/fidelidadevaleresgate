@@ -55,7 +55,7 @@ export function useConfrontosDaRodada(
         {
           event: "UPDATE",
           schema: "public",
-          table: "duelo_brackets",
+          table: "campeonato_brackets",
           filter: `tier_id=eq.${tierId}`,
         },
         () => qc.invalidateQueries({ queryKey }),

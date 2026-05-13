@@ -13,7 +13,7 @@ import type {
 export async function reconciliarStandings(
   janelaHoras = 48,
 ): Promise<ResultadoReconciliacao> {
-  const { data, error } = await supabase.rpc("duelo_reconcile_standings", {
+  const { data, error } = await supabase.rpc("campeonato_reconcile_standings", {
     p_hours: janelaHoras,
   });
   if (error) throw error;
@@ -23,7 +23,7 @@ export async function reconciliarStandings(
 export async function backfillStandings(
   seasonId: string,
 ): Promise<ResultadoBackfill> {
-  const { data, error } = await supabase.rpc("duelo_backfill_standings", {
+  const { data, error } = await supabase.rpc("campeonato_backfill_standings", {
     p_season_id: seasonId,
   });
   if (error) throw error;
@@ -31,7 +31,7 @@ export async function backfillStandings(
 }
 
 export async function avancarFases(): Promise<ResultadoAvancoFase> {
-  const { data, error } = await supabase.rpc("duelo_advance_phases");
+  const { data, error } = await supabase.rpc("campeonato_advance_phases");
   if (error) throw error;
   return data as unknown as ResultadoAvancoFase;
 }

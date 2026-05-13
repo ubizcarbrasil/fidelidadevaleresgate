@@ -1471,6 +1471,1054 @@ export type Database = {
         }
         Relationships: []
       }
+      campeonato_artilharia_window_prizes: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          label: string | null
+          season_id: string
+          updated_at: string
+          window_key: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          label?: string | null
+          season_id: string
+          updated_at?: string
+          window_key: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          label?: string | null
+          season_id?: string
+          updated_at?: string
+          window_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campeonato_artilharia_window_prizes_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campeonato_attempts_log: {
+        Row: {
+          branch_id: string | null
+          brand_id: string | null
+          code: string
+          created_at: string
+          details_json: Json
+          driver_id: string | null
+          id: string
+          ride_id: string | null
+          season_id: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          brand_id?: string | null
+          code: string
+          created_at?: string
+          details_json?: Json
+          driver_id?: string | null
+          id?: string
+          ride_id?: string | null
+          season_id?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          brand_id?: string | null
+          code?: string
+          created_at?: string
+          details_json?: Json
+          driver_id?: string | null
+          id?: string
+          ride_id?: string | null
+          season_id?: string | null
+        }
+        Relationships: []
+      }
+      campeonato_brackets: {
+        Row: {
+          bracket_scope: string
+          driver_a_id: string | null
+          driver_a_rides: number
+          driver_b_id: string | null
+          driver_b_rides: number
+          ends_at: string
+          id: string
+          round: string
+          season_id: string
+          slot: number
+          starts_at: string
+          tier_id: string | null
+          winner_id: string | null
+        }
+        Insert: {
+          bracket_scope?: string
+          driver_a_id?: string | null
+          driver_a_rides?: number
+          driver_b_id?: string | null
+          driver_b_rides?: number
+          ends_at: string
+          id?: string
+          round: string
+          season_id: string
+          slot: number
+          starts_at: string
+          tier_id?: string | null
+          winner_id?: string | null
+        }
+        Update: {
+          bracket_scope?: string
+          driver_a_id?: string | null
+          driver_a_rides?: number
+          driver_b_id?: string | null
+          driver_b_rides?: number
+          ends_at?: string
+          id?: string
+          round?: string
+          season_id?: string
+          slot?: number
+          starts_at?: string
+          tier_id?: string | null
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campeonato_brackets_driver_a_id_fkey"
+            columns: ["driver_a_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_brackets_driver_a_id_fkey"
+            columns: ["driver_a_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_brackets_driver_b_id_fkey"
+            columns: ["driver_b_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_brackets_driver_b_id_fkey"
+            columns: ["driver_b_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_brackets_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_brackets_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_season_tiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_brackets_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_brackets_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campeonato_champions: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          champion_driver_id: string | null
+          finalized_at: string | null
+          id: string
+          prizes_distributed: boolean
+          quarterfinalist_ids: string[]
+          r16_ids: string[]
+          runner_up_driver_id: string | null
+          season_id: string
+          semifinalist_ids: string[]
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          champion_driver_id?: string | null
+          finalized_at?: string | null
+          id?: string
+          prizes_distributed?: boolean
+          quarterfinalist_ids?: string[]
+          r16_ids?: string[]
+          runner_up_driver_id?: string | null
+          season_id: string
+          semifinalist_ids?: string[]
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          champion_driver_id?: string | null
+          finalized_at?: string | null
+          id?: string
+          prizes_distributed?: boolean
+          quarterfinalist_ids?: string[]
+          r16_ids?: string[]
+          runner_up_driver_id?: string | null
+          season_id?: string
+          semifinalist_ids?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campeonato_champions_champion_driver_id_fkey"
+            columns: ["champion_driver_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_champions_champion_driver_id_fkey"
+            columns: ["champion_driver_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_champions_runner_up_driver_id_fkey"
+            columns: ["runner_up_driver_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_champions_runner_up_driver_id_fkey"
+            columns: ["runner_up_driver_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_champions_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: true
+            referencedRelation: "campeonato_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campeonato_classificacao_auditoria: {
+        Row: {
+          attempted_by: string | null
+          block_code: string | null
+          block_reason: string | null
+          branch_id: string
+          brand_id: string
+          created_at: string
+          details_json: Json
+          divergent_count: number | null
+          divergent_sample: Json | null
+          eligible_count: number | null
+          id: string
+          outcome: string
+          required_count: number | null
+          season_id: string
+        }
+        Insert: {
+          attempted_by?: string | null
+          block_code?: string | null
+          block_reason?: string | null
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          details_json?: Json
+          divergent_count?: number | null
+          divergent_sample?: Json | null
+          eligible_count?: number | null
+          id?: string
+          outcome: string
+          required_count?: number | null
+          season_id: string
+        }
+        Update: {
+          attempted_by?: string | null
+          block_code?: string | null
+          block_reason?: string | null
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          details_json?: Json
+          divergent_count?: number | null
+          divergent_sample?: Json | null
+          eligible_count?: number | null
+          id?: string
+          outcome?: string
+          required_count?: number | null
+          season_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campeonato_classificacao_auditoria_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campeonato_driver_tier_history: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string
+          driver_id: string
+          ending_position: number | null
+          ending_tier_id: string | null
+          id: string
+          outcome: string | null
+          season_id: string
+          starting_tier_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          driver_id: string
+          ending_position?: number | null
+          ending_tier_id?: string | null
+          id?: string
+          outcome?: string | null
+          season_id: string
+          starting_tier_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          driver_id?: string
+          ending_position?: number | null
+          ending_tier_id?: string | null
+          id?: string
+          outcome?: string | null
+          season_id?: string
+          starting_tier_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campeonato_driver_tier_history_ending_tier_id_fkey"
+            columns: ["ending_tier_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_season_tiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_driver_tier_history_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_driver_tier_history_starting_tier_id_fkey"
+            columns: ["starting_tier_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_season_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campeonato_match_events: {
+        Row: {
+          bracket_id: string
+          driver_id: string
+          event_ref_id: string | null
+          event_type: string
+          id: string
+          occurred_at: string
+        }
+        Insert: {
+          bracket_id: string
+          driver_id: string
+          event_ref_id?: string | null
+          event_type?: string
+          id?: string
+          occurred_at?: string
+        }
+        Update: {
+          bracket_id?: string
+          driver_id?: string
+          event_ref_id?: string | null
+          event_type?: string
+          id?: string
+          occurred_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campeonato_match_events_bracket_id_fkey"
+            columns: ["bracket_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_brackets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_match_events_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_match_events_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campeonato_notifications: {
+        Row: {
+          action_url: string | null
+          brand_id: string
+          created_at: string
+          driver_id: string
+          event_type: string
+          id: string
+          message: string
+          read_at: string | null
+          season_id: string | null
+          title: string
+        }
+        Insert: {
+          action_url?: string | null
+          brand_id: string
+          created_at?: string
+          driver_id: string
+          event_type: string
+          id?: string
+          message: string
+          read_at?: string | null
+          season_id?: string | null
+          title: string
+        }
+        Update: {
+          action_url?: string | null
+          brand_id?: string
+          created_at?: string
+          driver_id?: string
+          event_type?: string
+          id?: string
+          message?: string
+          read_at?: string | null
+          season_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campeonato_notifications_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_notifications_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_notifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_notifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_notifications_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campeonato_prize_distributions: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          cancelled_reason: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          driver_id: string
+          id: string
+          points_awarded: number
+          points_ledger_id: string | null
+          position: string
+          season_id: string
+          status: string
+          tier_id: string
+          tier_name: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          cancelled_reason?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          points_awarded: number
+          points_ledger_id?: string | null
+          position: string
+          season_id: string
+          status?: string
+          tier_id: string
+          tier_name: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          cancelled_reason?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          points_awarded?: number
+          points_ledger_id?: string | null
+          position?: string
+          season_id?: string
+          status?: string
+          tier_id?: string
+          tier_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campeonato_prize_distributions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_prize_distributions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_prize_distributions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_prize_distributions_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_prize_distributions_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_prize_distributions_points_ledger_id_fkey"
+            columns: ["points_ledger_id"]
+            isOneToOne: false
+            referencedRelation: "points_ledger"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_prize_distributions_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_prize_distributions_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_season_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campeonato_season_enrollments: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string | null
+          driver_id: string
+          id: string
+          notes: string | null
+          season_id: string
+          status: string
+          tier_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string | null
+          driver_id: string
+          id?: string
+          notes?: string | null
+          season_id: string
+          status?: string
+          tier_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string | null
+          driver_id?: string
+          id?: string
+          notes?: string | null
+          season_id?: string
+          status?: string
+          tier_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campeonato_season_enrollments_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_season_enrollments_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_season_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campeonato_season_phase_config: {
+        Row: {
+          created_at: string | null
+          duration_hours: number
+          id: string
+          phase: string
+          season_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          duration_hours?: number
+          id?: string
+          phase: string
+          season_id: string
+        }
+        Update: {
+          created_at?: string | null
+          duration_hours?: number
+          id?: string
+          phase?: string
+          season_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campeonato_season_phase_config_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campeonato_season_prizes: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          position: number
+          prize_kind: string
+          prize_value: number
+          season_id: string
+          tier_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          position: number
+          prize_kind?: string
+          prize_value?: number
+          season_id: string
+          tier_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          position?: number
+          prize_kind?: string
+          prize_value?: number
+          season_id?: string
+          tier_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campeonato_season_prizes_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_season_prizes_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_season_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campeonato_season_standings: {
+        Row: {
+          driver_id: string
+          id: string
+          last_ride_at: string | null
+          points: number
+          position: number | null
+          position_in_tier: number | null
+          qualified: boolean
+          relegated_auto: boolean
+          season_id: string
+          tier_id: string | null
+          weekend_rides_count: number
+        }
+        Insert: {
+          driver_id: string
+          id?: string
+          last_ride_at?: string | null
+          points?: number
+          position?: number | null
+          position_in_tier?: number | null
+          qualified?: boolean
+          relegated_auto?: boolean
+          season_id: string
+          tier_id?: string | null
+          weekend_rides_count?: number
+        }
+        Update: {
+          driver_id?: string
+          id?: string
+          last_ride_at?: string | null
+          points?: number
+          position?: number | null
+          position_in_tier?: number | null
+          qualified?: boolean
+          relegated_auto?: boolean
+          season_id?: string
+          tier_id?: string | null
+          weekend_rides_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campeonato_season_standings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_season_standings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_season_standings_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_season_standings_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_season_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campeonato_season_tiers: {
+        Row: {
+          aborted_at: string | null
+          branch_id: string
+          brand_id: string
+          created_at: string
+          id: string
+          name: string
+          promotion_count: number
+          relegation_count: number
+          season_id: string
+          target_size: number
+          tier_order: number
+          updated_at: string
+        }
+        Insert: {
+          aborted_at?: string | null
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          id?: string
+          name: string
+          promotion_count?: number
+          relegation_count?: number
+          season_id: string
+          target_size?: number
+          tier_order: number
+          updated_at?: string
+        }
+        Update: {
+          aborted_at?: string | null
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          promotion_count?: number
+          relegation_count?: number
+          season_id?: string
+          target_size?: number
+          tier_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campeonato_season_tiers_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campeonato_seasons: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          classification_ends_at: string
+          classification_starts_at: string
+          created_at: string
+          created_by: string | null
+          default_match_hours: number
+          enrollment_closes_at: string | null
+          enrollment_mode: string
+          enrollment_opens_at: string | null
+          entry_fee_cents: number
+          entry_fee_currency: string
+          id: string
+          knockout_ends_at: string
+          knockout_starts_at: string
+          month: number
+          name: string
+          paused_at: string | null
+          phase: string
+          promotion_applied_at: string | null
+          published_at: string | null
+          relegation_policy: string
+          scoring_config_json: Json
+          scoring_mode: string
+          tier_seeding_completed_at: string | null
+          tiers_config_json: Json
+          tiers_count: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          classification_ends_at: string
+          classification_starts_at: string
+          created_at?: string
+          created_by?: string | null
+          default_match_hours?: number
+          enrollment_closes_at?: string | null
+          enrollment_mode?: string
+          enrollment_opens_at?: string | null
+          entry_fee_cents?: number
+          entry_fee_currency?: string
+          id?: string
+          knockout_ends_at: string
+          knockout_starts_at: string
+          month: number
+          name: string
+          paused_at?: string | null
+          phase?: string
+          promotion_applied_at?: string | null
+          published_at?: string | null
+          relegation_policy?: string
+          scoring_config_json?: Json
+          scoring_mode?: string
+          tier_seeding_completed_at?: string | null
+          tiers_config_json?: Json
+          tiers_count?: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          classification_ends_at?: string
+          classification_starts_at?: string
+          created_at?: string
+          created_by?: string | null
+          default_match_hours?: number
+          enrollment_closes_at?: string | null
+          enrollment_mode?: string
+          enrollment_opens_at?: string | null
+          entry_fee_cents?: number
+          entry_fee_currency?: string
+          id?: string
+          knockout_ends_at?: string
+          knockout_starts_at?: string
+          month?: number
+          name?: string
+          paused_at?: string | null
+          phase?: string
+          promotion_applied_at?: string | null
+          published_at?: string | null
+          relegation_policy?: string
+          scoring_config_json?: Json
+          scoring_mode?: string
+          tier_seeding_completed_at?: string | null
+          tiers_config_json?: Json
+          tiers_count?: number
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campeonato_seasons_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_seasons_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_seasons_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "public_brands_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campeonato_tier_memberships: {
+        Row: {
+          branch_id: string
+          brand_id: string
+          created_at: string
+          driver_id: string
+          id: string
+          season_id: string
+          source: string
+          tier_id: string
+        }
+        Insert: {
+          branch_id: string
+          brand_id: string
+          created_at?: string
+          driver_id: string
+          id?: string
+          season_id: string
+          source?: string
+          tier_id: string
+        }
+        Update: {
+          branch_id?: string
+          brand_id?: string
+          created_at?: string
+          driver_id?: string
+          id?: string
+          season_id?: string
+          source?: string
+          tier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campeonato_tier_memberships_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campeonato_tier_memberships_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "campeonato_season_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       catalog_cart_orders: {
         Row: {
           branch_id: string
@@ -4568,1054 +5616,6 @@ export type Database = {
             columns: ["winner_customer_id"]
             isOneToOne: false
             referencedRelation: "customers_safe"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      duelo_artilharia_window_prizes: {
-        Row: {
-          created_at: string
-          enabled: boolean
-          id: string
-          label: string | null
-          season_id: string
-          updated_at: string
-          window_key: string
-        }
-        Insert: {
-          created_at?: string
-          enabled?: boolean
-          id?: string
-          label?: string | null
-          season_id: string
-          updated_at?: string
-          window_key: string
-        }
-        Update: {
-          created_at?: string
-          enabled?: boolean
-          id?: string
-          label?: string | null
-          season_id?: string
-          updated_at?: string
-          window_key?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "duelo_artilharia_window_prizes_season_id_fkey"
-            columns: ["season_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_seasons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      duelo_attempts_log: {
-        Row: {
-          branch_id: string | null
-          brand_id: string | null
-          code: string
-          created_at: string
-          details_json: Json
-          driver_id: string | null
-          id: string
-          ride_id: string | null
-          season_id: string | null
-        }
-        Insert: {
-          branch_id?: string | null
-          brand_id?: string | null
-          code: string
-          created_at?: string
-          details_json?: Json
-          driver_id?: string | null
-          id?: string
-          ride_id?: string | null
-          season_id?: string | null
-        }
-        Update: {
-          branch_id?: string | null
-          brand_id?: string | null
-          code?: string
-          created_at?: string
-          details_json?: Json
-          driver_id?: string | null
-          id?: string
-          ride_id?: string | null
-          season_id?: string | null
-        }
-        Relationships: []
-      }
-      duelo_brackets: {
-        Row: {
-          bracket_scope: string
-          driver_a_id: string | null
-          driver_a_rides: number
-          driver_b_id: string | null
-          driver_b_rides: number
-          ends_at: string
-          id: string
-          round: string
-          season_id: string
-          slot: number
-          starts_at: string
-          tier_id: string | null
-          winner_id: string | null
-        }
-        Insert: {
-          bracket_scope?: string
-          driver_a_id?: string | null
-          driver_a_rides?: number
-          driver_b_id?: string | null
-          driver_b_rides?: number
-          ends_at: string
-          id?: string
-          round: string
-          season_id: string
-          slot: number
-          starts_at: string
-          tier_id?: string | null
-          winner_id?: string | null
-        }
-        Update: {
-          bracket_scope?: string
-          driver_a_id?: string | null
-          driver_a_rides?: number
-          driver_b_id?: string | null
-          driver_b_rides?: number
-          ends_at?: string
-          id?: string
-          round?: string
-          season_id?: string
-          slot?: number
-          starts_at?: string
-          tier_id?: string | null
-          winner_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "duelo_brackets_driver_a_id_fkey"
-            columns: ["driver_a_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_brackets_driver_a_id_fkey"
-            columns: ["driver_a_id"]
-            isOneToOne: false
-            referencedRelation: "customers_safe"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_brackets_driver_b_id_fkey"
-            columns: ["driver_b_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_brackets_driver_b_id_fkey"
-            columns: ["driver_b_id"]
-            isOneToOne: false
-            referencedRelation: "customers_safe"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_brackets_season_id_fkey"
-            columns: ["season_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_seasons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_brackets_tier_id_fkey"
-            columns: ["tier_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_season_tiers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_brackets_winner_id_fkey"
-            columns: ["winner_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_brackets_winner_id_fkey"
-            columns: ["winner_id"]
-            isOneToOne: false
-            referencedRelation: "customers_safe"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      duelo_champions: {
-        Row: {
-          branch_id: string
-          brand_id: string
-          champion_driver_id: string | null
-          finalized_at: string | null
-          id: string
-          prizes_distributed: boolean
-          quarterfinalist_ids: string[]
-          r16_ids: string[]
-          runner_up_driver_id: string | null
-          season_id: string
-          semifinalist_ids: string[]
-        }
-        Insert: {
-          branch_id: string
-          brand_id: string
-          champion_driver_id?: string | null
-          finalized_at?: string | null
-          id?: string
-          prizes_distributed?: boolean
-          quarterfinalist_ids?: string[]
-          r16_ids?: string[]
-          runner_up_driver_id?: string | null
-          season_id: string
-          semifinalist_ids?: string[]
-        }
-        Update: {
-          branch_id?: string
-          brand_id?: string
-          champion_driver_id?: string | null
-          finalized_at?: string | null
-          id?: string
-          prizes_distributed?: boolean
-          quarterfinalist_ids?: string[]
-          r16_ids?: string[]
-          runner_up_driver_id?: string | null
-          season_id?: string
-          semifinalist_ids?: string[]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "duelo_champions_champion_driver_id_fkey"
-            columns: ["champion_driver_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_champions_champion_driver_id_fkey"
-            columns: ["champion_driver_id"]
-            isOneToOne: false
-            referencedRelation: "customers_safe"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_champions_runner_up_driver_id_fkey"
-            columns: ["runner_up_driver_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_champions_runner_up_driver_id_fkey"
-            columns: ["runner_up_driver_id"]
-            isOneToOne: false
-            referencedRelation: "customers_safe"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_champions_season_id_fkey"
-            columns: ["season_id"]
-            isOneToOne: true
-            referencedRelation: "duelo_seasons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      duelo_classificacao_auditoria: {
-        Row: {
-          attempted_by: string | null
-          block_code: string | null
-          block_reason: string | null
-          branch_id: string
-          brand_id: string
-          created_at: string
-          details_json: Json
-          divergent_count: number | null
-          divergent_sample: Json | null
-          eligible_count: number | null
-          id: string
-          outcome: string
-          required_count: number | null
-          season_id: string
-        }
-        Insert: {
-          attempted_by?: string | null
-          block_code?: string | null
-          block_reason?: string | null
-          branch_id: string
-          brand_id: string
-          created_at?: string
-          details_json?: Json
-          divergent_count?: number | null
-          divergent_sample?: Json | null
-          eligible_count?: number | null
-          id?: string
-          outcome: string
-          required_count?: number | null
-          season_id: string
-        }
-        Update: {
-          attempted_by?: string | null
-          block_code?: string | null
-          block_reason?: string | null
-          branch_id?: string
-          brand_id?: string
-          created_at?: string
-          details_json?: Json
-          divergent_count?: number | null
-          divergent_sample?: Json | null
-          eligible_count?: number | null
-          id?: string
-          outcome?: string
-          required_count?: number | null
-          season_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "duelo_classificacao_auditoria_season_id_fkey"
-            columns: ["season_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_seasons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      duelo_driver_tier_history: {
-        Row: {
-          branch_id: string
-          brand_id: string
-          created_at: string
-          driver_id: string
-          ending_position: number | null
-          ending_tier_id: string | null
-          id: string
-          outcome: string | null
-          season_id: string
-          starting_tier_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          branch_id: string
-          brand_id: string
-          created_at?: string
-          driver_id: string
-          ending_position?: number | null
-          ending_tier_id?: string | null
-          id?: string
-          outcome?: string | null
-          season_id: string
-          starting_tier_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          branch_id?: string
-          brand_id?: string
-          created_at?: string
-          driver_id?: string
-          ending_position?: number | null
-          ending_tier_id?: string | null
-          id?: string
-          outcome?: string | null
-          season_id?: string
-          starting_tier_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "duelo_driver_tier_history_ending_tier_id_fkey"
-            columns: ["ending_tier_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_season_tiers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_driver_tier_history_season_id_fkey"
-            columns: ["season_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_seasons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_driver_tier_history_starting_tier_id_fkey"
-            columns: ["starting_tier_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_season_tiers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      duelo_match_events: {
-        Row: {
-          bracket_id: string
-          driver_id: string
-          event_ref_id: string | null
-          event_type: string
-          id: string
-          occurred_at: string
-        }
-        Insert: {
-          bracket_id: string
-          driver_id: string
-          event_ref_id?: string | null
-          event_type?: string
-          id?: string
-          occurred_at?: string
-        }
-        Update: {
-          bracket_id?: string
-          driver_id?: string
-          event_ref_id?: string | null
-          event_type?: string
-          id?: string
-          occurred_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "duelo_match_events_bracket_id_fkey"
-            columns: ["bracket_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_brackets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_match_events_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_match_events_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "customers_safe"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      duelo_notifications: {
-        Row: {
-          action_url: string | null
-          brand_id: string
-          created_at: string
-          driver_id: string
-          event_type: string
-          id: string
-          message: string
-          read_at: string | null
-          season_id: string | null
-          title: string
-        }
-        Insert: {
-          action_url?: string | null
-          brand_id: string
-          created_at?: string
-          driver_id: string
-          event_type: string
-          id?: string
-          message: string
-          read_at?: string | null
-          season_id?: string | null
-          title: string
-        }
-        Update: {
-          action_url?: string | null
-          brand_id?: string
-          created_at?: string
-          driver_id?: string
-          event_type?: string
-          id?: string
-          message?: string
-          read_at?: string | null
-          season_id?: string | null
-          title?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "duelo_notifications_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_notifications_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "public_brands_safe"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_notifications_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_notifications_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "customers_safe"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_notifications_season_id_fkey"
-            columns: ["season_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_seasons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      duelo_prize_distributions: {
-        Row: {
-          branch_id: string
-          brand_id: string
-          cancelled_reason: string | null
-          confirmed_at: string | null
-          confirmed_by: string | null
-          created_at: string
-          driver_id: string
-          id: string
-          points_awarded: number
-          points_ledger_id: string | null
-          position: string
-          season_id: string
-          status: string
-          tier_id: string
-          tier_name: string
-          updated_at: string
-        }
-        Insert: {
-          branch_id: string
-          brand_id: string
-          cancelled_reason?: string | null
-          confirmed_at?: string | null
-          confirmed_by?: string | null
-          created_at?: string
-          driver_id: string
-          id?: string
-          points_awarded: number
-          points_ledger_id?: string | null
-          position: string
-          season_id: string
-          status?: string
-          tier_id: string
-          tier_name: string
-          updated_at?: string
-        }
-        Update: {
-          branch_id?: string
-          brand_id?: string
-          cancelled_reason?: string | null
-          confirmed_at?: string | null
-          confirmed_by?: string | null
-          created_at?: string
-          driver_id?: string
-          id?: string
-          points_awarded?: number
-          points_ledger_id?: string | null
-          position?: string
-          season_id?: string
-          status?: string
-          tier_id?: string
-          tier_name?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "duelo_prize_distributions_branch_id_fkey"
-            columns: ["branch_id"]
-            isOneToOne: false
-            referencedRelation: "branches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_prize_distributions_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_prize_distributions_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "public_brands_safe"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_prize_distributions_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_prize_distributions_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "customers_safe"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_prize_distributions_points_ledger_id_fkey"
-            columns: ["points_ledger_id"]
-            isOneToOne: false
-            referencedRelation: "points_ledger"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_prize_distributions_season_id_fkey"
-            columns: ["season_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_seasons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_prize_distributions_tier_id_fkey"
-            columns: ["tier_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_season_tiers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      duelo_season_enrollments: {
-        Row: {
-          branch_id: string
-          brand_id: string
-          created_at: string | null
-          driver_id: string
-          id: string
-          notes: string | null
-          season_id: string
-          status: string
-          tier_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          branch_id: string
-          brand_id: string
-          created_at?: string | null
-          driver_id: string
-          id?: string
-          notes?: string | null
-          season_id: string
-          status?: string
-          tier_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          branch_id?: string
-          brand_id?: string
-          created_at?: string | null
-          driver_id?: string
-          id?: string
-          notes?: string | null
-          season_id?: string
-          status?: string
-          tier_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "duelo_season_enrollments_season_id_fkey"
-            columns: ["season_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_seasons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_season_enrollments_tier_id_fkey"
-            columns: ["tier_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_season_tiers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      duelo_season_phase_config: {
-        Row: {
-          created_at: string | null
-          duration_hours: number
-          id: string
-          phase: string
-          season_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          duration_hours?: number
-          id?: string
-          phase: string
-          season_id: string
-        }
-        Update: {
-          created_at?: string | null
-          duration_hours?: number
-          id?: string
-          phase?: string
-          season_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "duelo_season_phase_config_season_id_fkey"
-            columns: ["season_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_seasons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      duelo_season_prizes: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: string
-          position: number
-          prize_kind: string
-          prize_value: number
-          season_id: string
-          tier_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          position: number
-          prize_kind?: string
-          prize_value?: number
-          season_id: string
-          tier_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          position?: number
-          prize_kind?: string
-          prize_value?: number
-          season_id?: string
-          tier_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "duelo_season_prizes_season_id_fkey"
-            columns: ["season_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_seasons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_season_prizes_tier_id_fkey"
-            columns: ["tier_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_season_tiers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      duelo_season_standings: {
-        Row: {
-          driver_id: string
-          id: string
-          last_ride_at: string | null
-          points: number
-          position: number | null
-          position_in_tier: number | null
-          qualified: boolean
-          relegated_auto: boolean
-          season_id: string
-          tier_id: string | null
-          weekend_rides_count: number
-        }
-        Insert: {
-          driver_id: string
-          id?: string
-          last_ride_at?: string | null
-          points?: number
-          position?: number | null
-          position_in_tier?: number | null
-          qualified?: boolean
-          relegated_auto?: boolean
-          season_id: string
-          tier_id?: string | null
-          weekend_rides_count?: number
-        }
-        Update: {
-          driver_id?: string
-          id?: string
-          last_ride_at?: string | null
-          points?: number
-          position?: number | null
-          position_in_tier?: number | null
-          qualified?: boolean
-          relegated_auto?: boolean
-          season_id?: string
-          tier_id?: string | null
-          weekend_rides_count?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "duelo_season_standings_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_season_standings_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "customers_safe"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_season_standings_season_id_fkey"
-            columns: ["season_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_seasons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_season_standings_tier_id_fkey"
-            columns: ["tier_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_season_tiers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      duelo_season_tiers: {
-        Row: {
-          aborted_at: string | null
-          branch_id: string
-          brand_id: string
-          created_at: string
-          id: string
-          name: string
-          promotion_count: number
-          relegation_count: number
-          season_id: string
-          target_size: number
-          tier_order: number
-          updated_at: string
-        }
-        Insert: {
-          aborted_at?: string | null
-          branch_id: string
-          brand_id: string
-          created_at?: string
-          id?: string
-          name: string
-          promotion_count?: number
-          relegation_count?: number
-          season_id: string
-          target_size?: number
-          tier_order: number
-          updated_at?: string
-        }
-        Update: {
-          aborted_at?: string | null
-          branch_id?: string
-          brand_id?: string
-          created_at?: string
-          id?: string
-          name?: string
-          promotion_count?: number
-          relegation_count?: number
-          season_id?: string
-          target_size?: number
-          tier_order?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "duelo_season_tiers_season_id_fkey"
-            columns: ["season_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_seasons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      duelo_seasons: {
-        Row: {
-          branch_id: string
-          brand_id: string
-          cancellation_reason: string | null
-          cancelled_at: string | null
-          classification_ends_at: string
-          classification_starts_at: string
-          created_at: string
-          created_by: string | null
-          default_match_hours: number
-          enrollment_closes_at: string | null
-          enrollment_mode: string
-          enrollment_opens_at: string | null
-          entry_fee_cents: number
-          entry_fee_currency: string
-          id: string
-          knockout_ends_at: string
-          knockout_starts_at: string
-          month: number
-          name: string
-          paused_at: string | null
-          phase: string
-          promotion_applied_at: string | null
-          published_at: string | null
-          relegation_policy: string
-          scoring_config_json: Json
-          scoring_mode: string
-          tier_seeding_completed_at: string | null
-          tiers_config_json: Json
-          tiers_count: number
-          updated_at: string
-          year: number
-        }
-        Insert: {
-          branch_id: string
-          brand_id: string
-          cancellation_reason?: string | null
-          cancelled_at?: string | null
-          classification_ends_at: string
-          classification_starts_at: string
-          created_at?: string
-          created_by?: string | null
-          default_match_hours?: number
-          enrollment_closes_at?: string | null
-          enrollment_mode?: string
-          enrollment_opens_at?: string | null
-          entry_fee_cents?: number
-          entry_fee_currency?: string
-          id?: string
-          knockout_ends_at: string
-          knockout_starts_at: string
-          month: number
-          name: string
-          paused_at?: string | null
-          phase?: string
-          promotion_applied_at?: string | null
-          published_at?: string | null
-          relegation_policy?: string
-          scoring_config_json?: Json
-          scoring_mode?: string
-          tier_seeding_completed_at?: string | null
-          tiers_config_json?: Json
-          tiers_count?: number
-          updated_at?: string
-          year: number
-        }
-        Update: {
-          branch_id?: string
-          brand_id?: string
-          cancellation_reason?: string | null
-          cancelled_at?: string | null
-          classification_ends_at?: string
-          classification_starts_at?: string
-          created_at?: string
-          created_by?: string | null
-          default_match_hours?: number
-          enrollment_closes_at?: string | null
-          enrollment_mode?: string
-          enrollment_opens_at?: string | null
-          entry_fee_cents?: number
-          entry_fee_currency?: string
-          id?: string
-          knockout_ends_at?: string
-          knockout_starts_at?: string
-          month?: number
-          name?: string
-          paused_at?: string | null
-          phase?: string
-          promotion_applied_at?: string | null
-          published_at?: string | null
-          relegation_policy?: string
-          scoring_config_json?: Json
-          scoring_mode?: string
-          tier_seeding_completed_at?: string | null
-          tiers_config_json?: Json
-          tiers_count?: number
-          updated_at?: string
-          year?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "duelo_seasons_branch_id_fkey"
-            columns: ["branch_id"]
-            isOneToOne: false
-            referencedRelation: "branches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_seasons_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_seasons_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "public_brands_safe"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      duelo_tier_memberships: {
-        Row: {
-          branch_id: string
-          brand_id: string
-          created_at: string
-          driver_id: string
-          id: string
-          season_id: string
-          source: string
-          tier_id: string
-        }
-        Insert: {
-          branch_id: string
-          brand_id: string
-          created_at?: string
-          driver_id: string
-          id?: string
-          season_id: string
-          source?: string
-          tier_id: string
-        }
-        Update: {
-          branch_id?: string
-          brand_id?: string
-          created_at?: string
-          driver_id?: string
-          id?: string
-          season_id?: string
-          source?: string
-          tier_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "duelo_tier_memberships_season_id_fkey"
-            columns: ["season_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_seasons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "duelo_tier_memberships_tier_id_fkey"
-            columns: ["tier_id"]
-            isOneToOne: false
-            referencedRelation: "duelo_season_tiers"
             referencedColumns: ["id"]
           },
         ]
@@ -10541,6 +10541,60 @@ export type Database = {
       brand_set_duelo_feature: {
         Args: { p_brand_id: string; p_enabled: boolean; p_feature: string }
         Returns: undefined
+      }
+      campeonato_add_driver_to_season: {
+        Args: {
+          p_driver_id: string
+          p_initial_points?: number
+          p_reason?: string
+          p_season_id: string
+          p_tier_id: string
+        }
+        Returns: Json
+      }
+      campeonato_advance_phases: { Args: never; Returns: Json }
+      campeonato_backfill_standings: {
+        Args: { p_season_id: string }
+        Returns: Json
+      }
+      campeonato_calculate_prizes: {
+        Args: { p_season_id: string }
+        Returns: Json
+      }
+      campeonato_cancel_prize: {
+        Args: { p_distribution_id: string; p_reason: string }
+        Returns: Json
+      }
+      campeonato_cancel_season: {
+        Args: { p_reason: string; p_season_id: string }
+        Returns: Json
+      }
+      campeonato_change_engagement_format: {
+        Args: { p_brand_id: string; p_new_format: string }
+        Returns: Json
+      }
+      campeonato_get_engagement_format: {
+        Args: { p_brand_id: string }
+        Returns: string
+      }
+      campeonato_materialize_and_seed_season: {
+        Args: { p_caller?: string; p_season_id: string }
+        Returns: Json
+      }
+      campeonato_pause_season: { Args: { p_season_id: string }; Returns: Json }
+      campeonato_reconcile_standings: {
+        Args: { p_hours?: number }
+        Returns: Json
+      }
+      campeonato_resume_season: { Args: { p_season_id: string }; Returns: Json }
+      campeonato_update_prize: {
+        Args: {
+          p_brand_id: string
+          p_new_points: number
+          p_position: string
+          p_tier_name: string
+        }
+        Returns: Json
       }
       collect_duel_ride_ids: {
         Args: {

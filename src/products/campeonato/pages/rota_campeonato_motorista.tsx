@@ -26,7 +26,7 @@ import PaginaCampeonatoMotorista from "./pagina_campeonato_motorista";
  *     - driver_enroll_season(p_season_id uuid)
  *     - get_driver_active_season(p_brand_id, p_driver_id)
  *     - + as RPCs já existentes de classificação/artilharia/bracket
- *  5. Tabela `duelo_season_enrollments` com RLS isolando por driver_id e
+ *  5. Tabela `campeonato_season_enrollments` com RLS isolando por driver_id e
  *     branch_id (cross-brand bloqueado — validado via testes)
  *  6. Bucket `avatars` existente e público; edge function
  *     `driver-upload-photo` deployada (verify_jwt = false já que usa

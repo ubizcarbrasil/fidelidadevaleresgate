@@ -90,7 +90,7 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
     enabled: !!seasonId,
     queryFn: async (): Promise<SerieResumo[]> => {
       const { data, error } = await (supabase as any)
-        .from("duelo_season_tiers")
+        .from("campeonato_season_tiers")
         .select("id, tier_name, tier_order")
         .eq("season_id", seasonId)
         .order("tier_order", { ascending: true });

@@ -51,7 +51,7 @@ export default function EditorInformacoesBasicas({ brandId, branchId }: Props = 
     enabled: !!brandId && !!branchId && !!anoSelecionado && !!mesAtual,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("duelo_seasons")
+        .from("campeonato_seasons")
         .select("id, name, phase, paused_at, cancelled_at")
         .eq("brand_id", brandId!)
         .eq("branch_id", branchId!)

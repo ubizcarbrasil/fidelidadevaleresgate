@@ -46,7 +46,7 @@ export default function SecaoPremiosArtilharia({ seasonId }: Props) {
     enabled: !!seasonId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("duelo_artilharia_window_prizes")
+        .from("campeonato_artilharia_window_prizes")
         .select("window_key, enabled, label")
         .eq("season_id", seasonId);
       if (error) throw error;
@@ -85,7 +85,7 @@ export default function SecaoPremiosArtilharia({ seasonId }: Props) {
         label: l.label.trim() || null,
       }));
       const { data: ups, error } = await supabase
-        .from("duelo_artilharia_window_prizes")
+        .from("campeonato_artilharia_window_prizes")
         .upsert(rows, { onConflict: "season_id,window_key" })
         .select();
       if (error) throw error;

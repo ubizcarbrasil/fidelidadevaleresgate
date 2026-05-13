@@ -94,12 +94,12 @@ export default function TelaAprovacaoInscricoes({
     enabled: open && !!seasonId && !!brandId && !!branchId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("duelo_season_enrollments")
+        .from("campeonato_season_enrollments")
         .select(
           `id, status, tier_id, notes, created_at,
            customers:driver_id ( name, photo_url ),
            driver_profiles:driver_id ( photo_url ),
-           duelo_season_tiers:tier_id ( name )`,
+           campeonato_season_tiers:tier_id ( name )`,
         )
         .eq("season_id", seasonId)
         .eq("brand_id", brandId)
@@ -115,7 +115,7 @@ export default function TelaAprovacaoInscricoes({
         driver_name: row.customers?.name ?? null,
         photo_url:
           row.customers?.photo_url ?? row.driver_profiles?.photo_url ?? null,
-        tier_name: row.duelo_season_tiers?.name ?? null,
+        tier_name: row.campeonato_season_tiers?.name ?? null,
       }));
     },
   });
@@ -148,7 +148,7 @@ export default function TelaAprovacaoInscricoes({
       const tierAlvo = selecaoTier[inscricao.id] ?? inscricao.tier_id;
       if (tierAlvo && tierAlvo !== inscricao.tier_id) {
         const { data: tierUpd, error: tErr } = await supabase
-          .from("duelo_season_enrollments")
+          .from("campeonato_season_enrollments")
           .update({ tier_id: tierAlvo })
           .eq("id", inscricao.id)
           .eq("brand_id", brandId)
@@ -161,7 +161,7 @@ export default function TelaAprovacaoInscricoes({
         }
       }
       const { data: upd, error } = await supabase
-        .from("duelo_season_enrollments")
+        .from("campeonato_season_enrollments")
         .update({ status: "approved" })
         .eq("id", inscricao.id)
         .eq("brand_id", brandId)
@@ -185,7 +185,7 @@ export default function TelaAprovacaoInscricoes({
     setAcaoPendente(inscricaoId);
     try {
       const { data: upd, error } = await supabase
-        .from("duelo_season_enrollments")
+        .from("campeonato_season_enrollments")
         .update({ status: "rejected", notes: motivo?.trim() || null })
         .eq("id", inscricaoId)
         .eq("brand_id", brandId)
@@ -216,7 +216,7 @@ export default function TelaAprovacaoInscricoes({
     setAcaoPendente("__lote__");
     try {
       const { data: upd, error } = await supabase
-        .from("duelo_season_enrollments")
+        .from("campeonato_season_enrollments")
         .update({ status: "approved" })
         .in("id", ids)
         .eq("brand_id", brandId)

@@ -186,7 +186,7 @@ export async function listarMotoristasDisponiveis(
 /* ============== Mutations ============== */
 
 export async function trocarFormatoEngajamento(input: TrocarFormatoInput) {
-  const { data, error } = await supabase.rpc("duelo_change_engagement_format", {
+  const { data, error } = await supabase.rpc("campeonato_change_engagement_format", {
     p_brand_id: input.brandId,
     p_new_format: input.newFormat,
   });
@@ -195,7 +195,7 @@ export async function trocarFormatoEngajamento(input: TrocarFormatoInput) {
 }
 
 export async function cancelarTemporada(input: CancelarTemporadaInput) {
-  const { data, error } = await supabase.rpc("duelo_cancel_season", {
+  const { data, error } = await supabase.rpc("campeonato_cancel_season", {
     p_season_id: input.seasonId,
     p_reason: input.reason,
   });
@@ -204,7 +204,7 @@ export async function cancelarTemporada(input: CancelarTemporadaInput) {
 }
 
 export async function pausarTemporada(seasonId: string) {
-  const { data, error } = await supabase.rpc("duelo_pause_season", {
+  const { data, error } = await supabase.rpc("campeonato_pause_season", {
     p_season_id: seasonId,
   });
   if (error) throw error;
@@ -212,7 +212,7 @@ export async function pausarTemporada(seasonId: string) {
 }
 
 export async function retomarTemporada(seasonId: string) {
-  const { data, error } = await supabase.rpc("duelo_resume_season", {
+  const { data, error } = await supabase.rpc("campeonato_resume_season", {
     p_season_id: seasonId,
   });
   if (error) throw error;
@@ -220,7 +220,7 @@ export async function retomarTemporada(seasonId: string) {
 }
 
 export async function ajustarPremio(input: AjustarPremioInput) {
-  const { data, error } = await supabase.rpc("duelo_update_prize", {
+  const { data, error } = await supabase.rpc("campeonato_update_prize", {
     p_brand_id: input.brandId,
     p_tier_name: input.tierName,
     p_position: input.position,
@@ -231,7 +231,7 @@ export async function ajustarPremio(input: AjustarPremioInput) {
 }
 
 export async function incluirMotoristaTemporada(input: IncluirMotoristaInput) {
-  const { data, error } = await supabase.rpc("duelo_add_driver_to_season", {
+  const { data, error } = await supabase.rpc("campeonato_add_driver_to_season", {
     p_season_id: input.seasonId,
     p_driver_id: input.driverId,
     p_tier_id: input.tierId,
@@ -266,7 +266,7 @@ export async function criarTemporadaCompleta(
   };
 
   const { data: season, error: seasonErr } = await supabase
-    .from("duelo_seasons")
+    .from("campeonato_seasons")
     .insert({
       brand_id: input.brandId,
       branch_id: input.branchId,
@@ -365,7 +365,7 @@ export async function executarSeedingTemporada(seasonId: string) {
 
   // Fallback: RPC direto com retry para cache stale
   const tentar = async () => {
-    return await supabase.rpc("duelo_materialize_and_seed_season" as any, {
+    return await supabase.rpc("campeonato_materialize_and_seed_season" as any, {
       p_season_id: seasonId,
     });
   };
@@ -389,9 +389,9 @@ export async function listarDistribuicoesPendentes(
   seasonId: string,
 ): Promise<DistribuicaoPremio[]> {
   const { data, error } = await supabase
-    .from("duelo_prize_distributions")
+    .from("campeonato_prize_distributions")
     .select(
-      "id, season_id, driver_id, brand_id, branch_id, tier_id, tier_name, position, points_awarded, status, confirmed_at, cancelled_reason, created_at, customers!duelo_prize_distributions_driver_id_fkey(name)",
+      "id, season_id, driver_id, brand_id, branch_id, tier_id, tier_name, position, points_awarded, status, confirmed_at, cancelled_reason, created_at, customers!campeonato_prize_distributions_driver_id_fkey(name)",
     )
     .eq("season_id", seasonId)
     .order("tier_name", { ascending: true })
@@ -428,7 +428,7 @@ export async function confirmarDistribuicaoPremios(
 }
 
 export async function cancelarPremio(input: CancelarPremioInput) {
-  const { data, error } = await supabase.rpc("duelo_cancel_prize", {
+  const { data, error } = await supabase.rpc("campeonato_cancel_prize", {
     p_distribution_id: input.distributionId,
     p_reason: input.reason,
   });
@@ -437,7 +437,7 @@ export async function cancelarPremio(input: CancelarPremioInput) {
 }
 
 export async function calcularPremiosManualmente(seasonId: string) {
-  const { data, error } = await supabase.rpc("duelo_calculate_prizes", {
+  const { data, error } = await supabase.rpc("campeonato_calculate_prizes", {
     p_season_id: seasonId,
   });
   if (error) throw error;

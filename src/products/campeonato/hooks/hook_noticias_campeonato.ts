@@ -30,7 +30,7 @@ export function useNoticiasCampeonato(seasonId?: string | null) {
     staleTime: 120_000,
     queryFn: async (): Promise<NoticiaCampeonato[]> => {
       const { data, error } = await (supabase as any)
-        .from("duelo_attempts_log")
+        .from("campeonato_attempts_log")
         .select("id, event_type, payload, created_at")
         .eq("season_id", seasonId)
         .in("event_type", EVENTOS)

@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     );
 
     log("info", "starting reconcile");
-    const { data, error } = await supabase.rpc("duelo_reconcile_standings", {
+    const { data, error } = await supabase.rpc("campeonato_reconcile_standings", {
       p_hours: 48,
     });
     if (error) throw error;
