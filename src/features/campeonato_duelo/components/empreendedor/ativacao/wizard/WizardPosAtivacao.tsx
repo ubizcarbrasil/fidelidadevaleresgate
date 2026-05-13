@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import StepperWizard from "./StepperWizard";
 import PassoFormato from "./PassoFormato";
 import PassoCriarTemporada from "./PassoCriarTemporada";
 import PassoDistribuir from "./PassoDistribuir";
+import { useDashboardCampeonato } from "../../../../hooks/hook_campeonato_empreendedor";
 
 interface Props {
   open: boolean;
@@ -27,6 +28,21 @@ export default function WizardPosAtivacao({
   branchId,
 }: Props) {
   const [passo, setPasso] = useState(0);
+  const { data: dashboard } = useDashboardCampeonato(open ? brandId : undefined);
+
+  // Se ao abrir já existe temporada e séries, fecha (nada a fazer no wizard).
+  // Se existe temporada mas sem séries, pula para o passo de distribuir.
+  useEffect(() => {
+    if (!open || !dashboard) return;
+    const ativa = dashboard.active_season;
+    const temTiers = (dashboard.tiers ?? []).length > 0;
+    if (ativa && temTiers) {
+      onClose();
+      setTimeout(() => setPasso(0), 250);
+    } else if (ativa && !temTiers && passo < 2) {
+      setPasso(2);
+    }
+  }, [open, dashboard, onClose, passo]);
 
   function fechar() {
     onClose();
