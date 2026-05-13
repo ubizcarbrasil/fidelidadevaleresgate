@@ -82,6 +82,7 @@ export default function CampeonatoMotoristaPanel({
         ) : precisaFoto ? (
           <BloqueioInscricaoSemFoto
             fontHeading={fontHeading}
+            driverId={driverId}
             onFotoCadastrada={() => {
               setFotoConfirmada(true);
               refetchFoto();
