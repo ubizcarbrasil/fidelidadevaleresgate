@@ -19,6 +19,7 @@ import ListaTemporadasAnteriores from "./components/empreendedor/ListaTemporadas
 import DetalheSerieView from "./components/empreendedor/DetalheSerieView";
 import CardPremiosADistribuir from "./components/empreendedor/CardPremiosADistribuir";
 import CardAtivarCampeonato from "./components/empreendedor/CardAtivarCampeonato";
+import WizardPosAtivacao from "./components/empreendedor/ativacao/wizard/WizardPosAtivacao";
 import DashboardOperacaoCampeonato from "./components/empreendedor/dashboard/DashboardOperacaoCampeonato";
 import DistribuicaoManualView from "./components/empreendedor/DistribuicaoManualView";
 import EditorFasesMataMata from "./components/empreendedor/EditorFasesMataMata";
@@ -42,6 +43,7 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
   const [modalCriar, setModalCriar] = useState(false);
   const [modalDistribuicao, setModalDistribuicao] = useState(false);
   const [sheetInscricoes, setSheetInscricoes] = useState(false);
+  const [wizardAberto, setWizardAberto] = useState(false);
   const [serieAberta, setSerieAberta] = useState<{
     tier_id: string;
     tier_name: string;
@@ -97,7 +99,16 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
   if (!campeonatoHabilitado) {
     return (
       <div className="space-y-4 p-1">
-        <CardAtivarCampeonato brandId={brandId} />
+        <CardAtivarCampeonato
+          brandId={brandId}
+          onAtivado={() => setWizardAberto(true)}
+        />
+        <WizardPosAtivacao
+          open={wizardAberto}
+          onClose={() => setWizardAberto(false)}
+          brandId={brandId}
+          branchId={branchId}
+        />
       </div>
     );
   }
@@ -105,6 +116,12 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
   return (
     <div className="space-y-4 p-1">
       <CardAtivarCampeonato brandId={brandId} />
+      <WizardPosAtivacao
+        open={wizardAberto}
+        onClose={() => setWizardAberto(false)}
+        brandId={brandId}
+        branchId={branchId}
+      />
       <SeletorFormatoEngajamento brandId={brandId} />
 
       {isCampeonato && (
