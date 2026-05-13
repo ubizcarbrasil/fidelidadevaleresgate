@@ -766,7 +766,7 @@ Deno.serve(async (req) => {
 
       // Authorization: caller must be admin of the brand owning this season
       const { data: season, error: seasonErr } = await adminClient
-        .from("duelo_seasons")
+        .from("campeonato_seasons")
         .select("id, brand_id")
         .eq("id", season_id)
         .maybeSingle();
@@ -795,7 +795,7 @@ Deno.serve(async (req) => {
       }
 
       const { data, error } = await adminClient.rpc(
-        "duelo_materialize_and_seed_season",
+        "campeonato_materialize_and_seed_season",
         { p_season_id: season_id, p_caller: user.id },
       );
       if (error) throw error;

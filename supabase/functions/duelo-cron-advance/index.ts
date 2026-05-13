@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     );
 
     log("info", "starting advance phases");
-    const { data, error } = await supabase.rpc("duelo_advance_phases");
+    const { data, error } = await supabase.rpc("campeonato_advance_phases");
     if (error) throw error;
 
     log("info", "advance phases completed", data);
