@@ -22,7 +22,7 @@ export default function CardConfrontoAtual({
   onVerChaveamento,
 }: Props) {
   const { data, isLoading } = useConfrontoAtual(seasonId, driverId);
-  const { photoUrl } = useFotoPerfilMotorista();
+  const { photoUrl } = useFotoPerfilMotorista(driverId);
 
   if (isLoading) {
     return (
