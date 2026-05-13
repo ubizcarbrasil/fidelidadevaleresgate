@@ -1,5 +1,13 @@
 import { useMemo } from "react";
-import { Info, Calendar, MapPin, Layers, AlertTriangle, CheckCircle2 } from "lucide-react";
+import {
+  Trophy,
+  MapPin,
+  Layers,
+  AlertTriangle,
+  CheckCircle2,
+  Calendar,
+  Zap,
+} from "lucide-react";
 import { useDashboardCampeonato } from "../../../../hooks/hook_campeonato_empreendedor";
 import { formatarPeriodo } from "../../../../utils/utilitarios_campeonato";
 
@@ -13,6 +21,7 @@ export default function ResumoTemporadaAtivaWizard({ brandId, branchId }: Props)
 
   const ativa = dashboard?.active_season ?? null;
   const temTiers = (dashboard?.tiers ?? []).length > 0;
+  const tierCount = dashboard?.tiers?.length ?? 0;
 
   const periodoClassificacao = useMemo(() => {
     if (!ativa?.classification_starts_at || !ativa?.classification_ends_at) return null;
@@ -26,59 +35,112 @@ export default function ResumoTemporadaAtivaWizard({ brandId, branchId }: Props)
 
   if (isLoading) {
     return (
-      <div className="animate-pulse rounded-lg border border-border bg-muted/40 p-3">
-        <div className="h-3 w-1/2 rounded bg-muted" />
+      <div className="animate-pulse rounded-xl border border-border bg-muted/40 p-4">
+        <div className="h-4 w-1/2 rounded bg-muted" />
       </div>
     );
   }
 
   if (!ativa) {
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs dark:border-amber-900/50 dark:bg-amber-950/30">
-        <AlertTriangle className="h-4 w-4 shrink-0 text-amber-700 dark:text-amber-400" />
-        <span className="text-amber-900 dark:text-amber-100">
-          Nenhuma temporada ativa nesta cidade. O passo 2 permitirá criar uma nova.
-        </span>
+      <div className="flex items-center gap-3 rounded-xl border border-amber-300/60 bg-amber-50/60 p-4 text-xs dark:border-amber-900/50 dark:bg-amber-950/20">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/40">
+          <AlertTriangle className="h-4 w-4 text-amber-700 dark:text-amber-400" />
+        </div>
+        <div>
+          <p className="font-semibold text-amber-900 dark:text-amber-100">
+            Nenhuma temporada ativa nesta cidade
+          </p>
+          <p className="text-amber-700/80 dark:text-amber-300/70">
+            O passo 2 permitirá criar a primeira temporada do campeonato.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3 text-xs">
-      <div className="flex items-center gap-2 font-semibold text-foreground">
-        <Info className="h-4 w-4 text-primary" />
-        <span>Temporada detectada no sistema</span>
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      {/* Header: nome + cidade */}
+      <div className="flex items-start justify-between gap-3 bg-gradient-to-r from-primary/10 to-primary/5 px-4 py-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15">
+            <Trophy className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-foreground">{ativa.name}</p>
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              Temporada ativa detectada
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[10px] font-semibold text-muted-foreground">
+          <MapPin className="h-3 w-3" />
+          {branchId.slice(0, 8)}…
+        </div>
       </div>
 
-      <ul className="space-y-1.5 text-muted-foreground">
-        <li className="flex items-center gap-2">
-          <Calendar className="h-3.5 w-3.5 shrink-0 text-primary/70" />
-          <span>
-            <strong className="text-foreground">{ativa.name}</strong> — Classificação: {periodoClassificacao}
-            {periodoMataMata && ` · Mata-mata: ${periodoMataMata}`}
-          </span>
-        </li>
-        <li className="flex items-center gap-2">
-          <MapPin className="h-3.5 w-3.5 shrink-0 text-primary/70" />
-          <span>
-            Cidade (branch_id): <code className="rounded bg-muted px-1 text-[10px] text-foreground">{branchId}</code>
-          </span>
-        </li>
-        <li className="flex items-center gap-2">
-          <Layers className="h-3.5 w-3.5 shrink-0 text-primary/70" />
+      {/* Períodos */}
+      <div className="grid grid-cols-2 gap-px border-b border-border bg-border">
+        <div className="flex items-center gap-2.5 bg-card p-3">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-emerald-500/10">
+            <Calendar className="h-3.5 w-3.5 text-emerald-500" />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Classificação
+            </p>
+            <p className="text-xs font-semibold text-foreground">{periodoClassificacao ?? "—"}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5 bg-card p-3">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-500/10">
+            <Zap className="h-3.5 w-3.5 text-amber-500" />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Mata-mata
+            </p>
+            <p className="text-xs font-semibold text-foreground">{periodoMataMata ?? "—"}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Status de séries */}
+      <div className="px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Layers className="h-4 w-4 text-primary" />
+            <span className="text-xs font-semibold text-foreground">Distribuição de séries</span>
+          </div>
           {temTiers ? (
-            <span className="flex items-center gap-1">
-              <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-              Séries já distribuídas ({dashboard!.tiers.length} série(s)). O wizard será fechado.
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
+              <CheckCircle2 className="h-3 w-3" />
+              {tierCount} série{tierCount !== 1 ? "s" : ""}
             </span>
           ) : (
-            <span className="flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3 text-amber-500" />
-              Sem séries distribuídas. O passo 3 permitirá distribuir os motoristas.
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600">
+              <AlertTriangle className="h-3 w-3" />
+              Pendente
             </span>
           )}
-        </li>
-      </ul>
+        </div>
+
+        {/* Barra de progresso */}
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${
+              temTiers ? "bg-emerald-500 w-full" : "bg-amber-500 w-1/3"
+            }`}
+          />
+        </div>
+
+        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+          {temTiers
+            ? "As séries já foram distribuídas. O wizard será fechado automaticamente porque o campeonato já está operacional."
+            : "Os motoristas ainda não foram distribuídos pelas séries. O passo 3 permitirá concluir essa etapa."}
+        </p>
+      </div>
     </div>
   );
 }
