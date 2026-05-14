@@ -1,62 +1,126 @@
-## Etapa 4 — Artilharia / Recordes (modelo multi-prêmio)
+## Objetivo
 
-Decisão confirmada: migrar `campeonato_artilharia_window_prizes` para suportar **múltiplos prêmios por janela** (1º/2º/3º…). Reescrever admin + motorista.
-
----
-
-### Commit A — Migration multi-prêmio
-
-Arquivo novo em `supabase/migrations/`:
-
-- `ALTER TABLE campeonato_artilharia_window_prizes`:
-  - `ADD COLUMN IF NOT EXISTS position int NOT NULL DEFAULT 1`
-  - `ADD COLUMN IF NOT EXISTS prize_kind text` (`points` | `item`)
-  - `ADD COLUMN IF NOT EXISTS prize_value text` (string p/ aceitar número ou texto)
-  - `ADD COLUMN IF NOT EXISTS description text`
-  - CHECK `position BETWEEN 1 AND 50`
-  - CHECK `prize_kind IN ('points','item')` (nullable p/ linhas legadas)
-- Drop unique antigo `(season_id, window_key)` → recriar como `(season_id, window_key, position)`.
-- Backfill: linhas legadas ficam `position=1`, mantém `enabled`/`label` (label vira fallback de `description` na leitura).
-- Index `(season_id, window_key, position)`.
-- RLS já cobre via policies existentes (`admin_can_manage` + driver brand/branch). Sem alteração.
-
-Sem mudanças em RPCs.
-
-### Commit B — Admin: `EditorPremiosArtilharia.tsx`
-
-Novo componente em `components/empreendedor/EditorPremiosArtilharia.tsx`. Substitui `SecaoPremiosArtilharia` no painel (deletar uso antigo no `pagina_campeonato_empreendedor`).
-
-- 4 cards (24h / 7 dias / 15 dias / 30 dias), cada um com lista de prêmios:
-  - Linha = `Posição` (input num) | `Tipo` (Select pontos/item) | `Valor` (input) | `Descrição` (input) | botão `×`.
-  - Botão `+ Adicionar prêmio` por janela.
-- Salvar por janela: `delete WHERE season_id+window_key` → `insert` lista atual; ambos com `.select()` (Update Hardening). Toast PT-BR de sucesso/erro RLS.
-- Mantém `SecaoPremiosArtilharia.test.tsx` ajustado ao novo schema (ou removido se não cobrir mais o fluxo).
-
-### Commit C — Motorista: `AbaArtilharia` com badge multi-prêmio
-
-`components/motorista/AbaArtilharia.tsx` já tem 4 abas, medalhas, separador, fila top-20 e badge `has_prize`. Ajustes mínimos:
-
-- Hook novo `useArtilhariaPremios(seasonId, window)` lendo as N linhas (ordenadas por `position`) → tooltip/modal com lista completa quando o usuário toca no badge 🎁.
-- Badge mostra `prize_label` legado se `position=1.description` vazio; senão usa `description`.
-- Manter skeletons / vazio / erro+retry já existentes.
-
-### Commit D — Inscrição: prêmios na `AbaProximosCampeonatos`
-
-Em cada card de temporada futura, adicionar `<Collapsible>` "Ver prêmios de Artilharia":
-
-- Query: `select * from campeonato_artilharia_window_prizes where season_id=:id order by window_key, position`.
-- Render compacto: `[24h] 1º — 500 pts • 2º — Vale R$ 100 …` agrupado por janela.
-- Vazio: `"Sem prêmios extras de artilharia"`.
-- `branch_id` já está implícito via RLS (season pertence ao branch correto).
+Adicionar testes E2E **Playwright** cobrindo as 7 abas do `/motorista/campeonato`, com seed real no Supabase de teste e execução local + GitHub Actions.
 
 ---
 
-### Regras transversais
-- Tokens semânticos apenas (sem cor hardcoded).
-- Toda escrita com `.select()`.
-- `tsc --noEmit` verde após cada commit, na ordem A → B → C → D.
-- Nenhuma mudança fora de `src/products/campeonato/` exceto a migration.
-- RPC `driver_get_top_riders` permanece intocada (continua devolvendo `has_prize`/`prize_label` baseado em `position=1`).
+## Decisões aprovadas
 
-### Riscos
-- `driver_get_top_riders` hoje provavelmente lê `enabled`/`label`. Se quebrar com a nova UNIQUE, ajusto a query do RPC dentro da migration A para olhar `position=1` (sem mudar assinatura). Confirmo ao abrir o arquivo durante a execução.
+- **Mock**: Seed real (motorista + temporada/duelos/séries) via SQL fixture
+- **Escopo**: `/motorista/campeonato` — 7 abas (Drawer, Classificação, Duelos, Mata-mata, Artilharia, Próximos, Notícias, Configurações)
+- **CI**: Local (`npm run e2e`) + workflow `.github/workflows/e2e.yml` (não-bloqueante na primeira leva)
+
+---
+
+## Arquivos a criar
+
+```text
+playwright.config.ts                          # config base + projeto mobile (430x761)
+tests/e2e/
+├── fixtures/
+│   ├── seed.sql                              # cria brand/branch/season/series/duelos/customer
+│   ├── teardown.sql                          # remove fixtures por prefixo "e2e_"
+│   ├── auth.ts                               # helper que escreve driver_session_cpf_<brandId>
+│   └── constants.ts                          # CPF, brandId, branchId fake (UUIDs determinísticos)
+├── helpers/
+│   ├── seed-runner.ts                        # roda SQL via psql ou supabase-js service role
+│   └── driver-login.ts                       # context.addInitScript injetando localStorage
+├── campeonato/
+│   ├── 01-drawer-navigation.spec.ts          # ☰ abre, 7 itens, item ativo
+│   ├── 02-classificacao.spec.ts              # zonas vermelha/azul, troca de série
+│   ├── 03-duelos.spec.ts                     # cards Time A x Time B
+│   ├── 04-mata-mata.spec.ts                  # bracket espelhado, 🏆
+│   ├── 05-artilharia.spec.ts                 # 4 abas internas
+│   ├── 06-proximos.spec.ts                   # BloqueioInscricaoSemFoto
+│   ├── 07-noticias.spec.ts                   # feed renderiza
+│   ├── 08-configuracoes.spec.ts              # toggles + T&C
+│   └── 09-guardas.spec.ts                    # sem session → redireciona /auth
+└── README.md                                 # como rodar local + secrets de CI
+
+.github/workflows/e2e.yml                     # job ubuntu, npx playwright install, seed, run, teardown
+```
+
+## Arquivos a editar
+
+- `package.json` — scripts `e2e`, `e2e:ui`, `e2e:seed`, `e2e:teardown` + devDeps `@playwright/test`
+- `.gitignore` — `playwright-report/`, `test-results/`, `tests/e2e/.auth/`
+- `tsconfig.json` — excluir `tests/e2e/**` do build do app
+
+## Estratégia de seed (real Supabase)
+
+Usa SUPABASE_SERVICE_ROLE_KEY (somente em CI/local, nunca commitada):
+
+```text
+e2e_brand          → 1 brand "E2E Brand" com brand_settings_json.campeonato_standalone_enabled=true
+e2e_branch         → 1 branch vinculado
+e2e_customer       → 1 customer com nome "[MOTORISTA] E2E Test" + CPF "00000000000"
+e2e_season         → 1 campeonato_seasons ativo, fase=classification
+e2e_series A/B     → 2 séries com 4 motoristas cada (3 dummies + e2e_customer)
+e2e_duelos         → 2 duelos do dia: 1 vencido, 1 em andamento
+e2e_artilharia     → 3 entradas top scorers
+```
+
+Todo registro com prefixo `e2e_` no name/slug → teardown remove pelo padrão.
+
+## Estratégia de login do motorista
+
+Não temos email/senha — DriverSessionContext lê CPF de `localStorage.driver_session_cpf_<brandId>`. O helper:
+
+```ts
+await context.addInitScript(({ brandId, cpf }) => {
+  localStorage.setItem(`driver_session_cpf_${brandId}`, cpf);
+}, { brandId: E2E_BRAND_ID, cpf: "00000000000" });
+```
+
+Antes de navegar, isso garante que o `loginByCpf` na re-hidratação encontre o driver.
+
+## CI workflow
+
+```yaml
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}
+      PREVIEW_URL: ${{ secrets.E2E_PREVIEW_URL }}
+    steps:
+      - checkout, setup-node, bun install
+      - npx playwright install --with-deps chromium
+      - npm run e2e:seed
+      - npm run e2e        # roda contra PREVIEW_URL
+      - npm run e2e:teardown   # always()
+      - upload playwright-report
+```
+
+> Secrets necessárias (você adiciona depois manualmente): `E2E_SUPABASE_URL`, `E2E_SUPABASE_SERVICE_ROLE_KEY`, `E2E_PREVIEW_URL`.
+
+## O que NÃO está incluso nesta leva
+
+- Login admin (Supabase Auth real) — fica para Etapa 2 do plano de E2E
+- `/campeonato` standalone, `/dashboard/gamificacao-admin` — não selecionados
+- Visual regression (screenshots diff)
+- CI bloqueante — workflow será criado com `continue-on-error: true` até estabilizar
+
+## Riscos e mitigações
+
+| Risco | Mitigação |
+|---|---|
+| Seed colide com dados reais | Prefixo `e2e_` + UUIDs determinísticos + teardown por prefixo |
+| Service role exposta no repo | Apenas via env vars + GitHub Secrets, nunca commit |
+| RLS bloqueia leitura do motorista seedado | Seed usa service role (bypassa RLS), leituras via UI passam pela RPC `lookup_driver_by_cpf` que é SECURITY DEFINER |
+| Preview URL muda a cada deploy | `PREVIEW_URL` lido de secret; localmente usa `http://localhost:8080` via `webServer` do Playwright |
+
+## Validação final
+
+- `npm run e2e` local → 9 spec files passam em viewport 430×761
+- `tsc --noEmit` continua verde
+- Workflow do GitHub Actions executa sem erro de instalação
+- Teardown limpa 100% das linhas com prefixo `e2e_`
+
+## Commits sequenciais
+
+1. `chore(e2e): instalar Playwright e scaffold de configuração`
+2. `feat(e2e): seed/teardown de fixtures do Campeonato no Supabase`
+3. `test(e2e): 9 specs cobrindo as 7 abas e guardas do /motorista/campeonato`
+4. `ci(e2e): workflow GitHub Actions não-bloqueante`
