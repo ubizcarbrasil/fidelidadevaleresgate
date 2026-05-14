@@ -25,7 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ROTULOS_FORMATO } from "@/products/campeonato/constants/constantes_templates";
+import { ROTULOS_FORMATO } from "@/compartilhados/constants/constantes_templates_campeonato";
 
 interface Props {
   brandId: string;

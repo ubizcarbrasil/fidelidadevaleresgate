@@ -13,11 +13,11 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
   CAMPEONATO_STANDALONE_KEY,
-} from "@/products/campeonato/constants/constantes_campeonato";
+} from "@/compartilhados/constants/constantes_campeonato";
 import {
   useCampeonatoStandalone,
   useInvalidarCampeonatoStandalone,
-} from "@/products/campeonato/hooks/hook_campeonato_standalone";
+} from "@/compartilhados/hooks/hook_campeonato_standalone";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
