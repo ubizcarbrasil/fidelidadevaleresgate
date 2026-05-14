@@ -30,9 +30,15 @@ interface LinhaPremio {
 interface Props {
   seasonId: string;
   tiers: TierResumo[];
+  /** Se false, não renderiza o sub-editor de prêmios de Artilharia. */
+  incluirArtilharia?: boolean;
 }
 
-export default function EditorPremiosTemporada({ seasonId, tiers }: Props) {
+export default function EditorPremiosTemporada({
+  seasonId,
+  tiers,
+  incluirArtilharia = true,
+}: Props) {
   const qc = useQueryClient();
   const [tierId, setTierId] = useState<string>(tiers[0]?.tier_id ?? "");
   const [linhas, setLinhas] = useState<LinhaPremio[]>([]);
@@ -299,7 +305,7 @@ export default function EditorPremiosTemporada({ seasonId, tiers }: Props) {
         )}
       </CardContent>
     </Card>
-    <EditorPremiosArtilharia seasonId={seasonId} />
+    {incluirArtilharia && <EditorPremiosArtilharia seasonId={seasonId} />}
     </div>
   );
 }
