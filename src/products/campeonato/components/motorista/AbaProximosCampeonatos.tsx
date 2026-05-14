@@ -342,3 +342,65 @@ function StatusInscricao({
     </Button>
   );
 }
+
+function SecaoPremiosArtilharia({ seasonId }: { seasonId: string }) {
+  const [aberto, setAberto] = useState(false);
+  const { data, isLoading } = useArtilhariaPremios(aberto ? seasonId : null);
+  const grupos = (data ?? []).reduce<Record<string, typeof data>>((acc, p) => {
+    (acc[p.window_key] ||= [] as any).push(p);
+    return acc;
+  }, {});
+  const ordemJanelas = ["24h", "7d", "15d", "30d"];
+
+  return (
+    <Collapsible open={aberto} onOpenChange={setAberto}>
+      <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md border border-border bg-muted/30 px-2.5 py-2 text-xs hover:bg-muted/50 transition-colors">
+        <span className="flex items-center gap-1.5 font-semibold">
+          <Gift className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+          Ver prêmios de Artilharia
+        </span>
+        <ChevronDown
+          className={`h-3.5 w-3.5 transition-transform ${aberto ? "rotate-180" : ""}`}
+        />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pt-2">
+        {isLoading ? (
+          <p className="text-[11px] text-muted-foreground py-1">
+            Carregando…
+          </p>
+        ) : !data || data.length === 0 ? (
+          <p className="text-[11px] text-muted-foreground italic py-1">
+            Sem prêmios extras de artilharia.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {ordemJanelas.map((win) => {
+              const linhas = grupos[win];
+              if (!linhas || linhas.length === 0) return null;
+              return (
+                <div key={win} className="space-y-0.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {JANELA_LABELS[win] ?? win}
+                  </p>
+                  <ul className="space-y-0.5">
+                    {linhas.map((p) => (
+                      <li
+                        key={`${p.window_key}-${p.position}`}
+                        className="text-[11px] flex items-baseline gap-2"
+                      >
+                        <span className="font-semibold tabular-nums w-5">
+                          {p.position}º
+                        </span>
+                        <span>{formatarPremio(p)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
