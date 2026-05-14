@@ -25,6 +25,9 @@ import {
   useArtilhariaPremios,
   formatarPremio,
 } from "../../hooks/hook_artilharia_premios";
+import { useFotoPerfilMotorista } from "../../hooks/useFotoPerfilMotorista";
+import BloqueioInscricaoSemFoto from "./BloqueioInscricaoSemFoto";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const JANELA_LABELS: Record<string, string> = {
   "24h": "24h",
@@ -73,10 +76,13 @@ function classificarFase(t: ProximaTemporada): {
     : null;
 
   if (abre && agora < abre) {
-    return { label: "Aguardando inscrições", variant: "outline" };
+    return { label: "Inscrições em breve", variant: "outline" };
   }
   if (abre && fecha && agora >= abre && agora <= fecha) {
     return { label: "Inscrições abertas", variant: "default" };
+  }
+  if (fecha && agora > fecha) {
+    return { label: "Inscrições encerradas", variant: "secondary" };
   }
   return { label: "Em breve", variant: "secondary" };
 }
@@ -85,6 +91,12 @@ export default function AbaProximosCampeonatos({ branchId, driverId }: Props) {
   const queryClient = useQueryClient();
   const { data, isLoading, isError, refetch, isFetching } =
     useProximosCampeonatos(branchId, driverId);
+  const {
+    temFoto,
+    isLoading: loadingFoto,
+    refetch: refetchFoto,
+  } = useFotoPerfilMotorista(driverId);
+  const [bloqueioFotoAberto, setBloqueioFotoAberto] = useState(false);
 
   if (isLoading) {
     return (
@@ -116,7 +128,9 @@ export default function AbaProximosCampeonatos({ branchId, driverId }: Props) {
         <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
           <CalendarDays className="h-8 w-8 text-muted-foreground" />
         </div>
-        <p className="text-base font-bold mb-1">Nenhum campeonato programado</p>
+        <p className="text-base font-bold mb-1">
+          Nenhum campeonato programado no momento.
+        </p>
         <p className="text-sm text-muted-foreground max-w-xs">
           Quando sua cidade abrir um novo campeonato, ele aparecerá aqui.
         </p>
@@ -136,6 +150,9 @@ export default function AbaProximosCampeonatos({ branchId, driverId }: Props) {
           key={t.season_id}
           temporada={t}
           driverId={driverId}
+          temFoto={temFoto}
+          loadingFoto={loadingFoto}
+          onPedirFoto={() => setBloqueioFotoAberto(true)}
           onInscricaoOk={() =>
             queryClient.invalidateQueries({
               queryKey: ["campeonato-proximos", branchId, driverId],
@@ -143,6 +160,21 @@ export default function AbaProximosCampeonatos({ branchId, driverId }: Props) {
           }
         />
       ))}
+
+      <Dialog
+        open={bloqueioFotoAberto}
+        onOpenChange={(v) => !v && setBloqueioFotoAberto(false)}
+      >
+        <DialogContent className="max-w-md p-0">
+          <BloqueioInscricaoSemFoto
+            driverId={driverId}
+            onFotoCadastrada={() => {
+              setBloqueioFotoAberto(false);
+              refetchFoto();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -150,10 +182,16 @@ export default function AbaProximosCampeonatos({ branchId, driverId }: Props) {
 function CardProximaTemporada({
   temporada,
   driverId,
+  temFoto,
+  loadingFoto,
+  onPedirFoto,
   onInscricaoOk,
 }: {
   temporada: ProximaTemporada;
   driverId: string;
+  temFoto: boolean;
+  loadingFoto: boolean;
+  onPedirFoto: () => void;
   onInscricaoOk: () => void;
 }) {
   const [erroLocal, setErroLocal] = useState<string | null>(null);
@@ -248,6 +286,11 @@ function CardProximaTemporada({
         erroLocal={erroLocal}
         onInscrever={() => {
           setErroLocal(null);
+          if (loadingFoto) return;
+          if (!temFoto) {
+            onPedirFoto();
+            return;
+          }
           inscrever.mutate();
         }}
       />
