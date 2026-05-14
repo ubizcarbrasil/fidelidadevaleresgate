@@ -56,3 +56,26 @@ export const DURACOES_FASES_PADRAO_HORAS = {
  * - `false` (default / ausente) → comportamento atual (dentro de Gamificação).
  */
 export const CAMPEONATO_STANDALONE_KEY = "campeonato_standalone_enabled";
+
+/**
+ * Templates de mensagem PT-BR para notificações de duelo / mata-mata.
+ * Centralizados aqui para reuso entre Edge Functions, hooks de UI e
+ * componentes de feed. Mantidos como funções puras para permitir
+ * interpolação segura (sem template injection).
+ */
+export const MENSAGEM_DUELO_VITORIA = (
+  adversario: string,
+  pontos: number,
+) => `🏆 Você venceu o duelo contra ${adversario}! +${pontos} pontos`;
+
+export const MENSAGEM_DUELO_DERROTA = (adversario: string) =>
+  `Você perdeu o duelo contra ${adversario}. Continue firme!`;
+
+export const MENSAGEM_DUELO_EMPATE = (adversario: string) =>
+  `Duelo empatado com ${adversario}. +1 ponto para cada`;
+
+export const MENSAGEM_MATA_MATA_CLASSIFICADO = (fase: string) =>
+  `🎉 Você se classificou para as ${fase}!`;
+
+export const MENSAGEM_MATA_MATA_ELIMINADO = (fase: string) =>
+  `Você foi eliminado nas ${fase}. Até o próximo campeonato!`;
