@@ -218,6 +218,7 @@ function OfertasFastTrack({ children }: { children: ReactNode }) {
             <Route path="/webview" element={<WebviewPage />} />
             <Route path="/ofertas" element={<PaginaUbizOfertas />} />
             <Route path="/driver" element={<DriverPanelPage />} />
+            <Route path="/motorista/campeonato" element={<RotaCampeonatoMotorista />} />
             <Route path="*" element={<PaginaUbizOfertas />} />
           </Routes>
         </Suspense>
@@ -477,7 +478,7 @@ function AppContent() {
   }
 
   // Public paths that don't need brand resolution
-  const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store", "/p/", "/driver", "/d/", "/loja/", "/campeonato/", "/ofertas"];
+  const publicPaths = ["/auth", "/reset-password", "/trial", "/landing", "/register-store", "/p/", "/driver", "/d/", "/loja/", "/campeonato/", "/ofertas", "/motorista/"];
   const isPublicPath = publicPaths.some(p => location.pathname.startsWith(p));
 
   // Portal domain: redirect unauthenticated users to /auth immediately (before loading guard)
