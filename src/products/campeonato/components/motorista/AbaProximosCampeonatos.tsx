@@ -1,10 +1,15 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, Loader2, Trophy, AlertCircle } from "lucide-react";
+import { CalendarDays, Loader2, Trophy, AlertCircle, ChevronDown, Gift } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Tooltip,
   TooltipContent,
@@ -16,6 +21,17 @@ import {
   type ProximaTemporada,
 } from "../../hooks/hook_proximos_campeonatos";
 import { inscreverMotoristaTemporada } from "../../services/servico_inscricao_temporada";
+import {
+  useArtilhariaPremios,
+  formatarPremio,
+} from "../../hooks/hook_artilharia_premios";
+
+const JANELA_LABELS: Record<string, string> = {
+  "24h": "24h",
+  "7d": "7 dias",
+  "15d": "15 dias",
+  "30d": "30 dias",
+};
 
 interface Props {
   branchId: string;
@@ -222,6 +238,8 @@ function CardProximaTemporada({
           </ul>
         </div>
       )}
+
+      <SecaoPremiosArtilharia seasonId={temporada.season_id} />
 
       <StatusInscricao
         status={temporada.my_enrollment_status}
