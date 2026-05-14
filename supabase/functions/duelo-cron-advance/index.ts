@@ -52,6 +52,50 @@ Deno.serve(async (req) => {
     if (error) throw error;
 
     log("info", "advance phases completed", data);
+
+    // Despacha notificações de duelo recém-criadas (últimos 10 min) também
+    // pelo chat (TaxiMachine) via send-driver-message. Falhas aqui não
+    // afetam o avanço de fase — INSERT em campeonato_notifications já
+    // garante a entrega no app do motorista.
+    let dispatched = 0;
+    let dispatchFailed = 0;
+    try {
+      const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const { data: notifs } = await supabase
+        .from("campeonato_notifications")
+        .select("driver_id, brand_id, message, event_type")
+        .in("event_type", ["duelo_win", "duelo_loss", "duelo_draw"])
+        .gte("created_at", since)
+        .limit(500);
+
+      for (const n of notifs ?? []) {
+        try {
+          const { error: invErr } = await supabase.functions.invoke(
+            "send-driver-message",
+            {
+              body: {
+                brand_id: n.brand_id,
+                event_type: `CAMPEONATO_${n.event_type.toUpperCase()}`,
+                customer_ids: [n.driver_id],
+                message_body: n.message,
+              },
+            },
+          );
+          if (invErr) {
+            dispatchFailed++;
+          } else {
+            dispatched++;
+          }
+        } catch {
+          dispatchFailed++;
+        }
+      }
+      log("info", "duelo chat dispatch", { dispatched, failed: dispatchFailed });
+    } catch (dispatchErr) {
+      const msg = dispatchErr instanceof Error ? dispatchErr.message : String(dispatchErr);
+      log("warn", "duelo chat dispatch skipped", { reason: msg });
+    }
+
     return new Response(JSON.stringify({ ok: true, result: data }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
