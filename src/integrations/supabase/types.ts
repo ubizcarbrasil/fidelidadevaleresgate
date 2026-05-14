@@ -10934,6 +10934,18 @@ export type Database = {
           total_rides: number
         }[]
       }
+      get_drivers_ranking_for_season: {
+        Args: { p_branch_id: string; p_since_days?: number }
+        Returns: {
+          customer_id: string
+          driver_name: string
+          is_active: boolean
+          phone: string
+          points_balance: number
+          rank_position: number
+          rides_count: number
+        }[]
+      }
       get_duel_guesses_summary: {
         Args: { p_duel_id: string }
         Returns: {
