@@ -138,10 +138,12 @@ function LinhaTabela({
       ? "text-[hsl(var(--series-promotion))]"
       : linha.zone === "relegation"
         ? "text-destructive"
-        : "text-muted-foreground";
+        : linha.is_me
+          ? "text-foreground"
+          : "text-muted-foreground";
 
   const bgLinha = linha.is_me
-    ? "bg-muted/50"
+    ? "bg-muted/60 ring-1 ring-primary/30"
     : linha.zone === "promotion"
       ? "bg-[hsl(var(--series-promotion)/0.12)]"
       : linha.zone === "relegation"

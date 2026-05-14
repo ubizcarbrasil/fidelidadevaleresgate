@@ -14,6 +14,7 @@ interface Props {
   driverId: string | null;
   rodadaIndex: number;
   onRodadasResolvidas: (total: number, labels: string[]) => void;
+  arenaNome?: string | null;
 }
 
 export default function AbaTabelaDuelos({
@@ -22,6 +23,7 @@ export default function AbaTabelaDuelos({
   driverId,
   rodadaIndex,
   onRodadasResolvidas,
+  arenaNome,
 }: Props) {
   const { data: rodadas = [], isLoading: loadingRodadas } = useRodadasDoTier(
     seasonId,
@@ -77,6 +79,7 @@ export default function AbaTabelaDuelos({
         <ListaConfrontosRodada
           confrontos={confrontos}
           driverIdLogado={driverId}
+          arenaNome={arenaNome}
         />
       )}
     </div>

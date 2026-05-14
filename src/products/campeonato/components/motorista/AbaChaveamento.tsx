@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronUp, Trophy } from "lucide-react";
+import { ChevronDown, ChevronUp, Trophy, Crown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import AvatarMotorista from "../shared/AvatarMotorista";
@@ -65,8 +65,41 @@ export default function AbaChaveamento({
       const lista = m.get(b.phase);
       if (lista) lista.push(b);
     });
+    // Ordena cada fase por bracket_position
+    for (const f of FASES) {
+      const arr = m.get(f) ?? [];
+      arr.sort((a, b) => a.bracket_position - b.bracket_position);
+    }
     return m;
   }, [brackets]);
+
+  // Divide bracket_position em metades superior (esq) e inferior (dir)
+  const metades = useMemo(() => {
+    function dividir(lista: BracketSlotV2[]): { esq: BracketSlotV2[]; dir: BracketSlotV2[] } {
+      const meio = Math.ceil(lista.length / 2);
+      return { esq: lista.slice(0, meio), dir: lista.slice(meio) };
+    }
+    return {
+      r16: dividir(porFase.get("r16") ?? []),
+      qf: dividir(porFase.get("qf") ?? []),
+      sf: dividir(porFase.get("sf") ?? []),
+      final: porFase.get("final") ?? [],
+    };
+  }, [porFase]);
+
+  const campeao = useMemo(() => {
+    const f = porFase.get("final") ?? [];
+    if (f.length === 0) return null;
+    const finalSlot = f[0];
+    if (!finalSlot.winner_id) return null;
+    if (finalSlot.winner_id === finalSlot.driver_a_id) {
+      return { nome: finalSlot.driver_a_name, photo: finalSlot.driver_a_photo_url };
+    }
+    if (finalSlot.winner_id === finalSlot.driver_b_id) {
+      return { nome: finalSlot.driver_b_name, photo: finalSlot.driver_b_photo_url };
+    }
+    return null;
+  }, [porFase]);
 
   if (!seasonId || !tierId || !driverId) {
     return (
@@ -135,44 +168,76 @@ export default function AbaChaveamento({
         </div>
       ) : (
         <div className="overflow-x-auto pb-2">
-          <div className="flex gap-3 min-w-max">
-            {FASES.map((fase) => {
-              const lista = porFase.get(fase) ?? [];
-              if (lista.length === 0) return null;
-              const isDestaque = faseDestaque === fase;
-              return (
-                <div key={fase} className="flex flex-col gap-3 min-w-[180px]">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-center text-muted-foreground flex items-center justify-center gap-1">
-                    {fase === "final" && <Trophy className="h-3 w-3 text-primary" />}
-                    {FASE_LABEL[fase]}
-                  </p>
-                  <div
-                    className={`flex flex-col justify-around flex-1 ${
-                      fase === "r16"
-                        ? "gap-2"
-                        : fase === "qf"
-                          ? "gap-10"
-                          : fase === "sf"
-                            ? "gap-24"
-                            : "gap-0"
-                    }`}
-                  >
-                    {lista.map((b) => (
-                      <CardConfrontoBracket
-                        key={b.id}
-                        bracket={b}
-                        destacado={isDestaque}
-                        onClick={() => {
-                          if (b.driver_a_id && b.driver_b_id) {
-                            setConfrontoSelecionado(b);
-                          }
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-[minmax(170px,1fr)_minmax(170px,1fr)_minmax(170px,1fr)_minmax(180px,200px)_minmax(170px,1fr)_minmax(170px,1fr)_minmax(170px,1fr)] gap-2 min-w-[1200px]">
+            {/* Cabeçalhos */}
+            <FaseHeader fase="r16" />
+            <FaseHeader fase="qf" />
+            <FaseHeader fase="sf" />
+            <FaseHeader fase="final" centro />
+            <FaseHeader fase="sf" />
+            <FaseHeader fase="qf" />
+            <FaseHeader fase="r16" />
+
+            {/* Coluna R16 esquerda */}
+            <ColunaBracket
+              slots={metades.r16.esq}
+              gap="gap-2"
+              destacado={faseDestaque === "r16"}
+              onSelect={setConfrontoSelecionado}
+            />
+            {/* QF esquerda */}
+            <ColunaBracket
+              slots={metades.qf.esq}
+              gap="gap-10"
+              destacado={faseDestaque === "qf"}
+              onSelect={setConfrontoSelecionado}
+            />
+            {/* SF esquerda */}
+            <ColunaBracket
+              slots={metades.sf.esq}
+              gap="gap-24"
+              destacado={faseDestaque === "sf"}
+              onSelect={setConfrontoSelecionado}
+            />
+
+            {/* Coluna central — Final + Campeão */}
+            <div className="flex flex-col items-center justify-center gap-3">
+              <CampeaoCentro campeao={campeao} />
+              {metades.final.map((b) => (
+                <CardConfrontoBracket
+                  key={b.id}
+                  bracket={b}
+                  destacado={faseDestaque === "final"}
+                  onClick={() => {
+                    if (b.driver_a_id && b.driver_b_id) {
+                      setConfrontoSelecionado(b);
+                    }
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* SF direita */}
+            <ColunaBracket
+              slots={metades.sf.dir}
+              gap="gap-24"
+              destacado={faseDestaque === "sf"}
+              onSelect={setConfrontoSelecionado}
+            />
+            {/* QF direita */}
+            <ColunaBracket
+              slots={metades.qf.dir}
+              gap="gap-10"
+              destacado={faseDestaque === "qf"}
+              onSelect={setConfrontoSelecionado}
+            />
+            {/* R16 direita */}
+            <ColunaBracket
+              slots={metades.r16.dir}
+              gap="gap-2"
+              destacado={faseDestaque === "r16"}
+              onSelect={setConfrontoSelecionado}
+            />
           </div>
         </div>
       )}
@@ -183,6 +248,82 @@ export default function AbaChaveamento({
         confronto={confrontoSelecionado}
         phaseConfig={seasonInfo?.phase_config ?? []}
       />
+    </div>
+  );
+}
+
+/* ───────────── Cabeçalho de fase ───────────── */
+
+function FaseHeader({ fase, centro }: { fase: FasePhase; centro?: boolean }) {
+  return (
+    <p className="text-[11px] font-bold uppercase tracking-wide text-center text-muted-foreground flex items-center justify-center gap-1 pb-1 border-b border-border/40">
+      {(fase === "final" || centro) && <Trophy className="h-3 w-3 text-primary" />}
+      {FASE_LABEL[fase]}
+    </p>
+  );
+}
+
+/* ───────────── Coluna de slots ───────────── */
+
+function ColunaBracket({
+  slots,
+  gap,
+  destacado,
+  onSelect,
+}: {
+  slots: BracketSlotV2[];
+  gap: string;
+  destacado: boolean;
+  onSelect: (b: BracketSlotV2) => void;
+}) {
+  if (slots.length === 0) {
+    return <div className="border-r border-border/30" />;
+  }
+  return (
+    <div className={`flex flex-col justify-around flex-1 ${gap} border-r border-border/30 pr-2`}>
+      {slots.map((b) => (
+        <CardConfrontoBracket
+          key={b.id}
+          bracket={b}
+          destacado={destacado}
+          onClick={() => {
+            if (b.driver_a_id && b.driver_b_id) {
+              onSelect(b);
+            }
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ───────────── Centro do bracket — Campeão / Trophy ───────────── */
+
+function CampeaoCentro({
+  campeao,
+}: {
+  campeao: { nome: string | null; photo: string | null } | null;
+}) {
+  if (campeao) {
+    return (
+      <div className="rounded-lg border-2 border-primary bg-primary/10 p-3 flex flex-col items-center gap-2 w-full">
+        <Crown className="h-5 w-5 text-primary" />
+        <AvatarMotorista nome={campeao.nome} url={campeao.photo} size={56} />
+        <p className="text-xs font-bold text-center truncate w-full">
+          {campeao.nome ?? "—"}
+        </p>
+        <p className="text-[10px] uppercase tracking-wider text-primary font-bold">
+          🏆 Campeão
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-lg border-2 border-dashed border-border bg-card p-3 flex flex-col items-center gap-2 w-full">
+      <Trophy className="h-10 w-10 text-primary/70" />
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
+        🏆 a definir
+      </p>
     </div>
   );
 }
@@ -206,7 +347,7 @@ function CardConfrontoBracket({ bracket, destacado, onClick }: CardProps) {
       disabled={!definido}
       className={`w-full rounded-md border bg-card text-left transition-colors ${
         isMy
-          ? "border-primary ring-1 ring-primary/40"
+          ? "border-primary ring-2 ring-primary/40"
           : "border-border/40"
       } ${destacado ? "ring-2 ring-accent/40" : ""} ${
         definido ? "hover:bg-muted/40 cursor-pointer" : "cursor-default opacity-90"
@@ -246,8 +387,8 @@ function SlotMotorista({
 }) {
   if (vago) {
     return (
-      <div className="flex items-center gap-2 px-2 py-1.5">
-        <div className="h-7 w-7 rounded-full bg-muted animate-pulse shrink-0" />
+      <div className="flex items-center gap-2 px-2 py-2">
+        <div className="h-10 w-10 rounded-full bg-muted animate-pulse shrink-0" />
         <span className="flex-1 text-xs italic text-muted-foreground truncate">
           A definir
         </span>
@@ -257,11 +398,11 @@ function SlotMotorista({
   }
   return (
     <div
-      className={`flex items-center gap-2 px-2 py-1.5 ${
-        venceu ? "bg-primary/10" : ""
+      className={`flex items-center gap-2 px-2 py-2 ${
+        venceu ? "bg-primary/15" : ""
       }`}
     >
-      <AvatarMotorista nome={nome} url={photo} size={28} />
+      <AvatarMotorista nome={nome} url={photo} size={40} />
       <span
         className={`flex-1 text-xs truncate ${venceu ? "font-bold" : "font-medium"}`}
       >
