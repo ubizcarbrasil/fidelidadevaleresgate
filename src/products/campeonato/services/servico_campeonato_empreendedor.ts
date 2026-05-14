@@ -348,18 +348,31 @@ export async function criarTemporadaCompleta(
  *      em caso de PGRST202 (function not found in cache).
  */
 export async function executarSeedingTemporada(seasonId: string) {
+  const ehJaSemeada = (msg: string) =>
+    /já foi semeada|already seeded|duelo_season_tiers_season_id_tier_order_key|duplicate key/i.test(
+      msg,
+    );
+
   // Caminho principal: edge function com service_role
   try {
     const { data, error } = await supabase.functions.invoke(
       "admin-brand-actions",
       { body: { action: "seed_season", season_id: seasonId } },
     );
-    if (error) throw error;
+    if (error) {
+      const msg = (error as any)?.message ?? String(error);
+      if (ehJaSemeada(msg)) return { already_seeded: true };
+      throw error;
+    }
     if (data && typeof data === "object" && "error" in data && data.error) {
-      throw new Error(String((data as any).error));
+      const msg = String((data as any).error);
+      if (ehJaSemeada(msg)) return { already_seeded: true };
+      throw new Error(msg);
     }
     return (data as any)?.result ?? data;
   } catch (edgeErr) {
+    const msg = (edgeErr as any)?.message ?? String(edgeErr);
+    if (ehJaSemeada(msg)) return { already_seeded: true };
     console.warn(
       "[executarSeedingTemporada] edge function falhou, tentando RPC direto:",
       edgeErr,
@@ -378,7 +391,11 @@ export async function executarSeedingTemporada(seasonId: string) {
     await new Promise((r) => setTimeout(r, 1500));
     ({ data, error } = await tentar());
   }
-  if (error) throw error;
+  if (error) {
+    const msg = (error as any)?.message ?? String(error);
+    if (ehJaSemeada(msg)) return { already_seeded: true };
+    throw error;
+  }
   return data;
 }
 
