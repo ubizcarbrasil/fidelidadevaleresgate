@@ -219,14 +219,28 @@ export default function PassoMotoristasESeries({
     return m;
   }, [distribuicao]);
 
+  const indiceMotoristas = useMemo(() => {
+    const m = new Map<string, { driver_name: string | null }>();
+    for (const x of ranking ?? [])
+      m.set(x.customer_id, { driver_name: x.driver_name });
+    return m;
+  }, [ranking]);
+
   const seriesAlocadas = useMemo(
     () =>
-      series.map((s) => ({
-        name: s.name,
-        size: s.size,
-        alocados: distribuicao[s.name]?.length ?? 0,
-      })),
-    [series, distribuicao],
+      series.map((s) => {
+        const ids = distribuicao[s.name] ?? [];
+        return {
+          name: s.name,
+          size: s.size,
+          alocados: ids.length,
+          ordem: ids.map((id) => ({
+            customer_id: id,
+            driver_name: indiceMotoristas.get(id)?.driver_name ?? null,
+          })),
+        };
+      }),
+    [series, distribuicao, indiceMotoristas],
   );
 
   const calculo = useMemo(
