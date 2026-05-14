@@ -106,10 +106,11 @@ export async function obterDashboardCampeonato(
 
 export async function obterKpisCampeonato(
   brandId: string,
+  branchId?: string | null,
 ): Promise<DashboardKpisResponse> {
   const { data, error } = await supabase.rpc(
     "brand_get_campeonato_kpis" as never,
-    { p_brand_id: brandId } as never,
+    { p_brand_id: brandId, p_branch_id: branchId ?? null } as never,
   );
   if (error) throw error;
   return (

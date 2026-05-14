@@ -127,6 +127,7 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
       {isCampeonato && (
         <DashboardOperacaoCampeonato
           brandId={brandId}
+          branchId={branchId}
           onAcaoCta={() => {
             if (!ativa) {
               setModalCriar(true);

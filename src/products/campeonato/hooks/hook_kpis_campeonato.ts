@@ -3,12 +3,15 @@ import { obterKpisCampeonato } from "../services/servico_campeonato_empreendedor
 
 const STALE_KPIS = 30_000;
 
-export function useBrandCampeonatoKPIs(brandId?: string | null) {
+export function useBrandCampeonatoKPIs(
+  brandId?: string | null,
+  branchId?: string | null,
+) {
   return useQuery({
-    queryKey: ["empreendedor-campeonato-kpis", brandId],
+    queryKey: ["empreendedor-campeonato-kpis", brandId, branchId ?? null],
     enabled: !!brandId,
     staleTime: STALE_KPIS,
     refetchInterval: STALE_KPIS,
-    queryFn: () => obterKpisCampeonato(brandId!),
+    queryFn: () => obterKpisCampeonato(brandId!, branchId ?? null),
   });
 }

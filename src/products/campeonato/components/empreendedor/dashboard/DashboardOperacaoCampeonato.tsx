@@ -10,6 +10,7 @@ import SecaoRankings from "./SecaoRankings";
 
 interface Props {
   brandId: string;
+  branchId?: string | null;
   /** Callback executado quando o admin clica no CTA adaptativo. */
   onAcaoCta?: () => void;
 }
@@ -19,8 +20,8 @@ interface Props {
  * 3 seções verticais: Status, KPIs (2x2) e CTA adaptativo.
  * Rankings detalhados (Seção 3) ficam fora deste MVP.
  */
-export default function DashboardOperacaoCampeonato({ brandId, onAcaoCta }: Props) {
-  const { data, isLoading } = useBrandCampeonatoKPIs(brandId);
+export default function DashboardOperacaoCampeonato({ brandId, branchId, onAcaoCta }: Props) {
+  const { data, isLoading } = useBrandCampeonatoKPIs(brandId, branchId);
 
   if (isLoading) {
     return (
