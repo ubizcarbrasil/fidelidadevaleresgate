@@ -121,9 +121,13 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("campeonato") === "1") {
-      navigate("/motorista/campeonato");
+      const qs = new URLSearchParams();
+      qs.set("brandId", brand.id);
+      const sk = params.get("sessionKey");
+      if (sk) qs.set("sessionKey", sk);
+      navigate(`/motorista/campeonato?${qs.toString()}`);
     }
-  }, [navigate]);
+  }, [navigate, brand.id]);
 
   if (loading || loadingBranch) {
     return (
@@ -156,7 +160,14 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             onOpenCityRedeem={() => marketplaceEnabled && setHubOverlay({ type: "cityPartners" })}
             onOpenCityRedemptions={() => setHubOverlay({ type: "cityRedemptions" })}
             onOpenBuyPoints={() => buyPointsEnabled && setHubOverlay({ type: "buyPoints" })}
-            onOpenCampeonato={() => navigate("/motorista/campeonato")}
+            onOpenCampeonato={() => {
+              const params = new URLSearchParams(window.location.search);
+              const qs = new URLSearchParams();
+              qs.set("brandId", brand.id);
+              const sk = params.get("sessionKey");
+              if (sk) qs.set("sessionKey", sk);
+              navigate(`/motorista/campeonato?${qs.toString()}`);
+            }}
             onActivateSearch={() => achadinhosEnabled && setShowHub(false)}
             achadinhosEnabled={achadinhosEnabled}
             marketplaceEnabled={marketplaceEnabled}
@@ -280,7 +291,12 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
           onOpenChange={setNotifOpen}
           onNavigate={(url) => {
             if (url.includes("campeonato=1")) {
-              navigate("/motorista/campeonato");
+              const params = new URLSearchParams(window.location.search);
+              const qs = new URLSearchParams();
+              qs.set("brandId", brand.id);
+              const sk = params.get("sessionKey");
+              if (sk) qs.set("sessionKey", sk);
+              navigate(`/motorista/campeonato?${qs.toString()}`);
             }
           }}
         />
