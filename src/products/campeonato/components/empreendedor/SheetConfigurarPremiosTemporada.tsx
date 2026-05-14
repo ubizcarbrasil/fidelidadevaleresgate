@@ -60,7 +60,11 @@ export default function SheetConfigurarPremiosTemporada({
                 motoristas para configurar prêmios por posição.
               </p>
             ) : (
-              <EditorPremiosTemporada seasonId={seasonId} tiers={tiers} />
+              <EditorPremiosTemporada
+                seasonId={seasonId}
+                tiers={tiers}
+                incluirArtilharia={false}
+              />
             )}
           </TabsContent>
 
