@@ -86,6 +86,7 @@ export default function FormCriarTemporadaAutomatico({
         .eq("branch_id", branchId)
         .eq("year", datasCalculadas!.year)
         .eq("month", datasCalculadas!.month)
+        .is("cancelled_at", null)
         .maybeSingle();
       if (error) throw error;
       return data;
