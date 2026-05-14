@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import DriverBuyPointsOverlay from "@/components/driver/DriverBuyPointsOverlay";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import DriverMarketplace from "@/components/driver/DriverMarketplace";
@@ -20,7 +20,6 @@ import DriverCityPartnersPage from "@/components/driver/DriverCityPartnersPage";
 import DriverCityRedemptionHistory from "@/components/driver/DriverCityRedemptionHistory";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 import DriverCategoryPage from "@/components/driver/DriverCategoryPage";
-import CampeonatoMotoristaPanel from "@/components/driver/campeonato/CampeonatoMotoristaPanel";
 import BadgeNotificacoes from "@/products/campeonato/components/notificacoes/BadgeNotificacoes";
 import OverlayNotificacoes from "@/products/campeonato/components/notificacoes/OverlayNotificacoes";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
@@ -34,6 +33,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   isAdminSession: boolean;
 }) {
   const { driver, loading, refreshDriver } = useDriverSession();
+  const navigate = useNavigate();
   const settings = brand?.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
@@ -80,7 +80,6 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
     | { type: "cityPartners" }
     | { type: "cityRedemptions" }
     | { type: "buyPoints" }
-    | { type: "campeonato" }
     | { type: "category"; cat: DealCategory }
     | { type: "deal"; deal: any }
     | { type: "redeemDeal"; deal: any }
@@ -122,9 +121,9 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("campeonato") === "1") {
-      setHubOverlay({ type: "campeonato" });
+      navigate("/motorista/campeonato");
     }
-  }, []);
+  }, [navigate]);
 
   if (loading || loadingBranch) {
     return (
@@ -157,7 +156,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             onOpenCityRedeem={() => marketplaceEnabled && setHubOverlay({ type: "cityPartners" })}
             onOpenCityRedemptions={() => setHubOverlay({ type: "cityRedemptions" })}
             onOpenBuyPoints={() => buyPointsEnabled && setHubOverlay({ type: "buyPoints" })}
-            onOpenCampeonato={() => setHubOverlay({ type: "campeonato" })}
+            onOpenCampeonato={() => navigate("/motorista/campeonato")}
             onActivateSearch={() => achadinhosEnabled && setShowHub(false)}
             achadinhosEnabled={achadinhosEnabled}
             marketplaceEnabled={marketplaceEnabled}
@@ -264,14 +263,6 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             onBack={() => setHubOverlay(null)}
           />
         )}
-        {hubOverlay?.type === "campeonato" && (
-          <CampeonatoMotoristaPanel
-            brandId={brand.id}
-            fontHeading={fontHeading}
-            onBack={() => setHubOverlay(null)}
-          />
-        )}
-
         {/* Badge de notificações fixo no topo direito */}
         <div className="fixed top-2 right-2 z-50">
           <BadgeNotificacoes
@@ -289,7 +280,7 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
           onOpenChange={setNotifOpen}
           onNavigate={(url) => {
             if (url.includes("campeonato=1")) {
-              setHubOverlay({ type: "campeonato" });
+              navigate("/motorista/campeonato");
             }
           }}
         />
