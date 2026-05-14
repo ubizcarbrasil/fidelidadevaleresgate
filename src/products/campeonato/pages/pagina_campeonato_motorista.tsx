@@ -386,30 +386,29 @@ function HeaderCampeonato({
   onRefresh,
 }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-40 bg-card backdrop-blur border-b border-border">
+    <header className="sticky top-0 z-40 scorebug-bar backdrop-blur border-b-2 border-primary/40">
       <div className="max-w-lg mx-auto flex items-center gap-2 px-3 py-3">
         <button
           onClick={onAbrirDrawer}
-          className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
+          className="h-10 w-10 rounded-lg flex items-center justify-center hover:bg-primary/15 transition-colors"
           aria-label="Abrir menu"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-6 w-6 text-primary" />
         </button>
 
         <div className="flex-1 min-w-0 flex items-center justify-center gap-2">
-          <Trophy className="h-5 w-5 text-primary flex-shrink-0" />
+          <Trophy className="h-6 w-6 text-primary flex-shrink-0 drop-shadow-[0_0_6px_hsl(var(--primary)/0.6)]" />
           <div className="min-w-0 text-center">
             {loading ? (
               <Skeleton className="h-4 w-32 mx-auto" />
             ) : (
               <>
                 <p
-                  className="font-bold text-sm truncate leading-tight"
-                  style={{ fontFamily: fontHeading }}
+                  className="font-display-camp text-lg truncate leading-none uppercase tracking-wide"
                 >
                   {nomeCampeonato}
                 </p>
-                <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground leading-tight">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-primary/80 font-condensed-camp font-bold leading-tight mt-0.5">
                   {subtitulo}
                 </p>
               </>
@@ -420,7 +419,7 @@ function HeaderCampeonato({
 
         <button
           onClick={onAbrirSeries}
-          className="h-9 px-2 rounded-lg flex items-center gap-1 bg-muted hover:bg-accent text-xs font-semibold transition-colors"
+          className="h-10 px-2.5 rounded-lg flex items-center gap-1 bg-primary/15 hover:bg-primary/25 text-xs font-display-camp uppercase tracking-wider text-primary border border-primary/40 transition-colors"
           aria-label="Trocar série"
         >
           <span className="truncate max-w-[80px]">{serieNome}</span>
@@ -429,10 +428,10 @@ function HeaderCampeonato({
 
         <button
           onClick={onRefresh}
-          className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
+          className="h-10 w-10 rounded-lg flex items-center justify-center hover:bg-primary/15 transition-colors"
           aria-label="Atualizar"
         >
-          <RotateCcw className="h-4 w-4" />
+          <RotateCcw className="h-4 w-4 text-primary" />
         </button>
       </div>
     </header>
