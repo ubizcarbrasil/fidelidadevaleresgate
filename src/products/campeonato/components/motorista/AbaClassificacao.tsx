@@ -72,13 +72,14 @@ export default function AbaClassificacao({ seasonId, tierId, driverId }: Props) 
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card overflow-hidden font-mono">
-      {/* Cabeçalho da tabela */}
-      <div className="sticky top-[97px] z-20 bg-card/95 backdrop-blur border-b border-primary/20">
-        <div className="flex items-center gap-1.5 px-3 py-2 text-[11px] tracking-wider text-foreground/75 font-bold">
-          <span className="w-5 text-center" />
-          <span className="flex-1" />
-          <span className="w-7 text-right">P</span>
+    <div className="rounded-xl border-2 border-primary/40 bg-card overflow-hidden shadow-xl">
+      {/* Cabeçalho da tabela — estilo Brasileirão */}
+      <div className="sticky top-[97px] z-20 scorebug-bar">
+        <div className="flex items-center gap-1.5 px-3 py-2.5 text-[10px] tracking-[0.18em] font-condensed-camp font-bold uppercase">
+          <span className="w-6 text-center">#</span>
+          <span className="w-7" />
+          <span className="flex-1">Motorista</span>
+          <span className="w-8 text-right text-primary">P</span>
           <span className="w-7 text-right">J</span>
           <span className="w-6 text-right">V</span>
           <span className="w-6 text-right">E</span>
@@ -104,17 +105,17 @@ export default function AbaClassificacao({ seasonId, tierId, driverId }: Props) 
       </ul>
 
       {/* Rodapé: legenda + atualização */}
-      <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-border bg-muted/20 text-[10px] text-muted-foreground">
+      <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-border bg-muted/20 text-[10px] text-muted-foreground font-condensed-camp uppercase tracking-wider">
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <span
-              className="inline-block h-2 w-2 rounded-sm"
+              className="inline-block h-3 w-1 rounded-sm"
               style={{ background: "hsl(var(--series-promotion))" }}
             />
             Promoção
           </span>
           <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-sm bg-destructive" />
+            <span className="inline-block h-3 w-1 rounded-sm bg-destructive" />
             Rebaixamento
           </span>
         </div>
@@ -135,53 +136,75 @@ function LinhaTabela({
 }) {
   const corPosicao =
     linha.zone === "promotion"
-      ? "text-[hsl(var(--series-promotion))] font-extrabold"
+      ? "text-[hsl(var(--series-promotion))]"
       : linha.zone === "relegation"
-        ? "text-destructive font-extrabold"
-        : linha.is_me
-          ? "text-foreground"
-          : "text-muted-foreground";
+        ? "text-destructive"
+        : "text-muted-foreground";
 
-  const bgLinha = linha.is_me
-    ? "bg-primary/10 ring-1 ring-primary/40"
-    : "";
+  const classesLinha = linha.is_me
+    ? "row-me"
+    : linha.zone === "relegation"
+      ? "row-relegation"
+      : linha.zone === "promotion"
+        ? "row-promotion"
+        : "";
 
   return (
     <>
       {mostrarSeparadorAcima && (
-        <li className="border-t-2 border-destructive/60" aria-hidden />
+        <li className="border-t-2 border-destructive/70" aria-hidden />
       )}
       <li
-        className={`flex items-center gap-1.5 px-3 py-2 text-[13px] ${bgLinha}`}
+        className={`flex items-center gap-1.5 px-3 py-2.5 text-[13px] ${classesLinha} transition-colors`}
       >
-        <span className={`w-5 text-center tabular-nums ${corPosicao}`}>
+        <span
+          className={`w-6 text-center tabular-nums font-display-camp text-lg ${corPosicao}`}
+        >
           {linha.rank}
         </span>
         <AvatarMotorista
           nome={linha.driver_name}
           url={linha.photo_url}
-          size={26}
+          size={32}
         />
         <span
-          className={`flex-1 truncate font-sans ${linha.is_me ? "font-bold" : ""}`}
+          className={`flex-1 truncate ${
+            linha.is_me
+              ? "font-display-camp text-base text-primary uppercase tracking-wide"
+              : "font-semibold text-foreground"
+          }`}
         >
           {linha.is_me ? "VOCÊ" : (linha.driver_name ?? "—")}
         </span>
-        <span className="w-7 text-right tabular-nums font-extrabold text-foreground">
+        <span className="w-8 text-right tabular-nums font-display-camp text-lg text-primary">
           {linha.points}
         </span>
-        <span className="w-7 text-right tabular-nums text-muted-foreground">
+        <span className="w-7 text-right tabular-nums text-muted-foreground font-condensed-camp font-semibold">
           {linha.matches_played}
         </span>
-        <span className="w-6 text-right tabular-nums">{linha.wins}</span>
-        <span className="w-6 text-right tabular-nums">{linha.draws}</span>
-        <span className="w-6 text-right tabular-nums">{linha.losses}</span>
-        <span className="w-8 text-right tabular-nums">
+        <span className="w-6 text-right tabular-nums font-condensed-camp font-semibold text-foreground">
+          {linha.wins}
+        </span>
+        <span className="w-6 text-right tabular-nums font-condensed-camp font-semibold text-muted-foreground">
+          {linha.draws}
+        </span>
+        <span className="w-6 text-right tabular-nums font-condensed-camp font-semibold text-muted-foreground">
+          {linha.losses}
+        </span>
+        <span
+          className={`w-8 text-right tabular-nums font-condensed-camp font-bold ${
+            linha.goal_diff > 0
+              ? "text-[hsl(var(--series-promotion))]"
+              : linha.goal_diff < 0
+                ? "text-destructive"
+                : "text-muted-foreground"
+          }`}
+        >
           {linha.goal_diff > 0 ? `+${linha.goal_diff}` : linha.goal_diff}
         </span>
       </li>
       {mostrarSeparadorAbaixo && (
-        <li className="border-t border-dashed border-[hsl(var(--series-promotion))/40]" aria-hidden />
+        <li className="border-t border-dashed border-[hsl(var(--series-promotion))]/50" aria-hidden />
       )}
     </>
   );

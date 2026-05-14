@@ -1,71 +1,107 @@
-## Etapa A — Tela do Campeonato (Motorista) com fidelidade visual às referências
 
-Objetivo: refazer a UI de `/motorista/campeonato` espelhando as 4 referências enviadas (drawer lateral, header com seletor de temporada, classificação com colunas P/J/V/E/D/GP/SG e zona de rebaixamento vermelha, e chaveamento mata-mata em espelho com troféu). Sem mexer em backend/regras — só camada de apresentação reutilizando hooks e RPCs já existentes em `src/products/campeonato/`.
+# Plano definitivo — Campeonato
 
-### Escopo visual (somente frontend)
+Dois problemas, duas correções. Sem mais loops.
 
-1. **Header fixo (estilo print 4)**
-   - Botão hamburguer à esquerda → abre drawer.
-   - Centro: escudo da temporada + nome ("Campeonato Maio/2026") + sub-label "CLASSIFICAÇÃO/CHAVEAMENTO/…" conforme aba ativa.
-   - Direita: botão refresh (invalida queries da aba ativa).
-   - Fundo verde-escuro do tema da marca, texto claro.
+---
 
-2. **Drawer lateral (estilo print 3)**
-   - Card no topo: escudo + "Campeonato {Mês/Ano}" + chevron "Toque para alterar" (abre bottom-sheet com temporadas anteriores/atuais — `obterTemporadasDoMotorista`).
-   - Itens: Tabela de Jogos, Classificação, Artilharia, Chaveamento, Recordes, Premiação, Como funciona.
-   - Item ativo destacado em verde-neon com leve fundo claro.
-   - Ícones lucide (Calendar, Trophy, Target, GitBranch, Award, Gift, HelpCircle).
+## Parte 1 — Temporada Maio/2026 (destrava de vez)
 
-3. **Aba Classificação (estilo prints 1 e 2)**
-   - Cabeçalho de colunas alinhado à direita: P · J · V · E · D · GP · SG.
-   - Linhas com posição (azul nos top-4, branco no meio, vermelho nos últimos 4 = zona de rebaixamento), foto/escudo do motorista, nome, números monoespaçados.
-   - Linha do motorista logado destacada com leve highlight + ícone "você".
-   - Zona de rebaixamento separada por linha vermelha fina + linhas com cor #ef4444 no número da posição.
-   - Densidade compacta para 430px.
+**Estado real do banco agora:** Não há mais nenhuma temporada Maio/2026 ativa na sua cidade (`aa1e7a2c…`). Todas as 6 estão canceladas. A única "ativa" é em outra cidade (`ece001ed…`). O bloqueio do modal era cache obsoleto do React Query.
 
-4. **Aba Chaveamento (estilo print 5)**
-   - Layout espelhado: 4 partidas à esquerda, 4 à direita, convergindo no centro com troféu 🏆.
-   - "Cards" arredondados com borda verde-neon, foto + nome curto.
-   - Linhas conectoras desenhadas com SVG (não divs) para fidelidade.
-   - Scroll horizontal apenas se necessário; layout calibrado para 430x761.
-   - Reaproveita `obterBracketV2` / `BracketResponseV2`.
+**Correções:**
+1. `useCancelarTemporada` (hook_mutations_campeonato): após sucesso, invalidar **na hora** as queries `check-season-conflict` e `check-season-overlap` para o `brandId`/`branchId` envolvidos. Hoje só invalida a lista de temporadas — por isso o aviso vermelho continuava aparecendo após cancelar.
+2. `FormCriarTemporadaAutomatico` e `FormCriarTemporadaAvancado`: na mensagem do conflito, mostrar **ID curto + data de criação** da temporada conflitante (para você saber qual é).
+3. `useCriarTemporadaCompleta`: detectar também o índice atual `campeonato_seasons_active_brand_branch_year_month_key` no parsing de erro de duplicidade (hoje só reconhece o nome legado).
+4. Validação final: abrir o modal de criação Maio/2026 → confirmar zero aviso vermelho → criar com sucesso.
 
-5. **Demais abas (Tabela de Jogos, Artilharia, Recordes, Premiação, Como funciona)**
-   - Mantêm conteúdo atual mas ganham o mesmo header + cabeçalhos com sub-label.
-   - Cards de confronto (`CardDueloFutebol`) ajustados para o visual verde-neon do print 5 (borda neon, foto circular, contador "DR" para corridas).
+---
 
-### Arquivos a criar
+## Parte 2 — App do motorista: visual de transmissão de futebol
 
-```
-src/products/campeonato/components/motorista/
-  layout_campeonato_motorista.tsx         (header + drawer + outlet)
-  drawer_campeonato_motorista.tsx         (drawer estilo print 3)
-  seletor_temporada_bottomsheet.tsx       (bottom sheet "Toque para alterar")
-  tabela_classificacao_futebol.tsx        (estilo prints 1/2 com zona rebaixamento)
-  chaveamento_espelhado.tsx               (bracket SVG espelhado com troféu)
-src/products/campeonato/styles/
-  tokens_campeonato.css                   (verde-neon, zona vermelha, escuro futebol)
-```
+**Problema:** a estrutura existe (drawer, abas, cards de duelo, classificação, chaveamento), mas o **acabamento visual** ainda parece um app genérico de admin — não a transmissão da Globo/SporTV que você mostrou nas referências. O tema verde existe em CSS mas os componentes não exploram nem metade do que a referência exige.
 
-### Arquivos a editar
+**Reconstrução completa da camada visual (sem mexer em hook/RPC/banco):**
 
-- `src/products/campeonato/pages/rota_campeonato_motorista.tsx` — passar a usar o novo `layout_campeonato_motorista`.
-- `src/products/campeonato/components/motorista/card_duelo_futebol.tsx` — ajuste fino de borda/cor neon.
-- `src/products/campeonato/components/motorista/lista_confrontos_rodada.tsx` — header de rodada com setas `< Rodada N >` (estilo print 5 do upload anterior).
-- `src/index.css` — tokens `--campeonato-*` (neon, escuro, zona).
+### A — Header de transmissão
+- Substituir o header atual por um **placar de transmissão**: logo do campeonato à esquerda, nome em fonte display condensada (estilo Bebas Neue), badge da fase pulsante, linha de status com fase + dias restantes em tabular-nums grandes.
+- Faixa horizontal de séries (chips A/B/C/D) com a do motorista destacada em neon lime e underline animado — substitui o seletor "Trocar série" tímido de hoje.
+- Banner foto-obrigatória vira **banner full-bleed vermelho** com ícone de câmera grande, não amarelinho discreto.
 
-### Fora do escopo desta etapa
+### B — Card de duelo no estilo "scorebug" da TV
+Refazer `card_duelo_futebol.tsx`:
+- Avatares **80px** (hoje 40px), borda dupla + halo neon quando AO VIVO.
+- Placar central tipográfico **48-64px** em fonte condensada, com separador `×` cromado.
+- Faixa superior preta com hora + cidade (estilo SporTV).
+- Faixa inferior com barra de progresso do tempo (24h) preenchendo da esquerda em neon, e texto "AO VIVO" piscante alinhado ao padrão de transmissão.
+- Faixa de "última corrida há Xmin" abaixo do placar, atualizando em tempo real.
+- Estado vencedor: lado vencedor ganha **moldura dourada + coroa**; perdedor desbota em escala de cinza.
 
-- Foto obrigatória bloqueando inscrição → Etapa B.
-- Listagem de "próximos campeonatos" + checkout → Etapa C.
-- Notificações automáticas no chat do motorista → Etapa D.
-- Painel admin de agendamento futuro → Etapa E.
+### C — Tabela de classificação Brasileirão
+Refazer `AbaClassificacao.tsx`:
+- Colunas alinhadas como tabela do Brasileirão: `# | Time | P | DR | V | E | D | SG`.
+- Linhas com **foto circular 32px** + nome do motorista.
+- Zona de classificação ao mata-mata: faixa lateral verde nas N primeiras linhas.
+- Zona de rebaixamento: faixa lateral **vermelha** nas últimas linhas (já existe mas precisa ser visualmente óbvia).
+- Linha do motorista logado: fundo neon-lime suave + sticky no topo quando rolar.
+- Header sticky com mesma estrutura.
 
-### Validação
+### D — Chaveamento mata-mata espelhado
+Refazer `AbaChaveamento.tsx`:
+- Layout **espelhado**: chave esquerda (oitavas → quartas → semi) | troféu central | chave direita (semi → quartas → oitavas).
+- Conectores SVG curvos entre rodadas (não quadrados).
+- Cada slot vira mini scorecard com 2 fotos circulares + placar.
+- Troféu central anima (pulse + brilho) quando há campeão.
+- Em mobile (430px): vira accordion vertical por rodada com indicador "← Você está aqui".
 
-- Viewport 430x761 (PWA do motorista).
-- Comparar visualmente cada aba com as referências (`browser--screenshot`).
-- Conferir que abrir/fechar drawer, trocar temporada e refresh funcionam sem regressão.
-- Smoke test E2E existente (`tests/e2e/campeonato/01-drawer-navigation.spec.ts`) continua verde.
+### E — Drawer estilo app de futebol
+- Fundo verde escuro com pattern sutil de gramado (CSS gradient, sem imagem).
+- Item ativo: barra lateral neon de 4px + texto em bold + ícone preenchido.
+- Header do drawer: foto do motorista 64px, nome, série em badge, "Você está na X posição" em destaque.
+- Botão "Trocar foto" direto no drawer (não só no banner).
 
-Confirma para eu iniciar a implementação da Etapa A?
+### F — Tokens visuais novos em `index.css`
+Adicionar dentro de `.tema-campeonato`:
+- `--scorebug-bg`, `--scorebug-border` (preto + neon)
+- `--gold` (HSL) para vencedores e troféu
+- `--relegation-red` para zona vermelha
+- Fonte: importar **Bebas Neue** + **Barlow Condensed** via Google Fonts (já temos provisão em `fontPair`) e aplicar via `--font-display-campeonato` apenas dentro de `.tema-campeonato`.
+- Animação `@keyframes neon-pulse` para AO VIVO e troféu.
+
+### G — Limpeza
+- Remover `BannerFotoObrigatoria` amarelo atual e substituir pelo full-bleed vermelho.
+- Remover placeholder "Em construção" residual de qualquer aba (validar todas).
+- Corrigir warning do console: `ListaTemporadasAnteriores.tsx:182` — falta `key` em uma `<li>` (rápido, mas visível como bug).
+
+---
+
+## Arquivos afetados
+
+**Parte 1 (4 arquivos):**
+- `src/products/campeonato/hooks/hook_mutations_campeonato.ts`
+- `src/products/campeonato/components/empreendedor/FormCriarTemporadaAutomatico.tsx`
+- `src/products/campeonato/components/empreendedor/FormCriarTemporadaAvancado.tsx`
+- `src/products/campeonato/components/empreendedor/ListaTemporadasAnteriores.tsx` (key fix)
+
+**Parte 2 (8 arquivos):**
+- `src/index.css` (tokens + fontes + keyframes)
+- `src/products/campeonato/pages/pagina_campeonato_motorista.tsx` (header + banner)
+- `src/products/campeonato/components/motorista/card_duelo_futebol.tsx`
+- `src/products/campeonato/components/motorista/AbaClassificacao.tsx`
+- `src/products/campeonato/components/motorista/AbaChaveamento.tsx`
+- `src/products/campeonato/components/motorista/BracketCompleto.tsx`
+- Novo: `src/products/campeonato/components/motorista/header_transmissao.tsx`
+- Novo: `src/products/campeonato/components/motorista/chips_series.tsx`
+
+**Fora do escopo desta etapa:** Etapas C/D/E (próximos campeonatos, notificações chat, painel admin de programação) — já existem e ficam para depois.
+
+---
+
+## Validação
+
+1. Cancelar uma temporada teste → aviso vermelho some na hora, sem F5.
+2. Criar Maio/2026 com sucesso na sua cidade.
+3. Abrir `/motorista/campeonato?brandId=…` em viewport 430×761 → comparar lado a lado com as 5 referências que você enviou: header de transmissão, cards scorebug, classificação Brasileirão, chaveamento espelhado, drawer estádio.
+4. Console limpo (zero warnings).
+
+Aprova para eu implementar tudo de uma vez?

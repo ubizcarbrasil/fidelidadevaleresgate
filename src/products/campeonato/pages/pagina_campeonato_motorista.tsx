@@ -335,26 +335,25 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
 
 function BannerFotoObrigatoria({ onClick }: { onClick: () => void }) {
   return (
-    <div className="sticky top-[57px] z-30 bg-amber-500/15 border-b border-amber-500/40">
-      <div className="max-w-lg mx-auto flex items-center gap-3 px-4 py-2.5">
-        <div className="h-9 w-9 rounded-full bg-amber-500/25 flex items-center justify-center flex-shrink-0">
-          <Camera className="h-4 w-4 text-amber-700 dark:text-amber-300" />
+    <div className="sticky top-[57px] z-30 banner-alerta-foto">
+      <div className="max-w-lg mx-auto flex items-center gap-3 px-4 py-3">
+        <div className="h-11 w-11 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 ring-2 ring-white/40">
+          <Camera className="h-5 w-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold leading-tight text-amber-900 dark:text-amber-100">
-            Foto obrigatória para participar
+          <p className="font-display-camp text-base leading-tight uppercase tracking-wide">
+            Foto obrigatória
           </p>
-          <p className="text-[10px] leading-tight text-amber-800/80 dark:text-amber-200/80">
-            Sem foto você não consegue se inscrever em campeonatos.
+          <p className="text-[11px] leading-tight opacity-90">
+            Sem foto você não joga o campeonato.
           </p>
         </div>
         <Button
           size="sm"
-          variant="default"
           onClick={onClick}
-          className="h-8 px-3 text-xs bg-amber-600 hover:bg-amber-700 text-white"
+          className="h-9 px-4 text-xs font-bold uppercase tracking-wider bg-white text-destructive hover:bg-white/90 shadow-md"
         >
-          Adicionar
+          Enviar agora
         </Button>
       </div>
     </div>
@@ -387,30 +386,29 @@ function HeaderCampeonato({
   onRefresh,
 }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-40 bg-card backdrop-blur border-b border-border">
+    <header className="sticky top-0 z-40 scorebug-bar backdrop-blur border-b-2 border-primary/40">
       <div className="max-w-lg mx-auto flex items-center gap-2 px-3 py-3">
         <button
           onClick={onAbrirDrawer}
-          className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
+          className="h-10 w-10 rounded-lg flex items-center justify-center hover:bg-primary/15 transition-colors"
           aria-label="Abrir menu"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-6 w-6 text-primary" />
         </button>
 
         <div className="flex-1 min-w-0 flex items-center justify-center gap-2">
-          <Trophy className="h-5 w-5 text-primary flex-shrink-0" />
+          <Trophy className="h-6 w-6 text-primary flex-shrink-0 drop-shadow-[0_0_6px_hsl(var(--primary)/0.6)]" />
           <div className="min-w-0 text-center">
             {loading ? (
               <Skeleton className="h-4 w-32 mx-auto" />
             ) : (
               <>
                 <p
-                  className="font-bold text-sm truncate leading-tight"
-                  style={{ fontFamily: fontHeading }}
+                  className="font-display-camp text-lg truncate leading-none uppercase tracking-wide"
                 >
                   {nomeCampeonato}
                 </p>
-                <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground leading-tight">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-primary/80 font-condensed-camp font-bold leading-tight mt-0.5">
                   {subtitulo}
                 </p>
               </>
@@ -421,7 +419,7 @@ function HeaderCampeonato({
 
         <button
           onClick={onAbrirSeries}
-          className="h-9 px-2 rounded-lg flex items-center gap-1 bg-muted hover:bg-accent text-xs font-semibold transition-colors"
+          className="h-10 px-2.5 rounded-lg flex items-center gap-1 bg-primary/15 hover:bg-primary/25 text-xs font-display-camp uppercase tracking-wider text-primary border border-primary/40 transition-colors"
           aria-label="Trocar série"
         >
           <span className="truncate max-w-[80px]">{serieNome}</span>
@@ -430,10 +428,10 @@ function HeaderCampeonato({
 
         <button
           onClick={onRefresh}
-          className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
+          className="h-10 w-10 rounded-lg flex items-center justify-center hover:bg-primary/15 transition-colors"
           aria-label="Atualizar"
         >
-          <RotateCcw className="h-4 w-4" />
+          <RotateCcw className="h-4 w-4 text-primary" />
         </button>
       </div>
     </header>
@@ -452,24 +450,24 @@ function SubHeaderRodada({
   onProxima: () => void;
 }) {
   return (
-    <div className="sticky top-[57px] z-30 bg-card/95 backdrop-blur border-b border-border">
-      <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-2">
+    <div className="sticky top-[57px] z-20 bg-card/95 backdrop-blur border-b border-primary/20">
+      <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-2.5">
         <button
           onClick={onAnterior}
-          className="h-8 w-8 rounded-md flex items-center justify-center hover:bg-muted transition-colors"
+          className="h-9 w-9 rounded-md flex items-center justify-center hover:bg-primary/15 transition-colors text-primary"
           aria-label="Rodada anterior"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-5 w-5" />
         </button>
-        <p className="text-sm font-bold tracking-wide uppercase text-muted-foreground">
+        <p className="font-display-camp text-xl uppercase tracking-[0.18em] text-foreground">
           {rotulo}
         </p>
         <button
           onClick={onProxima}
-          className="h-8 w-8 rounded-md flex items-center justify-center hover:bg-muted transition-colors"
+          className="h-9 w-9 rounded-md flex items-center justify-center hover:bg-primary/15 transition-colors text-primary"
           aria-label="Próxima rodada"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-5 w-5" />
         </button>
       </div>
     </div>
