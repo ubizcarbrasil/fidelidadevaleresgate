@@ -197,11 +197,31 @@ export default function FormCriarTemporadaAutomatico({
       </div>
 
       <div className="space-y-2">
-        <Label className="text-sm">Duração de cada fase (horas)</Label>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="space-y-1.5">
+          <Label htmlFor="h-classificacao" className="text-sm">
+            Duração da Classificação (dias)
+          </Label>
+          <Input
+            id="h-classificacao"
+            type="number"
+            min={1}
+            max={60}
+            value={Math.max(1, Math.round(horas.duelo / 24))}
+            onChange={(e) => {
+              const dias = Math.max(1, Math.min(60, Math.floor(Number(e.target.value) || 0)));
+              setHoras((h) => ({ ...h, duelo: dias * 24 }));
+            }}
+          />
+          <p className="text-[11px] text-muted-foreground">
+            Fase de grupos / pontos corridos — janela em que todos os motoristas
+            da série acumulam pontos. Recomendado: ao menos 14 dias para uma
+            série de 16 motoristas.
+          </p>
+        </div>
+        <Label className="text-sm">Duração das fases do mata-mata (horas)</Label>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {(
             [
-              { k: "duelo" as const, label: "Duelo" },
               { k: "oitavas" as const, label: "Oitavas" },
               { k: "quartas" as const, label: "Quartas" },
               { k: "semi" as const, label: "Semi" },
