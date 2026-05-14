@@ -174,6 +174,42 @@ export default function PassoMotoristasESeries({
     void de;
   }
 
+  function reordenarManual(
+    serie: string,
+    driverId: string,
+    acao: "subir" | "descer" | "topo" | "fundo",
+  ) {
+    setDistribuicao((prev) => {
+      const arr = [...(prev[serie] ?? [])];
+      const idx = arr.indexOf(driverId);
+      if (idx === -1) return prev;
+      arr.splice(idx, 1);
+      let destino = idx;
+      if (acao === "subir") destino = Math.max(0, idx - 1);
+      else if (acao === "descer") destino = Math.min(arr.length, idx + 1);
+      else if (acao === "topo") destino = 0;
+      else if (acao === "fundo") destino = arr.length;
+      arr.splice(destino, 0, driverId);
+      return { ...prev, [serie]: arr };
+    });
+  }
+
+  function ordenarPorRanking(serie: string) {
+    if (!ranking) return;
+    const ordemRank = new Map(
+      ranking.map((m) => [m.customer_id, m.rank_position] as const),
+    );
+    setDistribuicao((prev) => {
+      const arr = [...(prev[serie] ?? [])];
+      arr.sort(
+        (a, b) =>
+          (ordemRank.get(a) ?? Number.MAX_SAFE_INTEGER) -
+          (ordemRank.get(b) ?? Number.MAX_SAFE_INTEGER),
+      );
+      return { ...prev, [serie]: arr };
+    });
+  }
+
   // Mapa customer_id → série
   const serieDe = useMemo(() => {
     const m = new Map<string, string>();
@@ -327,6 +363,8 @@ export default function PassoMotoristasESeries({
         selecionados={selecionados}
         motoristas={ranking ?? []}
         aoMover={moverManual}
+        aoReordenar={reordenarManual}
+        aoOrdenarPorRanking={ordenarPorRanking}
       />
     </div>
   );
