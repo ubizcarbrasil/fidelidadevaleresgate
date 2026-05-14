@@ -450,24 +450,24 @@ function SubHeaderRodada({
   onProxima: () => void;
 }) {
   return (
-    <div className="sticky top-[57px] z-30 bg-card/95 backdrop-blur border-b border-border">
-      <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-2">
+    <div className="sticky top-[57px] z-20 bg-card/95 backdrop-blur border-b border-primary/20">
+      <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-2.5">
         <button
           onClick={onAnterior}
-          className="h-8 w-8 rounded-md flex items-center justify-center hover:bg-muted transition-colors"
+          className="h-9 w-9 rounded-md flex items-center justify-center hover:bg-primary/15 transition-colors text-primary"
           aria-label="Rodada anterior"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-5 w-5" />
         </button>
-        <p className="text-sm font-bold tracking-wide uppercase text-muted-foreground">
+        <p className="font-display-camp text-xl uppercase tracking-[0.18em] text-foreground">
           {rotulo}
         </p>
         <button
           onClick={onProxima}
-          className="h-8 w-8 rounded-md flex items-center justify-center hover:bg-muted transition-colors"
+          className="h-9 w-9 rounded-md flex items-center justify-center hover:bg-primary/15 transition-colors text-primary"
           aria-label="Próxima rodada"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-5 w-5" />
         </button>
       </div>
     </div>
