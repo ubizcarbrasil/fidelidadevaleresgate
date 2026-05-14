@@ -27,6 +27,7 @@ interface Props {
   aoAlternar: (id: string) => void;
   aoSelecionarTodos: (ids: string[]) => void;
   aoLimparSelecao: () => void;
+  somenteLeitura?: boolean;
 }
 
 export default function TabelaMotoristasRanqueados({
@@ -37,6 +38,7 @@ export default function TabelaMotoristasRanqueados({
   aoAlternar,
   aoSelecionarTodos,
   aoLimparSelecao,
+  somenteLeitura = false,
 }: Props) {
   const { data, isLoading } = useMotoristasRanqueados(branchId, sinceDays);
   const [busca, setBusca] = useState("");
@@ -110,7 +112,7 @@ export default function TabelaMotoristasRanqueados({
               onClick={() =>
                 aoSelecionarTodos(filtrados.map((m) => m.customer_id))
               }
-              disabled={filtrados.length === 0}
+              disabled={filtrados.length === 0 || somenteLeitura}
             >
               Marcar visíveis
             </Button>
@@ -120,7 +122,7 @@ export default function TabelaMotoristasRanqueados({
               variant="ghost"
               className="h-7 px-2 text-xs text-destructive hover:text-destructive"
               onClick={aoLimparSelecao}
-              disabled={selecionados.size === 0}
+              disabled={selecionados.size === 0 || somenteLeitura}
             >
               Limpar
             </Button>
@@ -145,7 +147,9 @@ export default function TabelaMotoristasRanqueados({
                 <TableHead className="w-10">
                   <Checkbox
                     checked={todosVisiveisSelecionados}
+                    disabled={somenteLeitura}
                     onCheckedChange={(v) => {
+                      if (somenteLeitura) return;
                       if (v) aoSelecionarTodos(filtrados.map((m) => m.customer_id));
                       else aoLimparSelecao();
                     }}
@@ -167,14 +171,18 @@ export default function TabelaMotoristasRanqueados({
                   <TableRow
                     key={m.customer_id}
                     className={cn(
-                      "cursor-pointer",
+                      somenteLeitura ? "cursor-default" : "cursor-pointer",
                       sel && "bg-primary/5",
                     )}
-                    onClick={() => aoAlternar(m.customer_id)}
+                    onClick={() => {
+                      if (somenteLeitura) return;
+                      aoAlternar(m.customer_id);
+                    }}
                   >
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={sel}
+                        disabled={somenteLeitura}
                         onCheckedChange={() => aoAlternar(m.customer_id)}
                       />
                     </TableCell>
