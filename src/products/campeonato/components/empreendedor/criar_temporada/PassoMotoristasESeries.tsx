@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import TabelaMotoristasRanqueados from "./TabelaMotoristasRanqueados";
 import PainelResumoTemporada from "./PainelResumoTemporada";
+import EditorManualSeries from "./EditorManualSeries";
 import {
   useMotoristasRanqueados,
   type MotoristaRanqueado,
@@ -146,6 +147,31 @@ export default function PassoMotoristasESeries({
     for (const [k, arr] of Object.entries(dist))
       map[k] = arr.map((m) => m.customer_id);
     setDistribuicao(map);
+  }
+
+  function moverManual(
+    driverId: string,
+    de: string | null,
+    para: string | null,
+  ) {
+    setDistribuicao((prev) => {
+      const next: Record<string, string[]> = {};
+      for (const [k, arr] of Object.entries(prev))
+        next[k] = arr.filter((id) => id !== driverId);
+      if (para) {
+        next[para] = [...(next[para] ?? []), driverId];
+      }
+      return next;
+    });
+    if (para) {
+      setSelecionados((prev) => {
+        if (prev.has(driverId)) return prev;
+        const n = new Set(prev);
+        n.add(driverId);
+        return n;
+      });
+    }
+    void de;
   }
 
   // Mapa customer_id → série
@@ -294,6 +320,14 @@ export default function PassoMotoristasESeries({
           avisos={avisos}
         />
       </div>
+
+      <EditorManualSeries
+        series={series}
+        distribuicao={distribuicao}
+        selecionados={selecionados}
+        motoristas={ranking ?? []}
+        aoMover={moverManual}
+      />
     </div>
   );
 }
