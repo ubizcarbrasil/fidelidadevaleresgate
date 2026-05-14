@@ -1,31 +1,36 @@
-Diagnóstico encontrado:
+## Problema 1 — Zero não apaga nos inputs numéricos
 
-- A tela está enviando a cidade correta para o backend: `p_branch_id = 601882d7-bf11-4b49-afd1-728d54232ed3`.
-- Essa cidade é de fato `Leme - SP`.
-- A temporada ativa `Maio 2026` também está vinculada a `Leme - SP`.
-- O total exibido não vem de outra cidade: existem hoje 2.412 clientes ativos com `[MOTORISTA]` no nome cadastrados em Leme, e 2.407 já foram alocados na temporada.
-- A distribuição está tecnicamente filtrada por cidade, mas a regra atual é ampla demais: ela considera qualquer cliente ativo de Leme com `[MOTORISTA]` no nome, inclusive sem corrida recente, e joga quase todos para a Série C.
+Nos cards "Duração das fases do mata-mata" e "Prêmios da temporada", quando o usuário digita um valor, ele aparece concatenado ao zero existente (ex.: digita `48` e fica `048`; digita `100` e fica `0100`).
 
-Plano de correção:
+**Causa:** os `<Input type="number">` armazenam o valor como `number` no estado/form e renderizam sempre o número (ex.: `0`). Ao digitar, o cursor entra após o `0` e o valor passa a ser interpretado como string `"048"`. Como não há tratamento para limpar o zero inicial nem para deixar o campo vazio durante a edição, o usuário não consegue apagar.
 
-1. Ajustar a regra de elegibilidade da distribuição do Campeonato
-   - Manter o filtro obrigatório por cidade.
-   - Deixar de incluir todos os motoristas só por terem `[MOTORISTA]` no nome.
-   - Considerar elegível apenas motorista da cidade com corrida finalizada recente no período configurado, preservando exceção apenas para motoristas novos se essa regra já fizer sentido para o negócio.
+**Correção (frontend, sem mudar lógica de negócio):**
 
-2. Corrigir o total exibido nos KPIs
-   - O card “Motoristas” deve contar os motoristas realmente elegíveis/participantes da temporada da cidade selecionada.
-   - Evitar mostrar a base inteira importada quando a cidade tem milhares de cadastros históricos.
+1. `EditorFasesMataMata.tsx` — trocar o `Input` por uma versão controlada que:
+   - Mantém valor local como `string` (permite vazio).
+   - No `onChange`, remove zeros à esquerda e aceita string vazia.
+   - No `onBlur`, normaliza para número (default 24 se vazio).
+   - Adiciona `inputMode="numeric"` e `onFocus` que seleciona o conteúdo (`e.currentTarget.select()`) — assim ao tocar no campo já fica pronto pra sobrescrever.
 
-3. Corrigir “Distribuir motoristas”
-   - Atualizar a RPC de semeadura para não alocar automaticamente milhares de motoristas inativos na Série C.
-   - Garantir que a Edge Function `admin-brand-actions` continue chamando a versão correta da RPC.
+2. `EditorPremios.tsx` — mesmo tratamento no `<Input type="number">` registrado via `form.register`. Substituir por `Controller` (ou um wrapper `InputNumero`) com a mesma lógica (string local, remove zeros à esquerda, `onFocus` seleciona tudo, `onBlur` converte).
 
-4. Verificar dados após a correção
-   - Conferir no banco quantos motoristas de Leme são elegíveis pela regra nova.
-   - Conferir que os KPIs deixam de mostrar 2.407 quando a cidade selecionada é Leme.
-   - Conferir que A/B/C passam a refletir apenas os motoristas elegíveis/participantes.
+3. Criar componente compartilhado `src/compartilhados/components/input_numero.tsx` para reuso (segue regra de componentização). Usar nos dois locais acima.
 
-Observação importante:
+## Problema 2 — Resetar temporadas ativas para teste
 
-- Se a temporada atual já foi semeada com 2.407 motoristas, além da correção da regra será necessário limpar/resemear essa temporada específica ou criar uma ação de reprocessamento para remover os alocados indevidamente. Vou tratar isso na implementação para não deixar a tela presa no número antigo.
+Hoje existe **1 temporada ativa**: `Maio 2026` (Leme), `phase=classification`, já com `tier_seeding_completed_at` preenchido. O usuário quer começar do zero.
+
+**Ação:** Migration que, para toda temporada com `phase NOT IN ('finished','cancelled') AND cancelled_at IS NULL`:
+- Deleta `campeonato_season_standings` da temporada.
+- Deleta `campeonato_tier_memberships` da temporada.
+- Deleta `campeonato_brackets` / `campeonato_bracket_matches` se existirem.
+- Marca `cancelled_at = now()` e `phase = 'cancelled'` (cancelamento lógico — preserva histórico da season).
+
+Assim a tela de campeonato volta ao estado "sem temporada ativa" e o usuário pode criar uma nova do zero pra validar todo o fluxo (criação → distribuir motoristas → classificação).
+
+## Arquivos afetados
+
+- `src/compartilhados/components/input_numero.tsx` (novo)
+- `src/products/campeonato/components/empreendedor/EditorFasesMataMata.tsx`
+- `src/products/campeonato/components/empreendedor/EditorPremios.tsx`
+- nova migration `cancelar_temporadas_ativas_para_reset`
