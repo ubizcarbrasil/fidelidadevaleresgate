@@ -28,7 +28,10 @@ import {
   type DuracoesFasesHoras,
 } from "../../utils/utilitarios_campeonato";
 import { minimoDiasClassificacao } from "../../utils/utilitarios_data_final_temporada";
-import { useCriarTemporadaCompleta } from "../../hooks/hook_mutations_campeonato";
+import {
+  useCriarTemporadaCompleta,
+  useCancelarTemporada,
+} from "../../hooks/hook_mutations_campeonato";
 import { useCheckSeasonOverlap } from "../../hooks/hook_overlap_temporada";
 import type { TemplateKey } from "../../types/tipos_empreendedor";
 import PassoMotoristasESeries, {
@@ -74,6 +77,8 @@ export default function FormCriarTemporadaAutomatico({
   );
 
   const { mutate, isPending } = useCriarTemporadaCompleta();
+  const { mutate: cancelarExistente, isPending: cancelando } =
+    useCancelarTemporada(brandId);
 
   const datasCalculadas = useMemo(() => {
     if (!passo?.calculo) return null;
@@ -239,10 +244,30 @@ export default function FormCriarTemporadaAutomatico({
       />
 
       {temConflitoMesAno && (
-        <p className="text-xs text-destructive">
-          Já existe uma temporada para este mês/ano nesta cidade. Ajuste a data
-          de início ou cancele a temporada existente.
-        </p>
+        <div className="space-y-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+          <p>
+            Já existe a temporada{" "}
+            <strong>{temporadaConflitante?.name}</strong> nesta cidade. Cancele
+            para criar uma nova ou ajuste a data de início.
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            variant="destructive"
+            className="w-full sm:w-auto"
+            disabled={cancelando}
+            onClick={() => {
+              if (!temporadaConflitante) return;
+              cancelarExistente({
+                seasonId: temporadaConflitante.id,
+                reason: "Substituída por nova temporada",
+              });
+            }}
+          >
+            {cancelando && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+            Cancelar temporada existente
+          </Button>
+        </div>
       )}
 
       {temSobreposicao && temporadaSobreposta && (
