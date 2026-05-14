@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { POSICOES_PREMIAVEIS } from "../constants/constantes_templates";
+import {
+  POSICOES_PREMIAVEIS,
+  TARGET_SIZE_PADRAO,
+  PROMOTION_COUNT_PADRAO,
+  RELEGATION_COUNT_PADRAO,
+} from "../constants/constantes_templates";
 import {
   calcularDuracaoMinimaClassificacao,
   diferencaEmDiasInclusiva,
@@ -18,9 +23,10 @@ export const schemaSerie = z.object({
     .coerce.number()
     .int("Inteiro")
     .min(2, "Mínimo 2 motoristas")
-    .max(64, "Máximo 64"),
-  promote_count: z.coerce.number().int().min(0, "≥ 0").max(64),
-  relegate_count: z.coerce.number().int().min(0, "≥ 0").max(64),
+    .max(64, "Máximo 64")
+    .default(TARGET_SIZE_PADRAO),
+  promote_count: z.coerce.number().int().min(0, "≥ 0").max(64).default(PROMOTION_COUNT_PADRAO),
+  relegate_count: z.coerce.number().int().min(0, "≥ 0").max(64).default(RELEGATION_COUNT_PADRAO),
 });
 
 export const schemaPremio = z.object({

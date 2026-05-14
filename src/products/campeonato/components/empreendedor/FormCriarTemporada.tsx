@@ -37,6 +37,7 @@ import {
 } from "../../constants/constantes_templates";
 import {
   deInputDate,
+  deInputDateInicio06,
   gerarDatasSugeridas,
   nomeAutomaticoTemporada,
   paraInputDate,
@@ -173,9 +174,9 @@ export default function FormCriarTemporada({
         name: values.name,
         year: values.year,
         month: values.month,
-        classificationStartsAt: deInputDate(values.classificationStartsAt),
+        classificationStartsAt: deInputDateInicio06(values.classificationStartsAt),
         classificationEndsAt: deInputDate(values.classificationEndsAt, true),
-        knockoutStartsAt: deInputDate(values.knockoutStartsAt),
+        knockoutStartsAt: deInputDateInicio06(values.knockoutStartsAt),
         knockoutEndsAt: deInputDate(values.knockoutEndsAt, true),
         series: values.series.map((s) => ({
           name: s.name.trim(),

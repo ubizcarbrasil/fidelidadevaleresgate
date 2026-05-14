@@ -20,6 +20,7 @@ import {
   TEMPLATES_CAMPEONATO,
   obterTemplatePorChave,
   POSICOES_PREMIAVEIS,
+  DUELO_INICIO_HORA,
 } from "../../constants/constantes_templates";
 import { DURACOES_FASES_PADRAO_HORAS } from "../../constants/constantes_campeonato";
 import {
@@ -46,8 +47,16 @@ interface Props {
 
 function inicioPadrao(): string {
   const d = new Date();
-  d.setMinutes(0, 0, 0);
-  d.setHours(d.getHours() + 1);
+  d.setHours(DUELO_INICIO_HORA, 0, 0, 0);
+  if (d.getTime() < Date.now()) d.setDate(d.getDate() + 1);
+  return paraInputDateTimeLocal(d);
+}
+
+function normalizarPara06(valor: string): string {
+  if (!valor) return valor;
+  const d = new Date(valor);
+  if (isNaN(d.getTime())) return valor;
+  d.setHours(DUELO_INICIO_HORA, 0, 0, 0);
   return paraInputDateTimeLocal(d);
 }
 
@@ -209,8 +218,11 @@ export default function FormCriarTemporadaAutomatico({
             id="inicio-auto"
             type="datetime-local"
             value={inicio}
-            onChange={(e) => setInicio(e.target.value)}
+            onChange={(e) => setInicio(normalizarPara06(e.target.value))}
           />
+          <p className="text-[11px] text-muted-foreground">
+            Início às 06:00 (horário local)
+          </p>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="tpl-auto">Template de séries e prêmios</Label>

@@ -50,6 +50,19 @@ export function deInputDate(input: string, fimDoDia = false): string {
 }
 
 /**
+ * Recebe valor de input type="date" (YYYY-MM-DD) e devolve ISO no fuso
+ * local com hora 06:00 — usado para padronizar o início das fases do
+ * Campeonato (alinhado à janela do duelo diário 06:00 → 06:00).
+ */
+export function deInputDateInicio06(input: string): string {
+  if (!input) return new Date().toISOString();
+  const [y, m, d] = input.split("-").map(Number);
+  const data = new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
+  data.setHours(6, 0, 0, 0);
+  return data.toISOString();
+}
+
+/**
  * Recebe valor de input type="date" (YYYY-MM-DD) e devolve a mesma data
  * acrescida de N dias, no mesmo formato. Útil para encadear limites mínimos.
  */
