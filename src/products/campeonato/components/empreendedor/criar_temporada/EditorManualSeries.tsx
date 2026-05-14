@@ -1,5 +1,16 @@
 import { useMemo } from "react";
-import { UserRound, X, ArrowRightLeft, Plus, UserPlus } from "lucide-react";
+import {
+  UserRound,
+  X,
+  ArrowRightLeft,
+  Plus,
+  UserPlus,
+  ChevronUp,
+  ChevronDown,
+  ArrowUpToLine,
+  ArrowDownToLine,
+  ArrowDownAZ,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -25,6 +36,12 @@ interface Props {
   selecionados: Set<string>;
   motoristas: MotoristaRanqueado[];
   aoMover: (driverId: string, de: string | null, para: string | null) => void;
+  aoReordenar: (
+    serie: string,
+    driverId: string,
+    acao: "subir" | "descer" | "topo" | "fundo",
+  ) => void;
+  aoOrdenarPorRanking: (serie: string) => void;
 }
 
 function corCapacidade(atual: number, max: number): string {
@@ -40,6 +57,8 @@ export default function EditorManualSeries({
   selecionados,
   motoristas,
   aoMover,
+  aoReordenar,
+  aoOrdenarPorRanking,
 }: Props) {
   const indiceMotoristas = useMemo(() => {
     const m = new Map<string, MotoristaRanqueado>();
@@ -84,10 +103,10 @@ export default function EditorManualSeries({
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {series.map((s) => {
           const ids = distribuicao[s.name] ?? [];
+          // Preserva a ordem manual da distribuição.
           const linhas = ids
             .map((id) => indiceMotoristas.get(id))
-            .filter((x): x is MotoristaRanqueado => !!x)
-            .sort((a, b) => a.rank_position - b.rank_position);
+            .filter((x): x is MotoristaRanqueado => !!x);
           const destinos = series.filter((o) => o.name !== s.name);
 
           return (
@@ -95,16 +114,29 @@ export default function EditorManualSeries({
               key={s.name}
               className="flex h-64 flex-col rounded-lg border bg-card"
             >
-              <div className="flex items-center justify-between border-b px-2 py-1.5">
+              <div className="flex items-center justify-between gap-1 border-b px-2 py-1.5">
                 <span className="text-xs font-semibold">Série {s.name}</span>
-                <span
-                  className={cn(
-                    "font-mono text-[11px] tabular-nums",
-                    corCapacidade(linhas.length, s.size),
-                  )}
-                >
-                  {linhas.length}/{s.size}
-                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    title="Ordenar por ranking (corridas)"
+                    onClick={() => aoOrdenarPorRanking(s.name)}
+                    disabled={linhas.length < 2}
+                  >
+                    <ArrowDownAZ className="h-3 w-3" />
+                  </Button>
+                  <span
+                    className={cn(
+                      "font-mono text-[11px] tabular-nums",
+                      corCapacidade(linhas.length, s.size),
+                    )}
+                  >
+                    {linhas.length}/{s.size}
+                  </span>
+                </div>
               </div>
 
               <ScrollArea className="flex-1">
@@ -114,19 +146,50 @@ export default function EditorManualSeries({
                       Vazia. Adicione abaixo.
                     </p>
                   ) : (
-                    linhas.map((m) => (
+                    linhas.map((m, idx) => (
                       <div
                         key={m.customer_id}
                         className="group flex items-center gap-1.5 rounded border bg-background px-1.5 py-1 text-[11px]"
                       >
+                        <span className="w-5 shrink-0 text-center font-mono text-[10px] font-semibold tabular-nums text-muted-foreground">
+                          {idx + 1}
+                        </span>
                         <UserRound className="h-3 w-3 shrink-0 text-muted-foreground" />
                         <div className="min-w-0 flex-1">
                           <p className="truncate font-medium">
                             {m.driver_name ?? "Sem nome"}
                           </p>
                           <p className="truncate text-[9px] text-muted-foreground">
-                            #{m.rank_position} · {m.rides_count} corridas
+                            rank #{m.rank_position} · {m.rides_count} corridas
                           </p>
+                        </div>
+                        <div className="flex shrink-0 items-center">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            title="Subir"
+                            disabled={idx === 0}
+                            onClick={() =>
+                              aoReordenar(s.name, m.customer_id, "subir")
+                            }
+                          >
+                            <ChevronUp className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            title="Descer"
+                            disabled={idx === linhas.length - 1}
+                            onClick={() =>
+                              aoReordenar(s.name, m.customer_id, "descer")
+                            }
+                          >
+                            <ChevronDown className="h-3 w-3" />
+                          </Button>
                         </div>
                         {destinos.length > 0 && (
                           <DropdownMenu>
@@ -141,6 +204,28 @@ export default function EditorManualSeries({
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-40">
+                              <DropdownMenuLabel className="text-[10px]">
+                                Posição
+                              </DropdownMenuLabel>
+                              <DropdownMenuItem
+                                disabled={idx === 0}
+                                onClick={() =>
+                                  aoReordenar(s.name, m.customer_id, "topo")
+                                }
+                              >
+                                <ArrowUpToLine className="mr-1.5 h-3 w-3" />
+                                Mover para o topo
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                disabled={idx === linhas.length - 1}
+                                onClick={() =>
+                                  aoReordenar(s.name, m.customer_id, "fundo")
+                                }
+                              >
+                                <ArrowDownToLine className="mr-1.5 h-3 w-3" />
+                                Mover para o fim
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
                               <DropdownMenuLabel className="text-[10px]">
                                 Mover para…
                               </DropdownMenuLabel>

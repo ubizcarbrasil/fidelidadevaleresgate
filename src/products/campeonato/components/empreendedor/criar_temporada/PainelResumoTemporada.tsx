@@ -11,6 +11,7 @@ interface SerieAlocacao {
   name: string;
   size: number;
   alocados: number;
+  ordem?: Array<{ customer_id: string; driver_name: string | null }>;
 }
 
 interface Props {
@@ -69,17 +70,36 @@ export default function PainelResumoTemporada({
           series.map((s) => (
             <div
               key={s.name}
-              className="flex items-center justify-between rounded border border-border bg-card px-2 py-1.5 text-xs"
+              className="rounded border border-border bg-card px-2 py-1.5 text-xs"
             >
-              <span className="font-medium">Série {s.name}</span>
-              <span
-                className={cn(
-                  "font-mono tabular-nums",
-                  corCapacidade(s.alocados, s.size),
-                )}
-              >
-                {s.alocados}/{s.size}
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="font-medium">Série {s.name}</span>
+                <span
+                  className={cn(
+                    "font-mono tabular-nums",
+                    corCapacidade(s.alocados, s.size),
+                  )}
+                >
+                  {s.alocados}/{s.size}
+                </span>
+              </div>
+              {s.ordem && s.ordem.length > 0 && (
+                <ol className="mt-1 space-y-0.5">
+                  {s.ordem.map((m, i) => (
+                    <li
+                      key={m.customer_id}
+                      className="flex items-center gap-1.5 text-[10px] text-muted-foreground"
+                    >
+                      <span className="w-4 shrink-0 text-right font-mono tabular-nums">
+                        {i + 1}.
+                      </span>
+                      <span className="truncate">
+                        {m.driver_name ?? "Sem nome"}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              )}
             </div>
           ))
         )}
