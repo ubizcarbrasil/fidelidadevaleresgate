@@ -318,6 +318,9 @@ export default function EditorInformacoesBasicas({ brandId, branchId }: Props = 
               value={classStart}
               onChange={(e) => aoMudarClassStart(e.target.value)}
             />
+            <p className="text-[11px] text-muted-foreground">
+              Início às 06:00 (horário local)
+            </p>
           </div>
           <div className="space-y-1">
             <LabelComAjuda ajuda="Último dia válido para acumular pontos. Após essa data o ranking da série é congelado e o mata-mata começa.">
@@ -392,6 +395,9 @@ export default function EditorInformacoesBasicas({ brandId, branchId }: Props = 
               }
               onChange={(e) => aoMudarKnockStart(e.target.value)}
             />
+            <p className="text-[11px] text-muted-foreground">
+              Início às 06:00 (horário local)
+            </p>
           </div>
           <div className="space-y-1">
             <LabelComAjuda ajuda="Data limite para concluir o mata-mata e encerrar a temporada. Os prêmios são distribuídos automaticamente após essa data.">
