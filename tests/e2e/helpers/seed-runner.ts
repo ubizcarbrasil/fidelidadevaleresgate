@@ -7,7 +7,10 @@
  *   npx tsx tests/e2e/helpers/seed-runner.ts teardown
  */
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const ACTION = process.argv[2] as "seed" | "teardown";
 const SUPABASE_URL = process.env.SUPABASE_URL;
