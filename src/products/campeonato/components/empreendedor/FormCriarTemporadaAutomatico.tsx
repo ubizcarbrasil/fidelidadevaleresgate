@@ -186,12 +186,12 @@ export default function FormCriarTemporadaAutomatico({
   }
 
   return (
-    <div className="space-y-5">
-      <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
+    <div className="space-y-4">
+      <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-xs sm:text-sm text-muted-foreground">
         <p className="flex items-center gap-2 font-medium text-foreground">
           <Sparkles className="h-4 w-4 text-primary" /> Criação assistida
         </p>
-        <p className="mt-1 text-xs">
+        <p className="mt-1 text-[11px] sm:text-xs">
           Escolha a data de início e o template, selecione os motoristas e veja
           a data final do campeonato calculada em tempo real.
         </p>
@@ -253,18 +253,20 @@ export default function FormCriarTemporadaAutomatico({
         </p>
       )}
 
-      <DialogFooter>
+      <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
         <Button
           type="button"
           variant="outline"
           onClick={onClose}
           disabled={isPending}
+          className="w-full sm:w-auto"
         >
           Cancelar
         </Button>
         <Button
           type="button"
           onClick={aoCriar}
+          className="w-full sm:w-auto"
           disabled={
             isPending ||
             inicioInvalido ||

@@ -287,54 +287,57 @@ export default function PassoMotoristasESeries({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-end gap-2 rounded-md border border-primary/20 bg-primary/5 p-3">
-        <div className="space-y-1">
-          <Label htmlFor="class-dias" className="text-xs">
-            Classificação (dias)
-          </Label>
-          <Input
-            id="class-dias"
-            type="number"
-            min={1}
-            max={60}
-            className="h-9 w-24"
-            value={classificacaoDias}
-            onChange={(e) =>
-              aoMudarClassificacaoDias(
-                Math.max(1, Math.min(60, Math.floor(Number(e.target.value) || 1))),
-              )
-            }
-          />
-          <p className="text-[10px] text-muted-foreground">
-            Mínimo recomendado: {minDias}d
-          </p>
-        </div>
-        {(["oitavas", "quartas", "semi", "final"] as const).map((k) => (
-          <div key={k} className="space-y-1">
-            <Label htmlFor={`fase-${k}`} className="text-xs capitalize">
-              {k} (h)
+      <div className="space-y-3 rounded-md border border-primary/20 bg-primary/5 p-3">
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+          <div className="space-y-1">
+            <Label htmlFor="class-dias" className="text-[11px]">
+              Class. (dias)
             </Label>
             <Input
-              id={`fase-${k}`}
+              id="class-dias"
               type="number"
               min={1}
-              max={720}
-              className="h-9 w-20"
-              value={horas[k]}
+              max={60}
+              className="h-9 w-full"
+              value={classificacaoDias}
               onChange={(e) =>
-                aoMudarHoras({
-                  ...horas,
-                  [k]: Math.max(1, Math.min(720, Math.floor(Number(e.target.value) || 1))),
-                })
+                aoMudarClassificacaoDias(
+                  Math.max(1, Math.min(60, Math.floor(Number(e.target.value) || 1))),
+                )
               }
             />
           </div>
-        ))}
-        <div className="ml-auto flex flex-col gap-1.5 sm:flex-row">
+          {(["oitavas", "quartas", "semi", "final"] as const).map((k) => (
+            <div key={k} className="space-y-1">
+              <Label htmlFor={`fase-${k}`} className="text-[11px] capitalize">
+                {k} (h)
+              </Label>
+              <Input
+                id={`fase-${k}`}
+                type="number"
+                min={1}
+                max={720}
+                className="h-9 w-full"
+                value={horas[k]}
+                onChange={(e) =>
+                  aoMudarHoras({
+                    ...horas,
+                    [k]: Math.max(1, Math.min(720, Math.floor(Number(e.target.value) || 1))),
+                  })
+                }
+              />
+            </div>
+          ))}
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          Mínimo recomendado para classificação: {minDias}d
+        </p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <Button
             type="button"
             size="sm"
             variant="outline"
+            className="w-full"
             onClick={selecionarECompletarTopN}
           >
             <Sparkles className="mr-1.5 h-3.5 w-3.5" />
@@ -343,6 +346,7 @@ export default function PassoMotoristasESeries({
           <Button
             type="button"
             size="sm"
+            className="w-full"
             onClick={distribuirAutomaticamente}
             disabled={selecionados.size === 0}
           >
@@ -353,7 +357,7 @@ export default function PassoMotoristasESeries({
       </div>
 
       <div className="grid gap-3 lg:grid-cols-[1fr_280px]">
-        <div className="h-[480px]">
+        <div className="h-[60vh] min-h-[360px] lg:h-[480px]">
           <TabelaMotoristasRanqueados
             branchId={branchId}
             selecionados={selecionados}
