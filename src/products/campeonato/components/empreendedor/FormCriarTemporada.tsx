@@ -130,6 +130,7 @@ export default function FormCriarTemporada({
         .eq("branch_id", branchId)
         .eq("year", yearWatch as number)
         .eq("month", monthWatch as number)
+        .is("cancelled_at", null)
         .maybeSingle();
       if (error) throw error;
       return data;
