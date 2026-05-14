@@ -34,10 +34,13 @@ export const NOMES_MESES = [
 
 /**
  * Duração padrão (em horas) de cada fase no modo de criação automática.
- * Exemplo do produto: Duelo 24h, Oitavas 48h, Quartas 72h, Semi 96h, Final 120h.
+ * A Classificação (fase de grupos / pontos corridos / todos contra todos)
+ * precisa de uma janela longa o suficiente para todos da maior série se
+ * enfrentarem — por padrão usamos 14 dias (336h). Mata-mata segue rodadas
+ * curtas: Oitavas 48h, Quartas 72h, Semi 96h, Final 120h.
  */
 export const DURACOES_FASES_PADRAO_HORAS = {
-  duelo: 24,
+  duelo: 24 * 14,
   oitavas: 48,
   quartas: 72,
   semi: 96,

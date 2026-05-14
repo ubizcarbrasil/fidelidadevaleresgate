@@ -57,6 +57,7 @@ export default function EditorInformacoesBasicas({ brandId, branchId }: Props = 
         .eq("branch_id", branchId!)
         .eq("year", anoSelecionado as number)
         .eq("month", mesAtual as number)
+        .is("cancelled_at", null)
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -69,7 +70,7 @@ export default function EditorInformacoesBasicas({ brandId, branchId }: Props = 
       ? "cancelada"
       : temporadaExistente.paused_at
         ? "pausada"
-        : temporadaExistente.phase === "completed"
+        : temporadaExistente.phase === "finished"
           ? "finalizada"
           : "ativa"
     : "";
