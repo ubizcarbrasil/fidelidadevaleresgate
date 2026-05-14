@@ -335,26 +335,25 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
 
 function BannerFotoObrigatoria({ onClick }: { onClick: () => void }) {
   return (
-    <div className="sticky top-[57px] z-30 bg-amber-500/15 border-b border-amber-500/40">
-      <div className="max-w-lg mx-auto flex items-center gap-3 px-4 py-2.5">
-        <div className="h-9 w-9 rounded-full bg-amber-500/25 flex items-center justify-center flex-shrink-0">
-          <Camera className="h-4 w-4 text-amber-700 dark:text-amber-300" />
+    <div className="sticky top-[57px] z-30 banner-alerta-foto">
+      <div className="max-w-lg mx-auto flex items-center gap-3 px-4 py-3">
+        <div className="h-11 w-11 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 ring-2 ring-white/40">
+          <Camera className="h-5 w-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold leading-tight text-amber-900 dark:text-amber-100">
-            Foto obrigatória para participar
+          <p className="font-display-camp text-base leading-tight uppercase tracking-wide">
+            Foto obrigatória
           </p>
-          <p className="text-[10px] leading-tight text-amber-800/80 dark:text-amber-200/80">
-            Sem foto você não consegue se inscrever em campeonatos.
+          <p className="text-[11px] leading-tight opacity-90">
+            Sem foto você não joga o campeonato.
           </p>
         </div>
         <Button
           size="sm"
-          variant="default"
           onClick={onClick}
-          className="h-8 px-3 text-xs bg-amber-600 hover:bg-amber-700 text-white"
+          className="h-9 px-4 text-xs font-bold uppercase tracking-wider bg-white text-destructive hover:bg-white/90 shadow-md"
         >
-          Adicionar
+          Enviar agora
         </Button>
       </div>
     </div>
