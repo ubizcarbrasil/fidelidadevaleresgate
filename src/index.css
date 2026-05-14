@@ -528,6 +528,9 @@ html, body {
 /* ── Tema Campeonato (escopo: rota /motorista/campeonato) ── */
 /* Override apenas dos tokens semânticos consumidos pelo shell visual.
    Ativado via className="tema-campeonato" no wrapper raiz da página. */
+/* Auditoria Etapa 3/A: tokens completos verificados — background, foreground,
+   card, card-foreground, primary, primary-foreground, muted, muted-foreground,
+   border, accent, destructive, series-promotion. */
 .tema-campeonato {
   --background: 150 41% 9%;
   --foreground: 120 38% 93%;
