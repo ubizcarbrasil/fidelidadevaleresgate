@@ -3,10 +3,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, Swords } from "lucide-react";
+import InputNumero from "@/compartilhados/components/input_numero";
 
 type FaseChave = "R16" | "QF" | "SF" | "Final";
 
@@ -92,15 +92,13 @@ export default function EditorFasesMataMata({ seasonId }: Props) {
         {FASES.map((f) => (
           <div key={f.chave} className="grid grid-cols-[1fr,120px] items-center gap-3">
             <Label className="text-sm">{f.rotulo}</Label>
-            <Input
-              type="number"
-              min={1}
-              max={240}
+            <InputNumero
+              defaultOnEmpty={DURACAO_PADRAO}
               value={valores[f.chave]}
-              onChange={(e) =>
+              onChange={(n) =>
                 setValores((v) => ({
                   ...v,
-                  [f.chave]: Number(e.target.value) || 0,
+                  [f.chave]: n,
                 }))
               }
             />
