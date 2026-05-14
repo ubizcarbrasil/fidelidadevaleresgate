@@ -212,7 +212,7 @@ export default function FormCriarTemporada({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="w-[calc(100vw-1rem)] max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto overflow-x-hidden p-3 sm:p-6 [&>*]:min-w-0">
         <DialogHeader>
           <DialogTitle>Nova Temporada</DialogTitle>
           <DialogDescription>
