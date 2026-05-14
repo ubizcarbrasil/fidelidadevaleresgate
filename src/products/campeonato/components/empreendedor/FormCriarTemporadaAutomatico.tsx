@@ -114,7 +114,7 @@ export default function FormCriarTemporadaAutomatico({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("campeonato_seasons")
-        .select("id, name")
+        .select("id, name, classification_starts_at")
         .eq("brand_id", brandId)
         .eq("branch_id", branchId)
         .eq("year", datasCalculadas!.year)
@@ -259,8 +259,20 @@ export default function FormCriarTemporadaAutomatico({
         <div className="space-y-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
           <p>
             Já existe a temporada{" "}
-            <strong>{temporadaConflitante?.name}</strong> nesta cidade. Cancele
-            para criar uma nova ou ajuste a data de início.
+            <strong>{temporadaConflitante?.name}</strong>
+            {temporadaConflitante?.classification_starts_at && (
+              <>
+                {" "}(início em{" "}
+                <strong>
+                  {new Date(
+                    temporadaConflitante.classification_starts_at,
+                  ).toLocaleDateString("pt-BR")}
+                </strong>
+                )
+              </>
+            )}{" "}
+            nesta cidade. Cancele para criar uma nova ou ajuste a data de
+            início.
           </p>
           <Button
             type="button"
