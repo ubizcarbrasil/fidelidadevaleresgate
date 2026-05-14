@@ -10,7 +10,11 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:seed": "tsx tests/e2e/helpers/seed-runner.ts seed",
+    "e2e:teardown": "tsx tests/e2e/helpers/seed-runner.ts teardown"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
