@@ -314,7 +314,7 @@ function HeaderCampeonato({
   onRefresh,
 }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border">
+    <header className="sticky top-0 z-40 bg-card backdrop-blur border-b border-border">
       <div className="max-w-lg mx-auto flex items-center gap-2 px-3 py-3">
         <button
           onClick={onAbrirDrawer}
@@ -427,7 +427,7 @@ function DrawerNavegacao({
     <Sheet open={aberto} onOpenChange={onAbrirChange}>
       <SheetContent
         side="left"
-        className="tema-campeonato w-full max-w-xs p-0 bg-background text-foreground border-border"
+        className="tema-campeonato w-full max-w-[280px] p-0 bg-background text-foreground border-border"
       >
         <div className="flex flex-col h-full">
           {/* Cabeçalho */}
@@ -464,7 +464,7 @@ function DrawerNavegacao({
                 <button
                   key={item.id}
                   onClick={() => onSelecionar(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 mx-2 rounded-md text-sm transition-colors ${
                     ativo
                       ? "bg-primary text-primary-foreground font-semibold"
                       : "text-foreground hover:bg-muted"
@@ -480,7 +480,7 @@ function DrawerNavegacao({
 
             <button
               onClick={() => onSelecionar("configuracoes")}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+              className={`w-full flex items-center gap-3 px-4 py-3 mx-2 rounded-md text-sm transition-colors ${
                 abaAtiva === "configuracoes"
                   ? "bg-primary text-primary-foreground font-semibold"
                   : "text-foreground hover:bg-muted"
@@ -493,8 +493,8 @@ function DrawerNavegacao({
 
           {/* Rodapé */}
           <div className="px-4 py-3 border-t border-border">
-            <p className="text-[10px] text-muted-foreground">
-              Campeonato · v1.0
+            <p className="text-xs text-muted-foreground">
+              Campeonato · {(import.meta as any).env?.VITE_APP_VERSION ?? "v1.0"}
             </p>
           </div>
         </div>
