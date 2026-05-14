@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Crown, MapPin } from "lucide-react";
+import { Crown, MapPin, Radio } from "lucide-react";
 import { AvatarMotorista } from "../shared/AvatarMotorista";
 import { statusDoConfronto } from "../../utils/utilitarios_chaveamento";
 import { formatarTempoRestante } from "./utilitarios_motorista";
@@ -18,6 +18,16 @@ function formatarDataHora(iso: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+/** Progresso do duelo (0..1) baseado em starts_at → ends_at. */
+function progressoDuelo(startsAt: string, endsAt: string): number {
+  const ini = new Date(startsAt).getTime();
+  const fim = new Date(endsAt).getTime();
+  const agora = Date.now();
+  if (agora <= ini) return 0;
+  if (agora >= fim) return 1;
+  return (agora - ini) / (fim - ini);
 }
 
 /**
@@ -54,17 +64,34 @@ export default function CardDueloFutebol({
   const venceuB = !!confronto.winner_id && confronto.winner_id === confronto.driver_b_id;
   const encerrado = status === "encerrado";
 
-  const ladoA = ladoClasses(isMeA, venceuA, encerrado);
-  const ladoB = ladoClasses(isMeB, venceuB, encerrado);
+  const ladoAOpaco = encerrado && !venceuA;
+  const ladoBOpaco = encerrado && !venceuB;
+
+  const progresso =
+    status === "em_andamento"
+      ? progressoDuelo(confronto.starts_at, confronto.ends_at)
+      : encerrado
+        ? 1
+        : 0;
 
   return (
-    <div className="rounded-xl border border-primary/40 bg-card p-3 space-y-3 neon-glow">
-      {/* Topo: data/hora + arena + status */}
-      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+    <div
+      className={`overflow-hidden rounded-2xl border-2 bg-card shadow-xl ${
+        status === "em_andamento"
+          ? "border-primary neon-glow"
+          : encerrado
+            ? "border-border/60"
+            : "border-primary/30"
+      }`}
+    >
+      {/* Faixa superior preta — estilo scorebug SporTV */}
+      <div className="scorebug-bar flex items-center justify-between px-3 py-1.5 text-[10px] font-condensed-camp font-bold uppercase tracking-[0.18em]">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="tabular-nums">{formatarDataHora(confronto.starts_at)}</span>
+          <span className="tabular-nums opacity-80">
+            {formatarDataHora(confronto.starts_at)}
+          </span>
           {arenaNome && (
-            <span className="flex items-center gap-1 truncate">
+            <span className="flex items-center gap-1 truncate opacity-80">
               <MapPin className="h-3 w-3" />
               <span className="truncate">{arenaNome}</span>
             </span>
@@ -73,51 +100,105 @@ export default function CardDueloFutebol({
         <BadgeStatus status={status} endsAt={confronto.ends_at} />
       </div>
 
-      {/* Corpo: A | placar | B */}
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-        {/* Lado A */}
-        <div className={`flex flex-col items-center gap-1.5 rounded-md py-2 px-1 ${ladoA}`}>
-          <AvatarMotorista nome={confronto.driver_a_name} url={confronto.driver_a_photo_url} size={40} />
-          <p className={`text-xs text-center truncate w-full ${isMeA ? "font-bold" : "font-medium"}`}>
-            {isMeA ? "VOCÊ" : (confronto.driver_a_name ?? "—")}
+      {/* Corpo principal — A | PLACAR | B */}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 py-4">
+        <LadoMotorista
+          nome={confronto.driver_a_name}
+          photo={confronto.driver_a_photo_url}
+          isMe={isMeA}
+          venceu={venceuA}
+          opaco={ladoAOpaco}
+        />
+
+        <div className="flex flex-col items-center gap-0 px-1">
+          <div className="flex items-end gap-1.5">
+            <span
+              className={`font-display-camp tabular-nums leading-none ${
+                venceuA ? "text-[hsl(var(--gold))]" : "text-foreground"
+              } ${ladoAOpaco ? "opacity-50" : ""}`}
+              style={{ fontSize: "3.25rem" }}
+            >
+              {confronto.driver_a_rides}
+            </span>
+            <span className="font-display-camp text-2xl text-primary/70 leading-none pb-1">
+              ×
+            </span>
+            <span
+              className={`font-display-camp tabular-nums leading-none ${
+                venceuB ? "text-[hsl(var(--gold))]" : "text-foreground"
+              } ${ladoBOpaco ? "opacity-50" : ""}`}
+              style={{ fontSize: "3.25rem" }}
+            >
+              {confronto.driver_b_rides}
+            </span>
+          </div>
+          <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground font-bold mt-1">
+            corridas
           </p>
-          {venceuA && <Crown className="h-3 w-3 text-primary" aria-label="Vencedor" />}
         </div>
 
-        {/* Placar central */}
-        <div className="flex items-center gap-1.5 px-2">
-          <span className="text-2xl font-extrabold tabular-nums text-foreground">
-            {confronto.driver_a_rides}
-          </span>
-          <span className="text-base font-bold text-muted-foreground">×</span>
-          <span className="text-2xl font-extrabold tabular-nums text-foreground">
-            {confronto.driver_b_rides}
-          </span>
-        </div>
-
-        {/* Lado B */}
-        <div className={`flex flex-col items-center gap-1.5 rounded-md py-2 px-1 ${ladoB}`}>
-          <AvatarMotorista nome={confronto.driver_b_name} url={confronto.driver_b_photo_url} size={40} />
-          <p className={`text-xs text-center truncate w-full ${isMeB ? "font-bold" : "font-medium"}`}>
-            {isMeB ? "VOCÊ" : (confronto.driver_b_name ?? "—")}
-          </p>
-          {venceuB && <Crown className="h-3 w-3 text-primary" aria-label="Vencedor" />}
-        </div>
+        <LadoMotorista
+          nome={confronto.driver_b_name}
+          photo={confronto.driver_b_photo_url}
+          isMe={isMeB}
+          venceu={venceuB}
+          opaco={ladoBOpaco}
+        />
       </div>
 
-      {/* Linha "corridas" */}
-      <p className="text-center text-[10px] uppercase tracking-wider text-muted-foreground">
-        corridas
-      </p>
+      {/* Barra de progresso do duelo (24h) */}
+      <div className="h-1.5 w-full bg-secondary/60 relative overflow-hidden">
+        <div
+          className="duel-progress h-full transition-all"
+          style={{ width: `${Math.round(progresso * 100)}%` }}
+        />
+      </div>
     </div>
   );
 }
 
-function ladoClasses(isMe: boolean, venceu: boolean, encerrado: boolean): string {
-  if (encerrado && venceu) return "bg-primary/15";
-  if (encerrado && !venceu) return "opacity-60";
-  if (isMe) return "bg-muted/40";
-  return "";
+/* ───────────── Lado do motorista (foto grande + nome) ───────────── */
+
+function LadoMotorista({
+  nome,
+  photo,
+  isMe,
+  venceu,
+  opaco,
+}: {
+  nome: string | null;
+  photo: string | null;
+  isMe: boolean;
+  venceu: boolean;
+  opaco: boolean;
+}) {
+  return (
+    <div
+      className={`flex flex-col items-center gap-2 transition-all ${
+        opaco ? "opacity-50 grayscale" : ""
+      }`}
+    >
+      <div className={`relative rounded-full ${venceu ? "gold-halo" : ""}`}>
+        <AvatarMotorista nome={nome} url={photo} size={72} />
+        {venceu && (
+          <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 bg-[hsl(var(--gold))] rounded-full p-0.5 shadow-md">
+            <Crown className="h-3 w-3 text-[hsl(var(--gold-foreground))]" />
+          </div>
+        )}
+      </div>
+      <p
+        className={`text-[11px] text-center truncate w-full uppercase tracking-wide ${
+          isMe
+            ? "font-display-camp text-base text-primary"
+            : venceu
+              ? "font-bold text-foreground"
+              : "font-semibold text-foreground/90"
+        }`}
+      >
+        {isMe ? "VOCÊ" : (nome ?? "—")}
+      </p>
+    </div>
+  );
 }
 
 function BadgeStatus({
@@ -130,18 +211,24 @@ function BadgeStatus({
   if (status === "em_andamento") {
     return (
       <span className="flex items-center gap-1.5">
-        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse">
-          <span className="h-1.5 w-1.5 rounded-full bg-destructive-foreground" />
+        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse">
+          <Radio className="h-2.5 w-2.5" />
           AO VIVO
         </span>
-        <span className="tabular-nums text-[10px] text-primary font-semibold">
+        <span className="tabular-nums text-[10px] text-primary font-bold">
           {formatarTempoRestante(endsAt)}
         </span>
       </span>
     );
   }
   if (status === "encerrado") {
-    return <span className="text-[10px] font-semibold text-muted-foreground">ENCERRADO</span>;
+    return (
+      <span className="text-[10px] font-bold text-muted-foreground">
+        ENCERRADO
+      </span>
+    );
   }
-  return <span className="text-[10px] font-semibold text-muted-foreground">AGUARDANDO</span>;
+  return (
+    <span className="text-[10px] font-bold text-primary/80">AGUARDANDO</span>
+  );
 }
