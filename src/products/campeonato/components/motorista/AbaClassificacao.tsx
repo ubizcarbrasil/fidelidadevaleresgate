@@ -72,14 +72,14 @@ export default function AbaClassificacao({ seasonId, tierId, driverId }: Props) 
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card overflow-hidden">
+    <div className="rounded-lg border border-border bg-card overflow-hidden font-mono">
       {/* Cabeçalho da tabela */}
-      <div className="sticky top-[97px] z-20 bg-card/95 backdrop-blur border-b border-border">
-        <div className="flex items-center gap-2 px-3 py-2 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
-          <span className="w-6 text-center">Pos</span>
-          <span className="flex-1">Motorista</span>
+      <div className="sticky top-[97px] z-20 bg-card/95 backdrop-blur border-b border-primary/20">
+        <div className="flex items-center gap-1.5 px-3 py-2 text-[11px] tracking-wider text-foreground/75 font-bold">
+          <span className="w-5 text-center" />
+          <span className="flex-1" />
           <span className="w-7 text-right">P</span>
-          <span className="w-7 text-right">DR</span>
+          <span className="w-7 text-right">J</span>
           <span className="w-6 text-right">V</span>
           <span className="w-6 text-right">E</span>
           <span className="w-6 text-right">D</span>
@@ -135,43 +135,39 @@ function LinhaTabela({
 }) {
   const corPosicao =
     linha.zone === "promotion"
-      ? "text-[hsl(var(--series-promotion))]"
+      ? "text-[hsl(var(--series-promotion))] font-extrabold"
       : linha.zone === "relegation"
-        ? "text-destructive"
+        ? "text-destructive font-extrabold"
         : linha.is_me
           ? "text-foreground"
           : "text-muted-foreground";
 
   const bgLinha = linha.is_me
-    ? "bg-muted/60 ring-1 ring-primary/30"
-    : linha.zone === "promotion"
-      ? "bg-[hsl(var(--series-promotion)/0.12)]"
-      : linha.zone === "relegation"
-        ? "bg-destructive/10"
-        : "";
+    ? "bg-primary/10 ring-1 ring-primary/40"
+    : "";
 
   return (
     <>
       {mostrarSeparadorAcima && (
-        <li className="border-t border-dashed border-border/60" aria-hidden />
+        <li className="border-t-2 border-destructive/60" aria-hidden />
       )}
       <li
-        className={`flex items-center gap-2 px-3 py-2 text-xs ${bgLinha}`}
+        className={`flex items-center gap-1.5 px-3 py-2 text-[13px] ${bgLinha}`}
       >
-        <span className={`w-6 text-center font-bold tabular-nums ${corPosicao}`}>
+        <span className={`w-5 text-center tabular-nums ${corPosicao}`}>
           {linha.rank}
         </span>
         <AvatarMotorista
           nome={linha.driver_name}
           url={linha.photo_url}
-          size={28}
+          size={26}
         />
         <span
-          className={`flex-1 truncate ${linha.is_me ? "font-bold" : ""}`}
+          className={`flex-1 truncate font-sans ${linha.is_me ? "font-bold" : ""}`}
         >
           {linha.is_me ? "VOCÊ" : (linha.driver_name ?? "—")}
         </span>
-        <span className="w-7 text-right tabular-nums font-semibold text-primary">
+        <span className="w-7 text-right tabular-nums font-extrabold text-foreground">
           {linha.points}
         </span>
         <span className="w-7 text-right tabular-nums text-muted-foreground">
@@ -185,7 +181,7 @@ function LinhaTabela({
         </span>
       </li>
       {mostrarSeparadorAbaixo && (
-        <li className="border-t border-dashed border-border/60" aria-hidden />
+        <li className="border-t border-dashed border-[hsl(var(--series-promotion))/40]" aria-hidden />
       )}
     </>
   );

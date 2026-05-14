@@ -58,7 +58,7 @@ export default function CardDueloFutebol({
   const ladoB = ladoClasses(isMeB, venceuB, encerrado);
 
   return (
-    <div className="rounded-lg border border-border bg-card p-3 space-y-3">
+    <div className="rounded-xl border border-primary/40 bg-card p-3 space-y-3 neon-glow">
       {/* Topo: data/hora + arena + status */}
       <div className="flex items-center justify-between text-[10px] text-muted-foreground">
         <div className="flex items-center gap-2 min-w-0">

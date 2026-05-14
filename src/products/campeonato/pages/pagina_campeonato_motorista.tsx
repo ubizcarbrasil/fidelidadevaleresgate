@@ -52,6 +52,16 @@ const ITENS_NAVEGACAO: ItemNavegacao[] = [
   { id: "proximos", label: "Próximos Campeonatos", icon: CalendarDays },
 ];
 
+const SUBTITULO_ABA: Record<AbaId, string> = {
+  duelos: "Tabela de Duelos",
+  noticias: "Notícias",
+  classificacao: "Classificação",
+  artilharia: "Artilharia",
+  chaveamento: "Chaveamento",
+  proximos: "Próximos Campeonatos",
+  configuracoes: "Configurações",
+};
+
 const PLACEHOLDERS: Record<AbaId, { label: string; descricao: string }> = {
   duelos: { label: "Tabela de Duelos", descricao: "Em construção — disponível em breve" },
   noticias: { label: "Notícias do Campeonato", descricao: "Em construção — disponível em breve" },
@@ -175,6 +185,7 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
         nomeCampeonato={temporada?.season_name ?? "Campeonato"}
         fase={(temporada?.phase as FaseCampeonato) ?? null}
         serieNome={serieAtualNome}
+        subtitulo={SUBTITULO_ABA[abaAtiva]}
         loading={loadingTemporada}
         fontHeading={fontHeading}
         onAbrirDrawer={() => setDrawerAberto(true)}
@@ -297,6 +308,7 @@ interface HeaderProps {
   nomeCampeonato: string;
   fase: FaseCampeonato | null;
   serieNome: string;
+  subtitulo: string;
   loading: boolean;
   fontHeading?: string;
   onAbrirDrawer: () => void;
@@ -308,6 +320,7 @@ function HeaderCampeonato({
   nomeCampeonato,
   fase,
   serieNome,
+  subtitulo,
   loading,
   fontHeading,
   onAbrirDrawer,
@@ -325,18 +338,23 @@ function HeaderCampeonato({
           <Menu className="h-5 w-5" />
         </button>
 
-        <div className="flex-1 min-w-0 flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-primary flex-shrink-0" />
-          <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex items-center justify-center gap-2">
+          <Trophy className="h-5 w-5 text-primary flex-shrink-0" />
+          <div className="min-w-0 text-center">
             {loading ? (
-              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-32 mx-auto" />
             ) : (
-              <p
-                className="font-bold text-sm truncate"
-                style={{ fontFamily: fontHeading }}
-              >
-                {nomeCampeonato}
-              </p>
+              <>
+                <p
+                  className="font-bold text-sm truncate leading-tight"
+                  style={{ fontFamily: fontHeading }}
+                >
+                  {nomeCampeonato}
+                </p>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground leading-tight">
+                  {subtitulo}
+                </p>
+              </>
             )}
           </div>
           {fase && <BadgeFaseTemporada fase={fase} />}
@@ -465,12 +483,15 @@ function DrawerNavegacao({
                 <button
                   key={item.id}
                   onClick={() => onSelecionar(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
+                  className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm uppercase tracking-wider transition-colors ${
                     ativo
-                      ? "bg-primary text-primary-foreground font-semibold"
-                      : "text-foreground hover:bg-muted"
+                      ? "bg-foreground/10 text-primary font-bold"
+                      : "text-foreground/85 hover:bg-muted"
                   }`}
                 >
+                  {ativo && (
+                    <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r bg-primary" />
+                  )}
                   <Icon className="h-4 w-4" />
                   <span>{item.label}</span>
                 </button>
@@ -481,12 +502,15 @@ function DrawerNavegacao({
 
             <button
               onClick={() => onSelecionar("configuracoes")}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
+              className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm uppercase tracking-wider transition-colors ${
                 abaAtiva === "configuracoes"
-                  ? "bg-primary text-primary-foreground font-semibold"
-                  : "text-foreground hover:bg-muted"
+                  ? "bg-foreground/10 text-primary font-bold"
+                  : "text-foreground/85 hover:bg-muted"
               }`}
             >
+              {abaAtiva === "configuracoes" && (
+                <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r bg-primary" />
+              )}
               <Settings className="h-4 w-4" />
               <span>Configurações</span>
             </button>
