@@ -209,6 +209,7 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
             tierId={serieVisualizando}
             driverId={driverId}
             rodadaIndex={rodadaAtiva}
+            arenaNome={driver?.branches?.name ?? null}
             onRodadasResolvidas={(total, labels) => {
               setTotalRodadas(total);
               setRotulosRodadas(labels);
