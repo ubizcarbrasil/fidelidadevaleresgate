@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles, Wand2 } from "lucide-react";
+import { Sparkles, Wand2, Trophy, Filter, Hand } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import TabelaMotoristasRanqueados from "./TabelaMotoristasRanqueados";
 import PainelResumoTemporada from "./PainelResumoTemporada";
 import EditorManualSeries from "./EditorManualSeries";
+import ConfiguracaoLinhaCorte from "./ConfiguracaoLinhaCorte";
 import {
   useMotoristasRanqueados,
   type MotoristaRanqueado,
@@ -33,6 +34,8 @@ export interface PassoEstado {
   bloqueado: boolean;
 }
 
+export type ModoSelecaoMotoristas = "ranking" | "corte" | "manual";
+
 interface Props {
   branchId: string;
   inicio: string; // datetime-local
@@ -54,7 +57,11 @@ export default function PassoMotoristasESeries({
   aoMudarClassificacaoDias,
   aoMudar,
 }: Props) {
-  const { data: ranking } = useMotoristasRanqueados(branchId, 30);
+  const [modo, setModo] = useState<ModoSelecaoMotoristas>("ranking");
+  const [diasPeriodo, setDiasPeriodo] = useState<number>(30);
+  const [minimoCorridas, setMinimoCorridas] = useState<number>(5);
+
+  const { data: ranking } = useMotoristasRanqueados(branchId, diasPeriodo);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [distribuicao, setDistribuicao] = useState<Record<string, string[]>>(
     {},
@@ -284,9 +291,79 @@ export default function PassoMotoristasESeries({
 
   const maiorSerie = Math.max(0, ...series.map((s) => s.size));
   const minDias = minimoDiasClassificacao(maiorSerie);
+  const totalVagas = series.reduce((a, s) => a + s.size, 0);
+
+  const elegiveisCorte = useMemo(() => {
+    if (!ranking) return [] as MotoristaRanqueado[];
+    return ranking.filter((m) => m.rides_count >= minimoCorridas);
+  }, [ranking, minimoCorridas]);
+
+  // No modo "corte": auto-seleciona elegíveis e auto-distribui pelas séries.
+  useEffect(() => {
+    if (modo !== "corte" || !ranking) return;
+    const ids = elegiveisCorte
+      .slice(0, totalVagas)
+      .sort((a, b) => a.rank_position - b.rank_position);
+    setSelecionados(new Set(ids.map((m) => m.customer_id)));
+    const dist = distribuirTopNPorSerie(ids, series);
+    const map: Record<string, string[]> = {};
+    for (const [k, arr] of Object.entries(dist))
+      map[k] = arr.map((m) => m.customer_id);
+    setDistribuicao(map);
+  }, [modo, elegiveisCorte, totalVagas, series.map((s) => `${s.name}:${s.size}`).join("|")]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-1.5 rounded-md border bg-muted/30 p-1">
+        {([
+          { id: "ranking", label: "Ranking", icon: Trophy },
+          { id: "corte", label: "Linha de corte", icon: Filter },
+          { id: "manual", label: "Manual", icon: Hand },
+        ] as const).map((opt) => {
+          const Icon = opt.icon;
+          const ativo = modo === opt.id;
+          return (
+            <Button
+              key={opt.id}
+              type="button"
+              size="sm"
+              variant={ativo ? "default" : "ghost"}
+              className="h-8 w-full px-1.5 text-[11px] sm:text-xs"
+              onClick={() => setModo(opt.id)}
+            >
+              <Icon className="mr-1 h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{opt.label}</span>
+            </Button>
+          );
+        })}
+      </div>
+
+      {modo === "corte" && (
+        <ConfiguracaoLinhaCorte
+          diasPeriodo={diasPeriodo}
+          minimoCorridas={minimoCorridas}
+          totalElegiveis={elegiveisCorte.length}
+          totalNecessario={totalVagas}
+          aoMudarDias={setDiasPeriodo}
+          aoMudarMinimo={setMinimoCorridas}
+        />
+      )}
+
+      {modo === "corte" && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-8 text-[11px]"
+            onClick={() => setModo("manual")}
+          >
+            <Hand className="mr-1.5 h-3.5 w-3.5" />
+            Permitir edição manual
+          </Button>
+        </div>
+      )}
+
       <div className="space-y-3 rounded-md border border-primary/20 bg-primary/5 p-3">
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
           <div className="space-y-1">
@@ -332,6 +409,7 @@ export default function PassoMotoristasESeries({
         <p className="text-[10px] text-muted-foreground">
           Mínimo recomendado para classificação: {minDias}d
         </p>
+        {modo !== "corte" && (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <Button
             type="button"
@@ -339,9 +417,10 @@ export default function PassoMotoristasESeries({
             variant="outline"
             className="w-full"
             onClick={selecionarECompletarTopN}
+            disabled={modo === "manual"}
           >
             <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-            Top {series.reduce((a, s) => a + s.size, 0)} automático
+            Top {totalVagas} automático
           </Button>
           <Button
             type="button"
@@ -354,17 +433,20 @@ export default function PassoMotoristasESeries({
             Distribuir nas séries
           </Button>
         </div>
+        )}
       </div>
 
       <div className="grid gap-3 lg:grid-cols-[1fr_280px]">
         <div className="h-[60vh] min-h-[360px] lg:h-[480px]">
           <TabelaMotoristasRanqueados
             branchId={branchId}
+            sinceDays={diasPeriodo}
             selecionados={selecionados}
             serieDe={serieDe}
             aoAlternar={alternar}
             aoSelecionarTodos={selecionarTodos}
             aoLimparSelecao={limparSelecao}
+            somenteLeitura={modo === "corte"}
           />
         </div>
         <PainelResumoTemporada
@@ -375,15 +457,17 @@ export default function PassoMotoristasESeries({
         />
       </div>
 
-      <EditorManualSeries
-        series={series}
-        distribuicao={distribuicao}
-        selecionados={selecionados}
-        motoristas={ranking ?? []}
-        aoMover={moverManual}
-        aoReordenar={reordenarManual}
-        aoOrdenarPorRanking={ordenarPorRanking}
-      />
+      {modo === "manual" && (
+        <EditorManualSeries
+          series={series}
+          distribuicao={distribuicao}
+          selecionados={selecionados}
+          motoristas={ranking ?? []}
+          aoMover={moverManual}
+          aoReordenar={reordenarManual}
+          aoOrdenarPorRanking={ordenarPorRanking}
+        />
+      )}
     </div>
   );
 }
