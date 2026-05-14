@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { useFormContext, useWatch } from "react-hook-form";
-import { Input } from "@/components/ui/input";
+import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Trophy } from "lucide-react";
+import InputNumero from "@/compartilhados/components/input_numero";
 import {
   POSICOES_PREMIAVEIS,
   ROTULOS_POSICAO_PREMIO,
@@ -80,11 +80,15 @@ export default function EditorPremios() {
                   >
                     {ROTULOS_POSICAO_PREMIO[pos]}
                   </LabelComAjuda>
-                  <Input
-                    type="number"
-                    min={0}
-                    {...form.register(
-                      `prizesPerTier.${tierIdx}.prizes.${posIdx}.points`,
+                  <Controller
+                    control={form.control}
+                    name={`prizesPerTier.${tierIdx}.prizes.${posIdx}.points`}
+                    render={({ field }) => (
+                      <InputNumero
+                        value={field.value as number}
+                        onChange={(n) => field.onChange(n)}
+                        defaultOnEmpty={0}
+                      />
                     )}
                   />
                 </div>
