@@ -156,7 +156,7 @@ export default function DriverHomePage({
       <QuickActionCards
         fontHeading={fontHeading}
         showCityRedeem={isCityRedemptionEnabled}
-        showCityRedemptions
+        showCityRedemptions={isCityRedemptionEnabled}
         showBuyPoints={buyPointsEnabled}
         showCampeonato={showCampeonato}
         whatsappNumber={whatsappNumber}
