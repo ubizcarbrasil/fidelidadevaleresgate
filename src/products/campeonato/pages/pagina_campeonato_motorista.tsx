@@ -19,6 +19,9 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Camera } from "lucide-react";
+import BloqueioInscricaoSemFoto from "../components/motorista/BloqueioInscricaoSemFoto";
 import { supabase } from "@/integrations/supabase/client";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { useTemporadaAtivaDoMotorista } from "../hooks/hook_campeonato_motorista";
@@ -91,7 +94,13 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
 
   const { data: temporada, isLoading: loadingTemporada } =
     useTemporadaAtivaDoMotorista(brandId, driverId);
-  const { photoUrl } = useFotoPerfilMotorista(driverId);
+  const {
+    photoUrl,
+    temFoto,
+    isLoading: loadingFoto,
+    refetch: refetchFoto,
+  } = useFotoPerfilMotorista(driverId);
+  const [bloqueioFotoAberto, setBloqueioFotoAberto] = useState(false);
 
   const seasonId = temporada?.season_id ?? null;
 
@@ -192,6 +201,10 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
         onAbrirSeries={() => setBottomSheetAberto(true)}
         onRefresh={handleRefresh}
       />
+
+      {!loadingFoto && !temFoto && driverId && (
+        <BannerFotoObrigatoria onClick={() => setBloqueioFotoAberto(true)} />
+      )}
 
       {showSubHeader && (
         <SubHeaderRodada
@@ -298,6 +311,52 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
         }}
         fontHeading={fontHeading}
       />
+
+      <Dialog
+        open={bloqueioFotoAberto}
+        onOpenChange={(v) => !v && setBloqueioFotoAberto(false)}
+      >
+        <DialogContent className="max-w-md p-0">
+          <BloqueioInscricaoSemFoto
+            driverId={driverId}
+            fontHeading={fontHeading}
+            onFotoCadastrada={() => {
+              setBloqueioFotoAberto(false);
+              refetchFoto();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/* ───────────────────── BANNER FOTO OBRIGATÓRIA ─────────────── */
+
+function BannerFotoObrigatoria({ onClick }: { onClick: () => void }) {
+  return (
+    <div className="sticky top-[57px] z-30 bg-amber-500/15 border-b border-amber-500/40">
+      <div className="max-w-lg mx-auto flex items-center gap-3 px-4 py-2.5">
+        <div className="h-9 w-9 rounded-full bg-amber-500/25 flex items-center justify-center flex-shrink-0">
+          <Camera className="h-4 w-4 text-amber-700 dark:text-amber-300" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold leading-tight text-amber-900 dark:text-amber-100">
+            Foto obrigatória para participar
+          </p>
+          <p className="text-[10px] leading-tight text-amber-800/80 dark:text-amber-200/80">
+            Sem foto você não consegue se inscrever em campeonatos.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          variant="default"
+          onClick={onClick}
+          className="h-8 px-3 text-xs bg-amber-600 hover:bg-amber-700 text-white"
+        >
+          Adicionar
+        </Button>
+      </div>
     </div>
   );
 }
