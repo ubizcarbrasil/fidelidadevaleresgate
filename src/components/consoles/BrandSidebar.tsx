@@ -13,7 +13,7 @@ import { useResolvedModules } from "@/compartilhados/hooks/hook_modulos_resolvid
 import { USE_RESOLVED_MODULES } from "@/compartilhados/constants/constantes_features";
 import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
 import { useFormatoEngajamento } from "@/compartilhados/hooks/hook_formato_engajamento";
-import { useCampeonatoStandalone } from "@/products/campeonato/hooks/hook_campeonato_standalone";
+import { useCampeonatoStandalone } from "@/compartilhados/hooks/hook_campeonato_standalone";
 import { useProductScope } from "@/features/city_onboarding/hooks/hook_escopo_produto";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { supabase } from "@/integrations/supabase/client";

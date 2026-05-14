@@ -20,8 +20,10 @@ import DriverCityPartnersPage from "@/components/driver/DriverCityPartnersPage";
 import DriverCityRedemptionHistory from "@/components/driver/DriverCityRedemptionHistory";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 import DriverCategoryPage from "@/components/driver/DriverCategoryPage";
-import BadgeNotificacoes from "@/products/campeonato/components/notificacoes/BadgeNotificacoes";
-import OverlayNotificacoes from "@/products/campeonato/components/notificacoes/OverlayNotificacoes";
+import {
+  BadgeNotificacoes,
+  OverlayNotificacoes,
+} from "@/compartilhados/components/notificacoes_campeonato";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
 
 function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, initialDealId, isAdminSession }: {
