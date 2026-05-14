@@ -1474,27 +1474,39 @@ export type Database = {
       campeonato_artilharia_window_prizes: {
         Row: {
           created_at: string
+          description: string | null
           enabled: boolean
           id: string
           label: string | null
+          position: number
+          prize_kind: string | null
+          prize_value: string | null
           season_id: string
           updated_at: string
           window_key: string
         }
         Insert: {
           created_at?: string
+          description?: string | null
           enabled?: boolean
           id?: string
           label?: string | null
+          position?: number
+          prize_kind?: string | null
+          prize_value?: string | null
           season_id: string
           updated_at?: string
           window_key: string
         }
         Update: {
           created_at?: string
+          description?: string | null
           enabled?: boolean
           id?: string
           label?: string | null
+          position?: number
+          prize_kind?: string | null
+          prize_value?: string | null
           season_id?: string
           updated_at?: string
           window_key?: string

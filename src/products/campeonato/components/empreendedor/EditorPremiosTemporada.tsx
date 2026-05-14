@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Plus, Trophy, X } from "lucide-react";
-import SecaoPremiosArtilharia from "./SecaoPremiosArtilharia";
+import EditorPremiosArtilharia from "./EditorPremiosArtilharia";
 
 interface TierResumo {
   tier_id: string;
@@ -299,7 +299,7 @@ export default function EditorPremiosTemporada({ seasonId, tiers }: Props) {
         )}
       </CardContent>
     </Card>
-    <SecaoPremiosArtilharia seasonId={seasonId} />
+    <EditorPremiosArtilharia seasonId={seasonId} />
     </div>
   );
 }

@@ -8,6 +8,10 @@ import { AvatarMotorista } from "../shared/AvatarMotorista";
 import { useTopRiders } from "../../hooks/hook_artilharia";
 import type { JanelaArtilharia, TopRider } from "../../types/tipos_artilharia";
 import ModalDetalhesMotorista from "./ModalDetalhesMotorista";
+import {
+  useArtilhariaPremios,
+  formatarPremio,
+} from "../../hooks/hook_artilharia_premios";
 
 interface Props {
   brandId: string;
@@ -44,6 +48,10 @@ export default function AbaArtilharia({ brandId, seasonId, driverId }: Props) {
   const { data, isLoading, isError, error, refetch } = useTopRiders(
     seasonId,
     janelaAtiva,
+  );
+  const { data: premios } = useArtilhariaPremios(seasonId);
+  const premiosJanela = (premios ?? []).filter(
+    (p) => p.window_key === janelaAtiva,
   );
 
   useEffect(() => {
@@ -85,6 +93,30 @@ export default function AbaArtilharia({ brandId, seasonId, driverId }: Props) {
       <p className="text-xs text-muted-foreground px-1">
         {DESCRICOES[janelaAtiva]}
       </p>
+
+      {premiosJanela.length > 0 && (
+        <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3 space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            <Gift className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+            <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+              Prêmios desta janela
+            </p>
+          </div>
+          <ul className="space-y-0.5">
+            {premiosJanela.map((p) => (
+              <li
+                key={`${p.window_key}-${p.position}`}
+                className="text-[11px] text-foreground/90 flex items-baseline gap-2"
+              >
+                <span className="font-semibold tabular-nums w-6">
+                  {p.position}º
+                </span>
+                <span>{formatarPremio(p)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Lista */}
       <div className="rounded-lg border border-border bg-card overflow-hidden">
