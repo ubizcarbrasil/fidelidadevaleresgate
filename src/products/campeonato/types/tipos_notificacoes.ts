@@ -2,7 +2,10 @@ export type DueloNotificationEvent =
   | "season_created"
   | "knockout_started"
   | "match_result"
-  | "prize_received";
+  | "prize_received"
+  | "duelo_win"
+  | "duelo_loss"
+  | "duelo_draw";
 
 export interface DueloNotification {
   id: string;

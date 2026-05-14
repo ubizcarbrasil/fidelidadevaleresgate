@@ -1,4 +1,4 @@
-import { Bell, Crown, Gift, Swords, Trophy } from "lucide-react";
+import { Bell, Crown, Gift, Handshake, Swords, Trophy, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DueloNotification, DueloNotificationEvent } from "../../types/tipos_notificacoes";
 
@@ -7,6 +7,9 @@ const ICONS: Record<DueloNotificationEvent, React.ComponentType<{ className?: st
   knockout_started: Swords,
   match_result: Crown,
   prize_received: Gift,
+  duelo_win: Trophy,
+  duelo_loss: XCircle,
+  duelo_draw: Handshake,
 };
 
 function formatRelative(iso: string): string {
