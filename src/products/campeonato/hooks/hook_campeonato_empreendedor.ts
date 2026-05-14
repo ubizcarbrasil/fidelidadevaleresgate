@@ -13,13 +13,16 @@ import type { StatusFiltroSeason } from "../types/tipos_empreendedor";
 const STALE_DASHBOARD = 30_000;
 const STALE_HISTORICO = 5 * 60_000;
 
-export function useDashboardCampeonato(brandId?: string | null) {
+export function useDashboardCampeonato(
+  brandId?: string | null,
+  branchId?: string | null,
+) {
   return useQuery({
-    queryKey: ["empreendedor-dashboard-campeonato", brandId],
+    queryKey: ["empreendedor-dashboard-campeonato", brandId, branchId ?? null],
     enabled: !!brandId,
     staleTime: STALE_DASHBOARD,
     refetchInterval: STALE_DASHBOARD,
-    queryFn: () => obterDashboardCampeonato(brandId!),
+    queryFn: () => obterDashboardCampeonato(brandId!, branchId ?? null),
   });
 }
 
