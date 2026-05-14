@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Sparkles, CalendarClock } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -23,15 +23,17 @@ import {
 } from "../../constants/constantes_templates";
 import { DURACOES_FASES_PADRAO_HORAS } from "../../constants/constantes_campeonato";
 import {
-  calcularDatasAutomaticas,
-  formatarDataHora,
   nomeAutomaticoTemporada,
   paraInputDateTimeLocal,
   type DuracoesFasesHoras,
 } from "../../utils/utilitarios_campeonato";
+import { minimoDiasClassificacao } from "../../utils/utilitarios_data_final_temporada";
 import { useCriarTemporadaCompleta } from "../../hooks/hook_mutations_campeonato";
 import { useCheckSeasonOverlap } from "../../hooks/hook_overlap_temporada";
 import type { TemplateKey } from "../../types/tipos_empreendedor";
+import PassoMotoristasESeries, {
+  type PassoEstado,
+} from "./criar_temporada/PassoMotoristasESeries";
 
 interface Props {
   brandId: string;
@@ -56,17 +58,34 @@ export default function FormCriarTemporadaAutomatico({
     ...DURACOES_FASES_PADRAO_HORAS,
   });
   const [templateKey, setTemplateKey] = useState<TemplateKey>("padrao");
+  const [passo, setPasso] = useState<PassoEstado | null>(null);
+
+  const template = useMemo(
+    () => obterTemplatePorChave(templateKey),
+    [templateKey],
+  );
+  const seriesEntrada = useMemo(
+    () => template.series.map((s) => ({ name: s.name, size: s.size })),
+    [template],
+  );
+  const maiorSerie = Math.max(0, ...seriesEntrada.map((s) => s.size));
+  const [classificacaoDias, setClassificacaoDias] = useState<number>(
+    minimoDiasClassificacao(maiorSerie),
+  );
 
   const { mutate, isPending } = useCriarTemporadaCompleta();
 
   const datasCalculadas = useMemo(() => {
-    if (!inicio) return null;
-    try {
-      return calcularDatasAutomaticas(inicio, horas);
-    } catch {
-      return null;
-    }
-  }, [inicio, horas]);
+    if (!passo?.calculo) return null;
+    return {
+      classificationStartsAt: passo.calculo.classificationStartsAt.toISOString(),
+      classificationEndsAt: passo.calculo.classificationEndsAt.toISOString(),
+      knockoutStartsAt: passo.calculo.knockoutStartsAt.toISOString(),
+      knockoutEndsAt: passo.calculo.knockoutEndsAt.toISOString(),
+      year: passo.calculo.classificationStartsAt.getFullYear(),
+      month: passo.calculo.classificationStartsAt.getMonth() + 1,
+    };
+  }, [passo]);
 
   // Conflito mês/ano (mesma queryKey do modo avançado → desduplica)
   const { data: temporadaConflitante } = useQuery({
@@ -103,24 +122,16 @@ export default function FormCriarTemporadaAutomatico({
   );
   const temSobreposicao = !!temporadaSobreposta;
 
-  function atualizarHoras(campo: keyof DuracoesFasesHoras, valor: string) {
-    const n = Math.max(1, Math.min(720, Math.floor(Number(valor) || 0)));
-    setHoras((h) => ({ ...h, [campo]: n }));
-  }
-
-  const horasInvalidas =
-    !horas.duelo ||
-    !horas.oitavas ||
-    !horas.quartas ||
-    !horas.semi ||
-    !horas.final;
-
   const inicioInvalido =
     !inicio || !datasCalculadas || isNaN(new Date(inicio).getTime());
 
   function aoCriar() {
     if (!datasCalculadas) {
       toast.error("Informe uma data de início válida.");
+      return;
+    }
+    if (passo?.bloqueado) {
+      toast.error("Resolva os erros do resumo antes de criar.");
       return;
     }
     if (temSobreposicao) {
@@ -162,7 +173,7 @@ export default function FormCriarTemporadaAutomatico({
         entryFeeCents: 0,
         enrollmentOpensAt: null,
         enrollmentClosesAt: null,
-        defaultMatchHours: horas.duelo,
+        defaultMatchHours: horas.oitavas,
         publishToDrivers: true,
       },
       {
@@ -178,123 +189,54 @@ export default function FormCriarTemporadaAutomatico({
     <div className="space-y-5">
       <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
         <p className="flex items-center gap-2 font-medium text-foreground">
-          <Sparkles className="h-4 w-4 text-primary" /> Criação automática
+          <Sparkles className="h-4 w-4 text-primary" /> Criação assistida
         </p>
         <p className="mt-1 text-xs">
-          Informe a data de início e a duração de cada fase. O sistema calcula
-          tudo (nome, datas, séries e prêmios) usando o template escolhido.
+          Escolha a data de início e o template, selecione os motoristas e veja
+          a data final do campeonato calculada em tempo real.
         </p>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="inicio-auto">Início da temporada</Label>
-        <Input
-          id="inicio-auto"
-          type="datetime-local"
-          value={inicio}
-          onChange={(e) => setInicio(e.target.value)}
-        />
-      </div>
-
-      <div className="space-y-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="h-classificacao" className="text-sm">
-            Duração da Classificação (dias)
-          </Label>
+          <Label htmlFor="inicio-auto">Início da temporada</Label>
           <Input
-            id="h-classificacao"
-            type="number"
-            min={1}
-            max={60}
-            value={Math.max(1, Math.round(horas.duelo / 24))}
-            onChange={(e) => {
-              const dias = Math.max(1, Math.min(60, Math.floor(Number(e.target.value) || 0)));
-              setHoras((h) => ({ ...h, duelo: dias * 24 }));
-            }}
+            id="inicio-auto"
+            type="datetime-local"
+            value={inicio}
+            onChange={(e) => setInicio(e.target.value)}
           />
-          <p className="text-[11px] text-muted-foreground">
-            Fase de grupos / pontos corridos — janela em que todos os motoristas
-            da série acumulam pontos. Recomendado: ao menos 14 dias para uma
-            série de 16 motoristas.
-          </p>
         </div>
-        <Label className="text-sm">Duração das fases do mata-mata (horas)</Label>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {(
-            [
-              { k: "oitavas" as const, label: "Oitavas" },
-              { k: "quartas" as const, label: "Quartas" },
-              { k: "semi" as const, label: "Semi" },
-              { k: "final" as const, label: "Final" },
-            ]
-          ).map((f) => (
-            <div key={f.k} className="space-y-1">
-              <Label htmlFor={`h-${f.k}`} className="text-xs text-muted-foreground">
-                {f.label}
-              </Label>
-              <Input
-                id={`h-${f.k}`}
-                type="number"
-                min={1}
-                max={720}
-                value={horas[f.k]}
-                onChange={(e) => atualizarHoras(f.k, e.target.value)}
-              />
-            </div>
-          ))}
+        <div className="space-y-1.5">
+          <Label htmlFor="tpl-auto">Template de séries e prêmios</Label>
+          <Select
+            value={templateKey}
+            onValueChange={(v) => setTemplateKey(v as TemplateKey)}
+          >
+            <SelectTrigger id="tpl-auto">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TEMPLATES_CAMPEONATO.map((t) => (
+                <SelectItem key={t.key} value={t.key}>
+                  {t.label} — {t.series.length} série(s)
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="tpl-auto">Template de séries e prêmios</Label>
-        <Select
-          value={templateKey}
-          onValueChange={(v) => setTemplateKey(v as TemplateKey)}
-        >
-          <SelectTrigger id="tpl-auto">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {TEMPLATES_CAMPEONATO.map((t) => (
-              <SelectItem key={t.key} value={t.key}>
-                {t.label} — {t.series.length} série(s)
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground">
-          {obterTemplatePorChave(templateKey).description}
-        </p>
-      </div>
-
-      {datasCalculadas && (
-        <div className="rounded-md border border-border bg-muted/30 p-3 text-sm">
-          <p className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            <CalendarClock className="h-3.5 w-3.5" /> Resumo calculado
-          </p>
-          <ul className="space-y-1 text-xs">
-            <li>
-              <span className="text-muted-foreground">Nome:</span>{" "}
-              <span className="font-medium">
-                {nomeAutomaticoTemporada(
-                  datasCalculadas.year,
-                  datasCalculadas.month,
-                )}
-              </span>
-            </li>
-            <li>
-              <span className="text-muted-foreground">Classificação:</span>{" "}
-              {formatarDataHora(datasCalculadas.classificationStartsAt)} →{" "}
-              {formatarDataHora(datasCalculadas.classificationEndsAt)}
-            </li>
-            <li>
-              <span className="text-muted-foreground">Mata-mata:</span>{" "}
-              {formatarDataHora(datasCalculadas.knockoutStartsAt)} →{" "}
-              {formatarDataHora(datasCalculadas.knockoutEndsAt)}
-            </li>
-          </ul>
-        </div>
-      )}
+      <PassoMotoristasESeries
+        branchId={branchId}
+        inicio={inicio}
+        series={seriesEntrada}
+        horas={horas}
+        classificacaoDias={classificacaoDias}
+        aoMudarHoras={setHoras}
+        aoMudarClassificacaoDias={setClassificacaoDias}
+        aoMudar={setPasso}
+      />
 
       {temConflitoMesAno && (
         <p className="text-xs text-destructive">
@@ -306,10 +248,8 @@ export default function FormCriarTemporadaAutomatico({
       {temSobreposicao && temporadaSobreposta && (
         <p className="text-xs text-destructive">
           Conflito de período: a temporada{" "}
-          <strong>{temporadaSobreposta.name}</strong> ocupa{" "}
-          {formatarDataHora(temporadaSobreposta.classification_starts_at)} →{" "}
-          {formatarDataHora(temporadaSobreposta.knockout_ends_at)} nesta cidade. Ajuste o
-          início ou as durações para não sobrepor.
+          <strong>{temporadaSobreposta.name}</strong> ocupa este período nesta
+          cidade. Ajuste o início ou as durações para não sobrepor.
         </p>
       )}
 
@@ -328,7 +268,7 @@ export default function FormCriarTemporadaAutomatico({
           disabled={
             isPending ||
             inicioInvalido ||
-            horasInvalidas ||
+            !!passo?.bloqueado ||
             temConflitoMesAno ||
             temSobreposicao
           }
