@@ -24,7 +24,8 @@ import type {
 } from "../types/tipos_empreendedor";
 
 function invalidarTudo(qc: ReturnType<typeof useQueryClient>, brandId?: string) {
-  qc.invalidateQueries({ queryKey: ["empreendedor-dashboard-campeonato", brandId] });
+  qc.invalidateQueries({ queryKey: ["empreendedor-dashboard-campeonato"] });
+  qc.invalidateQueries({ queryKey: ["empreendedor-campeonato-kpis"] });
   qc.invalidateQueries({ queryKey: ["empreendedor-seasons"] });
   qc.invalidateQueries({ queryKey: ["empreendedor-season-summary"] });
   qc.invalidateQueries({ queryKey: ["empreendedor-series-detail"] });

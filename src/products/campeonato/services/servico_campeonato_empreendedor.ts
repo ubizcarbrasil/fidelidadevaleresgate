@@ -31,10 +31,12 @@ import type { DashboardKpisResponse } from "../types/tipos_dashboard_kpis";
 
 export async function obterDashboardCampeonato(
   brandId: string,
+  branchId?: string | null,
 ): Promise<DashboardCampeonatoData> {
-  const { data, error } = await supabase.rpc("brand_get_campeonato_dashboard", {
-    p_brand_id: brandId,
-  });
+  const { data, error } = await supabase.rpc(
+    "brand_get_campeonato_dashboard" as never,
+    { p_brand_id: brandId, p_branch_id: branchId ?? null } as never,
+  );
   if (error) throw error;
 
   /**

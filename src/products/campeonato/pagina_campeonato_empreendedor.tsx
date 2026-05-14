@@ -38,7 +38,7 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
   const { campeonatoHabilitado, isLoading: loadingHabilitacao } =
     useDueloCampeonatoHabilitado(brandId);
   const { isCampeonato, isLoading: loadingFormato } = useFormatoEngajamento(brandId);
-  const { data: dashboard, isLoading } = useDashboardCampeonato(brandId);
+  const { data: dashboard, isLoading } = useDashboardCampeonato(brandId, branchId);
   const seedingMutation = useExecutarSeedingTemporada(brandId);
   const [modalCriar, setModalCriar] = useState(false);
   const [modalDistribuicao, setModalDistribuicao] = useState(false);

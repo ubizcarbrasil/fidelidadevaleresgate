@@ -10483,10 +10483,9 @@ export type Database = {
         Returns: Json
       }
       brand_get_brackets_full: { Args: { p_season_id: string }; Returns: Json }
-      brand_get_campeonato_dashboard: {
-        Args: { p_brand_id: string }
-        Returns: Json
-      }
+      brand_get_campeonato_dashboard:
+        | { Args: { p_brand_id: string }; Returns: Json }
+        | { Args: { p_branch_id?: string; p_brand_id: string }; Returns: Json }
       brand_get_campeonato_kpis:
         | { Args: { p_brand_id: string }; Returns: Json }
         | { Args: { p_branch_id?: string; p_brand_id: string }; Returns: Json }

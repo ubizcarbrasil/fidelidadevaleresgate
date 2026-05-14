@@ -1,42 +1,46 @@
 ## Diagnóstico
 
-O painel "Maio 2026" está mostrando **2.407 motoristas** ignorando a cidade selecionada (Leme) porque a RPC `brand_get_campeonato_kpis` recebe **apenas `p_brand_id`** — não há filtro por `branch_id` em nenhuma camada.
+Há dois problemas separados no Campeonato de Leme:
 
-### Evidências
+1. **Erro ao clicar em “Distribuir motoristas agora”**
+   - A função de distribuição está bloqueando re-seed quando existe temporada anterior já semeada na mesma cidade.
+   - Em Leme existe uma temporada anterior de **Maio 2026** já semeada, então a temporada nova criada sem distribuição cai nesse erro:
+     `A cidade ... já tem temporada anterior semeada — use promoção/rebaixamento, não re-seed`.
 
-1. **RPC `brand_get_campeonato_kpis(p_brand_id uuid)`** (no banco):
-   - Busca a temporada com `WHERE s.brand_id = p_brand_id ... ORDER BY s.created_at DESC LIMIT 1` — pega a primeira temporada da marca, sem considerar a cidade.
-   - Conta `campeonato_tier_memberships` filtrando só por `season_id` — todos os motoristas daquela temporada entram, independentemente da cidade.
-   - `machine_rides` também é agregada por `brand_id`, sem `branch_id`.
+2. **Contagem de 2.407 motoristas**
+   - O painel principal ainda busca o dashboard por **marca**, sem passar `branchId`.
+   - Além disso, Leme realmente tem muitos clientes marcados como `[MOTORISTA]` no cadastro: encontrei **2.412 motoristas ativos** vinculados ao branch de Leme, sendo **2.270 criados em 20/04/2026**.
+   - Então parte da contagem vem de dado real do banco, e parte da tela ainda pode estar usando RPC sem filtro de cidade.
 
-2. **`campeonato_seasons` tem `branch_id`** (confirmado via schema) — ou seja, cada cidade tem suas próprias temporadas, mas a RPC não usa essa coluna.
+## Plano de correção
 
-3. **Frontend** (`DashboardOperacaoCampeonato.tsx` → `useBrandCampeonatoKPIs(brandId)`) recebe **só `brandId`** — o `branchId` selecionado no admin nunca chega à RPC.
+### 1. Filtrar o dashboard do empreendedor por cidade
+- Alterar o fluxo `useDashboardCampeonato` / `obterDashboardCampeonato` para receber `branchId`.
+- Atualizar a RPC `brand_get_campeonato_dashboard` para aceitar `p_branch_id` opcional.
+- Garantir que temporada ativa, séries, standings e totais sejam calculados somente para a cidade selecionada.
+- Atualizar `PaginaCampeonatoEmpreendedor` para chamar o dashboard com `brandId + branchId`.
 
-Resultado: o painel mostra a temporada mais recente da marca + todos os motoristas dela (provavelmente uma temporada de outra cidade, ou uma seedada brand-wide).
+### 2. Corrigir a ação “Distribuir motoristas agora”
+- Ajustar a lógica para não tentar “seed inicial” quando a cidade já tem temporada anterior semeada.
+- Quando houver temporada anterior, usar o fluxo correto de **promoção/rebaixamento** ou criar uma função segura que materialize as séries da nova temporada e migre os motoristas da temporada anterior para ela.
+- Retornar mensagem clara no botão quando for continuação de temporada, em vez de erro genérico.
 
-## Correção proposta
+### 3. Evitar temporada cancelada aparecer como ativa
+- Revisar `brand_get_campeonato_dashboard` para ignorar temporadas com `cancelled_at IS NOT NULL`, não apenas `phase != cancelled`.
+- Isso evita casos como “Julho 2026” aparecer com `phase = classification` mesmo estando cancelada.
 
-### 1. Migration — alterar a RPC
-`brand_get_campeonato_kpis(p_brand_id uuid, p_branch_id uuid DEFAULT NULL)`:
-- Filtrar `campeonato_seasons` por `brand_id AND (p_branch_id IS NULL OR branch_id = p_branch_id)`.
-- Em `campeonato_tier_memberships`, juntar com `customers` (ou coluna direta de `branch_id` na membership, se existir — verificar) para isolar por cidade.
-- Em `machine_rides`, adicionar `AND (p_branch_id IS NULL OR branch_id = p_branch_id)`.
-- Em `campeonato_attempts_log`, mesma adição.
-- Manter compatibilidade: quando `p_branch_id IS NULL`, comportamento atual (visão da marca inteira).
+### 4. Invalidar os caches corretos depois da distribuição
+- Atualizar invalidação para incluir as queries com `branchId`.
+- Incluir também os KPIs `empreendedor-campeonato-kpis` para refletir a distribuição imediatamente.
 
-### 2. Frontend — propagar `branchId`
-- `hook_kpis_campeonato.ts`: aceitar `branchId?: string | null`, incluir na queryKey e enviar como `p_branch_id`.
-- `servico_campeonato_empreendedor.ts` (`obterKpisCampeonato`): aceitar e enviar `p_branch_id`.
-- `DashboardOperacaoCampeonato.tsx`: receber `branchId` por prop.
-- `pagina_campeonato_empreendedor.tsx`: ler `?branchId=` da URL (já é o padrão do admin — ver memória "City View Dashboard") e passar para o dashboard.
+### 5. Validar no banco
+- Conferir para Leme:
+  - temporada ativa correta;
+  - tiers criadas;
+  - memberships por série;
+  - contagem do dashboard igual ao escopo da cidade;
+  - erro da Edge Function removido.
 
-### 3. Validação manual
-Após aplicar:
-- Acessar `?branchId=<leme-id>` → KPIs devem mostrar só a temporada e motoristas de Leme.
-- Sem `?branchId=` → comportamento atual (marca inteira) preservado.
+## Observação importante
 
-## Pontos a confirmar antes de codar
-
-- `campeonato_tier_memberships` tem coluna `branch_id` própria, ou precisa join com `customers.branch_id`? Vou verificar no banco antes da migration.
-- A intenção é que a visão "marca inteira" (sem branchId) continue existindo, ou todo dashboard de Campeonato passa a ser obrigatoriamente por cidade?
+A contagem alta de Leme não parece ser só bug visual: o banco contém milhares de registros ativos com `[MOTORISTA]` no branch de Leme. Depois de corrigir o filtro da tela, se você quiser, podemos fazer uma segunda etapa para auditar/importação desses motoristas e identificar se foram vinculados à cidade errada.
