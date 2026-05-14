@@ -456,7 +456,7 @@ function DrawerNavegacao({
           </div>
 
           {/* Itens */}
-          <nav className="flex-1 overflow-y-auto py-2">
+          <nav className="flex-1 overflow-y-auto py-2 px-2">
             {ITENS_NAVEGACAO.map((item) => {
               const ativo = abaAtiva === item.id;
               const Icon = item.icon;
@@ -464,7 +464,7 @@ function DrawerNavegacao({
                 <button
                   key={item.id}
                   onClick={() => onSelecionar(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 mx-2 rounded-md text-sm transition-colors ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
                     ativo
                       ? "bg-primary text-primary-foreground font-semibold"
                       : "text-foreground hover:bg-muted"
@@ -476,11 +476,11 @@ function DrawerNavegacao({
               );
             })}
 
-            <div className="my-2 mx-4 border-t border-border" />
+            <div className="my-2 border-t border-border" />
 
             <button
               onClick={() => onSelecionar("configuracoes")}
-              className={`w-full flex items-center gap-3 px-4 py-3 mx-2 rounded-md text-sm transition-colors ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
                 abaAtiva === "configuracoes"
                   ? "bg-primary text-primary-foreground font-semibold"
                   : "text-foreground hover:bg-muted"
