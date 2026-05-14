@@ -16,6 +16,7 @@ import CardResumoSerie from "./components/empreendedor/CardResumoSerie";
 import AcoesTemporadaAtiva from "./components/empreendedor/AcoesTemporadaAtiva";
 import BannerStatusTemporada from "./components/empreendedor/BannerStatusTemporada";
 import ListaTemporadasAnteriores from "./components/empreendedor/ListaTemporadasAnteriores";
+import ProximosCampeonatosAdmin from "./components/empreendedor/ProximosCampeonatosAdmin";
 import DetalheSerieView from "./components/empreendedor/DetalheSerieView";
 import CardPremiosADistribuir from "./components/empreendedor/CardPremiosADistribuir";
 import CardAtivarCampeonato from "./components/empreendedor/CardAtivarCampeonato";
@@ -320,6 +321,10 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
       )}
 
       {isCampeonato && <ListaTemporadasAnteriores brandId={brandId} />}
+
+      {isCampeonato && (
+        <ProximosCampeonatosAdmin brandId={brandId} branchId={branchId} />
+      )}
 
       <FormCriarTemporada
         open={modalCriar}
