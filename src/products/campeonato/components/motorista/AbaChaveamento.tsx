@@ -347,8 +347,8 @@ function CardConfrontoBracket({ bracket, destacado, onClick }: CardProps) {
       disabled={!definido}
       className={`w-full rounded-md border bg-card text-left transition-colors ${
         isMy
-          ? "border-primary ring-2 ring-primary/40"
-          : "border-border/40"
+          ? "border-primary ring-2 ring-primary/50 neon-glow"
+          : "border-primary/40"
       } ${destacado ? "ring-2 ring-accent/40" : ""} ${
         definido ? "hover:bg-muted/40 cursor-pointer" : "cursor-default opacity-90"
       }`}
