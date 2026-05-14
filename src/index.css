@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Fontes display do Campeonato (estádio / transmissão) ── */
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600;700;800;900&display=swap");
+
 @layer base {
   /* ── SaaS Premium Dark Palette ── */
   /* Both :root and .dark point to the same dark palette */
