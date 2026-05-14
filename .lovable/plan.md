@@ -1,21 +1,22 @@
-Plano para destravar a criação da temporada:
+Vou corrigir diretamente os dois problemas reais encontrados no código:
 
-1. Corrigir a regra no banco
-- Trocar a restrição única atual de `campeonato_seasons` que bloqueia qualquer nova temporada com mesmo mês/ano/cidade.
-- Substituir por um índice único parcial que só bloqueia temporadas não canceladas (`cancelled_at IS NULL`).
-- Resultado: temporada cancelada deixa de impedir uma nova temporada no mesmo mês/cidade.
+1. **Esconder módulos desativados no painel do motorista**
+   - Ajustar `DriverHomePage` para não enviar `showCityRedemptions` sempre ligado.
+   - `Meus Resgates` só aparecerá quando `Resgate na Cidade` estiver ativo para a cidade.
+   - `Comprar Pontos` continuará dependendo apenas de `enable_driver_points_purchase === true`.
+   - `Resgate na Cidade` continuará dependendo de `is_city_redemption_enabled === true`.
+   - Vou manter a regra do projeto: flags ausentes em `branch_settings_json` contam como desligadas.
 
-2. Corrigir a materialização das séries
-- Tornar `campeonato_materialize_and_seed_season` idempotente para séries já parcialmente criadas.
-- Evitar erro de chave duplicada em `campeonato_season_tiers` usando upsert/ignore por `(season_id, tier_order)`.
-- Resultado: se a criação ou distribuição for tentada duas vezes, não quebra com duplicidade.
+2. **Corrigir entrada na tela do Campeonato**
+   - Hoje o botão navega para `/motorista/campeonato` sem preservar `brandId`, e a rota só resolve a marca se estiver no domínio oficial. Em preview/app genérico isso cai em “Não foi possível identificar a marca”.
+   - Vou alterar todas as navegações do painel do motorista para abrir `/motorista/campeonato?brandId=<marca>`.
+   - Também vou preservar `sessionKey` quando existir, para não quebrar sessões administrativas/impersonadas.
+   - O clique em notificações com `campeonato=1` seguirá a mesma regra.
 
-3. Ajustar o frontend para refletir a regra real
-- Manter as consultas de conflito considerando apenas temporadas não canceladas.
-- Melhorar o tratamento de erro de duplicidade para não dizer “cancele/exclua” quando o problema for índice antigo/temporada cancelada.
-- Depois de cancelar, remover/refazer imediatamente as queries de conflito e sobreposição.
+3. **Evitar flash de módulo antes de carregar permissões**
+   - A Home do motorista só será renderizada depois que os módulos da marca e a cidade efetiva estiverem resolvidos.
+   - Isso evita exibir atalhos com base em estado parcial.
 
-4. Validar
-- Conferir no banco que as temporadas de Maio/2026 canceladas existem, mas não bloqueiam.
-- Testar a criação novamente para a mesma cidade/mês.
-- Verificar que a mensagem da tela desaparece e que a criação não cai mais em erro 500/duplicidade.
+4. **Validação**
+   - Verificar no código que os cards destacados ficam condicionados às flags certas.
+   - Verificar que a URL do Campeonato sempre recebe `brandId` a partir da marca carregada.
