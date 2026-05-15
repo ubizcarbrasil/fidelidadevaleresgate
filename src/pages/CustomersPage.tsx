@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import CustomerLedgerDrawer from "@/components/CustomerLedgerDrawer";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import { getTierInfo, getTierFromRideCount, CRM_SYNC_LABELS, TIERS } from "@/lib/tierUtils";
 import DataSkeleton from "@/components/DataSkeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -45,7 +46,7 @@ export default function CustomersPage() {
   const autoSyncTriggered = useRef(false);
 
   const { data: orphanCount } = useQuery({
-    queryKey: ["crm-orphan-count", currentBrandId],
+    queryKey: queryKeys.crm.orphanCount.list(currentBrandId),
     queryFn: async () => {
       if (!currentBrandId) return 0;
       const { count, error } = await supabase

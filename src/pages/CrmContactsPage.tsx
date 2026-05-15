@@ -12,6 +12,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCrmContacts, useCrmContactEvents, useCrmContactStats, SOURCE_LABELS, SOURCE_COLORS } from "@/modules/crm";
 import { Users, Smartphone, Globe, Upload, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { queryKeys } from "@/lib/queryKeys";
 import { getTierInfo } from "@/lib/tierUtils";
 
 export default function CrmContactsPage() {
@@ -34,7 +35,7 @@ export default function CrmContactsPage() {
   // Fetch linked customer data for displaying points
   const contactIds = (data?.contacts || []).filter(c => c.customer_id).map(c => c.customer_id);
   const { data: linkedCustomers } = useQuery({
-    queryKey: ["crm-linked-customers", contactIds],
+    queryKey: queryKeys.crm.linkedCustomers.list(contactIds),
     enabled: contactIds.length > 0,
     queryFn: async () => {
       const { data } = await supabase.from("customers").select("id, points_balance, money_balance, customer_tier, ride_count").in("id", contactIds as string[]);

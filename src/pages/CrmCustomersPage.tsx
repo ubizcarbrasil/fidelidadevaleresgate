@@ -15,6 +15,7 @@ import { ArrowLeft, Users, Search, Download, ArrowUpDown, Gift } from "lucide-re
 import ManualCustomerScoringDialog from "@/components/machine-integration/ManualCustomerScoringDialog";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { queryKeys } from "@/lib/queryKeys";
 
 const STATUS_LABELS: Record<string, string> = {
   active: "Ativo",
@@ -220,7 +221,7 @@ export default function CrmCustomersPage() {
           onOpenChange={(open) => {
             if (!open) {
               setBonusCustomer(null);
-              qc.invalidateQueries({ queryKey: ["crm-analytics-full"] });
+              qc.invalidateQueries({ queryKey: queryKeys.crm.analyticsFull.all });
             }
           }}
           customer={bonusCustomer ? { id: bonusCustomer.id, name: bonusCustomer.name } : null}

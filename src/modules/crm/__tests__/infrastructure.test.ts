@@ -69,4 +69,12 @@ describe("queryKeys", () => {
     expect(queryKeys.vouchers.all[0]).not.toBe(queryKeys.customers.all[0]);
     expect(queryKeys.loyalty.earnings.all[0]).toBe("loyalty-earnings");
   });
+
+  it("should expose the extended CRM entries used by hooks/pages", () => {
+    expect(queryKeys.crm.contactEvents.all).toEqual(["crm-contact-events"]);
+    expect(queryKeys.crm.contactStats.all).toEqual(["crm-contact-stats"]);
+    expect(queryKeys.crm.eventStats.all).toEqual(["crm-event-stats"]);
+    expect(queryKeys.crm.audiencesSelect.all).toEqual(["crm-audiences-select"]);
+    expect(queryKeys.crm.tierDistribution.all).toEqual(["crm-tier-distribution"]);
+  });
 });
