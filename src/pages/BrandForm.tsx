@@ -22,6 +22,7 @@ import type { OfferCardConfig } from "@/hooks/useOfferCardConfig";
 import { DEFAULT_CONFIG } from "@/hooks/useOfferCardConfig";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBrandModules } from "@/hooks/useBrandModules";
+import { queryKeys } from "@/lib/queryKeys";
 
 // Planos padrão (legado interno) — mantidos para compatibilidade.
 const LEGACY_PLAN_OPTIONS = [
@@ -205,7 +206,7 @@ export default function BrandForm() {
           try {
             await invokeAdminAction({ action: "change_plan", brand_id: id, plan: subscriptionPlan });
             setInitialPlan(subscriptionPlan);
-            queryClient.invalidateQueries({ queryKey: ["brands"] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.brands.all });
             toast.success(`Marca atualizada e plano alterado para ${currentPlanLabel}!`);
           } catch (err: any) {
             toast.error(`Marca salva, mas falha ao trocar plano: ${err.message}`);

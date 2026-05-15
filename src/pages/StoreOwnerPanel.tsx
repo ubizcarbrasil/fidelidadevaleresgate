@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrand } from "@/contexts/BrandContext";
+import { queryKeys } from "@/lib/queryKeys";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -76,7 +77,7 @@ export default function StoreOwnerPanel() {
   // Use store's brand_id to query modules (store_admin users may not have brand context)
   const storeBrandId = store?.brand_id || brand?.id || null;
   const { data: storeModules } = useQuery({
-    queryKey: ["brand-modules-active", storeBrandId],
+    queryKey: queryKeys.brandModulesActive.list(storeBrandId),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("brand_modules")

@@ -77,4 +77,16 @@ describe("queryKeys", () => {
     expect(queryKeys.crm.audiencesSelect.all).toEqual(["crm-audiences-select"]);
     expect(queryKeys.crm.tierDistribution.all).toEqual(["crm-tier-distribution"]);
   });
+
+  it("should expose stable cache keys for the brand entries consumed in pages/hooks", () => {
+    expect(queryKeys.brands.all).toEqual(["brands"]);
+    expect(queryKeys.brandsSelect.list("b1")).toEqual(["brands-select", "list", "b1"]);
+    expect(queryKeys.brandTrial.list("b1")).toEqual(["brand-trial-status", "list", "b1"]);
+    expect(queryKeys.brandScoringModels.list("b1")).toEqual(["brand-scoring-models", "list", "b1"]);
+    expect(queryKeys.brandModulesActive.list("b1")).toEqual(["brand-modules-active", "list", "b1"]);
+    expect(queryKeys.brandModules.list("b1")).toEqual(["brand-modules", "list", "b1"]);
+    expect(queryKeys.brandSettings.list("b1")).toEqual(["brand-settings", "list", "b1"]);
+    expect(queryKeys.brandDetail.all).toEqual(["brand-detail"]);
+    expect(queryKeys.brandTeam.list("b1")).toEqual(["brand-team", "list", "b1"]);
+  });
 });

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBrandScoringModels } from "@/hooks/useBrandScoringModels";
+import { queryKeys } from "@/lib/queryKeys";
 import { useProductScope } from "@/features/city_onboarding/hooks/hook_escopo_produto";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,7 +38,7 @@ export default function PaginaConversaoResgate() {
   const [dirty, setDirty] = useState(false);
 
   const { data: settings, isLoading } = useQuery({
-    queryKey: ["brand-settings", currentBrandId],
+    queryKey: queryKeys.brandSettings.list(currentBrandId),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("brands")
@@ -82,7 +83,7 @@ export default function PaginaConversaoResgate() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["brand-settings"] });
+      qc.invalidateQueries({ queryKey: queryKeys.brandSettings.all });
       qc.invalidateQueries({ queryKey: ["brand-points-per-real"] });
       toast.success("Taxas de conversão salvas com sucesso!");
       setDirty(false);

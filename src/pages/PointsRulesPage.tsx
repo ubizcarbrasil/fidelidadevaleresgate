@@ -4,6 +4,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -61,7 +62,8 @@ export default function PointsRulesPage() {
   const [form, setForm] = useState<RuleForm>(emptyForm);
 
   const { data: brands } = useQuery({
-    queryKey: ["brands-select"],
+    queryKey: queryKeys.brandsSelect.all,
+    staleTime: 10 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase.from("brands").select("id, name").order("name");
       if (error) throw error;

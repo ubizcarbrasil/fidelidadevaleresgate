@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useBrand } from "@/contexts/BrandContext";
+import { queryKeys } from "@/lib/queryKeys";
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 import { DataTableControls } from "@/components/DataTableControls";
 import { Card, CardContent } from "@/components/ui/card";
@@ -48,7 +49,7 @@ export default function ProdutosResgatePage() {
 
   // Query dedicada para brand_settings_json (brand pode ser null no admin)
   const { data: brandSettings } = useQuery({
-    queryKey: ["brand-settings", currentBrandId],
+    queryKey: queryKeys.brandSettings.list(currentBrandId),
     queryFn: async () => {
       const { data } = await supabase
         .from("brands")
@@ -79,7 +80,7 @@ export default function ProdutosResgatePage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["brand-settings", currentBrandId] });
+      qc.invalidateQueries({ queryKey: queryKeys.brandSettings.list(currentBrandId) });
       toast.success("Linhas de resgate atualizadas");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -275,7 +276,7 @@ export default function ProdutosResgatePage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["brand-settings", currentBrandId] });
+      qc.invalidateQueries({ queryKey: queryKeys.brandSettings.list(currentBrandId) });
       toast.success("Configuração de espelhamento atualizada");
     },
     onError: (e: Error) => toast.error(e.message),

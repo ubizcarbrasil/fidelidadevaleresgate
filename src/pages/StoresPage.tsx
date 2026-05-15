@@ -20,6 +20,7 @@ import EmptyState from "@/components/customer/EmptyState";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import ImageUploadField from "@/components/ImageUploadField";
 import DataSkeleton from "@/components/DataSkeleton";
 import { format } from "date-fns";
@@ -83,7 +84,7 @@ export default function StoresPage() {
     },
   });
 
-  const { data: brands } = useQuery({ queryKey: ["brands-select", currentBrandId], queryFn: async () => { let q = supabase.from("brands").select("id, name").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("id", currentBrandId); const { data } = await q; return data || []; } });
+  const { data: brands } = useQuery({ queryKey: queryKeys.brandsSelect.list(currentBrandId), queryFn: async () => { let q = supabase.from("brands").select("id, name").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("id", currentBrandId); const { data } = await q; return data || []; } });
   const { data: branches } = useQuery({ queryKey: ["branches-select", currentBrandId], queryFn: async () => { let q = supabase.from("branches").select("id, name, brand_id").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId); const { data } = await q; return data || []; } });
   const filteredBranches = branches?.filter(b => b.brand_id === form.brand_id) || [];
 

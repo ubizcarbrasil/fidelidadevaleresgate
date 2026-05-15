@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 
 export type ScoringModel = "DRIVER_ONLY" | "PASSENGER_ONLY" | "BOTH";
 
@@ -12,7 +13,7 @@ export function useBrandScoringModels() {
   const { currentBrandId } = useBrandGuard();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["brand-scoring-models", currentBrandId],
+    queryKey: queryKeys.brandScoringModels.list(currentBrandId),
     queryFn: async () => {
       if (!currentBrandId) return { isDriverEnabled: true, isPassengerEnabled: true };
 

@@ -4,13 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Clock, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { queryKeys } from "@/lib/queryKeys";
 
 export default function TrialBanner() {
   const { currentBrandId } = useBrandGuard();
   const navigate = useNavigate();
 
   const { data: brand } = useQuery({
-    queryKey: ["brand-trial-status", currentBrandId],
+    queryKey: queryKeys.brandTrial.list(currentBrandId),
     queryFn: async () => {
       if (!currentBrandId) return null;
       const { data } = await supabase

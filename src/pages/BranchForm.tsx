@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, MapPin } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 
 const STATES = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
@@ -58,7 +59,7 @@ export default function BranchForm() {
   const isLoadingEdit = useRef(false);
 
   const { data: brands } = useQuery({
-    queryKey: ["brands-select", currentBrandId, isRootAdmin],
+    queryKey: queryKeys.brandsSelect.list(currentBrandId, isRootAdmin),
     queryFn: async () => {
       let query = supabase.from("brands").select("id, name, tenants(name)").eq("is_active", true);
       if (!isRootAdmin && currentBrandId) {

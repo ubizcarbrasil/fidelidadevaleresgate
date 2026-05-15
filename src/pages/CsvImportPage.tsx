@@ -251,7 +251,7 @@ export default function CsvImportPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const { data: brands } = useQuery({
-    queryKey: ["brands-select"],
+    queryKey: queryKeys.brandsSelect.all,
     queryFn: async () => {
       const { data } = await supabase.from("brands").select("id, name").eq("is_active", true).order("name");
       return data || [];

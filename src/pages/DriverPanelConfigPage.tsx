@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -115,7 +116,7 @@ function DriverHubToggle({ brandId }: { brandId: string | null }) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["driver-hub-module", brandId] });
-      qc.invalidateQueries({ queryKey: ["brand-modules-active", brandId] });
+      qc.invalidateQueries({ queryKey: queryKeys.brandModulesActive.list(brandId) });
       toast({ title: "Home do Motorista atualizada" });
     },
   });
