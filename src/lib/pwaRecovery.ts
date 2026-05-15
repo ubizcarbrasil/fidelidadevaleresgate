@@ -18,10 +18,48 @@ export async function clearRuntimeCaches() {
 
 export async function recoverFromChunkError() {
   try {
+    showRecoveryOverlay();
     await clearRuntimeCaches();
   } finally {
-    window.location.replace(buildCacheBustedUrl());
+    // Pequeno atraso para o usuário enxergar o aviso antes do reload.
+    setTimeout(() => {
+      window.location.replace(buildCacheBustedUrl());
+    }, 900);
   }
+}
+
+/**
+ * Mostra um overlay leve avisando que a página está sendo atualizada.
+ * Usa DOM puro (sem React) porque é chamado quando o app pode estar quebrado.
+ */
+function showRecoveryOverlay() {
+  if (typeof document === "undefined") return;
+  if (document.getElementById("__pwa_recovery_overlay__")) return;
+  const el = document.createElement("div");
+  el.id = "__pwa_recovery_overlay__";
+  el.setAttribute("role", "alert");
+  el.style.cssText = [
+    "position:fixed",
+    "inset:0",
+    "z-index:2147483647",
+    "display:flex",
+    "flex-direction:column",
+    "align-items:center",
+    "justify-content:center",
+    "gap:16px",
+    "background:rgba(10,10,26,0.96)",
+    "color:#e8edf3",
+    "font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif",
+    "text-align:center",
+    "padding:24px",
+  ].join(";");
+  el.innerHTML = `
+    <div style="width:42px;height:42px;border:3px solid rgba(255,255,255,0.15);border-top-color:#7dd3fc;border-radius:50%;animation:__pwa_spin 0.9s linear infinite"></div>
+    <div style="font-size:16px;font-weight:600">Atualizando o aplicativo…</div>
+    <div style="font-size:13px;color:#94a3b8;max-width:280px">Detectamos uma versão antiga em cache. Recarregando com a versão mais recente.</div>
+    <style>@keyframes __pwa_spin{to{transform:rotate(360deg)}}</style>
+  `;
+  document.body.appendChild(el);
 }
 
 /**
