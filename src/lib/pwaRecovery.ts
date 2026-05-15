@@ -4,27 +4,72 @@ function buildCacheBustedUrl() {
   return url.toString();
 }
 
+const CACHE_OPERATION_TIMEOUT_MS = 1_500;
+const RECOVERY_RELOAD_DELAY_MS = 900;
+const RECOVERY_RELOAD_FLAG = "__pwa_recovery_reload_scheduled__";
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs = CACHE_OPERATION_TIMEOUT_MS): Promise<T | null> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const timer = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      resolve(null);
+    }, timeoutMs);
+
+    promise
+      .then((value) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timer);
+        resolve(value);
+      })
+      .catch(() => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timer);
+        resolve(null);
+      });
+  });
+}
+
+function scheduleRecoveryReload() {
+  if ((window as unknown as Record<string, boolean>)[RECOVERY_RELOAD_FLAG]) return;
+  (window as unknown as Record<string, boolean>)[RECOVERY_RELOAD_FLAG] = true;
+  window.setTimeout(() => {
+    window.location.replace(buildCacheBustedUrl());
+  }, RECOVERY_RELOAD_DELAY_MS);
+}
+
 export async function clearRuntimeCaches() {
   if ("serviceWorker" in navigator) {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    await Promise.all(registrations.map((registration) => registration.unregister().catch(() => false)));
+    const registrations = await withTimeout(navigator.serviceWorker.getRegistrations());
+    await Promise.all(
+      (registrations ?? []).map((registration) =>
+        withTimeout(registration.unregister()).catch(() => false),
+      ),
+    );
   }
 
   if ("caches" in window) {
-    const cacheKeys = await caches.keys();
-    await Promise.all(cacheKeys.map((cacheKey) => caches.delete(cacheKey).catch(() => false)));
+    const cacheKeys = await withTimeout(caches.keys());
+    await Promise.all(
+      (cacheKeys ?? []).map((cacheKey) =>
+        withTimeout(caches.delete(cacheKey)).catch(() => false),
+      ),
+    );
   }
 }
 
 export async function recoverFromChunkError() {
+  showRecoveryOverlay();
+  // Agenda o reload antes da limpeza: em iOS/PWA algumas APIs de cache/SW
+  // podem travar indefinidamente, deixando o usuário preso no overlay.
+  scheduleRecoveryReload();
   try {
-    showRecoveryOverlay();
     await clearRuntimeCaches();
-  } finally {
-    // Pequeno atraso para o usuário enxergar o aviso antes do reload.
-    setTimeout(() => {
-      window.location.replace(buildCacheBustedUrl());
-    }, 900);
+  } catch {
+    // O reload já está agendado; falhas na limpeza não devem bloquear a abertura.
   }
 }
 
@@ -77,6 +122,9 @@ export function isRecoverableDomError(message: string | undefined | null): boole
     m.includes("loading css chunk") ||
     m.includes("removechild") ||
     m.includes("insertbefore") ||
+    m.includes("object can not be found here") ||
+    m.includes("object cannot be found here") ||
+    m.includes("node could not be found") ||
     (m.includes("not a child of this node"))
   );
 }
