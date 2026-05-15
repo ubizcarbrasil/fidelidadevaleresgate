@@ -106,7 +106,7 @@ export default function RotaCampeonatoMotorista() {
         .eq("is_active", true)
         .maybeSingle();
       if (brandError || !b) {
-        trackStage(ROUTE, "brand-loader", "error", brandError?.message ?? "brand não encontrada");
+        trackStage(ROUTE, "brand-loader", "error", brandError?.message || "brand não encontrada");
         setError("Marca não encontrada.");
         setLoading(false);
         return;
