@@ -72,6 +72,35 @@
         }
       })();
     </script>
+    <script>
+      // ── SW VERSION GUARD (todas as rotas) ─────────────────────────────────
+      // Quando o BUILD_VERSION (meta app-version) muda em relação ao último
+      // visto pelo navegador, limpamos UMA vez Service Workers + caches para
+      // evitar tela preta por chunks fantasmas (Vite re-otimizou deps com
+      // novo hash, mas o SW ainda serve HTML/asset velho).
+      // Idempotente: roda no máximo 1x por versão. Não recarrega.
+      (function(){
+        try {
+          var meta = document.querySelector('meta[name="app-version"]');
+          var BUILD_VERSION = (meta && meta.getAttribute("content")) || "unknown";
+          var KEY = "__app_sw_build__";
+          var lastSeen = null;
+          try { lastSeen = localStorage.getItem(KEY); } catch(_){}
+          if (lastSeen === BUILD_VERSION) return;
+          try { localStorage.setItem(KEY, BUILD_VERSION); } catch(_){}
+          if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs){
+              (regs || []).forEach(function(r){ try { r.unregister(); } catch(_){} });
+            }).catch(function(){});
+          }
+          if (typeof caches !== "undefined") {
+            caches.keys().then(function(keys){
+              (keys || []).forEach(function(k){ try { caches.delete(k); } catch(_){} });
+            }).catch(function(){});
+          }
+        } catch(_) { /* nunca bloqueia o boot */ }
+      })();
+    </script>
     <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
