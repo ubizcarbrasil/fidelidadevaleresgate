@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import { TelaCarregamentoInline } from "@/compartilhados/components/tela_carregamento";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -96,7 +97,7 @@ export default function Brands() {
     }));
 
   const { data, isLoading } = useQuery({
-    queryKey: ["brands", debouncedSearch, page],
+    queryKey: queryKeys.brands.list(debouncedSearch, page),
     queryFn: async () => {
       let query = supabase.from("brands").select("*, tenants(name)", { count: "exact" });
       if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,slug.ilike.%${debouncedSearch}%`);
@@ -112,7 +113,7 @@ export default function Brands() {
       const { error } = await supabase.from("brands").update({ is_active }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["brands"] }); toast.success("Status atualizado!"); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.brands.all }); toast.success("Status atualizado!"); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -145,7 +146,7 @@ export default function Brands() {
     try {
       setActionLoading(true);
       await invokeAdminAction({ action: "change_plan", brand_id: brandId, plan });
-      queryClient.invalidateQueries({ queryKey: ["brands"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.brands.all });
       toast.success(`Plano alterado para ${plan}!`);
     } catch (e: any) {
       toast.error(e.message);
@@ -159,7 +160,7 @@ export default function Brands() {
     try {
       setActionLoading(true);
       await invokeAdminAction({ action: "delete_brand", brand_id: deleteTarget.id });
-      queryClient.invalidateQueries({ queryKey: ["brands"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.brands.all });
       toast.success("Marca excluída permanentemente!");
       setDeleteTarget(null);
       setDeleteConfirmName("");
@@ -198,9 +199,9 @@ export default function Brands() {
         new_status: renewStatus,
         trial_days: renewStatus === "TRIAL" ? Number(renewTrialDays) : undefined,
       });
-      queryClient.invalidateQueries({ queryKey: ["brands"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.brands.all });
       queryClient.invalidateQueries({ queryKey: ["brand-trial-blocker", renewTarget.id] });
-      queryClient.invalidateQueries({ queryKey: ["brand-trial-status", renewTarget.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.brandTrial.list(renewTarget.id) });
       const statusLabel = STATUS_OPTIONS.find(s => s.key === renewStatus)?.label || renewStatus;
       const trialMsg = renewStatus === "TRIAL" ? ` (${renewTrialDays} dias)` : "";
       toast.success(`Assinatura atualizada para ${statusLabel}${trialMsg}!`);

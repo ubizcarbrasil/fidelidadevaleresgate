@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import CustomerLedgerDrawer from "@/components/CustomerLedgerDrawer";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import { getTierInfo, getTierFromRideCount, CRM_SYNC_LABELS, TIERS } from "@/lib/tierUtils";
 import DataSkeleton from "@/components/DataSkeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -91,7 +92,7 @@ export default function CustomersPage() {
     },
   });
 
-  const { data: brands } = useQuery({ queryKey: ["brands-select", currentBrandId], queryFn: async () => { let q = supabase.from("brands").select("id, name").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("id", currentBrandId); const { data } = await q; return data || []; } });
+  const { data: brands } = useQuery({ queryKey: queryKeys.brandsSelect.list(currentBrandId), queryFn: async () => { let q = supabase.from("brands").select("id, name").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("id", currentBrandId); const { data } = await q; return data || []; } });
   const { data: branches } = useQuery({ queryKey: ["branches-select", currentBrandId], queryFn: async () => { let q = supabase.from("branches").select("id, name, brand_id").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId); const { data } = await q; return data || []; } });
   const filteredBranches = branches?.filter(b => b.brand_id === form.brand_id) || [];
 

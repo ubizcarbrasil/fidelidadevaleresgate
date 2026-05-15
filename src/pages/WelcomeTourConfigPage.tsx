@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,8 +75,8 @@ export default function WelcomeTourConfigPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["brands"] });
-      queryClient.invalidateQueries({ queryKey: ["brand-detail"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.brands.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.brandDetail.all });
       toast.success("Tour de boas-vindas atualizado!");
     },
     onError: (e: any) => toast.error(e.message),

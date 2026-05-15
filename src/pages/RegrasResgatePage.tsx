@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -40,7 +41,7 @@ export default function RegrasResgatePage() {
 
   // Brand settings
   const { data: settings, isLoading } = useQuery({
-    queryKey: ["brand-settings", currentBrandId],
+    queryKey: queryKeys.brandSettings.list(currentBrandId),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("brands")
@@ -118,10 +119,10 @@ export default function RegrasResgatePage() {
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["brand-settings"] });
+      qc.invalidateQueries({ queryKey: queryKeys.brandSettings.all });
       qc.invalidateQueries({ queryKey: ["brand-branches-scoring"] });
       qc.invalidateQueries({ queryKey: ["branch-scoring-model"] });
-      qc.invalidateQueries({ queryKey: ["brand-scoring-models"] });
+      qc.invalidateQueries({ queryKey: queryKeys.brandScoringModels.all });
       toast.success(isBranchScope ? "Modelo da cidade atualizado!" : "Regras de resgate salvas!");
       setDirty(false);
     },
