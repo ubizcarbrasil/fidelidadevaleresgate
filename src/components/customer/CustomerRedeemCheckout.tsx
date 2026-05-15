@@ -102,8 +102,13 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
     setOtpInput(["", "", "", "", "", ""]);
     setOtpError(false);
     setStep("otp");
-    // TODO: Enviar código via e-mail/SMS em produção
-    console.log("[OTP] Código gerado para verificação");
+    // TODO[CRÍTICO]: Integrar envio real de OTP via e-mail/SMS antes de produção.
+    // O código é gerado client-side e validado client-side — não há proteção real.
+    // Em DEV exibe o código no toast para permitir testes; em PROD a verificação
+    // de identidade está efetivamente desabilitada.
+    if (import.meta.env.DEV) {
+      toast.info(`[DEV] Código OTP: ${code}`, { duration: 10000 });
+    }
   };
 
   const handleOtpChange = (index: number, value: string) => {
