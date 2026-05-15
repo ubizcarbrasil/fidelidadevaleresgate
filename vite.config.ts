@@ -69,10 +69,20 @@ return ({
         // PWA após múltiplas builds (seletor de plano no BrandForm, distribuição em lote
         // do Campeonato, etc.) que estavam causando "Importing a module script failed"
         // por chunk-YQECZGAV.js fantasma cacheado pelo SW v8.
-        cacheId: "vale-resgate-v10",
+        // v11 (NetworkFirst para navegação + imagens fora do precache) — corrige
+        // ciclo de "Atualizando o aplicativo..." em toda abertura no iOS Safari.
+        // Causa do problema: HTML era servido do precache, com referências a
+        // chunks de builds anteriores que viraram 404 no server. → chunk error
+        // → recovery → reload → 30s de espera em rede 5G/ruim a cada abertura.
+        // Solução: navegação agora tenta a rede primeiro (5s timeout), cai
+        // pra cache só se offline. Imagens saíram do precache (vão pelo
+        // runtime cache CacheFirst quando solicitadas).
+        cacheId: "vale-resgate-v11",
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,jpg,jpeg,webp}"],
+        // Removido png/jpg/jpeg/webp do precache — reduz tamanho de ~7.7MB
+        // pra ~3MB. Imagens são cacheadas sob demanda via runtimeCaching.
+        globPatterns: ["**/*.{js,css,html,ico,svg,woff2}"],
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [
           /^\/~oauth/,
@@ -91,6 +101,19 @@ return ({
         skipWaiting: true,
         clientsClaim: true,
         runtimeCaching: [
+          // ==== Navegação (HTML): NetworkFirst com timeout curto ====
+          // Sempre tenta rede primeiro pra pegar o index.html mais recente
+          // (com referências aos chunks atuais). Se rede falhar em 5s, usa
+          // cache (precache fallback). Resolve: chunk-XYZ-old.js 404 → loop.
+          {
+            urlPattern: ({ request }: { request: Request }) => request.mode === "navigate",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "navigations",
+              networkTimeoutSeconds: 5,
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 }, // 24h
+            },
+          },
           // ==== Edge Functions: NUNCA cachear (invocações sempre frescas) ====
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/functions\/v1\/.*/i,
