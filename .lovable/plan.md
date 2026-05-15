@@ -1,49 +1,75 @@
-## Objetivo
 
-Quando o motorista entrar no painel e o **único** módulo ativo da marca/cidade for o **Campeonato** (sem Resgate na Cidade, Comprar Pontos, Meus Resgates, Achadinhos), pular o hub `ACHADINHOS` e abrir direto a página do Campeonato.
+## Diagnóstico (causa real)
 
-Quando houver outros módulos ativos além do Campeonato, manter o hub atual exatamente como está.
+O erro de runtime real (capturado nos logs/network) é:
 
-## Onde mexer
+```
+TypeError: Importing a module script failed.
+URL: /node_modules/.vite/deps/chunk-QCHXOAYK.js?v=6b467bc9
+```
 
-Apenas em `src/pages/DriverPanelPage.tsx` (componente `DriverGate`). Nenhuma mudança em business logic, schema, ou na página do Campeonato.
+Ele acontece **antes mesmo de qualquer tela de Campeonato**, dentro do `AppLayout → ProtectedRoute` ao carregar `/`. Não é regressão da Etapa 3 nem do `DriverPanelPage` — é um problema de **chunk obsoleto servido pelo Service Worker** depois que o Vite re-otimizou as deps e atribuiu um novo hash (`?v=6b467bc9`). O ErrorBoundary detecta como “chunk error” e mostra o card *“Atualização disponível”*, o usuário clica em “Recarregar”, mas a tela volta preta (replay confirma: `Atualizando o aplicativo… → /?v=… → Iniciando aplicativo… → preto`).
 
-### Passos
+A causa de o ciclo ficar preso (e não ser resolvido pelo próprio recovery do app) foi a **última mudança cirúrgica**:
 
-1. Em `DriverGate`, importar e usar:
-   - `useDueloCampeonatoHabilitado(brand.id)` → `campeonatoHabilitado`
-   - `useCampeonatoStandalone(brand.id)` → `standalone` (`campeonatoStandalone`)
-   
-   Hoje esses hooks só são chamados dentro de `DriverHomePage`; precisamos do valor no nível do gate para decidir o redirect.
+```ts
+// src/main.tsx
+// installGlobalDomErrorRecovery();  // ⟵ comentada
+```
 
-2. Calcular flags consolidadas (já existem variáveis equivalentes no arquivo):
-   ```ts
-   const isCityRedemptionEnabled = (effectiveBranch as any)?.is_city_redemption_enabled === true;
-   const hasOtherModules =
-     achadinhosEnabled ||
-     marketplaceEnabled ||
-     buyPointsEnabled ||
-     isCityRedemptionEnabled;
-   const showCampeonato = campeonatoHabilitado || campeonatoStandalone;
-   const campeonatoOnly = showCampeonato && !hasOtherModules;
-   ```
+Sem esse listener global, qualquer erro de import dinâmico que ocorre **fora da árvore React** (ex.: os `void import("@/components/AppLayout")` e `void import("@/pages/Dashboard")` do warm-up em `main.tsx`, e prefetches do DriverPanel) **não dispara mais a limpeza de SW + caches**. Resultado: o SW continua entregando HTML antigo apontando para chunks com hash novo → tela preta permanente até o usuário limpar o app na mão.
 
-3. Adicionar `useEffect` que dispara o redirect quando:
-   - `driver` autenticado
-   - `modulesLoaded === true` (evita redirecionar antes de saber os flags reais)
-   - `loadingFlag` dos hooks de Campeonato finalizado
-   - `campeonatoOnly === true`
-   - rota atual ainda é `/painel-motorista` (não está num overlay/categoria)
+Resumo das duas frentes:
+1. O **trigger** é stale Vite deps + SW antigo controlando a página.
+2. O **motivo de não auto-recuperar** é o `installGlobalDomErrorRecovery` desativado.
 
-   Ação: `navigate(`/motorista/campeonato?brandId=...&sessionKey=...`, { replace: true })` reaproveitando a mesma montagem de query string que o `onOpenCampeonato` já usa (linhas 165–172).
+## Plano de correção (mínimo, sem novas features)
 
-4. Enquanto o redirect ainda não disparou (mas já sabemos que `campeonatoOnly === true`), renderizar o mesmo loader (`Loader2`) usado nas linhas 134–140 para evitar o flash do hub `ACHADINHOS`.
+### Etapa 1 — Reativar auto-recovery global
+Arquivo: `src/main.tsx`
+- Remover o `// [TEMP]` e descomentar `installGlobalDomErrorRecovery();`.
+- Manter `installRouteDiagnostics();` ainda comentado (não é necessário para resolver o boot e não vamos reintroduzir variáveis).
 
-5. Não alterar o caminho contrário: se `hasOtherModules` for verdadeiro, o `DriverHomePage` continua sendo renderizado normalmente (incluindo o card "Campeonato" dentro do hub).
+Justificativa: o cooldown via `sessionStorage` (`canAttemptRecovery`, 60s) já evita loop de reload. Sem essa função, erros fora do React não recuperam.
 
-## Critérios de aceite
+### Etapa 2 — Quebrar o loop de Service Worker entre versões
+Arquivo: `index.html` (script inline, antes de qualquer `<script type="module">`).
+- Adicionar um pequeno guard que compara um `BUILD_VERSION` (string injetada pelo Vite via `import.meta.env.VITE_BUILD_ID` ou `Date.now()` no preview) com o que está em `localStorage`. Se diferente:
+  - `navigator.serviceWorker.getRegistrations().then(r => r.forEach(x => x.unregister()))`
+  - `caches.keys().then(k => k.forEach(c => caches.delete(c)))`
+  - Salvar a nova versão no `localStorage`.
+- Não recarrega — apenas garante que o próximo carregamento dos módulos não passa por SW velho.
 
-- Marca com **só Campeonato ativo** → ao entrar em `/painel-motorista`, motorista cai direto na página do Campeonato sem ver o hub.
-- Marca com Campeonato + qualquer outro módulo (Resgate na Cidade, Comprar Pontos, Achadinhos, Marketplace) → hub `ACHADINHOS` continua aparecendo igual hoje, com o card Campeonato listado.
-- Sem regressão em deep links (`?campeonato=1`, `initialCategoryId`, `initialDealId`) — o `useEffect` novo só age quando nenhum desses está em jogo (já coberto por `modulesLoaded` + `!hasOtherModules`).
-- Sem flash visual do hub durante a decisão (loader cobre o intervalo).
+Esse guard é **idempotente, roda uma vez por versão**, não interfere em quem já está na versão atual.
+
+### Etapa 3 — Validação
+- Abrir `/` na preview e confirmar boot até o Dashboard/Login (sem tela preta).
+- Abrir `/motorista/campeonato?brandId=db15bd21-9137-4965-a0fb-540d8e8b26f1` na preview e confirmar render.
+- Confirmar via console que **não** há mais `Importing a module script failed.`.
+
+## O que NÃO vamos mexer
+- `DriverPanelPage.tsx` (lógica de `campeonatoOnly` está correta — o redirect só dispara após `modulesLoaded` + sem outros módulos; não é causa da tela preta).
+- `RotaCampeonatoMotorista.tsx` (com `trackStage`, mas sem efeito colateral de boot).
+- `OfertasFastTrack` em `App.tsx`.
+- Hooks `useDueloCampeonatoHabilitado` / `useCampeonatoStandalone`.
+- Schema, RLS, edge functions.
+
+## Detalhes técnicos resumidos
+
+```text
+boot atual (quebrado):
+  index.html
+    └─ main.tsx
+         ├─ void import(AppLayout)        ⟵ falha (chunk stale do SW)
+         ├─ void import(Dashboard)        ⟵ falha
+         └─ App lazy import → render → ErrorBoundary "Atualização disponível"
+              └─ Reload → SW serve HTML velho de novo → loop
+
+boot após fix:
+  index.html (guard de versão limpa SW se mudou)
+    └─ main.tsx (installGlobalDomErrorRecovery ATIVO)
+         └─ se ainda houver chunk stale residual: recovery dispara 1x,
+            limpa caches + SW e recarrega com ?v=timestamp → ok.
+```
+
+Confiança alta no diagnóstico: o erro de import dinâmico está nos logs do cliente, e a regressão coincide exatamente com a desativação do recovery global na Etapa anterior.
