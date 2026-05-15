@@ -15,12 +15,32 @@ export type BootPhase =
 let currentPhase: BootPhase = "BOOTSTRAP";
 const listeners: Array<(phase: BootPhase) => void> = [];
 
+// Prioridade monotônica das fases — uma vez resolvido, não regredimos
+// para AUTH_LOADING/AUTH_READY (ex.: BrandContext faz skip-local antes
+// do AuthContext terminar e o loader ficava preso).
+const PHASE_RANK: Record<BootPhase, number> = {
+  BOOTSTRAP: 0,
+  AUTH_LOADING: 1,
+  AUTH_READY: 2,
+  BRAND_LOADING: 3,
+  BRAND_READY: 4,
+  APP_MOUNTED: 5,
+  FAILED: 5,
+};
+
 export function dismissBootstrap() {
   const el = document.getElementById("bootstrap-fallback");
   if (el) el.style.display = "none";
 }
 
 export function setBootPhase(phase: BootPhase, detail?: string) {
+  // Não regride: se já alcançamos uma fase de prioridade maior,
+  // ignoramos transições "para trás" (mantém UI estável).
+  if (PHASE_RANK[phase] < PHASE_RANK[currentPhase]) {
+    const ts = (performance.now() / 1000).toFixed(2);
+    console.info(`[boot] ${ts}s → ${phase} ignorado (atual=${currentPhase})${detail ? ` (${detail})` : ""}`);
+    return;
+  }
   currentPhase = phase;
   (window as any).__BOOT_PHASE__ = phase;
   const ts = (performance.now() / 1000).toFixed(2);
