@@ -390,15 +390,52 @@ export default function DriverPanelPage() {
       return;
     }
     const load = async () => {
+      // Retry com backoff exponencial em erro de rede (TypeError: Load failed)
+      // do Safari iOS quando 5G/WiFi oscila durante o fetch inicial da marca.
+      // Sem isso, o usuário vê tela de erro permanente até recarregar manualmente.
+      const fetchBrandWithRetry = async (attempt = 0): Promise<{ data: any; error: any } | null> => {
+        try {
+          const result = await supabase
+            .from("public_brands_safe")
+            .select("*")
+            .eq("id", brandId)
+            .eq("is_active", true)
+            .maybeSingle();
+          // Se erro de rede transiente, tenta de novo (até 3x)
+          const isTransientNetworkError =
+            result.error?.message?.includes("Load failed") ||
+            result.error?.message?.includes("Failed to fetch") ||
+            result.error?.message?.includes("NetworkError");
+          if (isTransientNetworkError && attempt < 3) {
+            const delayMs = 500 * Math.pow(2, attempt); // 500ms, 1s, 2s
+            console.warn(`[DriverPanelPage] brand fetch transient error (attempt ${attempt + 1}), retrying in ${delayMs}ms`);
+            await new Promise((r) => setTimeout(r, delayMs));
+            return fetchBrandWithRetry(attempt + 1);
+          }
+          return result;
+        } catch (e: any) {
+          if (attempt < 3) {
+            const delayMs = 500 * Math.pow(2, attempt);
+            console.warn(`[DriverPanelPage] brand fetch threw (attempt ${attempt + 1}), retrying in ${delayMs}ms`, e?.message);
+            await new Promise((r) => setTimeout(r, delayMs));
+            return fetchBrandWithRetry(attempt + 1);
+          }
+          throw e;
+        }
+      };
+
       try {
-      // Use public view to allow anonymous access (Android/mobile without session)
-      const { data: b, error: brandError } = await supabase
-        .from("public_brands_safe")
-        .select("*")
-        .eq("id", brandId)
-        .eq("is_active", true)
-        .maybeSingle();
-      if (brandError) { setError(`Erro ao buscar marca: ${brandError.message}`); setLoading(false); return; }
+      const result = await fetchBrandWithRetry();
+      const b = result?.data;
+      const brandError = result?.error;
+      if (brandError) {
+        const friendly = brandError.message?.includes("Load failed") || brandError.message?.includes("Failed to fetch")
+          ? "Conexão instável. Verifique sua internet e toque em recarregar."
+          : `Erro ao buscar marca: ${brandError.message}`;
+        setError(friendly);
+        setLoading(false);
+        return;
+      }
       if (!b) { setError("Marca não encontrada para o ID informado."); setLoading(false); return; }
 
       // Auto-redirect: if current host doesn't match the brand's canonical origin, redirect ONCE
@@ -480,8 +517,14 @@ export default function DriverPanelPage() {
 
   if (error || !brand) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4 px-6 text-center">
         <p className="text-muted-foreground">{error || "Erro ao carregar"}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 active:scale-95 transition"
+        >
+          Tentar novamente
+        </button>
       </div>
     );
   }

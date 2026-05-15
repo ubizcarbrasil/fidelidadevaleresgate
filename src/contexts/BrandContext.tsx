@@ -27,16 +27,45 @@ const BrandContext = createContext<BrandContextType | undefined>(undefined);
  * or by full domain match in brand_domains table.
  */
 /**
+ * Detecta erros transientes de rede do Safari iOS quando 5G/WiFi oscila.
+ * Sem retry, o usuário fica preso em "Carregando seu painel..." indefinidamente.
+ */
+function isTransientNetworkError(err: unknown): boolean {
+  const msg = (err as { message?: string })?.message ?? "";
+  return msg.includes("Load failed") || msg.includes("Failed to fetch") || msg.includes("NetworkError");
+}
+
+async function withNetworkRetry<T>(fn: () => Promise<T>, maxAttempts = 3): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (!isTransientNetworkError(err) || attempt === maxAttempts - 1) throw err;
+      const delayMs = 500 * Math.pow(2, attempt); // 500ms, 1s, 2s
+      console.warn(`[BrandContext] transient network error (attempt ${attempt + 1}/${maxAttempts}), retrying in ${delayMs}ms`);
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+  throw lastErr;
+}
+
+/**
  * Fetch brand data by ID using the public-safe view first (works for anon),
  * falling back to the full brands table (works for authenticated users).
  */
 async function fetchBrandById(brandId: string): Promise<Brand | null> {
   // Try public view first (accessible to anonymous users)
-  const { data: publicBrand } = await supabase
-    .from("public_brands_safe")
-    .select("*")
-    .eq("id", brandId)
-    .single();
+  const { data: publicBrand } = await withNetworkRetry(async () => {
+    const result = await supabase
+      .from("public_brands_safe")
+      .select("*")
+      .eq("id", brandId)
+      .single();
+    if (result.error && isTransientNetworkError(result.error)) throw result.error;
+    return result;
+  });
 
   if (publicBrand) {
     // Cast — the public view has the same core fields
@@ -44,11 +73,15 @@ async function fetchBrandById(brandId: string): Promise<Brand | null> {
   }
 
   // Fallback for authenticated users with RLS access
-  const { data: brand } = await supabase
-    .from("brands")
-    .select("*")
-    .eq("id", brandId)
-    .single();
+  const { data: brand } = await withNetworkRetry(async () => {
+    const result = await supabase
+      .from("brands")
+      .select("*")
+      .eq("id", brandId)
+      .single();
+    if (result.error && isTransientNetworkError(result.error)) throw result.error;
+    return result;
+  });
 
   return brand;
 }
