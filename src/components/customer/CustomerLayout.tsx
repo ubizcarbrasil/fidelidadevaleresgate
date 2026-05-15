@@ -23,6 +23,7 @@ import { Menu } from "lucide-react";
 import { useBrandModules } from "@/hooks/useBrandModules";
 import { usePrefetchRoutes } from "@/hooks/usePrefetchRoutes";
 import { hslToCss } from "@/lib/utils";
+import { safeGetItem, safeSetItem } from "@/lib/safeStorage";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Tables } from "@/integrations/supabase/types";
 import type { OfferWithStore, NavOffer, NavStore } from "@/types/customer";
@@ -184,10 +185,10 @@ export default function CustomerLayout() {
     if (!allowToggle) {
       // Force the configured theme, ignore user preference
       document.documentElement.classList.toggle("dark", defaultTheme === "dark");
-      localStorage.setItem("customer_dark_mode", defaultTheme);
+      safeSetItem("customer_dark_mode", defaultTheme);
     } else {
       // Respect user preference, fallback to branch default
-      const saved = localStorage.getItem("customer_dark_mode");
+      const saved = safeGetItem("customer_dark_mode");
       const effectiveTheme = saved || defaultTheme;
       document.documentElement.classList.toggle("dark", effectiveTheme !== "light");
     }
@@ -200,7 +201,7 @@ export default function CustomerLayout() {
   useEffect(() => {
     if (!customer) return;
     const key = `welcome_tour_${customer.id}`;
-    if (!localStorage.getItem(key)) {
+    if (!safeGetItem(key)) {
       setShowTour(true);
     }
   }, [customer]);
@@ -484,7 +485,7 @@ export default function CustomerLayout() {
             customSlides={((brand?.brand_settings_json as any)?.welcome_tour_slides) || undefined}
             onComplete={() => {
               setShowTour(false);
-              if (customer) localStorage.setItem(`welcome_tour_${customer.id}`, "done");
+              if (customer) safeSetItem(`welcome_tour_${customer.id}`, "done");
             }}
           />
         )}

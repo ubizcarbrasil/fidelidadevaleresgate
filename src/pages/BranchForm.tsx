@@ -22,7 +22,7 @@ async function geocodeCity(city: string, state: string): Promise<{ lat: string; 
       headers: { "Accept-Language": "pt-BR" },
     });
     const data = await res.json();
-    if (data && data.length > 0) {
+    if (Array.isArray(data) && data.length > 0 && data[0]?.lat && data[0]?.lon) {
       return { lat: data[0].lat, lon: data[0].lon };
     }
   } catch {

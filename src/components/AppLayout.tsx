@@ -18,6 +18,9 @@ import BranchSelector from "@/components/BranchSelector";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import { ScopeSwitcher } from "@/components/ScopeSwitcher";
 import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("AppLayout");
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -120,8 +123,12 @@ export default function AppLayout() {
         .select("matrix_api_key")
         .eq("id", brandId)
         .maybeSingle()
-        .then(({ data }) => {
+        .then(({ data, error }) => {
           if (cancelled) return;
+          if (error) {
+            log.warn("Falha ao verificar matrix_api_key", { brandId, error });
+            return;
+          }
           const jaConfigurado = !!data?.matrix_api_key;
           if (!jaConfigurado) setShowApiKeyOnboarding(true);
         });
@@ -142,6 +149,10 @@ export default function AppLayout() {
       .maybeSingle()
       .then((platformRes) => {
         if (cancelled) return;
+        if (platformRes.error) {
+          log.warn("Falha ao carregar platform_theme", platformRes.error);
+          return;
+        }
         if (platformRes.data?.value_json) setPlatformTheme(platformRes.data.value_json);
       });
 
