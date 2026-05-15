@@ -272,7 +272,7 @@ export default function CsvImportPage() {
 
   // Stores for EARNING_EVENTS store selector
   const { data: storesForEarning } = useQuery({
-    queryKey: ["stores-for-earning", brandId, branchId],
+    queryKey: queryKeys.storesForEarning.list(brandId, branchId),
     queryFn: async () => {
       let q = supabase.from("stores").select("id, name").eq("brand_id", brandId).eq("is_active", true).order("name");
       if (branchId) q = q.eq("branch_id", branchId);

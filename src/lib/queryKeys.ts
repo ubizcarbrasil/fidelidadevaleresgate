@@ -111,6 +111,8 @@ export const queryKeys = {
   brandsSelect: createKeys("brands-select"),
   branchesSelect: createKeys("branches-select"),
   storesSelect: createKeys("stores-select"),
+  storesPendingCount: createKeys("stores-pending-count"),
+  storesForEarning: createKeys("stores-for-earning"),
 
   // ── Misc ──
   iconLibrary: createKeys("icon-library"),
