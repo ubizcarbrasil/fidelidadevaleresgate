@@ -111,6 +111,19 @@ export function installGlobalDomErrorRecovery() {
   const tryRecover = (message: string | undefined) => {
     if (!isRecoverableDomError(message)) return;
     if (!canAttemptRecovery()) return;
+    // Em dev, erros de removeChild/insertBefore vêm do React Fast Refresh
+    // após HMR. Limpar SW + caches é exagero e pode loopar com o HMR —
+    // basta um reload simples.
+    const m = (message || "").toLowerCase();
+    const isHmrDomGlitch =
+      import.meta.env?.DEV &&
+      (m.includes("removechild") ||
+        m.includes("insertbefore") ||
+        m.includes("not a child of this node"));
+    if (isHmrDomGlitch) {
+      window.location.reload();
+      return;
+    }
     void recoverFromChunkError();
   };
 
