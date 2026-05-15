@@ -63,6 +63,9 @@ export const queryKeys = {
   },
   customerFavorites: createKeys("customer-favorites"),
   customerLedger: createKeys("customer-ledger"),
+  customerLedgerMachine: createKeys("customer-ledger-machine"),
+  customerRedeemOrders: createKeys("customer-redeem-orders"),
+  customerRedeemStore: createKeys("customer-redeem-store"),
 
   // ── Brand config ──
   brandSettings: createKeys("brand-settings"),

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { useBrand } from "@/contexts/BrandContext";
+import { queryKeys } from "@/lib/queryKeys";
 import { ArrowLeft, Package, Clock, CheckCircle2, Truck, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,7 +27,7 @@ export default function CustomerRedeemOrderHistory({ onBack }: Props) {
   const { brand } = useBrand();
 
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ["customer-redeem-orders", customer?.id],
+    queryKey: queryKeys.customerRedeemOrders.list(customer?.id),
     enabled: !!customer?.id,
     queryFn: async () => {
       const { data } = await supabase

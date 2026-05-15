@@ -69,4 +69,12 @@ describe("queryKeys", () => {
     expect(queryKeys.vouchers.all[0]).not.toBe(queryKeys.customers.all[0]);
     expect(queryKeys.loyalty.earnings.all[0]).toBe("loyalty-earnings");
   });
+
+  it("should expose the customer entries consumed in pages/components", () => {
+    expect(queryKeys.customers.all).toEqual(["customers"]);
+    expect(queryKeys.customerProductOrders.all).toEqual(["customer-product-orders"]);
+    expect(queryKeys.customerLedgerMachine.list("c1")).toEqual(["customer-ledger-machine", "list", "c1"]);
+    expect(queryKeys.customerRedeemOrders.list("c1")).toEqual(["customer-redeem-orders", "list", "c1"]);
+    expect(queryKeys.customerRedeemStore.list("b1", "br1", false)).toEqual(["customer-redeem-store", "list", "b1", "br1", false]);
+  });
 });
