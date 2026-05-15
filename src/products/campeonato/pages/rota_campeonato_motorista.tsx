@@ -67,11 +67,14 @@ const UUID_RE =
 export default function RotaCampeonatoMotorista() {
   const [searchParams] = useSearchParams();
   const isPortalDomain = window.location.hostname === PORTAL_HOSTNAME;
+  const isLovableHost =
+    window.location.hostname.includes("lovable.app") ||
+    window.location.hostname.includes("lovableproject.com");
   const rawBrandId = searchParams.get("brandId");
   const brandId =
     rawBrandId && UUID_RE.test(rawBrandId)
       ? rawBrandId
-      : isPortalDomain
+      : isPortalDomain || isLovableHost
         ? PORTAL_BRAND_ID
         : null;
   const sessionRequestKey = searchParams.get("sessionKey") || null;

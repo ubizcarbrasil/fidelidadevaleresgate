@@ -198,10 +198,14 @@ function OfertasFastTrack({ children }: { children: ReactNode }) {
     typeof window !== "undefined" &&
     (window.location.pathname === "/driver" || window.location.pathname.startsWith("/driver/"));
 
+  const isCampeonatoMotorista =
+    typeof window !== "undefined" &&
+    window.location.pathname === "/motorista/campeonato";
+
   const isDriverShort =
     false; // /d/<brandId> agora é tratado como redirect estático no index.html
 
-  if (!isOfertas && !isWebview && !isDriver && !isDriverShort) return <>{children}</>;
+  if (!isOfertas && !isWebview && !isDriver && !isCampeonatoMotorista && !isDriverShort) return <>{children}</>;
 
   return (
     <TooltipProvider>
@@ -219,7 +223,7 @@ function OfertasFastTrack({ children }: { children: ReactNode }) {
             <Route path="/ofertas" element={<PaginaUbizOfertas />} />
             <Route path="/driver" element={<DriverPanelPage />} />
             <Route path="/motorista/campeonato" element={<RotaCampeonatoMotorista />} />
-            <Route path="*" element={<PaginaUbizOfertas />} />
+            <Route path="*" element={isCampeonatoMotorista ? <RotaCampeonatoMotorista /> : <PaginaUbizOfertas />} />
           </Routes>
         </Suspense>
       </BrowserRouter>
