@@ -73,7 +73,7 @@ export default function PointsRulesPage() {
   });
 
   const { data: branches } = useQuery({
-    queryKey: ["branches-select", form.brand_id || currentBrandId],
+    queryKey: queryKeys.branchesSelect.list(form.brand_id || currentBrandId),
     queryFn: async () => {
       const brandId = form.brand_id || currentBrandId;
       if (!brandId) return [];

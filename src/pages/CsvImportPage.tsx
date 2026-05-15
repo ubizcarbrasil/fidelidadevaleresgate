@@ -260,7 +260,7 @@ export default function CsvImportPage() {
   });
 
   const { data: branches } = useQuery({
-    queryKey: ["branches-select", brandId],
+    queryKey: queryKeys.branchesSelect.list(brandId),
     queryFn: async () => {
       let q = supabase.from("branches").select("id, name").eq("is_active", true).order("name");
       if (brandId) q = q.eq("brand_id", brandId);
@@ -771,7 +771,7 @@ export default function CsvImportPage() {
 
   // ── Import history query ──
   const { data: importHistory, isLoading: historyLoading } = useQuery({
-    queryKey: ["import-jobs-history", brandId],
+    queryKey: queryKeys.importJobs.list(brandId),
     queryFn: async () => {
       let q = supabase
         .from("import_jobs")

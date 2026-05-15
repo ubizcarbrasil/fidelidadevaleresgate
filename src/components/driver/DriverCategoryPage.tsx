@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
+import { queryKeys } from "@/lib/queryKeys";
 import type { AffiliateDeal, DealCategory } from "./DriverMarketplace";
 import { formatPrice, LucideIcon, getPublicShareUrl } from "./DriverMarketplace";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
@@ -61,7 +62,7 @@ export default function DriverCategoryPage({ category, brandId, branchId, custom
   });
 
   const { data: banners } = useQuery({
-    queryKey: ["affiliate-cat-banners", brandId, category.id],
+    queryKey: queryKeys.affiliateCatBanners.list(brandId, category.id),
     queryFn: async () => {
       const { data } = await supabase
         .from("affiliate_category_banners")

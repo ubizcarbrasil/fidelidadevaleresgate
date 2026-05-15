@@ -58,7 +58,7 @@ function BrandUsersView({ brandId }: { brandId: string }) {
   const [selectedPerms, setSelectedPerms] = useState<Set<string>>(new Set());
 
   const { data: branches } = useQuery({
-    queryKey: ["branches-select", brandId],
+    queryKey: queryKeys.branchesSelect.list(brandId),
     queryFn: async () => {
       const { data } = await supabase.from("branches").select("id, name").eq("brand_id", brandId).order("name");
       return data || [];
@@ -459,7 +459,7 @@ function RootUsersView() {
   });
 
   const { data: branches } = useQuery({
-    queryKey: ["branches-select", currentBrandId],
+    queryKey: queryKeys.branchesSelect.list(currentBrandId),
     queryFn: async () => {
       let q = supabase.from("branches").select("id, name").order("name");
       if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);

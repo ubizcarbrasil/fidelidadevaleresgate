@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Car, TrendingUp, Coins, Gift, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { hslToCss } from "@/lib/utils";
+import { queryKeys } from "@/lib/queryKeys";
 import DriverRedeemOrderHistory from "@/components/driver/DriverRedeemOrderHistory";
 import SecaoGamificacaoDashboard from "@/components/driver/duels/dashboard/SecaoGamificacaoDashboard";
 import { format } from "date-fns";
@@ -230,7 +231,7 @@ export default function CustomerDriverDashboardPage() {
 
   // Fetch driver points history
   const { data: ledgerEntries = [], isLoading: ledgerLoading } = useQuery({
-    queryKey: ["driver-ledger", customer?.id],
+    queryKey: queryKeys.driverLedger.list(customer?.id),
     enabled: !!customer,
     queryFn: async () => {
       const { data } = await supabase

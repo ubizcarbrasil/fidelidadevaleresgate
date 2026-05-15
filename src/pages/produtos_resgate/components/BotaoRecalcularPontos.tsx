@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useRegrasResgateCidade } from "@/compartilhados/hooks/hook_regras_resgate_cidade";
+import { queryKeys } from "@/lib/queryKeys";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -70,8 +71,8 @@ export default function BotaoRecalcularPontos() {
     },
     onSuccess: (count) => {
       toast.success(`Pontos recalculados em ${count} produto(s) com taxa ${taxa} pts/R$`);
-      qc.invalidateQueries({ queryKey: ["produtos-resgate"] });
-      qc.invalidateQueries({ queryKey: ["produtos-resgate-kpis"] });
+      qc.invalidateQueries({ queryKey: queryKeys.produtosResgate.all });
+      qc.invalidateQueries({ queryKey: queryKeys.produtosResgateKpis.all });
       setAberto(false);
     },
     onError: (e: Error) => toast.error(e.message),

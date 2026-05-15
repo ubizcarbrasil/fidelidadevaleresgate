@@ -8,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle, Clock, Hash, Zap, Bell } from "lucide-react";
+import { queryKeys } from "@/lib/queryKeys";
 import { useToast } from "@/hooks/use-toast";
 
 type FrequencyType = "EVERY_RIDE" | "DAILY" | "EVERY_X_HOURS" | "EVERY_X_RIDES" | "EVERY_X_POINTS";
@@ -30,7 +31,7 @@ export default function DriverNotificationConfig({ brandId, branchId }: Props) {
   const queryClient = useQueryClient();
 
   const { data: integration, isLoading } = useQuery({
-    queryKey: ["driver-notification-config", brandId, branchId],
+    queryKey: queryKeys.driverNotificationConfig.list(brandId, branchId),
     queryFn: async () => {
       let q = (supabase as any)
         .from("machine_integrations")
@@ -80,7 +81,7 @@ export default function DriverNotificationConfig({ brandId, branchId }: Props) {
       toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
       return false;
     }
-    queryClient.invalidateQueries({ queryKey: ["driver-notification-config"] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.driverNotificationConfig.all });
     queryClient.invalidateQueries({ queryKey: ["machine-integrations"] });
     return true;
   };

@@ -88,7 +88,7 @@ export default function ProdutosResgatePage() {
 
   // ── Query ──
   const { data, isLoading } = useQuery({
-    queryKey: ["produtos-resgate", debouncedSearch, page, currentBrandId, statusFilter],
+    queryKey: queryKeys.produtosResgate.list(debouncedSearch, page, currentBrandId, statusFilter),
     queryFn: async () => {
       let query = supabase
         .from("affiliate_deals")
@@ -112,7 +112,7 @@ export default function ProdutosResgatePage() {
 
   // ── KPIs ──
   const { data: kpis } = useQuery({
-    queryKey: ["produtos-resgate-kpis", currentBrandId],
+    queryKey: queryKeys.produtosResgateKpis.list(currentBrandId),
     queryFn: async () => {
       const base = supabase
         .from("affiliate_deals")
@@ -150,8 +150,8 @@ export default function ProdutosResgatePage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["produtos-resgate"] });
-      qc.invalidateQueries({ queryKey: ["produtos-resgate-kpis"] });
+      qc.invalidateQueries({ queryKey: queryKeys.produtosResgate.all });
+      qc.invalidateQueries({ queryKey: queryKeys.produtosResgateKpis.all });
     },
   });
 
@@ -164,9 +164,9 @@ export default function ProdutosResgatePage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["produtos-resgate"] });
-      qc.invalidateQueries({ queryKey: ["produtos-resgate-kpis"] });
-      qc.invalidateQueries({ queryKey: ["affiliate-deals"] });
+      qc.invalidateQueries({ queryKey: queryKeys.produtosResgate.all });
+      qc.invalidateQueries({ queryKey: queryKeys.produtosResgateKpis.all });
+      qc.invalidateQueries({ queryKey: queryKeys.affiliateDeals.all });
       setSelectedIds(new Set());
       setBatchCost("");
     },

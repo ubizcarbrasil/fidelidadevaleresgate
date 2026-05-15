@@ -8,6 +8,7 @@ import { ptBR } from "date-fns/locale";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
+import { queryKeys } from "@/lib/queryKeys";
 import type { Database } from "@/integrations/supabase/types";
 import EmptyState from "@/components/customer/EmptyState";
 import DataSkeleton from "@/components/DataSkeleton";
@@ -22,7 +23,7 @@ export default function RedemptionsPage() {
   const { search, debouncedSearch, page, setPage, onSearchChange } = useDebouncedSearch();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["redemptions", debouncedSearch, page, currentBrandId],
+    queryKey: queryKeys.redemptions.list(debouncedSearch, page, currentBrandId),
     queryFn: async () => {
       let query = supabase.from("redemptions")
         .select("*, offers(title), customers(name), branches(name)", { count: "exact" });

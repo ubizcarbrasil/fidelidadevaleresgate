@@ -10,6 +10,7 @@ import { Plus, Pencil, Power, Search } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
+import { queryKeys } from "@/lib/queryKeys";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { TelaCarregamentoInline } from "@/compartilhados/components/tela_carregamento";
 
@@ -26,7 +27,7 @@ export default function Vouchers() {
   const debouncedSearch = useDebounce(search, 300);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["coupons", debouncedSearch, page, currentBrandId],
+    queryKey: queryKeys.coupons.list(debouncedSearch, page, currentBrandId),
     queryFn: async () => {
       let query = supabase.from("coupons").select("*, branches:branch_id(name, brands:brand_id(name))", { count: "exact" });
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
@@ -44,7 +45,7 @@ export default function Vouchers() {
       const { error } = await supabase.from("coupons").update({ status: newStatus }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["coupons"] }); toast.success("Status atualizado!"); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.coupons.all }); toast.success("Status atualizado!"); },
     onError: (e: Error) => toast.error(e.message),
   });
 

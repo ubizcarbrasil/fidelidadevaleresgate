@@ -85,7 +85,7 @@ export default function IconLibraryPage() {
 
   /* ─── Gallery queries ─── */
   const { data: iconList } = useQuery({
-    queryKey: ["icon-library", currentBrandId],
+    queryKey: queryKeys.iconLibrary.list(currentBrandId),
     queryFn: async () => {
       let q = supabase.from("icon_library").select("*").eq("is_active", true);
       if (currentBrandId) q = q.or(`brand_id.eq.${currentBrandId},brand_id.is.null`);
@@ -104,7 +104,7 @@ export default function IconLibraryPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["icon-library"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.iconLibrary.all });
       setDialogOpen(false);
       setForm({ name: "", category: "geral", icon_type: "lucide", lucide_name: "", image_url: "", color: "" });
       toast.success("Ícone adicionado!");
@@ -117,7 +117,7 @@ export default function IconLibraryPage() {
       const { error } = await supabase.from("icon_library").update({ is_active: false }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["icon-library"] }); toast.success("Ícone removido."); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.iconLibrary.all }); toast.success("Ícone removido."); },
   });
 
   const filtered = iconList?.filter((i) => i.name.toLowerCase().includes(search.toLowerCase()));

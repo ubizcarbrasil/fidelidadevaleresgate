@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { icons } from "lucide-react";
 import { Search } from "lucide-react";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface IconPickerDialogProps {
   open: boolean;
@@ -22,7 +23,7 @@ export default function IconPickerDialog({ open, onClose, onSelect, brandId }: I
   const [search, setSearch] = useState("");
 
   const { data: customIcons } = useQuery({
-    queryKey: ["icon-library", brandId],
+    queryKey: queryKeys.iconLibrary.list(brandId),
     queryFn: async () => {
       let q = supabase.from("icon_library").select("*").eq("is_active", true);
       if (brandId) q = q.or(`brand_id.eq.${brandId},brand_id.is.null`);

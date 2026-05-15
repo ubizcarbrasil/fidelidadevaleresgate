@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { queryKeys } from "@/lib/queryKeys";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,7 +43,7 @@ export default function VoucherForm() {
   const [loading, setLoading] = useState(false);
 
   const { data: branches } = useQuery({
-    queryKey: ["branches-select"],
+    queryKey: queryKeys.branchesSelect.all,
     queryFn: async () => {
       const { data } = await supabase
         .from("branches")

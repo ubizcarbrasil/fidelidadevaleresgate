@@ -94,7 +94,7 @@ export default function BrandModulesPage() {
   });
 
   const { data: definitions, isLoading: loadingDefs } = useQuery({
-    queryKey: ["module-definitions"],
+    queryKey: queryKeys.moduleDefinitions.all,
     queryFn: async () => {
       const { data, error } = await supabase.from("module_definitions").select("*").eq("is_active", true).order("category, name");
       if (error) throw error;

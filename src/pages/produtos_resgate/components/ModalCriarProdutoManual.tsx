@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useProductScope } from "@/features/city_onboarding/hooks/hook_escopo_produto";
 import { useRegrasResgateCidade } from "@/compartilhados/hooks/hook_regras_resgate_cidade";
+import { queryKeys } from "@/lib/queryKeys";
 import {
   Dialog,
   DialogContent,
@@ -124,8 +125,8 @@ export default function ModalCriarProdutoManual({ aberto, onFechar }: Props) {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["produtos-resgate"] });
-      qc.invalidateQueries({ queryKey: ["produtos-resgate-kpis"] });
+      qc.invalidateQueries({ queryKey: queryKeys.produtosResgate.all });
+      qc.invalidateQueries({ queryKey: queryKeys.produtosResgateKpis.all });
       toast.success("Produto criado com sucesso");
       onFechar();
     },

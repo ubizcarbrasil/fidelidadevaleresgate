@@ -4,6 +4,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -105,7 +106,7 @@ export default function AffiliateCategoriesPage() {
   });
 
   const { data: categories, isLoading } = useQuery({
-    queryKey: ["affiliate-categories", currentBrandId],
+    queryKey: queryKeys.affiliateCategories.list(currentBrandId),
     queryFn: async () => {
       if (!currentBrandId) return [];
       const { data, error } = await supabase
@@ -123,7 +124,7 @@ export default function AffiliateCategoriesPage() {
     if (categories && categories.length === 0 && currentBrandId) {
       supabase.rpc("seed_affiliate_categories", { p_brand_id: currentBrandId }).then(({ error }) => {
         if (!error) {
-          qc.invalidateQueries({ queryKey: ["affiliate-categories"] });
+          qc.invalidateQueries({ queryKey: queryKeys.affiliateCategories.all });
           toast.success("Categorias padrão criadas!");
         }
       });
@@ -148,7 +149,7 @@ export default function AffiliateCategoriesPage() {
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["affiliate-categories"] });
+      qc.invalidateQueries({ queryKey: queryKeys.affiliateCategories.all });
       toast.success("Categoria salva!");
       setEditId(null); setEditForm(null); setNewForm(null);
     },
@@ -160,7 +161,7 @@ export default function AffiliateCategoriesPage() {
       const { error } = await supabase.from("affiliate_deal_categories").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["affiliate-categories"] }); toast.success("Categoria removida!"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.affiliateCategories.all }); toast.success("Categoria removida!"); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -175,8 +176,8 @@ export default function AffiliateCategoriesPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["affiliate-categories"] });
-      qc.invalidateQueries({ queryKey: ["affiliate-deals"] });
+      qc.invalidateQueries({ queryKey: queryKeys.affiliateCategories.all });
+      qc.invalidateQueries({ queryKey: queryKeys.affiliateDeals.all });
       toast.success("Ofertas da categoria excluídas com sucesso!");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -188,7 +189,7 @@ export default function AffiliateCategoriesPage() {
       if (error) throw error;
     },
     onSuccess: (_, { active }) => {
-      qc.invalidateQueries({ queryKey: ["affiliate-categories", currentBrandId] });
+      qc.invalidateQueries({ queryKey: queryKeys.affiliateCategories.list(currentBrandId) });
       toast.success(active ? "Categoria ativada!" : "Categoria desativada!");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -202,7 +203,7 @@ export default function AffiliateCategoriesPage() {
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["affiliate-categories", currentBrandId] });
+      qc.invalidateQueries({ queryKey: queryKeys.affiliateCategories.list(currentBrandId) });
       toast.success("Ordem atualizada!");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -468,7 +469,7 @@ function CategoryBannerManager({ brandId, categoryId }: { brandId: string; categ
   const [newBanner, setNewBanner] = useState<{ image_url: string; title: string; link_url: string } | null>(null);
 
   const { data: banners, isLoading } = useQuery({
-    queryKey: ["affiliate-cat-banners-admin", brandId, categoryId],
+    queryKey: queryKeys.affiliateCatBannersAdmin.list(brandId, categoryId),
     queryFn: async () => {
       const { data } = await supabase
         .from("affiliate_category_banners")
@@ -489,7 +490,7 @@ function CategoryBannerManager({ brandId, categoryId }: { brandId: string; categ
       });
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["affiliate-cat-banners-admin", brandId, categoryId] }); setNewBanner(null); toast.success("Banner adicionado!"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.affiliateCatBannersAdmin.list(brandId, categoryId) }); setNewBanner(null); toast.success("Banner adicionado!"); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -498,7 +499,7 @@ function CategoryBannerManager({ brandId, categoryId }: { brandId: string; categ
       const { error } = await supabase.from("affiliate_category_banners").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["affiliate-cat-banners-admin", brandId, categoryId] }); toast.success("Banner removido!"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.affiliateCatBannersAdmin.list(brandId, categoryId) }); toast.success("Banner removido!"); },
   });
 
   return (

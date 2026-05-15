@@ -11,6 +11,7 @@ import { ScanLine, CheckCircle2, XCircle, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { useRedeemCelebration } from "@/hooks/useRedeemCelebration";
 import { haptics } from "@/lib/haptics";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface RedemptionResult {
   id: string;
@@ -103,7 +104,7 @@ export default function OperatorRedeemPage() {
     onSuccess: () => {
       celebrateRedeem({ title: "Resgate confirmado! 🎉", description: "Voucher utilizado com sucesso." });
       setResult(null); setPin(""); setCpf(""); setPurchaseValue(""); setError(null);
-      qc.invalidateQueries({ queryKey: ["redemptions"] });
+      qc.invalidateQueries({ queryKey: queryKeys.redemptions.all });
     },
     onError: (e: Error) => { haptics.error(); toast.error(e.message); },
   });

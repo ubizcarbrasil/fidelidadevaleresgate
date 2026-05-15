@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useRegrasResgateCidade } from "@/compartilhados/hooks/hook_regras_resgate_cidade";
+import { queryKeys } from "@/lib/queryKeys";
 import {
   Dialog,
   DialogContent,
@@ -107,8 +108,8 @@ export default function ModalEditarResgatavel({ produto, aberto, onFechar }: Pro
     },
     onSuccess: () => {
       toast.success("Produto atualizado com sucesso");
-      qc.invalidateQueries({ queryKey: ["produtos-resgate"] });
-      qc.invalidateQueries({ queryKey: ["produtos-resgate-kpis"] });
+      qc.invalidateQueries({ queryKey: queryKeys.produtosResgate.all });
+      qc.invalidateQueries({ queryKey: queryKeys.produtosResgateKpis.all });
       onFechar();
     },
     onError: (e: Error) => toast.error(e.message),
