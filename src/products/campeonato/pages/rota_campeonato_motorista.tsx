@@ -113,7 +113,7 @@ export default function RotaCampeonatoMotorista() {
       }
       setBrand(b);
       setLoading(false);
-      trackStage(ROUTE, "brand-loader", "ok", b.id);
+      trackStage(ROUTE, "brand-loader", "ok", b.id ?? undefined);
     })();
   }, [brandId, rawBrandId]);
 
