@@ -163,35 +163,46 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
 
       if (!customers?.length) throw new Error("Nenhum cliente teste encontrado");
 
-      let credited = 0;
-      for (const cust of customers) {
-        const { data: existing } = await supabase
-          .from("points_ledger")
-          .select("id")
-          .eq("customer_id", cust.id)
-          .eq("reason", "DEMO_SEED_BONUS")
-          .maybeSingle();
+      // Busca de uma vez quais clientes já receberam o bônus demo (em vez de N queries)
+      const customerIds = customers.map((c) => c.id);
+      const { data: existingEntries } = await supabase
+        .from("points_ledger")
+        .select("customer_id")
+        .in("customer_id", customerIds)
+        .eq("reason", "DEMO_SEED_BONUS");
 
-        if (!existing) {
-          await supabase.from("points_ledger").insert({
-            brand_id: brandId,
-            branch_id: branchId,
-            customer_id: cust.id,
-            entry_type: "CREDIT",
-            points_amount: 1000,
-            money_amount: 0,
-            reason: "DEMO_SEED_BONUS",
-            reference_type: "MANUAL_ADJUSTMENT",
-            created_by_user_id: "00000000-0000-0000-0000-000000000000",
-          });
-          await supabase
+      const alreadyCredited = new Set((existingEntries || []).map((e) => e.customer_id));
+      const toCredit = customers.filter((c) => !alreadyCredited.has(c.id));
+
+      if (toCredit.length === 0) return 0;
+
+      // Insere todos os ledgers em uma única chamada
+      const { error: ledgerError } = await supabase.from("points_ledger").insert(
+        toCredit.map((cust) => ({
+          brand_id: brandId,
+          branch_id: branchId,
+          customer_id: cust.id,
+          entry_type: "CREDIT" as const,
+          points_amount: 1000,
+          money_amount: 0,
+          reason: "DEMO_SEED_BONUS",
+          reference_type: "MANUAL_ADJUSTMENT" as const,
+          created_by_user_id: "00000000-0000-0000-0000-000000000000",
+        })),
+      );
+      if (ledgerError) throw ledgerError;
+
+      // Atualiza saldos em paralelo (Supabase não suporta UPDATE multi-linha com valores distintos)
+      await Promise.all(
+        toCredit.map((cust) =>
+          supabase
             .from("customers")
             .update({ points_balance: (cust.points_balance || 0) + 1000 })
-            .eq("id", cust.id);
-          credited++;
-        }
-      }
-      return credited;
+            .eq("id", cust.id),
+        ),
+      );
+
+      return toCredit.length;
     },
     onSuccess: (credited) => {
       if (credited > 0) {

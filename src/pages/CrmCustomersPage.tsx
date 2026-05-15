@@ -13,8 +13,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Users, Search, Download, ArrowUpDown, Gift } from "lucide-react";
 import ManualCustomerScoringDialog from "@/components/machine-integration/ManualCustomerScoringDialog";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 const STATUS_LABELS: Record<string, string> = {
   active: "Ativo",
@@ -60,7 +58,11 @@ export default function CrmCustomersPage() {
 
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString("pt-BR") : "—";
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import("jspdf"),
+      import("jspdf-autotable"),
+    ]);
     const doc = new jsPDF();
     doc.text("Relatório CRM - Clientes", 14, 16);
     autoTable(doc, {

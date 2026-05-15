@@ -70,14 +70,14 @@ export default function EtapaUpload({ onLoaded }: Props) {
     }
   };
 
-  const handleColarCsv = () => {
+  const handleColarCsv = async () => {
     const txt = textoCsv.trim();
     if (!txt) {
       toast.error("Cole o conteúdo do CSV antes de continuar.");
       return;
     }
     try {
-      const linhas = parsearTextoCsv(txt);
+      const linhas = await parsearTextoCsv(txt);
       validarECarregar(linhas);
     } catch (err) {
       toast.error("CSV inválido: " + (err instanceof Error ? err.message : ""));

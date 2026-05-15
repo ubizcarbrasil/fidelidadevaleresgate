@@ -1,5 +1,3 @@
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import type { EventoLogConfronto } from "../types/tipos_log_eventos";
 import { ROTULOS_RODADA } from "../constants/constantes_campeonato";
 import { formatarDataHoraEvento, rotuloEventType, rotuloOponente } from "./utilitarios_log_eventos";
@@ -141,7 +139,11 @@ export function exportarLogCsv(eventos: EventoLogConfronto[], resumo: ResumoFilt
   baixarBlob(blob, nomeArquivo("csv"));
 }
 
-export function exportarLogPdf(eventos: EventoLogConfronto[], resumo: ResumoFiltrosExport) {
+export async function exportarLogPdf(eventos: EventoLogConfronto[], resumo: ResumoFiltrosExport) {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
   const margemX = 40;
   let y = 40;
