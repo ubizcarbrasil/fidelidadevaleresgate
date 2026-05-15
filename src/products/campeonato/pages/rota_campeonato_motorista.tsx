@@ -8,6 +8,7 @@ import {
   useDriverSession,
 } from "@/contexts/DriverSessionContext";
 import { useDueloCampeonatoHabilitado } from "@/compartilhados/hooks/hook_duelo_campeonato_habilitado";
+import { trackStage } from "@/lib/routeDiagnostics";
 import PaginaCampeonatoMotorista from "./pagina_campeonato_motorista";
 
 /**
@@ -47,6 +48,8 @@ const PORTAL_BRAND_ID = "db15bd21-9137-4965-a0fb-540d8e8b26f1";
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+const ROUTE = "/motorista/campeonato";
+
 /**
  * Wrapper de auth da rota /motorista/campeonato.
  * Resolve a marca pelo mesmo padrão da DriverPanelPage e protege com o
@@ -84,7 +87,9 @@ export default function RotaCampeonatoMotorista() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    trackStage(ROUTE, "brand-loader", "start", `brandId=${brandId ?? "null"}`);
     if (!brandId) {
+      trackStage(ROUTE, "brand-loader", "error", "brandId ausente/ inválido");
       setError(
         rawBrandId
           ? "Link inválido. Peça um novo link à sua cidade."
@@ -101,12 +106,14 @@ export default function RotaCampeonatoMotorista() {
         .eq("is_active", true)
         .maybeSingle();
       if (brandError || !b) {
+        trackStage(ROUTE, "brand-loader", "error", brandError?.message || "brand não encontrada");
         setError("Marca não encontrada.");
         setLoading(false);
         return;
       }
       setBrand(b);
       setLoading(false);
+      trackStage(ROUTE, "brand-loader", "ok", b.id ?? undefined);
     })();
   }, [brandId, rawBrandId]);
 
@@ -117,6 +124,19 @@ export default function RotaCampeonatoMotorista() {
   // Gate de feature: respeita USE_DUELO_CAMPEONATO + brand_settings_json
   const { campeonatoHabilitado, isLoading: loadingFlag } =
     useDueloCampeonatoHabilitado(brand?.id ?? null);
+
+  useEffect(() => {
+    if (loadingFlag) {
+      trackStage(ROUTE, "feature-flag", "start");
+    } else {
+      trackStage(
+        ROUTE,
+        "feature-flag",
+        campeonatoHabilitado ? "ok" : "skip",
+        `enabled=${campeonatoHabilitado}`,
+      );
+    }
+  }, [loadingFlag, campeonatoHabilitado]);
 
   if (loading) {
     return (
@@ -177,6 +197,19 @@ function GuardSessaoMotorista({
   fontHeading?: string;
 }) {
   const { driver, loading } = useDriverSession();
+
+  useEffect(() => {
+    if (loading) {
+      trackStage(ROUTE, "driver-session", "start");
+    } else {
+      trackStage(
+        ROUTE,
+        "driver-session",
+        driver ? "ok" : "skip",
+        driver ? `driverId=${driver.id}` : "sem sessão (redirect /driver)",
+      );
+    }
+  }, [loading, driver]);
 
   if (loading) {
     return (

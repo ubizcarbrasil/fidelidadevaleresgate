@@ -12,6 +12,7 @@ import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import { installGlobalDomErrorRecovery } from "@/lib/pwaRecovery";
 import { installRadixPointerEventsFix } from "@/lib/radixPointerEventsFix";
 import { isWebviewLitePath, startMonitoring } from "@/lib/bootMonitoring";
+import { installRouteDiagnostics } from "@/lib/routeDiagnostics";
 import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
 
 // Recuperação reativa apenas em erro real de chunk/import dinâmico.
@@ -21,6 +22,10 @@ installGlobalDomErrorRecovery();
 // Fix global para travamento da UI causado pelo bug do Radix Dialog/Popover
 // que deixa pointer-events:none no <body> ao fechar overlays em sequência.
 installRadixPointerEventsFix();
+
+// Diagnóstico por rota: expõe `window.__routeReport()` no console para
+// inspecionar rapidamente em qual provider/loader uma rota travou.
+installRouteDiagnostics();
 
 const App = lazyWithRetry(() => {
   console.info("[boot] App dynamic import started");
