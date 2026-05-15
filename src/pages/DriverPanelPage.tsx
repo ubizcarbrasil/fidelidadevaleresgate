@@ -25,6 +25,8 @@ import {
   OverlayNotificacoes,
 } from "@/compartilhados/components/notificacoes_campeonato";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
+import { useDueloCampeonatoHabilitado } from "@/compartilhados/hooks/hook_duelo_campeonato_habilitado";
+import { useCampeonatoStandalone } from "@/compartilhados/hooks/hook_campeonato_standalone";
 
 function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, initialDealId, isAdminSession }: {
   brand: any;
@@ -110,6 +112,22 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   const achadinhosEnabled = modulesLoaded ? (brandAchadinhosEnabled && branchAchadinhosEnabled) : false;
   const marketplaceEnabled = modulesLoaded ? (branchMarketplaceEnabled || branchPointsPurchaseEnabled) : false;
   const buyPointsEnabled = branchSettings?.enable_driver_points_purchase === true;
+  const isCityRedemptionEnabled = (effectiveBranch as any)?.is_city_redemption_enabled === true;
+
+  // Campeonato flags (decisão de redirect quando é o único módulo ativo)
+  const { campeonatoHabilitado, isLoading: loadingCampHab } =
+    useDueloCampeonatoHabilitado(brand.id) as any;
+  const { standalone: campeonatoStandalone, isLoading: loadingCampStand } =
+    useCampeonatoStandalone(brand.id);
+  const showCampeonato = !!(campeonatoHabilitado || campeonatoStandalone);
+  const hasOtherModules =
+    achadinhosEnabled ||
+    marketplaceEnabled ||
+    buyPointsEnabled ||
+    isCityRedemptionEnabled;
+  const campeonatoFlagsLoading = !!(loadingCampHab || loadingCampStand);
+  const campeonatoOnly =
+    modulesLoaded && !campeonatoFlagsLoading && showCampeonato && !hasOtherModules;
 
   // Derive whatsappNumber filtered by city toggle
   const rawWhatsappNumber = settings?.whatsapp_number as string | undefined;
@@ -131,6 +149,19 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
     }
   }, [navigate, brand.id]);
 
+  // Auto-redirect: se Campeonato é o único módulo ativo, ir direto à página dele
+  useEffect(() => {
+    if (!driver || !campeonatoOnly) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("campeonato") === "1") return;
+    if (initialCategoryId || initialDealId) return;
+    const qs = new URLSearchParams();
+    qs.set("brandId", brand.id);
+    const sk = params.get("sessionKey");
+    if (sk) qs.set("sessionKey", sk);
+    navigate(`/motorista/campeonato?${qs.toString()}`, { replace: true });
+  }, [driver, campeonatoOnly, brand.id, initialCategoryId, initialDealId, navigate]);
+
   if (loading || loadingBranch) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -141,6 +172,15 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
 
   if (!driver) {
     return <DriverCpfLogin logoUrl={logoUrl} brandName={brand.name} fontHeading={fontHeading} />;
+  }
+
+  // Cobre o intervalo até o redirect efetivar — evita flash do hub
+  if (campeonatoOnly) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   return (

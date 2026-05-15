@@ -1,42 +1,49 @@
-## Diagnóstico
+## Objetivo
 
-A constraint problemática **já não existe** no banco. A correção descrita já está aplicada (provavelmente em migration anterior).
+Quando o motorista entrar no painel e o **único** módulo ativo da marca/cidade for o **Campeonato** (sem Resgate na Cidade, Comprar Pontos, Meus Resgates, Achadinhos), pular o hub `ACHADINHOS` e abrir direto a página do Campeonato.
 
-**Estado atual de `campeonato_seasons`:**
+Quando houver outros módulos ativos além do Campeonato, manter o hub atual exatamente como está.
 
-```text
-Índices únicos existentes:
-- duelo_seasons_pkey                                       (id)
-- campeonato_seasons_active_brand_branch_year_month_key    UNIQUE (brand_id, branch_id, year, month) WHERE cancelled_at IS NULL  ✅
-```
+## Onde mexer
 
-Não existe nenhuma constraint `UNIQUE(brand_id, branch_id, year, month)` total. A `pg_constraint` retorna 0 linhas do tipo `u` na tabela — o índice parcial já é o único enforcement, exatamente como pedido.
+Apenas em `src/pages/DriverPanelPage.tsx` (componente `DriverGate`). Nenhuma mudança em business logic, schema, ou na página do Campeonato.
 
-**Verificação de duplicatas ativas:**
+### Passos
 
-```sql
-SELECT brand_id, branch_id, year, month, COUNT(*)
-FROM campeonato_seasons WHERE cancelled_at IS NULL
-GROUP BY 1,2,3,4 HAVING COUNT(*) > 1;
--- → 0 linhas
-```
+1. Em `DriverGate`, importar e usar:
+   - `useDueloCampeonatoHabilitado(brand.id)` → `campeonatoHabilitado`
+   - `useCampeonatoStandalone(brand.id)` → `standalone` (`campeonatoStandalone`)
+   
+   Hoje esses hooks só são chamados dentro de `DriverHomePage`; precisamos do valor no nível do gate para decidir o redirect.
 
-**Maio/2026 hoje (9 registros):** 6 cancelled + 3 ativas em **branches diferentes** (`601882d7…`, `aa1e7a2c…`, `ece001ed…`). Ou seja, novas temporadas foram criadas com sucesso após cancelamento — prova de que o índice parcial está funcionando.
+2. Calcular flags consolidadas (já existem variáveis equivalentes no arquivo):
+   ```ts
+   const isCityRedemptionEnabled = (effectiveBranch as any)?.is_city_redemption_enabled === true;
+   const hasOtherModules =
+     achadinhosEnabled ||
+     marketplaceEnabled ||
+     buyPointsEnabled ||
+     isCityRedemptionEnabled;
+   const showCampeonato = campeonatoHabilitado || campeonatoStandalone;
+   const campeonatoOnly = showCampeonato && !hasOtherModules;
+   ```
 
-## Conclusão
+3. Adicionar `useEffect` que dispara o redirect quando:
+   - `driver` autenticado
+   - `modulesLoaded === true` (evita redirecionar antes de saber os flags reais)
+   - `loadingFlag` dos hooks de Campeonato finalizado
+   - `campeonatoOnly === true`
+   - rota atual ainda é `/painel-motorista` (não está num overlay/categoria)
 
-Nenhuma migration é necessária. O bug descrito já está corrigido. Rodar o `DROP CONSTRAINT IF EXISTS … _key` é seguro mas inerte (a constraint não existe), e o `CREATE UNIQUE INDEX IF NOT EXISTS idx_campeonato_seasons_unique_ativa` criaria um **índice duplicado** com nome diferente do já existente (`campeonato_seasons_active_brand_branch_year_month_key`).
+   Ação: `navigate(`/motorista/campeonato?brandId=...&sessionKey=...`, { replace: true })` reaproveitando a mesma montagem de query string que o `onOpenCampeonato` já usa (linhas 165–172).
 
-## Frontend
+4. Enquanto o redirect ainda não disparou (mas já sabemos que `campeonatoOnly === true`), renderizar o mesmo loader (`Loader2`) usado nas linhas 134–140 para evitar o flash do hub `ACHADINHOS`.
 
-As queries client-side em `FormCriarTemporadaAutomatico.tsx`, `FormCriarTemporadaAvancado.tsx` e `useCheckSeasonOverlap` já filtram `.is('cancelled_at', null)`. Nada a mudar.
+5. Não alterar o caminho contrário: se `hasOtherModules` for verdadeiro, o `DriverHomePage` continua sendo renderizado normalmente (incluindo o card "Campeonato" dentro do hub).
 
-## Recomendação
+## Critérios de aceite
 
-Não aplicar a migration. Se quiser, posso:
-
-1. **Apenas padronizar o nome** do índice para `idx_campeonato_seasons_unique_ativa` (renomear o existente) — cosmético.
-2. **Investigar o sintoma real** que motivou o pedido: se ainda aparece "já existe temporada Maio/2026" para algum branch, é provavelmente cache de React Query ou dados de outro branch — me diga qual cidade/branch está sendo afetada que eu reproduzo.
-3. **Não fazer nada** — DB está correto.
-
-Qual caminho prefere?
+- Marca com **só Campeonato ativo** → ao entrar em `/painel-motorista`, motorista cai direto na página do Campeonato sem ver o hub.
+- Marca com Campeonato + qualquer outro módulo (Resgate na Cidade, Comprar Pontos, Achadinhos, Marketplace) → hub `ACHADINHOS` continua aparecendo igual hoje, com o card Campeonato listado.
+- Sem regressão em deep links (`?campeonato=1`, `initialCategoryId`, `initialDealId`) — o `useEffect` novo só age quando nenhum desses está em jogo (já coberto por `modulesLoaded` + `!hasOtherModules`).
+- Sem flash visual do hub durante a decisão (loader cobre o intervalo).
