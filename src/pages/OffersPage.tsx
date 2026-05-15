@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import { useProductScope } from "@/features/city_onboarding/hooks/hook_escopo_produto";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -54,7 +55,7 @@ export default function OffersPage() {
   }, [isRootAdmin, currentBrandId]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["offers", debouncedSearch, page, currentBrandId, filtroMotorista],
+    queryKey: queryKeys.offers.list(debouncedSearch, page, currentBrandId, filtroMotorista),
     enabled: !!currentBrandId || isRootAdmin,
     queryFn: async () => {
       let query = supabase.from("offers").select("*, brands(name), branches(name), stores(name)", { count: "exact" });
@@ -69,9 +70,9 @@ export default function OffersPage() {
     },
   });
 
-  const { data: brands } = useQuery({ queryKey: ["brands-select", currentBrandId], queryFn: async () => { let q = supabase.from("brands").select("id, name").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("id", currentBrandId); const { data } = await q; return data || []; } });
-  const { data: branches } = useQuery({ queryKey: ["branches-select", currentBrandId], queryFn: async () => { let q = supabase.from("branches").select("id, name, brand_id").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId); const { data } = await q; return data || []; } });
-  const { data: stores } = useQuery({ queryKey: ["stores-select", currentBrandId], queryFn: async () => { let q = supabase.from("stores").select("id, name, branch_id, brand_id").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId); const { data } = await q; return data || []; } });
+  const { data: brands } = useQuery({ queryKey: queryKeys.brandsSelect.list(currentBrandId), queryFn: async () => { let q = supabase.from("brands").select("id, name").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("id", currentBrandId); const { data } = await q; return data || []; } });
+  const { data: branches } = useQuery({ queryKey: queryKeys.branchesSelect.list(currentBrandId), queryFn: async () => { let q = supabase.from("branches").select("id, name, brand_id").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId); const { data } = await q; return data || []; } });
+  const { data: stores } = useQuery({ queryKey: queryKeys.storesSelect.list(currentBrandId), queryFn: async () => { let q = supabase.from("stores").select("id, name, branch_id, brand_id").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId); const { data } = await q; return data || []; } });
 
   const filteredBranches = branches?.filter(b => b.brand_id === form.brand_id) || [];
   const filteredStores = stores?.filter(s => s.branch_id === form.branch_id && s.brand_id === form.brand_id) || [];
@@ -86,13 +87,13 @@ export default function OffersPage() {
       if (editId) { const { error } = await supabase.from("offers").update(payload).eq("id", editId); if (error) throw error; }
       else { const { error } = await supabase.from("offers").insert(payload); if (error) throw error; }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["offers"] }); toast.success(editId ? "Oferta atualizada!" : "Oferta criada!"); closeDialog(); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.offers.all }); toast.success(editId ? "Oferta atualizada!" : "Oferta criada!"); closeDialog(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const remove = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("offers").delete().eq("id", id); if (error) throw error; },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["offers"] }); toast.success("Oferta removida!"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.offers.all }); toast.success("Oferta removida!"); },
     onError: (e: Error) => toast.error(e.message),
   });
 

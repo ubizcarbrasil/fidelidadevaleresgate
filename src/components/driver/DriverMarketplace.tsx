@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 import { formatPoints } from "@/lib/formatPoints";
+import { queryKeys } from "@/lib/queryKeys";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import DriverProfileOverlay from "./DriverProfileOverlay";
 import DriverLedgerOverlay from "./DriverLedgerOverlay";
@@ -189,7 +190,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const driverRedeemRows = settings?.driver_redeem_rows ?? 1;
 
   const { data: pointsPerReal } = useQuery({
-    queryKey: ["driver-points-per-real", brand.id],
+    queryKey: queryKeys.driverPointsPerReal.list(brand.id),
     queryFn: async () => {
       const { data } = await supabase
         .from("points_rules")
@@ -205,7 +206,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   // Fase 3: City offers (REDEEM / BOTH)
   const isCityRedemptionEnabled = (branch as any)?.is_city_redemption_enabled === true;
   const { data: cityOffers } = useQuery({
-    queryKey: ["driver-city-offers", brand.id, branch?.id],
+    queryKey: queryKeys.driverCityOffers.list(brand.id, branch?.id),
     queryFn: async () => {
       let q = supabase
         .from("offers")

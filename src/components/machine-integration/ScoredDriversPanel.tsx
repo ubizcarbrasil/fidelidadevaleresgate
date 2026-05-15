@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
+import { queryKeys } from "@/lib/queryKeys";
 import {
   Search, Eye, Loader2, Coins, ArrowUpRight, ArrowDownRight,
   User, Phone, Mail, CreditCard, Hash, Download, Truck, Gift, Link2, Unlink,
@@ -49,7 +50,7 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
 
   /* ── Query: customers with [MOTORISTA] tag ── */
   const { data: drivers, isLoading } = useQuery({
-    queryKey: ["scored-drivers", brandId, debouncedSearch],
+    queryKey: queryKeys.scoredDrivers.list(brandId, debouncedSearch),
     queryFn: async () => {
       let q = (supabase as any)
         .from("customers")
@@ -111,7 +112,7 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
 
   /* ── Query: ledger for selected driver ── */
   const { data: ledger, isLoading: ledgerLoading } = useQuery({
-    queryKey: ["driver-ledger-machine", selectedDriver?.id],
+    queryKey: queryKeys.driverLedgerMachine.list(selectedDriver?.id),
     queryFn: async () => {
       const { data, error } = await supabase
         .rpc("get_driver_ledger", { p_customer_id: selectedDriver!.id });
@@ -154,7 +155,7 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
     },
     onSuccess: () => {
       toast({ title: "Conta vinculada!", description: "O motorista agora pode acessar o app." });
-      queryClient.invalidateQueries({ queryKey: ["scored-drivers"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.scoredDrivers.all });
       setLinkDriver(null);
       setLinkEmail("");
       setSelectedDriver(null);
@@ -175,7 +176,7 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
     },
     onSuccess: () => {
       toast({ title: "Conta desvinculada" });
-      queryClient.invalidateQueries({ queryKey: ["scored-drivers"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.scoredDrivers.all });
       setSelectedDriver(null);
     },
     onError: (err: any) => {

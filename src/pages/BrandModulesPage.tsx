@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
 import {
   Blocks, Shield, Store, MapPin, Users, Tag, Ticket, PackageSearch,
@@ -93,7 +94,7 @@ export default function BrandModulesPage() {
   });
 
   const { data: definitions, isLoading: loadingDefs } = useQuery({
-    queryKey: ["module-definitions"],
+    queryKey: queryKeys.moduleDefinitions.all,
     queryFn: async () => {
       const { data, error } = await supabase.from("module_definitions").select("*").eq("is_active", true).order("category, name");
       if (error) throw error;
@@ -102,7 +103,7 @@ export default function BrandModulesPage() {
   });
 
   const { data: brandModules, isLoading: loadingBM } = useQuery({
-    queryKey: ["brand-modules", brandId],
+    queryKey: queryKeys.brandModules.list(brandId),
     queryFn: async () => {
       const { data, error } = await supabase.from("brand_modules").select("*").eq("brand_id", brandId!);
       if (error) throw error;
@@ -127,8 +128,8 @@ export default function BrandModulesPage() {
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["brand-modules", brandId] });
-      qc.invalidateQueries({ queryKey: ["brand-modules-active", brandId] });
+      qc.invalidateQueries({ queryKey: queryKeys.brandModules.list(brandId) });
+      qc.invalidateQueries({ queryKey: queryKeys.brandModulesActive.list(brandId) });
       // Fase 1: invalida o hook unificado (sem brandId = todas as combinações)
       qc.invalidateQueries({ queryKey: ["resolved-modules"] });
       toast.success("Módulo atualizado!");

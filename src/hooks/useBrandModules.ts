@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 
 export function useBrandModules() {
   const { currentBrandId, currentBranchId, consoleScope } = useBrandGuard();
@@ -24,7 +25,7 @@ export function useBrandModules() {
   const effectiveBrandId = currentBrandId || resolvedBrandId || null;
 
   const { data: brandModules, isLoading } = useQuery({
-    queryKey: ["brand-modules-active", effectiveBrandId],
+    queryKey: queryKeys.brandModulesActive.list(effectiveBrandId),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("brand_modules")

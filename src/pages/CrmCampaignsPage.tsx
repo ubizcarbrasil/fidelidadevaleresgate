@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useAuth } from "@/contexts/AuthContext";
+import { queryKeys } from "@/lib/queryKeys";
 import { campaignService, CHANNEL_CONFIG } from "@/modules/crm";
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,13 +43,13 @@ export default function CrmCampaignsPage() {
   const [validityDays, setValidityDays] = useState("7");
 
   const { data: campaigns, isLoading } = useQuery({
-    queryKey: ["crm-campaigns", currentBrandId],
+    queryKey: queryKeys.crm.campaigns.list(currentBrandId),
     queryFn: () => campaignService.fetchCampaigns(currentBrandId!),
     enabled: !!currentBrandId,
   });
 
   const { data: audiences } = useQuery({
-    queryKey: ["crm-audiences-select", currentBrandId],
+    queryKey: queryKeys.crm.audiencesSelect.list(currentBrandId),
     queryFn: () => campaignService.fetchAudiences(currentBrandId!),
     enabled: !!currentBrandId,
   });
@@ -76,7 +77,7 @@ export default function CrmCampaignsPage() {
         createdBy: user?.id,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["crm-campaigns"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.crm.campaigns.all });
       setShowCreate(false);
       resetForm();
       toast({ title: "Campanha enviada para aprovação" });
@@ -87,7 +88,7 @@ export default function CrmCampaignsPage() {
   const approveMutation = useMutation({
     mutationFn: (id: string) => campaignService.approveCampaign(id, user?.id || ""),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["crm-campaigns"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.crm.campaigns.all });
       toast({ title: "Campanha aprovada" });
     },
   });

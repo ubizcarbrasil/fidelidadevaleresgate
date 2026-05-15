@@ -90,7 +90,7 @@ export default function AchadinhoCategoryPage({ category, onBack }: Props) {
   });
 
   const { data: banners } = useQuery({
-    queryKey: ["affiliate-cat-banners", brand?.id, category.id],
+    queryKey: queryKeys.affiliateCatBanners.list(brand?.id, category.id),
     enabled: !!brand,
     queryFn: async () => {
       const { data } = await supabase

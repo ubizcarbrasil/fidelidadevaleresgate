@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Coins, Loader2 } from "lucide-react";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface Props {
   open: boolean;
@@ -42,9 +43,9 @@ export default function ManualDriverScoringDialog({ open, onOpenChange, driver, 
     },
     onSuccess: () => {
       toast.success(`${points} pontos creditados com sucesso!`);
-      qc.invalidateQueries({ queryKey: ["scored-drivers"] });
-      qc.invalidateQueries({ queryKey: ["driver-ledger-machine"] });
-      qc.invalidateQueries({ queryKey: ["driver-ledger-detail"] });
+      qc.invalidateQueries({ queryKey: queryKeys.scoredDrivers.all });
+      qc.invalidateQueries({ queryKey: queryKeys.driverLedgerMachine.all });
+      qc.invalidateQueries({ queryKey: queryKeys.driverLedgerDetail.all });
       setPoints("");
       setReason("");
       onOpenChange(false);

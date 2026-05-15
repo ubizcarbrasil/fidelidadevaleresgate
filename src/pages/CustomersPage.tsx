@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import CustomerLedgerDrawer from "@/components/CustomerLedgerDrawer";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import { getTierInfo, getTierFromRideCount, CRM_SYNC_LABELS, TIERS } from "@/lib/tierUtils";
 import DataSkeleton from "@/components/DataSkeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -45,7 +46,7 @@ export default function CustomersPage() {
   const autoSyncTriggered = useRef(false);
 
   const { data: orphanCount } = useQuery({
-    queryKey: ["crm-orphan-count", currentBrandId],
+    queryKey: queryKeys.crm.orphanCount.list(currentBrandId),
     queryFn: async () => {
       if (!currentBrandId) return 0;
       const { count, error } = await supabase
@@ -77,7 +78,7 @@ export default function CustomersPage() {
   }, [orphanCount]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["customers", debouncedSearch, page, currentBrandId, tierFilter, crmFilter],
+    queryKey: queryKeys.customers.list(debouncedSearch, page, currentBrandId, tierFilter, crmFilter),
     queryFn: async () => {
       let query = supabase.from("customers").select("*, brands(name), branches(name)", { count: "exact" }) as any;
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
@@ -91,8 +92,8 @@ export default function CustomersPage() {
     },
   });
 
-  const { data: brands } = useQuery({ queryKey: ["brands-select", currentBrandId], queryFn: async () => { let q = supabase.from("brands").select("id, name").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("id", currentBrandId); const { data } = await q; return data || []; } });
-  const { data: branches } = useQuery({ queryKey: ["branches-select", currentBrandId], queryFn: async () => { let q = supabase.from("branches").select("id, name, brand_id").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId); const { data } = await q; return data || []; } });
+  const { data: brands } = useQuery({ queryKey: queryKeys.brandsSelect.list(currentBrandId), queryFn: async () => { let q = supabase.from("brands").select("id, name").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("id", currentBrandId); const { data } = await q; return data || []; } });
+  const { data: branches } = useQuery({ queryKey: queryKeys.branchesSelect.list(currentBrandId), queryFn: async () => { let q = supabase.from("branches").select("id, name, brand_id").order("name"); if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId); const { data } = await q; return data || []; } });
   const filteredBranches = branches?.filter(b => b.brand_id === form.brand_id) || [];
 
   const save = useMutation({
@@ -101,7 +102,7 @@ export default function CustomersPage() {
       if (editId) { const { error } = await (supabase as any).from("customers").update(payload).eq("id", editId); if (error) throw error; }
       else { const { error } = await (supabase as any).from("customers").insert(payload); if (error) throw error; }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["customers"] }); toast.success(editId ? "Cliente atualizado!" : "Cliente criado!"); closeDialog(); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.customers.all }); toast.success(editId ? "Cliente atualizado!" : "Cliente criado!"); closeDialog(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -199,7 +200,7 @@ export default function CustomersPage() {
       return { pushedCount, importedCount };
     },
     onSuccess: ({ pushedCount, importedCount }) => {
-      qc.invalidateQueries({ queryKey: ["customers"] });
+      qc.invalidateQueries({ queryKey: queryKeys.customers.all });
       if (pushedCount === 0 && importedCount === 0) {
         toast.info("Tudo sincronizado! Nenhuma pendência encontrada.");
       } else {
@@ -240,7 +241,7 @@ export default function CustomersPage() {
       const { error } = await (supabase as any).from("customers").update(updates).in("id", ids);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["customers"] }); toast.success(`${selectedIds.size} cliente(s) atualizado(s)!`); setSelectedIds(new Set()); setBulkOpen(false); setBulkForm({ name: "", cpf: "", phone: "" }); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.customers.all }); toast.success(`${selectedIds.size} cliente(s) atualizado(s)!`); setSelectedIds(new Set()); setBulkOpen(false); setBulkForm({ name: "", cpf: "", phone: "" }); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -436,7 +437,7 @@ export default function CustomersPage() {
         onOpenChange={(open) => {
           if (!open) {
             setBonusCustomer(null);
-            qc.invalidateQueries({ queryKey: ["customers"] });
+            qc.invalidateQueries({ queryKey: queryKeys.customers.all });
           }
         }}
         customer={bonusCustomer ? { id: bonusCustomer.id, name: bonusCustomer.name, branch_id: bonusCustomer.branch_id } : null}

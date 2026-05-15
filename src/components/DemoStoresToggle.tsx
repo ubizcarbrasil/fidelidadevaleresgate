@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Store, Coins, Rocket, ShoppingBag } from "lucide-react";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface DemoStoresToggleProps {
   brandId: string;
@@ -21,7 +22,7 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
 
   // Count demo stores (slug ends with brand slug pattern)
   const { data: demoInfo, isLoading } = useQuery({
-    queryKey: ["demo-stores-info", brandId],
+    queryKey: queryKeys.demoStores.list(brandId),
     queryFn: async () => {
       const { data: brand } = await supabase
         .from("brands")
@@ -51,7 +52,7 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
 
   // Count demo affiliate deals
   const { data: dealsInfo, isLoading: dealsLoading } = useQuery({
-    queryKey: ["demo-deals-info", brandId],
+    queryKey: queryKeys.demoDeals.list(brandId),
     queryFn: async () => {
       const { data: deals } = await supabase
         .from("affiliate_deals")
@@ -87,9 +88,9 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
       if (data.creditedCustomers > 0) {
         toast.success(`${data.creditedCustomers} cliente(s) teste receberam 1000 pontos!`);
       }
-      queryClient.invalidateQueries({ queryKey: ["demo-stores-info"] });
-      queryClient.invalidateQueries({ queryKey: ["demo-deals-info"] });
-      queryClient.invalidateQueries({ queryKey: ["stores"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.demoStores.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.demoDeals.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.stores.all });
     } catch (err: any) {
       toast.error("Erro ao criar parceiros demo", { description: err.message });
     } finally {
@@ -123,8 +124,8 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
     },
     onSuccess: (_, activate) => {
       toast.success(activate ? "Parceiros demo ativados!" : "Parceiros demo desativados!");
-      queryClient.invalidateQueries({ queryKey: ["demo-stores-info"] });
-      queryClient.invalidateQueries({ queryKey: ["stores"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.demoStores.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.stores.all });
       queryClient.invalidateQueries({ queryKey: ["stores-count"] });
     },
     onError: (err: any) => {
@@ -144,8 +145,8 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
     },
     onSuccess: (_, activate) => {
       toast.success(activate ? "Achadinhos demo ativados!" : "Achadinhos demo desativados!");
-      queryClient.invalidateQueries({ queryKey: ["demo-deals-info"] });
-      queryClient.invalidateQueries({ queryKey: ["affiliate-deals"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.demoDeals.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.affiliateDeals.all });
     },
     onError: (err: any) => {
       toast.error("Erro ao alterar achadinhos demo", { description: err.message });

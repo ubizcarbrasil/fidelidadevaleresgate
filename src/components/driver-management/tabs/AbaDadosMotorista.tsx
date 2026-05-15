@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { queryKeys } from "@/lib/queryKeys";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -94,7 +95,7 @@ export default function AbaDadosMotorista({ driver, brandId }: Props) {
       if (error) throw error;
 
       toast.success("Dados atualizados com sucesso!");
-      queryClient.invalidateQueries({ queryKey: ["driver-management"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.driverManagement.all });
       setEditing(false);
     } catch (err: any) {
       toast.error("Erro ao salvar: " + (err.message || "Tente novamente."));

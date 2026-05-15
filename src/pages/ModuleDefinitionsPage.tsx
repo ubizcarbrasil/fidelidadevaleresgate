@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Pencil, Trash2, Eye, EyeOff, Blocks, Shield } from "lucide-react";
 import { toast } from "sonner";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface ModForm {
   key: string;
@@ -33,7 +34,7 @@ export default function ModuleDefinitionsPage() {
   const [form, setForm] = useState<ModForm>(emptyForm);
 
   const { data: modules, isLoading } = useQuery({
-    queryKey: ["module-definitions"],
+    queryKey: queryKeys.moduleDefinitions.all,
     queryFn: async () => {
       const { data, error } = await supabase.from("module_definitions").select("*").order("category, name");
       if (error) throw error;
@@ -59,7 +60,7 @@ export default function ModuleDefinitionsPage() {
         if (error) throw error;
       }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["module-definitions"] }); toast.success("Módulo salvo!"); closeDialog(); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.moduleDefinitions.all }); toast.success("Módulo salvo!"); closeDialog(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -68,7 +69,7 @@ export default function ModuleDefinitionsPage() {
       const { error } = await supabase.from("module_definitions").update({ is_active }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["module-definitions"] }); toast.success("Status atualizado!"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.moduleDefinitions.all }); toast.success("Status atualizado!"); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -77,7 +78,7 @@ export default function ModuleDefinitionsPage() {
       const { error } = await supabase.from("module_definitions").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["module-definitions"] }); toast.success("Módulo removido!"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.moduleDefinitions.all }); toast.success("Módulo removido!"); },
     onError: (e: Error) => toast.error(e.message),
   });
 

@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { sugerirCategoria, type CategoriaAchadinho } from "@/lib/categorizadorAchadinhos";
 
@@ -60,7 +61,7 @@ export default function AchadinhosMobileImportPage() {
 
   // ── Fetch categories for auto-suggestion ──
   const { data: categoriasRaw } = useQuery({
-    queryKey: ["affiliate-categories", currentBrandId],
+    queryKey: queryKeys.affiliateCategories.list(currentBrandId),
     queryFn: async () => {
       if (!currentBrandId) return [];
       const { data } = await supabase
@@ -430,7 +431,7 @@ export default function AchadinhosMobileImportPage() {
       setPublishProgress({ done: i + 1, total: products.length });
     }
     setIsPublishing(false);
-    queryClient.invalidateQueries({ queryKey: ["affiliate-deals"] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.affiliateDeals.all });
     if (successCount > 0) {
       toast.success(`${successCount} achadinho(s) publicado(s)!`);
       setStep("success");

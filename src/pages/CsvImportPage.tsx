@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -250,7 +251,7 @@ export default function CsvImportPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const { data: brands } = useQuery({
-    queryKey: ["brands-select"],
+    queryKey: queryKeys.brandsSelect.all,
     queryFn: async () => {
       const { data } = await supabase.from("brands").select("id, name").eq("is_active", true).order("name");
       return data || [];
@@ -259,7 +260,7 @@ export default function CsvImportPage() {
   });
 
   const { data: branches } = useQuery({
-    queryKey: ["branches-select", brandId],
+    queryKey: queryKeys.branchesSelect.list(brandId),
     queryFn: async () => {
       let q = supabase.from("branches").select("id, name").eq("is_active", true).order("name");
       if (brandId) q = q.eq("brand_id", brandId);
@@ -271,7 +272,7 @@ export default function CsvImportPage() {
 
   // Stores for EARNING_EVENTS store selector
   const { data: storesForEarning } = useQuery({
-    queryKey: ["stores-for-earning", brandId, branchId],
+    queryKey: queryKeys.storesForEarning.list(brandId, branchId),
     queryFn: async () => {
       let q = supabase.from("stores").select("id, name").eq("brand_id", brandId).eq("is_active", true).order("name");
       if (branchId) q = q.eq("branch_id", branchId);
@@ -739,11 +740,11 @@ export default function CsvImportPage() {
     onSuccess: (result) => {
       setImportResult(result);
       setStep("done");
-      qc.invalidateQueries({ queryKey: ["stores"] });
-      qc.invalidateQueries({ queryKey: ["offers"] });
-      qc.invalidateQueries({ queryKey: ["customers"] });
-      qc.invalidateQueries({ queryKey: ["crm-contacts"] });
-      qc.invalidateQueries({ queryKey: ["coupons"] });
+      qc.invalidateQueries({ queryKey: queryKeys.stores.all });
+      qc.invalidateQueries({ queryKey: queryKeys.offers.all });
+      qc.invalidateQueries({ queryKey: queryKeys.customers.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.contacts.all });
+      qc.invalidateQueries({ queryKey: queryKeys.coupons.all });
       if (result.errors.length === 0) toast.success(`${result.success} registros importados com sucesso!`);
       else toast.warning(`${result.success} importados, ${result.errors.length} erros.`);
     },
@@ -770,7 +771,7 @@ export default function CsvImportPage() {
 
   // ── Import history query ──
   const { data: importHistory, isLoading: historyLoading } = useQuery({
-    queryKey: ["import-jobs-history", brandId],
+    queryKey: queryKeys.importJobs.list(brandId),
     queryFn: async () => {
       let q = supabase
         .from("import_jobs")

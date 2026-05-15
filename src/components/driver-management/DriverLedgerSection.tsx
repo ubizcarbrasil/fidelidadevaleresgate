@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowUpRight, ArrowDownRight, Download, ScrollText, Car, ShoppingCart, Gift, Ticket } from "lucide-react";
 import { formatPoints } from "@/lib/formatPoints";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface Props {
   driverId: string;
@@ -24,7 +25,7 @@ type LedgerEntry = {
 
 export default function DriverLedgerSection({ driverId, driverName }: Props) {
   const { data: ledger, isLoading, error } = useQuery({
-    queryKey: ["driver-ledger-detail", driverId],
+    queryKey: queryKeys.driverLedgerDetail.list(driverId),
     queryFn: async () => {
       const { data, error } = await supabase
         .rpc("get_driver_ledger", { p_customer_id: driverId });

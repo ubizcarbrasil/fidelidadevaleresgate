@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Save, Plus, Trash2, Truck, Info, DoorOpen } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type VolumeTier = {
@@ -76,7 +77,7 @@ export default function DriverPointsRulesPage() {
   const branchId = isBranchScope ? currentBranchId! : (selectedBranchId || branches?.[0]?.id || "");
 
   const { data: rule, isLoading } = useQuery({
-    queryKey: ["driver-points-rules", currentBrandId, branchId],
+    queryKey: queryKeys.driverPointsRules.list(currentBrandId, branchId),
     enabled: !!currentBrandId && !!branchId,
     queryFn: async () => {
       const { data } = await (supabase as any)
@@ -149,7 +150,7 @@ export default function DriverPointsRulesPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["driver-points-rules"] });
+      qc.invalidateQueries({ queryKey: queryKeys.driverPointsRules.all });
       setForm({});
       toast.success("Regras de pontuação do motorista salvas!");
     },

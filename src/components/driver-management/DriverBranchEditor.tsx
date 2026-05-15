@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { MapPin } from "lucide-react";
 import type { DriverRow } from "@/types/driver";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface Props {
   driver: DriverRow;
@@ -39,7 +40,7 @@ export default function DriverBranchEditor({ driver, brandId }: Props) {
     },
     onSuccess: () => {
       toast.success("Cidade atualizada!");
-      qc.invalidateQueries({ queryKey: ["driver-management"] });
+      qc.invalidateQueries({ queryKey: queryKeys.driverManagement.all });
     },
     onError: (e: Error) => toast.error(e.message),
   });

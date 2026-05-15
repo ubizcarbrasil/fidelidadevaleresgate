@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { queryKeys } from "@/lib/queryKeys";
 import {
   buscarDiagnosticoMarca,
   reaplicarTemplateMarca,
@@ -22,7 +23,7 @@ export function useReaplicarTemplate() {
     onSuccess: (_, input) => {
       toast.success("Template do produto reaplicado com sucesso.");
       queryClient.invalidateQueries({ queryKey: ["diagnostico-marca", input.brandId] });
-      queryClient.invalidateQueries({ queryKey: ["brand-modules-active"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.brandModulesActive.all });
     },
     onError: (err: any) => {
       toast.error(err?.message ?? "Falha ao reaplicar template do produto.");

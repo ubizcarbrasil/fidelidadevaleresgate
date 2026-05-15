@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
+import { queryKeys } from "@/lib/queryKeys";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -184,7 +185,7 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
       if (rpcError) throw rpcError;
 
       await refetch();
-      queryClient.invalidateQueries({ queryKey: ["customer-product-orders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.customerProductOrders.all });
 
       sendRedemptionTelegramNotification({
         brandId: customer.brand_id,

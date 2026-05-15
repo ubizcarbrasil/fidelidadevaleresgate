@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useAuth } from "@/contexts/AuthContext";
+import { queryKeys } from "@/lib/queryKeys";
 import { ROLE_LABELS } from "@/hooks/usePermissions";
 import UserPermissionsDialog from "@/components/UserPermissionsDialog";
 
@@ -57,7 +58,7 @@ function BrandUsersView({ brandId }: { brandId: string }) {
   const [selectedPerms, setSelectedPerms] = useState<Set<string>>(new Set());
 
   const { data: branches } = useQuery({
-    queryKey: ["branches-select", brandId],
+    queryKey: queryKeys.branchesSelect.list(brandId),
     queryFn: async () => {
       const { data } = await supabase.from("branches").select("id, name").eq("brand_id", brandId).order("name");
       return data || [];
@@ -128,7 +129,7 @@ function BrandUsersView({ brandId }: { brandId: string }) {
   };
 
   const { data: brandUsers, isLoading } = useQuery({
-    queryKey: ["brand-team", brandId],
+    queryKey: queryKeys.brandTeam.list(brandId),
     queryFn: async () => {
       const { data: roles, error } = await supabase
         .from("user_roles")
@@ -187,7 +188,7 @@ function BrandUsersView({ brandId }: { brandId: string }) {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["brand-team", brandId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.brandTeam.list(brandId) });
       toast.success("Acesso criado com sucesso!");
       setInviteOpen(false);
       setEmail(""); setFullName(""); setPassword(""); setConfirmPassword("");
@@ -202,7 +203,7 @@ function BrandUsersView({ brandId }: { brandId: string }) {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["brand-team", brandId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.brandTeam.list(brandId) });
       toast.success("Acesso removido!");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -448,7 +449,7 @@ function RootUsersView() {
   });
 
   const { data: brands } = useQuery({
-    queryKey: ["brands-select", currentBrandId],
+    queryKey: queryKeys.brandsSelect.list(currentBrandId),
     queryFn: async () => {
       let q = supabase.from("brands").select("id, name").order("name");
       if (!isRootAdmin && currentBrandId) q = q.eq("id", currentBrandId);
@@ -458,7 +459,7 @@ function RootUsersView() {
   });
 
   const { data: branches } = useQuery({
-    queryKey: ["branches-select", currentBrandId],
+    queryKey: queryKeys.branchesSelect.list(currentBrandId),
     queryFn: async () => {
       let q = supabase.from("branches").select("id, name").order("name");
       if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);

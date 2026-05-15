@@ -2,8 +2,14 @@
  * Query Key Factory — chaves tipadas por módulo para invalidação precisa.
  *
  * Uso:
- *   queryClient.invalidateQueries({ queryKey: queryKeys.crm.contacts._def })
+ *   // Invalida TODAS as queries de um módulo (prefix match):
+ *   queryClient.invalidateQueries({ queryKey: queryKeys.crm.contacts.all })
+ *
+ *   // Query específica com argumentos:
  *   useQuery({ queryKey: queryKeys.loyalty.earnings.list(brandId, period) })
+ *
+ *   // Detalhe por id:
+ *   useQuery({ queryKey: queryKeys.crm.contacts.detail(contactId) })
  */
 
 function createKeys<T extends string>(module: T) {
@@ -22,10 +28,18 @@ export const queryKeys = {
   crm: {
     ...createKeys("crm"),
     contacts: createKeys("crm-contacts"),
+    contactEvents: createKeys("crm-contact-events"),
+    contactStats: createKeys("crm-contact-stats"),
     events: createKeys("crm-events"),
+    eventStats: createKeys("crm-event-stats"),
     audiences: createKeys("crm-audiences"),
+    audiencesSelect: createKeys("crm-audiences-select"),
     campaigns: createKeys("crm-campaigns"),
     tiers: createKeys("crm-tiers"),
+    tierDistribution: createKeys("crm-tier-distribution"),
+    analyticsFull: createKeys("crm-analytics-full"),
+    orphanCount: createKeys("crm-orphan-count"),
+    linkedCustomers: createKeys("crm-linked-customers"),
   },
 
   // ── Loyalty ──
@@ -63,6 +77,9 @@ export const queryKeys = {
   },
   customerFavorites: createKeys("customer-favorites"),
   customerLedger: createKeys("customer-ledger"),
+  customerLedgerMachine: createKeys("customer-ledger-machine"),
+  customerRedeemOrders: createKeys("customer-redeem-orders"),
+  customerRedeemStore: createKeys("customer-redeem-store"),
 
   // ── Brand config ──
   brandSettings: createKeys("brand-settings"),
@@ -97,6 +114,8 @@ export const queryKeys = {
   brandsSelect: createKeys("brands-select"),
   branchesSelect: createKeys("branches-select"),
   storesSelect: createKeys("stores-select"),
+  storesPendingCount: createKeys("stores-pending-count"),
+  storesForEarning: createKeys("stores-for-earning"),
 
   // ── Misc ──
   iconLibrary: createKeys("icon-library"),

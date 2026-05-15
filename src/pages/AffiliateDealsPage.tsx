@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import ImageUploadField from "@/components/ImageUploadField";
 import { formatPoints } from "@/lib/formatPoints";
 
@@ -139,8 +140,8 @@ export default function AffiliateDealsPage() {
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["affiliate-deals"] });
-      qc.invalidateQueries({ queryKey: ["produtos-resgate"] });
+      qc.invalidateQueries({ queryKey: queryKeys.affiliateDeals.all });
+      qc.invalidateQueries({ queryKey: queryKeys.produtosResgate.all });
       toast.success(`${selectedIds.size} produto(s) marcados como resgatáveis!`);
       setSelectedIds(new Set());
       setShowBulkRedeemDialog(false);
@@ -152,7 +153,7 @@ export default function AffiliateDealsPage() {
 
   // Categories for dropdown
   const { data: brandCategories } = useQuery({
-    queryKey: ["affiliate-categories", currentBrandId],
+    queryKey: queryKeys.affiliateCategories.list(currentBrandId),
     queryFn: async () => {
       if (!currentBrandId) return [];
       const { data } = await supabase
@@ -167,7 +168,7 @@ export default function AffiliateDealsPage() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["affiliate-deals", debouncedSearch, page, currentBrandId, redeemFilter],
+    queryKey: queryKeys.affiliateDeals.list(debouncedSearch, page, currentBrandId, redeemFilter),
     queryFn: async () => {
       let query = supabase.from("affiliate_deals").select("*", { count: "exact" });
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
@@ -264,7 +265,7 @@ export default function AffiliateDealsPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["affiliate-deals"] });
+      qc.invalidateQueries({ queryKey: queryKeys.affiliateDeals.all });
       toast.success(`${drafts.filter((d) => d.title && d.affiliate_url).length} achadinhos criados!`);
       setDrafts([newDraft()]);
     },
@@ -345,7 +346,7 @@ export default function AffiliateDealsPage() {
     }
 
     setImporting(false);
-    qc.invalidateQueries({ queryKey: ["affiliate-deals"] });
+    qc.invalidateQueries({ queryKey: queryKeys.affiliateDeals.all });
     toast.success(`${done} achadinhos importados!`);
     setCsvRows([]);
   }, [csvRows, currentBrandId, qc]);
@@ -357,7 +358,7 @@ export default function AffiliateDealsPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["affiliate-deals"] });
+      qc.invalidateQueries({ queryKey: queryKeys.affiliateDeals.all });
       toast.success("Achadinho removido!");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -408,7 +409,7 @@ export default function AffiliateDealsPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["affiliate-deals"] });
+      qc.invalidateQueries({ queryKey: queryKeys.affiliateDeals.all });
       toast.success("Achadinho atualizado!");
       setEditId(null);
       setEditForm(null);

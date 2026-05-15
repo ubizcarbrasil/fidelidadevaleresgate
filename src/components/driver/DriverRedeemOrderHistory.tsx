@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatPoints } from "@/lib/formatPoints";
+import { queryKeys } from "@/lib/queryKeys";
 
 const STATUS_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
   PENDING: { label: "Pendente", icon: Clock, color: "hsl(var(--muted-foreground))" },
@@ -19,7 +20,7 @@ export default function DriverRedeemOrderHistory() {
   const { driver } = useDriverSession();
 
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ["driver-redeem-orders", driver?.id],
+    queryKey: queryKeys.driverRedeemOrders.list(driver?.id),
     enabled: !!driver,
     queryFn: async () => {
       const { data } = await supabase

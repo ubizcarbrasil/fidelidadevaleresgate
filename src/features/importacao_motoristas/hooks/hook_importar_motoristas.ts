@@ -5,6 +5,7 @@ import type { LinhaPlanilha, LinhaMapeada, ResumoMapeamento, ResultadoImportacao
 import { ImportacaoTimeoutError, ImportacaoUploadError } from "../types/tipos_importacao";
 import { mapearLinha, calcularResumoMapeamento } from "../utils/mapeador_taximachine";
 import { uploadPlanilhaParaStorage } from "../utils/upload_planilha_storage";
+import { queryKeys } from "@/lib/queryKeys";
 
 const POLLING_INTERVAL_MS = 1500;
 /** Tempo máximo absoluto de polling: 20 minutos. */
@@ -164,7 +165,7 @@ export function useImportarMotoristas({ brandId, branchId }: Args) {
       setResultado(r);
 
       if (r.status === "done" || r.status === "error") {
-        queryClient.invalidateQueries({ queryKey: ["driver-management"] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.driverManagement.all });
         return r;
       }
     }

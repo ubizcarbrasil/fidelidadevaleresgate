@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Save } from "lucide-react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { TIERS } from "@/lib/tierUtils";
+import { queryKeys } from "@/lib/queryKeys";
 
 export default function TierPointsRulesPage() {
   const qc = useQueryClient();
@@ -33,7 +34,7 @@ export default function TierPointsRulesPage() {
   const branchId = selectedBranchId || branches?.[0]?.id || "";
 
   const { data: rules, isLoading } = useQuery({
-    queryKey: ["tier-points-rules", currentBrandId, branchId],
+    queryKey: queryKeys.tierPointsRules.list(currentBrandId, branchId),
     enabled: !!currentBrandId && !!branchId,
     queryFn: async () => {
       const { data } = await supabase
@@ -82,7 +83,7 @@ export default function TierPointsRulesPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["tier-points-rules"] });
+      qc.invalidateQueries({ queryKey: queryKeys.tierPointsRules.all });
       setLocalRules({});
       toast.success("Regras de pontuação por tier salvas!");
     },

@@ -8,6 +8,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { queryKeys } from "@/lib/queryKeys";
 
 export interface ModuleTemplate {
   id: string;
@@ -328,7 +329,7 @@ export function useAplicarModuleTemplate() {
     },
     onSuccess: ({ brandsTouched, branchesTouched }) => {
       qc.invalidateQueries({ queryKey: ["resolved-modules"] });
-      qc.invalidateQueries({ queryKey: ["brand-modules-active"] });
+      qc.invalidateQueries({ queryKey: queryKeys.brandModulesActive.all });
       qc.invalidateQueries({ queryKey: ["brand-modules-admin"] });
       toast.success(
         `Template aplicado em ${brandsTouched} marca(s) e ${branchesTouched} cidade(s)`,

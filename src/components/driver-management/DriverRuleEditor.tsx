@@ -8,6 +8,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { queryKeys } from "@/lib/queryKeys";
 import { Loader2, Save, Settings2 } from "lucide-react";
 
 interface Props {
@@ -19,7 +20,7 @@ export default function DriverRuleEditor({ driverId, brandId }: Props) {
   const qc = useQueryClient();
 
   const { data: rule, isLoading } = useQuery({
-    queryKey: ["driver-rule-individual", driverId, brandId],
+    queryKey: queryKeys.driverRuleIndividual.list(driverId, brandId),
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("driver_points_rules")
@@ -33,7 +34,7 @@ export default function DriverRuleEditor({ driverId, brandId }: Props) {
   });
 
   const { data: brandRule } = useQuery({
-    queryKey: ["driver-rule-brand", brandId],
+    queryKey: queryKeys.driverRuleBrand.list(brandId),
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("driver_points_rules")
@@ -89,7 +90,7 @@ export default function DriverRuleEditor({ driverId, brandId }: Props) {
     },
     onSuccess: () => {
       toast.success("Regra individual salva!");
-      qc.invalidateQueries({ queryKey: ["driver-rule-individual", driverId] });
+      qc.invalidateQueries({ queryKey: queryKeys.driverRuleIndividual.list(driverId) });
       setEditing(false);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -106,7 +107,7 @@ export default function DriverRuleEditor({ driverId, brandId }: Props) {
     },
     onSuccess: () => {
       toast.success("Regra individual removida. Será usada a regra padrão.");
-      qc.invalidateQueries({ queryKey: ["driver-rule-individual", driverId] });
+      qc.invalidateQueries({ queryKey: queryKeys.driverRuleIndividual.list(driverId) });
       setEditing(false);
     },
     onError: (e: Error) => toast.error(e.message),

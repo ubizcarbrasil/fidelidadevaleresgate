@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useRegrasResgateCidade } from "@/compartilhados/hooks/hook_regras_resgate_cidade";
+import { queryKeys } from "@/lib/queryKeys";
 import {
   Dialog,
   DialogContent,
@@ -115,10 +116,10 @@ export default function ModalAdicionarResgatavel({ aberto, onFechar }: Props) {
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["produtos-resgate"] });
-      qc.invalidateQueries({ queryKey: ["produtos-resgate-kpis"] });
+      qc.invalidateQueries({ queryKey: queryKeys.produtosResgate.all });
+      qc.invalidateQueries({ queryKey: queryKeys.produtosResgateKpis.all });
       qc.invalidateQueries({ queryKey: ["deals-nao-resgataveis"] });
-      qc.invalidateQueries({ queryKey: ["affiliate-deals"] });
+      qc.invalidateQueries({ queryKey: queryKeys.affiliateDeals.all });
       toast.success(`${selecionados.size} produto(s) marcado(s) como resgatável`);
       handleFechar();
     },
