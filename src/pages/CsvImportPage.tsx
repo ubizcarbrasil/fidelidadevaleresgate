@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -271,7 +272,7 @@ export default function CsvImportPage() {
 
   // Stores for EARNING_EVENTS store selector
   const { data: storesForEarning } = useQuery({
-    queryKey: ["stores-for-earning", brandId, branchId],
+    queryKey: queryKeys.storesForEarning.list(brandId, branchId),
     queryFn: async () => {
       let q = supabase.from("stores").select("id, name").eq("brand_id", brandId).eq("is_active", true).order("name");
       if (branchId) q = q.eq("branch_id", branchId);
@@ -739,7 +740,7 @@ export default function CsvImportPage() {
     onSuccess: (result) => {
       setImportResult(result);
       setStep("done");
-      qc.invalidateQueries({ queryKey: ["stores"] });
+      qc.invalidateQueries({ queryKey: queryKeys.stores.all });
       qc.invalidateQueries({ queryKey: ["offers"] });
       qc.invalidateQueries({ queryKey: ["customers"] });
       qc.invalidateQueries({ queryKey: ["crm-contacts"] });

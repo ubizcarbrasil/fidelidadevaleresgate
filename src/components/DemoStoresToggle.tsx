@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Store, Coins, Rocket, ShoppingBag } from "lucide-react";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface DemoStoresToggleProps {
   brandId: string;
@@ -89,7 +90,7 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
       }
       queryClient.invalidateQueries({ queryKey: ["demo-stores-info"] });
       queryClient.invalidateQueries({ queryKey: ["demo-deals-info"] });
-      queryClient.invalidateQueries({ queryKey: ["stores"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.stores.all });
     } catch (err: any) {
       toast.error("Erro ao criar parceiros demo", { description: err.message });
     } finally {
@@ -124,7 +125,7 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
     onSuccess: (_, activate) => {
       toast.success(activate ? "Parceiros demo ativados!" : "Parceiros demo desativados!");
       queryClient.invalidateQueries({ queryKey: ["demo-stores-info"] });
-      queryClient.invalidateQueries({ queryKey: ["stores"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.stores.all });
       queryClient.invalidateQueries({ queryKey: ["stores-count"] });
     },
     onError: (err: any) => {

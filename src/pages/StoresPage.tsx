@@ -20,6 +20,7 @@ import EmptyState from "@/components/customer/EmptyState";
 import { toast } from "sonner";
 import { DataTableControls } from "@/components/DataTableControls";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import ImageUploadField from "@/components/ImageUploadField";
 import DataSkeleton from "@/components/DataSkeleton";
 import { format } from "date-fns";
@@ -60,7 +61,7 @@ export default function StoresPage() {
 
   // Pending count for badge
   const { data: pendingCount } = useQuery({
-    queryKey: ["stores-pending-count", currentBrandId],
+    queryKey: queryKeys.storesPendingCount.list(currentBrandId),
     queryFn: async () => {
       let q = supabase.from("stores").select("id", { count: "exact", head: true }).eq("approval_status", "PENDING_APPROVAL" as any);
       if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);
@@ -70,7 +71,7 @@ export default function StoresPage() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["stores", debouncedSearch, page, currentBrandId, statusTab],
+    queryKey: queryKeys.stores.list(debouncedSearch, page, currentBrandId, statusTab),
     queryFn: async () => {
       let query = supabase.from("stores").select("*, brands(name), branches(name)", { count: "exact" });
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
@@ -93,13 +94,13 @@ export default function StoresPage() {
       if (editId) { const { error } = await supabase.from("stores").update(payload).eq("id", editId); if (error) throw error; }
       else { const { error } = await supabase.from("stores").insert(payload); if (error) throw error; }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["stores"] }); toast.success(editId ? "Parceiro atualizado!" : "Parceiro criado!"); closeDialog(); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.stores.all }); toast.success(editId ? "Parceiro atualizado!" : "Parceiro criado!"); closeDialog(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const remove = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("stores").delete().eq("id", id); if (error) throw error; },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["stores"] }); toast.success("Parceiro removido!"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.stores.all }); toast.success("Parceiro removido!"); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -122,7 +123,7 @@ export default function StoresPage() {
       .update({ approval_status: "APPROVED", approved_at: new Date().toISOString(), is_active: true })
       .eq("id", detailStore.id);
     if (error) { toast.error(error.message); }
-    else { toast.success("Parceiro aprovado!"); setDetailStore(null); qc.invalidateQueries({ queryKey: ["stores"] }); qc.invalidateQueries({ queryKey: ["stores-pending-count"] }); }
+    else { toast.success("Parceiro aprovado!"); setDetailStore(null); qc.invalidateQueries({ queryKey: queryKeys.stores.all }); qc.invalidateQueries({ queryKey: queryKeys.storesPendingCount.all }); }
     setProcessing(false);
   };
 
@@ -134,7 +135,7 @@ export default function StoresPage() {
       .update({ approval_status: "REJECTED", rejection_reason: rejectionReason })
       .eq("id", detailStore.id);
     if (error) { toast.error(error.message); }
-    else { toast.success("Parceiro rejeitado"); setDetailStore(null); qc.invalidateQueries({ queryKey: ["stores"] }); qc.invalidateQueries({ queryKey: ["stores-pending-count"] }); }
+    else { toast.success("Parceiro rejeitado"); setDetailStore(null); qc.invalidateQueries({ queryKey: queryKeys.stores.all }); qc.invalidateQueries({ queryKey: queryKeys.storesPendingCount.all }); }
     setProcessing(false);
   };
 

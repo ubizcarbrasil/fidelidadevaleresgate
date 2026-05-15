@@ -69,4 +69,11 @@ describe("queryKeys", () => {
     expect(queryKeys.vouchers.all[0]).not.toBe(queryKeys.customers.all[0]);
     expect(queryKeys.loyalty.earnings.all[0]).toBe("loyalty-earnings");
   });
+
+  it("should expose the stores entries consumed in pages/components", () => {
+    expect(queryKeys.stores.all).toEqual(["stores"]);
+    expect(queryKeys.storesSelect.list("b1")).toEqual(["stores-select", "list", "b1"]);
+    expect(queryKeys.storesPendingCount.list("b1")).toEqual(["stores-pending-count", "list", "b1"]);
+    expect(queryKeys.storesForEarning.list("b1", "br1")).toEqual(["stores-for-earning", "list", "b1", "br1"]);
+  });
 });
