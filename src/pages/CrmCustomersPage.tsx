@@ -61,7 +61,11 @@ export default function CrmCustomersPage() {
 
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString("pt-BR") : "—";
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import("jspdf"),
+      import("jspdf-autotable"),
+    ]);
     const doc = new jsPDF();
     doc.text("Relatório CRM - Clientes", 14, 16);
     autoTable(doc, {

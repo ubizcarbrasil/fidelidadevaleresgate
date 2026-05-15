@@ -8,8 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, UserX, Flame, Snowflake, UserMinus, Download } from "lucide-react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 type InactiveFilter = "30" | "60" | "90" | "all";
 
@@ -30,7 +28,11 @@ export default function CrmLostCustomersPage() {
 
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString("pt-BR") : "—";
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import("jspdf"),
+      import("jspdf-autotable"),
+    ]);
     const doc = new jsPDF();
     doc.text("Relatório - Clientes Perdidos", 14, 16);
     autoTable(doc, {

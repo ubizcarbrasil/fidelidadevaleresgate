@@ -40,7 +40,7 @@ export default function BotaoExportarLog({
   const motivoFinal =
     motivoBloqueio ?? (semDados ? "Nenhum evento corresponde aos filtros aplicados." : null);
 
-  const exportar = (formato: "csv" | "pdf") => {
+  const exportar = async (formato: "csv" | "pdf") => {
     if (bloqueado) {
       toast.error("Não é possível exportar", {
         description: motivoFinal ?? "Verifique os filtros aplicados.",
@@ -49,7 +49,7 @@ export default function BotaoExportarLog({
     }
     try {
       if (formato === "csv") exportarLogCsv(eventos, resumo);
-      else exportarLogPdf(eventos, resumo);
+      else await exportarLogPdf(eventos, resumo);
       toast.success(`Exportação concluída (${formato.toUpperCase()})`, {
         description: `${resumo.total} evento(s) exportado(s).`,
       });

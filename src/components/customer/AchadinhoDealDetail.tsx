@@ -11,6 +11,9 @@ import { hslToCss, withAlpha } from "@/lib/utils";
 import SafeImage from "@/components/customer/SafeImage";
 import AppIcon from "@/components/customer/AppIcon";
 import { formatPoints } from "@/lib/formatPoints";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("AchadinhoDealDetail");
 
 interface AffiliateDeal {
   id: string;
@@ -122,7 +125,12 @@ export default function AchadinhoDealDetail({
 
   const handleBuyExternal = () => {
     if (customerId) {
-      supabase.from("affiliate_clicks").insert({ deal_id: deal.id, customer_id: customerId }).then();
+      supabase
+        .from("affiliate_clicks")
+        .insert({ deal_id: deal.id, customer_id: customerId })
+        .then(({ error }) => {
+          if (error) log.warn("Falha ao registrar affiliate_click", { dealId: deal.id, error });
+        });
     }
     window.open(deal.affiliate_url, "_blank", "noopener,noreferrer");
   };
@@ -140,7 +148,12 @@ export default function AchadinhoDealDetail({
       onSelectDeal(similar);
     } else {
       if (customerId) {
-        supabase.from("affiliate_clicks").insert({ deal_id: similar.id, customer_id: customerId }).then();
+        supabase
+          .from("affiliate_clicks")
+          .insert({ deal_id: similar.id, customer_id: customerId })
+          .then(({ error }) => {
+            if (error) log.warn("Falha ao registrar affiliate_click", { dealId: similar.id, error });
+          });
       }
       window.open(similar.affiliate_url, "_blank", "noopener,noreferrer");
     }

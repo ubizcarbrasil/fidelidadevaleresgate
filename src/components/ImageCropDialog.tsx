@@ -16,6 +16,8 @@ interface ImageCropDialogProps {
   onCancel: () => void;
 }
 
+const INITIAL_ZOOM: [number] = [1];
+
 function getCroppedBlob(
   image: HTMLImageElement,
   crop: PixelCrop,
@@ -71,7 +73,7 @@ export default function ImageCropDialog({
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [rotation, setRotation] = useState(0);
-  const [zoom, setZoom] = useState([1]);
+  const [zoom, setZoom] = useState<number[]>(INITIAL_ZOOM);
 
   const onImageLoad = useCallback(
     (e: React.SyntheticEvent<HTMLImageElement>) => {

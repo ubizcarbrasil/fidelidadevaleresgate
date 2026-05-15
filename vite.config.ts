@@ -147,15 +147,44 @@ return ({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-supabase': ['@supabase/supabase-js'],
-          'vendor-query': ['@tanstack/react-query'],
-          'vendor-motion': ['framer-motion'],
-          'vendor-charts': ['recharts'],
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+
+          // React core — sempre eager, base do app
+          if (id.match(/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//)) {
+            return 'vendor-react';
+          }
+          // Supabase — usado em quase toda página
+          if (id.includes('@supabase/')) return 'vendor-supabase';
+          // React Query — central pra estado server
+          if (id.includes('@tanstack/react-query')) return 'vendor-query';
+          // Radix UI — ~30 pacotes, soma ~100kB. Em chunk próprio
+          if (id.includes('@radix-ui/')) return 'vendor-radix';
+          // Sonner toast
+          if (id.includes('/sonner/')) return 'vendor-toast';
+          // Framer Motion — usado em várias páginas
+          if (id.includes('framer-motion')) return 'vendor-motion';
+          // Sentry — só usado pós-mount, deferred
+          if (id.includes('@sentry/')) return 'vendor-sentry';
+          // Forms — react-hook-form + zod
+          if (id.match(/node_modules\/(react-hook-form|@hookform|zod)\//)) return 'vendor-forms';
+          // Utilities — clsx, tailwind-merge, cva
+          if (id.match(/node_modules\/(clsx|tailwind-merge|class-variance-authority)\//)) {
+            return 'vendor-utils';
+          }
+
+          // IMPORTANTE: NÃO criar chunk catch-all aqui. Deixar Rollup decidir
+          // o co-location entre lib e seu consumidor. Isso evita que libs
+          // pesadas usadas só em rotas específicas (jspdf, xlsx, html2canvas,
+          // recharts, lucide-react, date-fns) virem chunks gigantes carregados
+          // eagerly.
+          return undefined;
         },
       },
     },
+    // Aviso de chunk size — reduzido de 500 (default) para 600 já que com
+    // splitting agressivo só recharts/xlsx ficam grandes (sob demanda).
+    chunkSizeWarningLimit: 600,
   },
   resolve: {
     alias: {

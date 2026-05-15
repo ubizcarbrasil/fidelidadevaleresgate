@@ -11,6 +11,9 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { hslToCss, withAlpha } from "@/lib/utils";
 import AppIcon from "@/components/customer/AppIcon";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("AchadinhoDealsOverlay");
 
 const ICON_ALIASES: Record<string, string> = { Home: "House" };
 
@@ -69,7 +72,12 @@ export default function AchadinhoDealsOverlay({ category, onBack }: Props) {
 
   const handleClick = (deal: AffiliateDeal) => {
     if (customer) {
-      supabase.from("affiliate_clicks").insert({ deal_id: deal.id, customer_id: customer.id }).then();
+      supabase
+        .from("affiliate_clicks")
+        .insert({ deal_id: deal.id, customer_id: customer.id })
+        .then(({ error }) => {
+          if (error) log.warn("Falha ao registrar affiliate_click", { dealId: deal.id, error });
+        });
     }
     window.open(deal.affiliate_url, "_blank", "noopener,noreferrer");
   };

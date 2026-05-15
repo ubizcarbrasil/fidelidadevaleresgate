@@ -74,6 +74,7 @@ export default function PointsRulesPage() {
 
   const { data: branches } = useQuery({
     queryKey: queryKeys.branchesSelect.list(form.brand_id || currentBrandId),
+    staleTime: 10 * 60 * 1000,
     queryFn: async () => {
       const brandId = form.brand_id || currentBrandId;
       if (!brandId) return [];
@@ -86,6 +87,7 @@ export default function PointsRulesPage() {
 
   const { data: rules, isLoading } = useQuery({
     queryKey: ["points-rules", currentBrandId],
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       let q = supabase.from("points_rules").select("*, brands(name), branches(name)").order("created_at", { ascending: false });
       if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);

@@ -9,8 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FileText, Download, Loader2, Store, Settings } from "lucide-react";
 import { toast } from "sonner";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useGanhaGanhaConfig } from "@/hooks/useGanhaGanhaConfig";
 import { useNavigate } from "react-router-dom";
@@ -131,9 +129,13 @@ export default function GanhaGanhaClosingReportsPage() {
     );
   }, [storeSummaries]);
 
-  function generateStorePdf(store: StoreSummary) {
+  async function generateStorePdf(store: StoreSummary) {
     setGeneratingPdf(store.storeId);
     try {
+      const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+      ]);
       const doc = new jsPDF();
       const brandName = brand?.name || "Marca";
       const period = monthLabel(periodMonth);
@@ -223,8 +225,11 @@ export default function GanhaGanhaClosingReportsPage() {
     }
   }
 
-  function generateAllPdfs() {
-    storeSummaries.forEach((store) => generateStorePdf(store));
+  async function generateAllPdfs() {
+    // Gera sequencialmente para evitar CPU spike e múltiplos cliques no mesmo blob save
+    for (const store of storeSummaries) {
+      await generateStorePdf(store);
+    }
   }
 
   if (isLoading || ggLoading) {

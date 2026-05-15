@@ -12,6 +12,17 @@ dist
 dist-ssr
 *.local
 
+# Variáveis de ambiente.
+# O `.env` no repositório contém APENAS chaves públicas (Supabase anon JWT,
+# project ID, URL pública). NUNCA adicione SUPABASE_SERVICE_ROLE_KEY,
+# STRIPE_SECRET_KEY ou outras credenciais privadas ao `.env` — use `.env.local`
+# (gitignored) para segredos locais e a UI do hosting (Lovable / Supabase
+# Dashboard) para segredos em produção.
+.env.local
+.env.*.local
+.env.production
+.env.development
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
