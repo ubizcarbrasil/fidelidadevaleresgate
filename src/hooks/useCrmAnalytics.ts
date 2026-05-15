@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
+import { queryKeys } from "@/lib/queryKeys";
 import { format, subMonths, startOfMonth } from "date-fns";
 
 export interface CrmCustomer {
@@ -72,7 +73,7 @@ export function useCrmAnalytics() {
   const { currentBrandId } = useBrandGuard();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["crm-analytics-full", currentBrandId],
+    queryKey: queryKeys.crm.analyticsFull.list(currentBrandId),
     queryFn: async () => {
       if (!currentBrandId) return null;
 

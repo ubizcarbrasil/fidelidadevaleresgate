@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useAuth } from "@/contexts/AuthContext";
+import { queryKeys } from "@/lib/queryKeys";
 import { campaignService, type AudienceFilters } from "@/modules/crm";
 import PageHeader from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,7 +26,7 @@ export default function CrmAudiencesPage() {
   const [filters, setFilters] = useState<AudienceFilters>({});
 
   const { data: audiences, isLoading } = useQuery({
-    queryKey: ["crm-audiences", currentBrandId],
+    queryKey: queryKeys.crm.audiences.list(currentBrandId),
     queryFn: () => campaignService.fetchAudiences(currentBrandId!),
     enabled: !!currentBrandId,
   });
@@ -43,7 +44,7 @@ export default function CrmAudiencesPage() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["crm-audiences"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.crm.audiences.all });
       setShowCreate(false);
       setName("");
       setDescription("");
@@ -56,7 +57,7 @@ export default function CrmAudiencesPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => campaignService.deleteAudience(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["crm-audiences"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.crm.audiences.all });
       toast({ title: "Público removido" });
     },
   });

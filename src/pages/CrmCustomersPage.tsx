@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Users, Search, Download, ArrowUpDown, Gift } from "lucide-react";
 import ManualCustomerScoringDialog from "@/components/machine-integration/ManualCustomerScoringDialog";
+import { queryKeys } from "@/lib/queryKeys";
 
 const STATUS_LABELS: Record<string, string> = {
   active: "Ativo",
@@ -222,7 +223,7 @@ export default function CrmCustomersPage() {
           onOpenChange={(open) => {
             if (!open) {
               setBonusCustomer(null);
-              qc.invalidateQueries({ queryKey: ["crm-analytics-full"] });
+              qc.invalidateQueries({ queryKey: queryKeys.crm.analyticsFull.all });
             }
           }}
           customer={bonusCustomer ? { id: bonusCustomer.id, name: bonusCustomer.name } : null}
