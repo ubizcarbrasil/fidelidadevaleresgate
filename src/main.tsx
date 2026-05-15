@@ -15,10 +15,11 @@ import { isWebviewLitePath, startMonitoring } from "@/lib/bootMonitoring";
 import { installRouteDiagnostics } from "@/lib/routeDiagnostics";
 import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
 
-// [TEMP] Desabilitado para diagnosticar tela preta — reativar após validação.
 // Recuperação reativa apenas em erro real de chunk/import dinâmico.
 // Não limpamos mais SW/caches em toda abertura — isso degradava o boot.
-// installGlobalDomErrorRecovery();
+// Sem este listener, erros de import fora da árvore React (warm-up,
+// prefetches) deixam a tela preta sem auto-recovery.
+installGlobalDomErrorRecovery();
 
 // Fix global para travamento da UI causado pelo bug do Radix Dialog/Popover
 // que deixa pointer-events:none no <body> ao fechar overlays em sequência.
