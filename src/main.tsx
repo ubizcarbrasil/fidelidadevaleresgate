@@ -138,7 +138,9 @@ if (!rootEl) {
   }
 } else {
   try {
-    const root = createRoot(rootEl);
+    const rootWindow = window as any;
+    const root = rootWindow.__VALE_RESGATE_REACT_ROOT__ ?? createRoot(rootEl);
+    rootWindow.__VALE_RESGATE_REACT_ROOT__ = root;
     root.render(<BootShell />);
     console.info("[boot] render() called");
   } catch (err: any) {
