@@ -2,6 +2,9 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useDebounce } from "@/hooks/useDebounce";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("CommandPalette");
 import {
   CommandDialog,
   CommandInput,
@@ -96,13 +99,22 @@ export function CommandPalette() {
         .select("id, name, email")
         .or(`name.ilike.${pattern},email.ilike.${pattern}`)
         .limit(5),
-    ]).then(([offersRes, storesRes, customersRes]) => {
-      if (cancelled) return;
-      setOffers((offersRes.data as any[]) || []);
-      setStores((storesRes.data as any[]) || []);
-      setCustomers((customersRes.data as any[]) || []);
-      setLoading(false);
-    });
+    ])
+      .then(([offersRes, storesRes, customersRes]) => {
+        if (cancelled) return;
+        setOffers((offersRes.data as any[]) || []);
+        setStores((storesRes.data as any[]) || []);
+        setCustomers((customersRes.data as any[]) || []);
+        setLoading(false);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        log.error("Falha na busca do CommandPalette", error);
+        setOffers([]);
+        setStores([]);
+        setCustomers([]);
+        setLoading(false);
+      });
 
     return () => { cancelled = true; };
   }, [debouncedSearch, shouldQuery]);

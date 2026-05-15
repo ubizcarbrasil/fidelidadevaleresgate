@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { memo, useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
@@ -146,7 +146,7 @@ function applyRankingBoost(items: any[], rankedIds: string[]): any[] {
 }
 
 /** Renders all enabled brand sections in order */
-export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }: HomeSectionsRendererProps = {}) {
+function HomeSectionsRendererImpl({ renderBannersOnly, skipBanners }: HomeSectionsRendererProps = {}) {
   const { brand, selectedBranch, theme } = useBrand();
   const { customer } = useCustomer();
   const { data: rankedOfferIdsFromHook = [] } = useRankedOffers(30);
@@ -185,6 +185,7 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
   const { data: standaloneBanners } = useQuery({
     queryKey: ["standalone-banners", brand?.id],
     enabled: !!brand && renderBannersOnly === true && !loading && !hasBannerSection,
+    staleTime: 60 * 1000,
     queryFn: async () => {
       const now = new Date().toISOString();
       const { data } = await supabase
@@ -193,8 +194,9 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
         .eq("brand_id", brand!.id)
         .eq("is_active", true)
         .lte("start_at", now)
+        .or(`end_at.is.null,end_at.gt.${now}`)
         .order("order_index");
-      return (data || []).filter((b: any) => !b.end_at || new Date(b.end_at) > new Date());
+      return data || [];
     },
   });
 
@@ -265,6 +267,9 @@ export default function HomeSectionsRenderer({ renderBannersOnly, skipBanners }:
     </div>
   );
 }
+
+const HomeSectionsRenderer = memo(HomeSectionsRendererImpl);
+export default HomeSectionsRenderer;
 
 interface SectionBlockProps {
   section: BrandSection;

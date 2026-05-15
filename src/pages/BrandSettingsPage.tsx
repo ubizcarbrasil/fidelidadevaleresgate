@@ -74,6 +74,10 @@ export default function BrandSettingsPage() {
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["brand-settings-metrics", currentBrandId],
+    // Métricas de 30 dias mudam pouco; evita 6 queries paralelas a cada focus de aba
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       if (!currentBrandId) return null;
 

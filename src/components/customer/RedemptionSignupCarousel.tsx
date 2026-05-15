@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, User, Mail, Phone, KeyRound, Lock, CreditCard } from "lucide-react";
@@ -46,6 +46,13 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
   const [direction, setDirection] = useState(1);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<SignupData>({ cpf: "", name: "", email: "", phone: "", otp: "", password: "" });
+  const completeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (completeTimeoutRef.current) clearTimeout(completeTimeoutRef.current);
+    };
+  }, []);
 
   const update = (field: keyof SignupData, value: string) =>
     setData((prev) => ({ ...prev, [field]: value }));
@@ -111,7 +118,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
       }
 
       toast({ title: "Conta criada!", description: "Finalizando seu resgate..." });
-      setTimeout(() => onComplete(data.cpf), 2000);
+      completeTimeoutRef.current = setTimeout(() => onComplete(data.cpf), 2000);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro inesperado";
       toast({ title: "Erro", description: translateError(message), variant: "destructive" });

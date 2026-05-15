@@ -4,8 +4,6 @@
  * Geração client-side de CSV e PDF dos Relatórios Cashback +
  * registro de audit_logs (action='csv_exported' | 'pdf_exported').
  */
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { supabase } from "@/integrations/supabase/client";
 import type {
   GgSummary,
@@ -155,6 +153,10 @@ export async function exportGgReportCsv(ctx: ExportContext) {
 }
 
 export async function exportGgReportPdf(ctx: ExportContext) {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
 

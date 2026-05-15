@@ -10,12 +10,11 @@ export default function ElementRenderer({ element }: Props) {
 
   const handleClick = () => {
     if (action.type === "external_link" && action.url) {
-      window.open(action.url, "_blank");
+      window.open(action.url, "_blank", "noopener,noreferrer");
     } else if (action.type === "internal_route" && action.route) {
-      // In customer context this would navigate; for preview just log
-      console.log("Navigate to:", action.route);
+      // Preview-only renderer: navegação real é feita pelo runtime de customer
     } else if (action.type === "webview" && action.url) {
-      window.open(action.url, "_blank");
+      window.open(action.url, "_blank", "noopener,noreferrer");
     }
   };
 
