@@ -1,5 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from "react";
-import { onBootPhase, getBootPhase, type BootPhase } from "@/lib/bootStateCore";
+import { onBootPhase, getBootPhase, isBootResolved, type BootPhase } from "@/lib/bootStateCore";
 
 /**
  * TelaCarregamento — loader premium unificado da plataforma.
@@ -83,11 +83,16 @@ export default function TelaCarregamento({
     return unsubscribe;
   }, [acompanharBoot]);
 
-  // Considera "boot ativo" enquanto não chegou a APP_MOUNTED nem FAILED.
-  // Nessas fases finais, voltamos ao ciclo genérico (caso o loader continue
-  // visível por algum motivo de Suspense/route).
+  // Considera "boot ativo" enquanto o boot ainda não foi resolvido
+  // (BRAND_READY/FAILED) e ainda não atingimos APP_MOUNTED. Após
+  // resolvido, qualquer transição posterior (ex.: AUTH_LOADING tardio
+  // do AuthContext após BrandContext skip-local) NÃO pode reativar o
+  // overlay full-screen — caso contrário a UI fica presa em azul.
   const bootAtivo =
-    acompanharBoot && faseBoot !== "APP_MOUNTED" && faseBoot !== "FAILED";
+    acompanharBoot &&
+    !isBootResolved() &&
+    faseBoot !== "APP_MOUNTED" &&
+    faseBoot !== "FAILED";
 
   // Só mostramos o texto detalhado da fase depois de 2s no mesmo loader,
   // evitando "cascata" de mensagens piscando em boots rápidos (<2s).
