@@ -96,4 +96,12 @@ describe("queryKeys", () => {
     expect(queryKeys.storesPendingCount.list("b1")).toEqual(["stores-pending-count", "list", "b1"]);
     expect(queryKeys.storesForEarning.list("b1", "br1")).toEqual(["stores-for-earning", "list", "b1", "br1"]);
   });
+
+  it("should expose the customer entries consumed in pages/components", () => {
+    expect(queryKeys.customers.all).toEqual(["customers"]);
+    expect(queryKeys.customerProductOrders.all).toEqual(["customer-product-orders"]);
+    expect(queryKeys.customerLedgerMachine.list("c1")).toEqual(["customer-ledger-machine", "list", "c1"]);
+    expect(queryKeys.customerRedeemOrders.list("c1")).toEqual(["customer-redeem-orders", "list", "c1"]);
+    expect(queryKeys.customerRedeemStore.list("b1", "br1", false)).toEqual(["customer-redeem-store", "list", "b1", "br1", false]);
+  });
 });

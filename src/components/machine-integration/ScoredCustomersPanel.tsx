@@ -14,6 +14,7 @@ import {
   User, Phone, Mail, CreditCard, Hash, Download, Gift,
 } from "lucide-react";
 import ManualCustomerScoringDialog from "./ManualCustomerScoringDialog";
+import { queryKeys } from "@/lib/queryKeys";
 
 type ScoredCustomer = {
   id: string;
@@ -107,7 +108,7 @@ export default function ScoredCustomersPanel({ brandId }: { brandId: string }) {
 
   /* ── Query: ledger for selected customer ── */
   const { data: ledger, isLoading: ledgerLoading } = useQuery({
-    queryKey: ["customer-ledger-machine", selectedCustomer?.id],
+    queryKey: queryKeys.customerLedgerMachine.list(selectedCustomer?.id),
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("points_ledger")

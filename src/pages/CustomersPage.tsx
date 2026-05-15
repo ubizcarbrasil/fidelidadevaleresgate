@@ -78,7 +78,7 @@ export default function CustomersPage() {
   }, [orphanCount]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["customers", debouncedSearch, page, currentBrandId, tierFilter, crmFilter],
+    queryKey: queryKeys.customers.list(debouncedSearch, page, currentBrandId, tierFilter, crmFilter),
     queryFn: async () => {
       let query = supabase.from("customers").select("*, brands(name), branches(name)", { count: "exact" }) as any;
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
@@ -102,7 +102,7 @@ export default function CustomersPage() {
       if (editId) { const { error } = await (supabase as any).from("customers").update(payload).eq("id", editId); if (error) throw error; }
       else { const { error } = await (supabase as any).from("customers").insert(payload); if (error) throw error; }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["customers"] }); toast.success(editId ? "Cliente atualizado!" : "Cliente criado!"); closeDialog(); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.customers.all }); toast.success(editId ? "Cliente atualizado!" : "Cliente criado!"); closeDialog(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -200,7 +200,7 @@ export default function CustomersPage() {
       return { pushedCount, importedCount };
     },
     onSuccess: ({ pushedCount, importedCount }) => {
-      qc.invalidateQueries({ queryKey: ["customers"] });
+      qc.invalidateQueries({ queryKey: queryKeys.customers.all });
       if (pushedCount === 0 && importedCount === 0) {
         toast.info("Tudo sincronizado! Nenhuma pendência encontrada.");
       } else {
@@ -241,7 +241,7 @@ export default function CustomersPage() {
       const { error } = await (supabase as any).from("customers").update(updates).in("id", ids);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["customers"] }); toast.success(`${selectedIds.size} cliente(s) atualizado(s)!`); setSelectedIds(new Set()); setBulkOpen(false); setBulkForm({ name: "", cpf: "", phone: "" }); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.customers.all }); toast.success(`${selectedIds.size} cliente(s) atualizado(s)!`); setSelectedIds(new Set()); setBulkOpen(false); setBulkForm({ name: "", cpf: "", phone: "" }); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -437,7 +437,7 @@ export default function CustomersPage() {
         onOpenChange={(open) => {
           if (!open) {
             setBonusCustomer(null);
-            qc.invalidateQueries({ queryKey: ["customers"] });
+            qc.invalidateQueries({ queryKey: queryKeys.customers.all });
           }
         }}
         customer={bonusCustomer ? { id: bonusCustomer.id, name: bonusCustomer.name, branch_id: bonusCustomer.branch_id } : null}

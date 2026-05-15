@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useBrand } from "@/contexts/BrandContext";
 import { useCustomer } from "@/contexts/CustomerContext";
+import { queryKeys } from "@/lib/queryKeys";
 import { ArrowLeft, Gift, Coins, Search, X, ShoppingBag, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,7 +56,7 @@ export default function CustomerRedeemStorePage({ onBack }: Props) {
   const mirrorDriver = (brand?.brand_settings_json as any)?.customer_redeem_mirror_driver === true;
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["customer-redeem-store", brandId, branchId, mirrorDriver],
+    queryKey: queryKeys.customerRedeemStore.list(brandId, branchId, mirrorDriver),
     enabled: !!brandId,
     queryFn: async () => {
       let q = supabase

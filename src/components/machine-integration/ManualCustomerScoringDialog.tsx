@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Coins, Loader2 } from "lucide-react";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface Props {
   open: boolean;
@@ -43,7 +44,7 @@ export default function ManualCustomerScoringDialog({ open, onOpenChange, custom
     onSuccess: () => {
       toast.success(`${points} pontos creditados com sucesso!`);
       qc.invalidateQueries({ queryKey: ["scored-customers"] });
-      qc.invalidateQueries({ queryKey: ["customer-ledger-machine"] });
+      qc.invalidateQueries({ queryKey: queryKeys.customerLedgerMachine.all });
       setPoints("");
       setReason("");
       onOpenChange(false);
