@@ -81,17 +81,54 @@ export class ErrorBoundary extends React.Component<Props, State> {
     }
 
     if (this.state.isChunkError) {
+      // Auto-recovery: dispara o fluxo de limpeza + reload sem o usuário
+      // precisar clicar. O overlay do pwaRecovery (visualmente alinhado ao
+      // TelaCarregamento) cobre essa tela em < 100ms, então o usuário não
+      // chega a ver mensagem alarmista. Botão fica como fallback de 2ª
+      // tentativa caso o recovery automático não dispare.
+      void recoverFromChunkError();
       return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4">
-          <div className="text-center space-y-4">
-            <h2 className="text-xl font-bold text-foreground">Atualização disponível</h2>
-            <p className="text-muted-foreground text-sm max-w-md">
-              Uma nova versão do app foi publicada. Recarregue a página para continuar.
-            </p>
-            <Button onClick={() => void recoverFromChunkError()}>
-              Recarregar página
-            </Button>
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed inset-0 z-[9999] flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-6 text-center"
+        >
+          <div className="relative flex h-24 w-24 items-center justify-center">
+            <svg
+              width={96}
+              height={96}
+              viewBox="0 0 96 96"
+              className="animate-spin motion-reduce:animate-none"
+              aria-hidden="true"
+            >
+              <defs>
+                <linearGradient id="eb-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="1" />
+                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.15" />
+                </linearGradient>
+              </defs>
+              <circle cx={48} cy={48} r={45} fill="none" stroke="hsl(var(--primary) / 0.08)" strokeWidth={3} />
+              <circle
+                cx={48}
+                cy={48}
+                r={45}
+                fill="none"
+                stroke="url(#eb-grad)"
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeDasharray="99 283"
+              />
+            </svg>
+            <img
+              src="/logo-vale-resgate.png"
+              alt=""
+              aria-hidden="true"
+              className="absolute h-12 w-12 rounded-full object-contain animate-loader-pulse-soft motion-reduce:animate-none"
+            />
           </div>
+          <p className="max-w-xs text-sm font-medium text-muted-foreground">
+            Sincronizando…
+          </p>
         </div>
       );
     }
