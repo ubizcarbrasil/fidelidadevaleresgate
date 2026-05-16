@@ -258,6 +258,41 @@ export async function criarTemporadaCompleta(
 ) {
   const { data: userData } = await supabase.auth.getUser();
 
+  // PRE-CHECK: verifica se já existe temporada ATIVA (não cancelada) para
+  // o mesmo brand/branch/year/month. Isso protege contra o caso em que a
+  // migration 20260514102435 (índice único parcial WHERE cancelled_at IS
+  // NULL) NÃO foi aplicada na Supabase do usuário — sem esse check, a
+  // unique constraint antiga bloqueia mesmo após cancelar a temporada,
+  // resultando em "já existe" mesmo com tudo cancelado.
+  //
+  // Bug reportado pelo usuário: cancelava 100% das temporadas mas continuava
+  // recebendo "Já existe uma temporada para Maio/2026 nesta cidade".
+  const { data: existing, error: existingErr } = await supabase
+    .from("campeonato_seasons")
+    .select("id, name, phase, cancelled_at")
+    .eq("brand_id", input.brandId)
+    .eq("branch_id", input.branchId)
+    .eq("year", input.year)
+    .eq("month", input.month)
+    .is("cancelled_at", null)
+    .limit(1)
+    .maybeSingle();
+
+  if (existingErr) {
+    console.error("[criarTemporadaCompleta] pre-check falhou", existingErr);
+    // Não bloqueia — segue tentando o insert. Pode ser RLS ou coluna ausente.
+  } else if (existing) {
+    // Temporada ATIVA já existe — erro claro com ID pra UI oferecer "Cancelar
+    // e recriar" caso queira.
+    const err = new Error(
+      `Já existe uma temporada ativa para este mês/ano. Cancele ou exclua a temporada existente antes de criar uma nova.`,
+    );
+    (err as any).code = "SEASON_ALREADY_ACTIVE";
+    (err as any).existingSeasonId = existing.id;
+    (err as any).existingSeasonName = existing.name;
+    throw err;
+  }
+
   const tiersConfig = {
     series: input.series.map((s, idx) => ({
       name: s.name,
@@ -297,7 +332,20 @@ export async function criarTemporadaCompleta(
     } as any)
     .select()
     .maybeSingle();
-  if (seasonErr) throw seasonErr;
+
+  if (seasonErr) {
+    // Caso o pre-check tenha passado mas o DB ainda tem a UNIQUE não-parcial
+    // antiga, capturar 23505 e dar mensagem clara apontando pro suporte.
+    if (seasonErr.code === "23505") {
+      const err = new Error(
+        `Erro de configuração do banco: temporada cancelada ainda está bloqueando criação. Contate o suporte.`,
+      );
+      (err as any).code = "DB_UNIQUE_NOT_PARTIAL";
+      (err as any).originalError = seasonErr;
+      throw err;
+    }
+    throw seasonErr;
+  }
   if (!season) {
     throw new Error(
       "Não foi possível criar a temporada. Verifique as permissões ou os dados informados.",
