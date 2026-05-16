@@ -73,11 +73,13 @@ export function useCriarTemporadaCompleta() {
       const mes = NOMES_MESES[(vars?.month ?? 1) - 1] ?? `${vars?.month}`;
       const ano = vars?.year ?? "";
 
-      // 1. Temporada ATIVA (não cancelada) já existe — pre-check JS detectou
+      // 1. Temporada ATIVA (não cancelada, não finalizada) já existe.
+      // Usa a mensagem do erro que vem do service (com nome + fase da
+      // temporada bloqueando), pra usuário entender exatamente o que fazer.
       if (code === "SEASON_ALREADY_ACTIVE") {
-        toast.error(
-          `Já existe uma temporada ATIVA para ${mes}/${ano}. Cancele a temporada existente antes de criar uma nova.`,
-        );
+        toast.error(err?.message ?? `Já existe uma temporada ativa para ${mes}/${ano}.`, {
+          duration: 10000, // mais tempo pra ler a mensagem completa
+        });
         return;
       }
 
