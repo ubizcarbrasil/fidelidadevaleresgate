@@ -115,6 +115,13 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#1a6cfa" />
     <meta name="app-version" content="2026-05-15-recovery1" />
+
+    <!-- Preconnect ao Supabase: reduz handshake TLS (~200ms no 5G) pra
+         a rajada de fetches do boot (auth + brand + roles + ...). Apenas
+         abre a conexão; não baixa nada. -->
+    <link rel="preconnect" href="https://rwhhabwgnkqjxcqwpcev.supabase.co" crossorigin />
+    <link rel="dns-prefetch" href="https://rwhhabwgnkqjxcqwpcev.supabase.co" />
+
     <link rel="apple-touch-icon" href="/pwa-192x192.png" />
 
     <meta property="og:type" content="website" />
