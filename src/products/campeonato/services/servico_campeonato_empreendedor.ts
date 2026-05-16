@@ -133,13 +133,20 @@ export async function obterKpisCampeonato(
 export async function listarTemporadasMarca(
   brandId: string,
   status: StatusFiltroSeason = "all",
+  branchId: string | null = null,
 ): Promise<SeasonListItem[]> {
   const { data, error } = await supabase.rpc("brand_get_seasons_list", {
     p_brand_id: brandId,
     p_status: status,
   });
   if (error) throw error;
-  return ((data as unknown as SeasonListItem[]) ?? []);
+  const all = (data as unknown as SeasonListItem[]) ?? [];
+  // FIX (bug temporadas zumbi): RPC brand_get_seasons_list filtra apenas
+  // por brand_id, retornando temporadas de TODAS as cidades. Filtramos
+  // localmente por branch_id quando o usuário quer ver apenas a cidade
+  // atual (mantém comportamento antigo quando branchId não passado).
+  if (!branchId) return all;
+  return all.filter((s) => (s as unknown as { branch_id?: string }).branch_id === branchId);
 }
 
 export async function obterDetalheSerie(

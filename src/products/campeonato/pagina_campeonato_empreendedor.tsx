@@ -320,7 +320,9 @@ export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Prop
         </>
       )}
 
-      {isCampeonato && <ListaTemporadasAnteriores brandId={brandId} />}
+      {isCampeonato && (
+        <ListaTemporadasAnteriores brandId={brandId} branchId={branchId} />
+      )}
 
       {isCampeonato && (
         <ProximosCampeonatosAdmin brandId={brandId} branchId={branchId} />
