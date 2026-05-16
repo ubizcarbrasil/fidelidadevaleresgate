@@ -1,0 +1,1 @@
+ALTER TABLE public.machine_integrations ADD COLUMN IF NOT EXISTS preferred_endpoint text NOT NULL DEFAULT 'recibo';

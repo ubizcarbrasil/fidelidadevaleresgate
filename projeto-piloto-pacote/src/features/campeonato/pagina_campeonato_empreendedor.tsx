@@ -1,0 +1,368 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Trophy, Calendar, AlertTriangle, Loader2 } from "lucide-react";
+import { useDashboardCampeonato } from "./hooks/hook_campeonato_empreendedor";
+import { useFormatoEngajamento } from "./hooks/hook_formato_engajamento";
+import { useDueloCampeonatoHabilitado } from "@/compartilhados/hooks/hook_duelo_campeonato_habilitado";
+import { useExecutarSeedingTemporada } from "./hooks/hook_mutations_campeonato";
+import { CORES_FASE, ROTULOS_FASE } from "./constants/constantes_campeonato";
+import { formatarPeriodo } from "./utils/utilitarios_campeonato";
+import SeletorFormatoEngajamento from "./components/empreendedor/SeletorFormatoEngajamento";
+import FormCriarTemporada from "./components/empreendedor/FormCriarTemporada";
+import CardResumoSerie from "./components/empreendedor/CardResumoSerie";
+import AcoesTemporadaAtiva from "./components/empreendedor/AcoesTemporadaAtiva";
+import BannerStatusTemporada from "./components/empreendedor/BannerStatusTemporada";
+import ListaTemporadasAnteriores from "./components/empreendedor/ListaTemporadasAnteriores";
+import ProximosCampeonatosAdmin from "./components/empreendedor/ProximosCampeonatosAdmin";
+import DetalheSerieView from "./components/empreendedor/DetalheSerieView";
+import CardPremiosADistribuir from "./components/empreendedor/CardPremiosADistribuir";
+import CardAtivarCampeonato from "./components/empreendedor/CardAtivarCampeonato";
+import WizardPosAtivacao from "./components/empreendedor/ativacao/wizard/WizardPosAtivacao";
+import DashboardOperacaoCampeonato from "./components/empreendedor/dashboard/DashboardOperacaoCampeonato";
+import DistribuicaoManualView from "./components/empreendedor/DistribuicaoManualView";
+import EditorFasesMataMata from "./components/empreendedor/EditorFasesMataMata";
+import EditorPremiosTemporada from "./components/empreendedor/EditorPremiosTemporada";
+import TelaAprovacaoInscricoes from "./components/empreendedor/TelaAprovacaoInscricoes";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Users } from "lucide-react";
+
+interface Props {
+  brandId: string;
+  branchId: string;
+}
+
+export default function PaginaCampeonatoEmpreendedor({ brandId, branchId }: Props) {
+  const { campeonatoHabilitado, isLoading: loadingHabilitacao } =
+    useDueloCampeonatoHabilitado(brandId);
+  const { isCampeonato, isLoading: loadingFormato } = useFormatoEngajamento(brandId);
+  const { data: dashboard, isLoading } = useDashboardCampeonato(brandId, branchId);
+  const seedingMutation = useExecutarSeedingTemporada(brandId);
+  const [modalCriar, setModalCriar] = useState(false);
+  const [modalDistribuicao, setModalDistribuicao] = useState(false);
+  const [sheetInscricoes, setSheetInscricoes] = useState(false);
+  const [wizardAberto, setWizardAberto] = useState(false);
+  const [serieAberta, setSerieAberta] = useState<{
+    tier_id: string;
+    tier_name: string;
+  } | null>(null);
+
+  const ativa = dashboard?.active_season ?? null;
+  const tiers = dashboard?.tiers ?? [];
+  const tiersResumo = tiers.map((t) => ({
+    tier_id: t.tier_id,
+    tier_name: t.tier_name,
+  }));
+
+  // Carrega enrollment_mode da temporada ativa (não vem na RPC do dashboard)
+  // IMPORTANTE: hooks SEMPRE antes de qualquer early return — não mover para baixo.
+  const { data: configTemporada } = useQuery({
+    queryKey: ["duelo-season-enrollment-config", ativa?.id],
+    enabled: !!ativa?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("campeonato_seasons")
+        .select("enrollment_mode, published_at")
+        .eq("id", ativa!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const modoManual = configTemporada?.enrollment_mode === "manual";
+
+  // Conta inscrições pendentes para o badge
+  const { data: pendentesCount } = useQuery({
+    queryKey: ["duelo-pending-enrollments-count", ativa?.id],
+    enabled: !!ativa?.id && modoManual,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("campeonato_season_enrollments")
+        .select("id", { count: "exact", head: true })
+        .eq("season_id", ativa!.id)
+        .eq("brand_id", brandId)
+        .eq("branch_id", branchId)
+        .eq("status", "pending");
+      if (error) throw error;
+      return count ?? 0;
+    },
+    refetchInterval: 30_000,
+  });
+
+  if (loadingHabilitacao || loadingFormato || isLoading) {
+    return <Skeleton className="h-64 w-full rounded-lg" />;
+  }
+
+  // Camada 2 OFF: marca ainda não ativou o campeonato. Mostra só o card de ativação.
+  if (!campeonatoHabilitado) {
+    return (
+      <div className="space-y-4 p-1">
+        <CardAtivarCampeonato
+          brandId={brandId}
+          onAtivado={() => setWizardAberto(true)}
+        />
+        <WizardPosAtivacao
+          open={wizardAberto}
+          onClose={() => setWizardAberto(false)}
+          brandId={brandId}
+          branchId={branchId}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 p-1">
+      <CardAtivarCampeonato brandId={brandId} />
+      <WizardPosAtivacao
+        open={wizardAberto}
+        onClose={() => setWizardAberto(false)}
+        brandId={brandId}
+        branchId={branchId}
+      />
+      <SeletorFormatoEngajamento brandId={brandId} />
+
+      {isCampeonato && (
+        <DashboardOperacaoCampeonato
+          brandId={brandId}
+          branchId={branchId}
+          onAcaoCta={() => {
+            if (!ativa) {
+              setModalCriar(true);
+              return;
+            }
+            if (tiers.length === 0) {
+              // Sem séries criadas: roda o seeding inicial e, ao concluir,
+              // abre a tela de distribuição manual para o admin ajustar A/B/C.
+              seedingMutation.mutate(ativa.id, {
+                onSuccess: () => setModalDistribuicao(true),
+              });
+              return;
+            }
+            // Séries já existem (caso "todos em C" da Ubiz Resgata, ou rebalancear):
+            // abre direto a distribuição manual para promover/rebaixar motoristas.
+            setModalDistribuicao(true);
+          }}
+        />
+      )}
+
+      {!isCampeonato ? (
+        <Card>
+          <CardContent className="p-6 text-center">
+            <Trophy className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+            <p className="text-sm font-medium">
+              Formato atual diferente de Campeonato
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Selecione "Campeonato" no seletor acima para criar e gerenciar
+              temporadas mensais com séries hierárquicas.
+            </p>
+          </CardContent>
+        </Card>
+      ) : !ativa ? (
+        <Card>
+          <CardContent className="p-6 text-center">
+            <Trophy className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+            <h3 className="text-base font-semibold">Nenhuma temporada ativa</h3>
+            <p className="mb-4 mt-1 text-sm text-muted-foreground">
+              Crie a primeira temporada do campeonato para iniciar a operação.
+            </p>
+            <Button onClick={() => setModalCriar(true)}>
+              <Plus className="mr-2 h-4 w-4" /> Criar temporada
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <Card>
+            <CardContent className="space-y-3 p-4">
+              <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-bold">{ativa.name}</h2>
+                    <Badge
+                      variant="outline"
+                      className={`text-xs ${CORES_FASE[ativa.phase as keyof typeof CORES_FASE] ?? ""}`}
+                    >
+                      {ROTULOS_FASE[ativa.phase as keyof typeof ROTULOS_FASE] ?? ativa.phase}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    Classificação:{" "}
+                    {formatarPeriodo(
+                      ativa.classification_starts_at,
+                      ativa.classification_ends_at,
+                    )}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Mata-mata:{" "}
+                    {formatarPeriodo(
+                      ativa.knockout_starts_at,
+                      ativa.knockout_ends_at,
+                    )}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <AcoesTemporadaAtiva
+                    brandId={brandId}
+                    seasonId={ativa.id}
+                    seasonName={ativa.name}
+                    pausada={!!ativa.paused_at}
+                    fase={ativa.phase}
+                    tiers={tiersResumo}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setModalCriar(true)}
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Nova
+                  </Button>
+                  {modoManual && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSheetInscricoes(true)}
+                    >
+                      <Users className="mr-2 h-4 w-4" /> Gerenciar inscrições
+                      {!!pendentesCount && pendentesCount > 0 && (
+                        <Badge variant="secondary" className="ml-2">
+                          {pendentesCount}
+                        </Badge>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <BannerStatusTemporada
+                brandId={brandId}
+                seasonId={ativa.id}
+                pausedAt={ativa.paused_at}
+                cancelledAt={ativa.cancelled_at}
+                cancellationReason={ativa.cancellation_reason}
+                isFinished={ativa.phase === "finished"}
+              />
+            </CardContent>
+          </Card>
+
+          <CardPremiosADistribuir
+            brandId={brandId}
+            seasonId={ativa.id}
+            seasonName={ativa.name}
+            isFinished={ativa.phase === "finished"}
+          />
+
+          {tiers.length === 0 ? (
+            <Card className="border-amber-300 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-700 dark:text-amber-400 mt-0.5 shrink-0" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+                      Temporada criada, mas os motoristas ainda não foram distribuídos
+                    </p>
+                    <p className="text-xs text-amber-800/90 dark:text-amber-200/80">
+                      Clique em <strong>Distribuir motoristas agora</strong> para
+                      criar as séries e alocar os motoristas elegíveis da cidade.
+                      Sem este passo, o app do motorista mostra "nenhum
+                      campeonato ativo".
+                    </p>
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    onClick={() => seedingMutation.mutate(ativa.id)}
+                    disabled={seedingMutation.isPending}
+                  >
+                    {seedingMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Distribuindo...
+                      </>
+                    ) : (
+                      "Distribuir motoristas agora"
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {tiers.map((s) => (
+                <CardResumoSerie
+                  key={s.tier_id}
+                  serie={s}
+                  aoVerDetalhes={() =>
+                    setSerieAberta({
+                      tier_id: s.tier_id,
+                      tier_name: s.tier_name,
+                    })
+                  }
+                />
+              ))}
+            </div>
+          )}
+
+          {tiers.length > 0 && (
+            <>
+              <EditorFasesMataMata seasonId={ativa.id} />
+              <EditorPremiosTemporada
+                seasonId={ativa.id}
+                tiers={tiersResumo}
+              />
+            </>
+          )}
+        </>
+      )}
+
+      {isCampeonato && (
+        <ListaTemporadasAnteriores brandId={brandId} branchId={branchId} />
+      )}
+
+      {isCampeonato && (
+        <ProximosCampeonatosAdmin brandId={brandId} branchId={branchId} />
+      )}
+
+      <FormCriarTemporada
+        open={modalCriar}
+        onClose={() => setModalCriar(false)}
+        brandId={brandId}
+        branchId={branchId}
+      />
+
+      <DetalheSerieView
+        open={!!serieAberta}
+        onClose={() => setSerieAberta(null)}
+        seasonId={ativa?.id ?? ""}
+        tierId={serieAberta?.tier_id ?? null}
+        tierName={serieAberta?.tier_name ?? null}
+      />
+
+      {ativa && (
+        <DistribuicaoManualView
+          open={modalDistribuicao}
+          onClose={() => setModalDistribuicao(false)}
+          brandId={brandId}
+          seasonId={ativa.id}
+          fase={ativa.phase}
+        />
+      )}
+
+      {ativa && (
+        <TelaAprovacaoInscricoes
+          open={sheetInscricoes}
+          onClose={() => setSheetInscricoes(false)}
+          seasonId={ativa.id}
+          brandId={brandId}
+          branchId={branchId}
+          tiers={tiersResumo}
+        />
+      )}
+    </div>
+  );
+}

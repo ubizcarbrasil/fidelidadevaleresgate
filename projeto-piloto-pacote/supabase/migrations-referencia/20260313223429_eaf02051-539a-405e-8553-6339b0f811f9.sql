@@ -1,0 +1,1 @@
+ALTER TABLE public.machine_integrations ADD CONSTRAINT machine_integrations_brand_id_unique UNIQUE (brand_id);

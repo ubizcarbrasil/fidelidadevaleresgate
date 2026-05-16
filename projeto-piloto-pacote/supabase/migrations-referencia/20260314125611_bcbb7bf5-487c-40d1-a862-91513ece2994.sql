@@ -1,0 +1,1 @@
+ALTER TABLE public.machine_integrations ADD COLUMN IF NOT EXISTS callback_url TEXT DEFAULT NULL;

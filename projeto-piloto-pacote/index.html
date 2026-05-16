@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <script>
+      // ── /d/<brandId> SHORT-CIRCUIT ────────────────────────────────────────
+      // Rota curta de divulgação (ex.: WebView do Ubiz Car). Redireciona
+      // INSTANTANEAMENTE para /driver?brandId=... sem inicializar React,
+      // providers, Sentry ou qualquer chunk pesado. Limpa SW antigo SOMENTE
+      // quando a versão do build (BUILD_VERSION) muda — assim, em aberturas
+      // normais (mesma versão) o redirect roda em < 30 ms sem tocar caches.
+      // Custo total: < 50 ms em condições normais.
+      (function(){
+        try {
+          var path = location.pathname.replace(/\/+$/,"");
+          if (path.indexOf("/d/") !== 0) return;
+          var parts = path.split("/").filter(Boolean); // ["d","<brandId>"]
+          var brandId = parts[1] || "";
+          // Valida UUID v4-ish. Se vier "<brandId>" (template não substituído)
+          // ou qualquer string inválida, NÃO propaga para /driver — manda
+          // para a home da marca (resolução por hostname) e evita o erro
+          // "invalid input syntax for type uuid".
+          var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          if (!UUID_RE.test(brandId)) {
+            location.replace("/");
+            throw new Error("__d_redirect__");
+          }
+          var qs = new URLSearchParams(location.search);
+          if (brandId) qs.set("brandId", brandId);
+          var target = "/driver?" + qs.toString() + (location.hash || "");
+          // Versão atual do build, lida do <meta name="app-version">.
+          // Quando o deploy muda essa string, forçamos UMA limpeza de SW/caches
+          // para evitar chunks fantasmas. Persistido em localStorage para
+          // sobreviver entre sessões — limpamos no máximo uma vez por deploy.
+          var BUILD_VERSION = (function(){
+            var m = document.querySelector('meta[name="app-version"]');
+            return (m && m.getAttribute("content")) || "unknown";
+          })();
+          var KEY = "__d_sw_build__";
+          var lastSeen = null;
+          try { lastSeen = localStorage.getItem(KEY); } catch(_){}
+          var versionChanged = lastSeen !== BUILD_VERSION;
+          var done = false;
+          var go = function(){ if (done) return; done = true; location.replace(brandId ? target : "/"); };
+          if (versionChanged && "serviceWorker" in navigator) {
+            try { localStorage.setItem(KEY, BUILD_VERSION); } catch(_){}
+            setTimeout(go, 400); // teto duro
+            Promise.resolve()
+              .then(function(){ return navigator.serviceWorker.getRegistrations(); })
+              .then(function(regs){ return Promise.all((regs||[]).map(function(r){ return r.unregister().catch(function(){}); })); })
+              .then(function(){
+                if (typeof caches !== "undefined") {
+                  return caches.keys().then(function(keys){
+                    return Promise.all(keys.map(function(k){ return caches.delete(k).catch(function(){}); }));
+                  });
+                }
+              })
+              .catch(function(){})
+              .then(go);
+          } else {
+            go();
+          }
+          // Aborta o boot do React enquanto o redirect acontece.
+          // (Throw é capturado pelo navegador e impede execução dos scripts seguintes
+          //  do mesmo bloco inline; o <script type="module"> ainda carrega, mas a
+          //  navegação location.replace já estará em curso.)
+          throw new Error("__d_redirect__");
+        } catch (e) {
+          if (e && e.message === "__d_redirect__") throw e;
+          /* fall through to normal boot */
+        }
+      })();
+    </script>
+    <script>
+      // ── SW VERSION GUARD (todas as rotas) ─────────────────────────────────
+      // Quando o BUILD_VERSION (meta app-version) muda em relação ao último
+      // visto pelo navegador, limpamos UMA vez Service Workers + caches para
+      // evitar tela preta por chunks fantasmas (Vite re-otimizou deps com
+      // novo hash, mas o SW ainda serve HTML/asset velho).
+      // Idempotente: roda no máximo 1x por versão. Não recarrega.
+      (function(){
+        try {
+          var meta = document.querySelector('meta[name="app-version"]');
+          var BUILD_VERSION = (meta && meta.getAttribute("content")) || "unknown";
+          var KEY = "__app_sw_build__";
+          var lastSeen = null;
+          try { lastSeen = localStorage.getItem(KEY); } catch(_){}
+          if (lastSeen === BUILD_VERSION) return;
+          try { localStorage.setItem(KEY, BUILD_VERSION); } catch(_){}
+          if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs){
+              (regs || []).forEach(function(r){ try { r.unregister(); } catch(_){} });
+            }).catch(function(){});
+          }
+          if (typeof caches !== "undefined") {
+            caches.keys().then(function(keys){
+              (keys || []).forEach(function(k){ try { caches.delete(k); } catch(_){} });
+            }).catch(function(){});
+          }
+        } catch(_) { /* nunca bloqueia o boot */ }
+      })();
+    </script>
+    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(self)" />
+    
+    <title>Vale Resgate — Painel Admin</title>
+    <meta name="description" content="Painel administrativo Vale Resgate — Gerencie vouchers, lojas e clientes">
+    <meta name="author" content="Vale Resgate" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Vale Resgate" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#1a6cfa" />
+    <meta name="app-version" content="2026-05-15-recovery1" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/499c94d3-cc18-4c40-92ba-c12abdf2ed63/id-preview-e4f29599--3ff47979-b8b4-4666-bfef-7987c2d119c3.lovable.app-1772648810378.png">
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/499c94d3-cc18-4c40-92ba-c12abdf2ed63/id-preview-e4f29599--3ff47979-b8b4-4666-bfef-7987c2d119c3.lovable.app-1772648810378.png">
+    <meta property="og:title" content="Vale Resgate — Painel Admin">
+    <meta name="twitter:title" content="Vale Resgate — Painel Admin">
+    <meta property="og:description" content="Painel administrativo Vale Resgate — Gerencie vouchers, lojas e clientes">
+    <meta name="twitter:description" content="Painel administrativo Vale Resgate — Gerencie vouchers, lojas e clientes">
+  </head>
+
+  <body>
+    <!-- Bootstrap overlay — visualmente alinhado ao componente TelaCarregamento. Removido por main.tsx no mount. -->
+    <div id="bootstrap-fallback" style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#0f1729;flex-direction:column;gap:24px;padding:24px;transition:opacity 300ms ease-out;">
+      <style>
+        @keyframes vr-spin { to { transform: rotate(360deg); } }
+        @keyframes vr-bar { 0% { transform: translateX(-100%);} 100% { transform: translateX(250%);} }
+        @keyframes vr-pulse { 0%,100% { opacity: 0.85; transform: scale(1);} 50% { opacity: 1; transform: scale(1.04);} }
+        #bootstrap-bar { position:absolute; top:0; left:0; right:0; height:2px; overflow:hidden; }
+        #bootstrap-bar > span { display:block; height:100%; width:33%; border-radius:9999px;
+          background: linear-gradient(90deg, rgba(59,130,246,0) 0%, #3b82f6 50%, rgba(59,130,246,0) 100%);
+          animation: vr-bar 1.4s cubic-bezier(0.4,0,0.2,1) infinite; }
+        #bootstrap-ring { animation: vr-spin 1.1s linear infinite; }
+        #bootstrap-logo { animation: vr-pulse 2.4s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          #bootstrap-ring, #bootstrap-logo, #bootstrap-bar > span { animation: none !important; }
+        }
+      </style>
+      <div id="bootstrap-bar"><span></span></div>
+      <div id="bootstrap-spinner" style="position:relative;width:96px;height:96px;display:flex;align-items:center;justify-content:center;">
+        <svg id="bootstrap-ring" width="96" height="96" viewBox="0 0 96 96" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#3b82f6" stop-opacity="1"/>
+              <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.15"/>
+            </linearGradient>
+          </defs>
+          <circle cx="48" cy="48" r="45" fill="none" stroke="rgba(59,130,246,0.08)" stroke-width="3"/>
+          <circle cx="48" cy="48" r="45" fill="none" stroke="url(#bg-grad)" stroke-width="3" stroke-linecap="round" stroke-dasharray="99 283"/>
+        </svg>
+        <img id="bootstrap-logo" src="/logo-vale-resgate.png" alt="" aria-hidden="true"
+             style="position:absolute;width:48px;height:48px;border-radius:9999px;object-fit:contain;"
+             onerror="this.style.display='none'"/>
+      </div>
+      <div id="bootstrap-phase" style="text-align:center;color:#94a3b8;font-family:system-ui,sans-serif;font-size:13px;font-weight:500;">Carregando aplicativo…</div>
+      <div id="bootstrap-error" style="display:none;text-align:center;color:#e2e8f0;font-family:system-ui,sans-serif;padding:0 24px;"></div>
+    </div>
+
+    <div id="root"></div>
+
+    <script>
+      (function(){
+        function m(){var s={};return{getItem:function(k){return s.hasOwnProperty(k)?s[k]:null},setItem:function(k,v){s[k]=String(v)},removeItem:function(k){delete s[k]},clear:function(){s={}},key:function(i){return Object.keys(s)[i]||null},get length(){return Object.keys(s).length}};}
+        try{var t='__st__';window.localStorage.setItem(t,t);window.localStorage.removeItem(t)}catch(e){try{Object.defineProperty(window,'localStorage',{value:m(),writable:true})}catch(e2){window.localStorage=m()}}
+        try{var t2='__ss__';window.sessionStorage.setItem(t2,t2);window.sessionStorage.removeItem(t2)}catch(e){try{Object.defineProperty(window,'sessionStorage',{value:m(),writable:true})}catch(e2){window.sessionStorage=m()}}
+      })();
+    </script>
+
+    <script>
+      window.__BOOT_PHASE__ = "BOOT_HTML_READY";
+      window.__bootstrapDismissed = false;
+
+      window.__dismissBootstrap = function(){
+        if(window.__bootstrapDismissed) return;
+        window.__bootstrapDismissed = true;
+        var el = document.getElementById('bootstrap-fallback');
+        if(!el) return;
+        el.style.opacity = '0';
+        el.style.pointerEvents = 'none';
+        setTimeout(function(){ if(el && el.parentNode) el.parentNode.removeChild(el); }, 350);
+      };
+
+      window.__showBootError = function(phase, detail){
+        window.__BOOT_PHASE__ = phase;
+        console.error('[boot] ' + phase, detail);
+        var spinner = document.getElementById('bootstrap-spinner');
+        var phaseEl = document.getElementById('bootstrap-phase');
+        var err = document.getElementById('bootstrap-error');
+        if(spinner) spinner.style.display = 'none';
+        if(phaseEl) phaseEl.style.display = 'none';
+        if(err){
+          err.style.display = 'block';
+          err.innerHTML = '<p style="margin:0 0 8px;font-size:11px;color:#7c6faa;">' + phase + '</p>'
+            + '<p style="margin:0 0 12px;font-size:14px;">' + (detail || 'Erro ao carregar a aplicação.') + '</p>'
+            + '<button onclick="window.location.reload()" style="background:#6d4aff;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;">Recarregar</button>';
+        }
+      };
+
+      (function(){
+        var p = window.location.pathname;
+        if(p === "/index" || p === "/index.html" || p === "/index/"){
+          window.history.replaceState(null, "", "/" + window.location.search + window.location.hash);
+        }
+      })();
+
+      // /ofertas — vitrine pública. Esconder overlay imediatamente para evitar
+      // a tela "Carregando aplicativo…" em in-app browsers (Instagram, FB, iOS WebView)
+      // onde getSession() pode travar por 5–15s. A própria página renderiza seu loader.
+      (function(){
+        var pn = window.location.pathname;
+        if(pn === "/ofertas" || pn.indexOf("/ofertas/") === 0 || pn === "/webview" || pn.indexOf("/webview/") === 0){
+          window.__OFERTAS_FAST_BOOT__ = true;
+          var el = document.getElementById('bootstrap-fallback');
+          if(el){
+            el.style.background = '#0f1729';
+            var phaseEl = document.getElementById('bootstrap-phase');
+            if(phaseEl) phaseEl.textContent = '';
+          }
+        }
+      })();
+
+      // /ofertas em in-app browsers: desregistrar SW antes do mount para evitar
+      // chunks fantasmas servindo tela branca após "Voltar".
+      (function(){
+        var p = window.location.pathname;
+        var isPub = p === "/ofertas" || p.indexOf("/ofertas/") === 0 || p === "/webview" || p.indexOf("/webview/") === 0;
+        if(!isPub) return;
+        var ua = navigator.userAgent || "";
+        var isInApp = /Instagram|FBAN|FBAV|FB_IAB|Line|MicroMessenger|WhatsApp|Twitter|TikTok/i.test(ua);
+        if(!isInApp) return;
+        if('serviceWorker' in navigator){
+          navigator.serviceWorker.getRegistrations().then(function(regs){
+            regs.forEach(function(r){ try { r.unregister(); } catch(e){} });
+          }).catch(function(){});
+        }
+      })();
+
+      // SW recovery: detect _sw_cleared param and clean URL without reload
+      (function(){
+        try {
+          var params = new URLSearchParams(window.location.search);
+          if (params.has('_sw_cleared')) {
+            params.delete('_sw_cleared');
+            var clean = window.location.pathname + (params.toString() ? '?' + params.toString() : '') + window.location.hash;
+            window.history.replaceState(null, '', clean);
+          }
+        } catch(e){}
+      })();
+
+      // SW/cache cleanup ON-DEMAND apenas. Antes este bloco rodava em
+      // toda abertura, encontrava qualquer SW registrado, limpava tudo
+      // e forçava reload — o que sabotava o boot e provocava a sensação
+      // de "demora e não abre". A limpeza real agora é feita por:
+      //   - lazyWithRetry (erro de import dinâmico)
+      //   - installGlobalDomErrorRecovery (erro DOM/cache em runtime)
+      //   - botão "Atualizar agora" (acionado pelo usuário)
+
+      setTimeout(function(){
+        if(window.__bootstrapDismissed || window.__APP_MOUNTED__) return;
+        var phase = window.__BOOT_PHASE__ || 'desconhecida';
+        if(phase === 'APP_IMPORT_START' || phase === 'AUTH_LOADING' || phase === 'BRAND_LOADING'){
+          setTimeout(function(){
+            if(window.__bootstrapDismissed || window.__APP_MOUNTED__) return;
+            window.__showBootError('TIMEOUT', 'A aplicação não carregou a tempo. Fase: ' + (window.__BOOT_PHASE__ || 'desconhecida'));
+          }, 20000);
+          return;
+        }
+        window.__showBootError('TIMEOUT', 'A aplicação não carregou a tempo. Fase: ' + phase);
+      }, 25000);
+    </script>
+
+    <script type="module" src="/src/entry-client.ts"></script>
+  </body>
+</html>

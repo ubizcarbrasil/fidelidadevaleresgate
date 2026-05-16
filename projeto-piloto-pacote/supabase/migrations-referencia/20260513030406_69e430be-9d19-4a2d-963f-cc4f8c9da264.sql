@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.duelo_materialize_and_seed_season(uuid);
