@@ -222,8 +222,9 @@ export default function PaginaCampeonatoMotorista({ brandId, fontHeading }: Prop
         {serieVisualizando &&
           temporada?.tier_id &&
           serieVisualizando !== temporada.tier_id && (
-            <div className="mb-3 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-              Você está vendo a {serieAtualNome}
+            <div className="mb-3 rounded-md border border-orange-500/40 bg-orange-500/10 px-3 py-2.5 text-xs font-medium text-orange-200 flex items-center gap-2">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-orange-400 animate-pulse" aria-hidden />
+              Você está vendo a <strong className="font-bold">{serieAtualNome}</strong> (não é sua série)
             </div>
           )}
 
