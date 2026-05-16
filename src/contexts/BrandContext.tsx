@@ -117,14 +117,24 @@ async function resolveBrandByDomain(hostname: string): Promise<Brand | null> {
     domainsToTry.push(`www.${hostname}`);
   }
 
-  for (const domain of domainsToTry) {
-    const { data } = await supabase
-      .from("brand_domains")
-      .select("brand_id")
-      .eq("domain", domain)
-      .eq("is_active", true)
-      .maybeSingle();
+  // Paralelizar as queries de domínio (eram sequenciais — 2x RTT no 5G).
+  // Em hostname com "www.", isso transforma 2x latência (300ms) em 1x.
+  const domainResults = await Promise.all(
+    domainsToTry.map((domain) =>
+      withNetworkRetry(async () => {
+        const result = await supabase
+          .from("brand_domains")
+          .select("brand_id")
+          .eq("domain", domain)
+          .eq("is_active", true)
+          .maybeSingle();
+        if (result.error && isTransientNetworkError(result.error)) throw result.error;
+        return result;
+      }).catch(() => ({ data: null })),
+    ),
+  );
 
+  for (const { data } of domainResults) {
     if (data) {
       return fetchBrandById(data.brand_id);
     }
