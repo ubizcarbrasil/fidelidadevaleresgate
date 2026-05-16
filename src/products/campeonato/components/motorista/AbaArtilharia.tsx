@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Gift, ChevronRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Gift, ChevronRight, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -54,13 +54,23 @@ export default function AbaArtilharia({ brandId, seasonId, driverId }: Props) {
     (p) => p.window_key === janelaAtiva,
   );
 
+  // Só mostra toast em erro QUANDO o usuário clicar manualmente em refetch.
+  // Erros no load inicial / refetch automático já aparecem no in-page UI,
+  // não precisam de toast duplicado (era spam toda vez que entrava na aba).
+  const refetchManualRef = useRef(false);
   useEffect(() => {
-    if (isError) {
-      toast.error("Erro ao carregar artilharia", {
-        description: "Não foi possível atualizar o ranking. Tente novamente.",
+    if (isError && refetchManualRef.current) {
+      toast.error("Não foi possível atualizar o ranking", {
+        description: "Verifique sua conexão e tente novamente.",
       });
+      refetchManualRef.current = false;
     }
   }, [isError]);
+
+  const handleManualRefetch = () => {
+    refetchManualRef.current = true;
+    refetch();
+  };
 
   const top = (data ?? []).slice(0, 20);
   const janelaLabel =
@@ -132,18 +142,33 @@ export default function AbaArtilharia({ brandId, seasonId, driverId }: Props) {
             ))}
           </div>
         ) : isError ? (
-          <div className="py-8 px-4 text-center space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Não foi possível carregar a artilharia.
-            </p>
-            <Button size="sm" variant="outline" onClick={() => refetch()}>
+          <div className="py-10 px-4 text-center space-y-3">
+            <Trophy className="h-10 w-10 mx-auto text-muted-foreground/40" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">
+                Ranking sendo preparado…
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Aguarde um instante ou toque pra recarregar.
+              </p>
+            </div>
+            <Button size="sm" variant="outline" onClick={handleManualRefetch}>
               Tentar novamente
             </Button>
           </div>
         ) : top.length === 0 ? (
-          <p className="py-8 px-4 text-center text-sm text-muted-foreground">
-            Nenhum dado disponível para este período.
-          </p>
+          <div className="py-10 px-4 text-center space-y-3">
+            <Trophy className="h-10 w-10 mx-auto text-muted-foreground/40" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">
+                Nenhuma corrida ainda neste período
+              </p>
+              <p className="text-xs text-muted-foreground">
+                As corridas dos motoristas aparecem aqui assim que começam.
+                Volte em breve.
+              </p>
+            </div>
+          </div>
         ) : (
           <div className="divide-y divide-border">
             {top.map((r) => {
