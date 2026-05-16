@@ -3,7 +3,11 @@ import * as Sentry from "@sentry/react";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/lib/errorTracker";
 import { setBootPhase, dismissBootstrap } from "@/lib/bootState";
-import { recoverFromChunkError, isRecoverableDomError } from "@/lib/pwaRecovery";
+import {
+  recoverFromChunkError,
+  isRecoverableDomError,
+  canAttemptRecovery,
+} from "@/lib/pwaRecovery";
 
 interface Props {
   children: React.ReactNode;
@@ -81,54 +85,82 @@ export class ErrorBoundary extends React.Component<Props, State> {
     }
 
     if (this.state.isChunkError) {
-      // Auto-recovery: dispara o fluxo de limpeza + reload sem o usuário
-      // precisar clicar. O overlay do pwaRecovery (visualmente alinhado ao
-      // TelaCarregamento) cobre essa tela em < 100ms, então o usuário não
-      // chega a ver mensagem alarmista. Botão fica como fallback de 2ª
-      // tentativa caso o recovery automático não dispare.
-      void recoverFromChunkError();
-      return (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed inset-0 z-[9999] flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-6 text-center"
-        >
-          <div className="relative flex h-24 w-24 items-center justify-center">
-            <svg
-              width={96}
-              height={96}
-              viewBox="0 0 96 96"
-              className="animate-spin motion-reduce:animate-none"
-              aria-hidden="true"
-            >
-              <defs>
-                <linearGradient id="eb-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="1" />
-                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.15" />
-                </linearGradient>
-              </defs>
-              <circle cx={48} cy={48} r={45} fill="none" stroke="hsl(var(--primary) / 0.08)" strokeWidth={3} />
-              <circle
-                cx={48}
-                cy={48}
-                r={45}
-                fill="none"
-                stroke="url(#eb-grad)"
-                strokeWidth={3}
-                strokeLinecap="round"
-                strokeDasharray="99 283"
+      // Tenta auto-recovery APENAS se canAttemptRecovery() permitir
+      // (cooldown de 60s via sessionStorage). Isso evita loop infinito:
+      // se o chunk continuar falhando após o reload, paramos de auto-
+      // recuperar e mostramos botão pra usuário decidir.
+      //
+      // 2ª regressão fix (PR de hotfix): a auto-recovery sem guard estava
+      // travando o app em "Sincronizando…" eternamente quando o chunk
+      // falhava persistentemente (recovery → reload → chunk error →
+      // recovery → reload → loop).
+      const podeAutoRecuperar = canAttemptRecovery();
+      if (podeAutoRecuperar) {
+        void recoverFromChunkError();
+        // Mostra o loader unificado enquanto o overlay do pwaRecovery
+        // (que aparece em <100ms) cobre essa tela.
+        return (
+          <div
+            role="status"
+            aria-live="polite"
+            className="fixed inset-0 z-[9999] flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-6 text-center"
+          >
+            <div className="relative flex h-24 w-24 items-center justify-center">
+              <svg
+                width={96}
+                height={96}
+                viewBox="0 0 96 96"
+                className="animate-spin motion-reduce:animate-none"
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient id="eb-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="1" />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.15" />
+                  </linearGradient>
+                </defs>
+                <circle cx={48} cy={48} r={45} fill="none" stroke="hsl(var(--primary) / 0.08)" strokeWidth={3} />
+                <circle
+                  cx={48}
+                  cy={48}
+                  r={45}
+                  fill="none"
+                  stroke="url(#eb-grad)"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                  strokeDasharray="99 283"
+                />
+              </svg>
+              <img
+                src="/logo-vale-resgate.png"
+                alt=""
+                aria-hidden="true"
+                className="absolute h-12 w-12 rounded-full object-contain animate-loader-pulse-soft motion-reduce:animate-none"
               />
-            </svg>
-            <img
-              src="/logo-vale-resgate.png"
-              alt=""
-              aria-hidden="true"
-              className="absolute h-12 w-12 rounded-full object-contain animate-loader-pulse-soft motion-reduce:animate-none"
-            />
+            </div>
+            <p className="max-w-xs text-sm font-medium text-muted-foreground">
+              Sincronizando…
+            </p>
           </div>
-          <p className="max-w-xs text-sm font-medium text-muted-foreground">
-            Sincronizando…
-          </p>
+        );
+      }
+
+      // Cooldown bateu — tentativa anterior falhou ou loop detectado.
+      // Mostra mensagem clara + botão pra usuário decidir manualmente.
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <div className="text-center space-y-4 max-w-md">
+            <h2 className="text-xl font-bold text-foreground">
+              Não foi possível atualizar automaticamente
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              Toque em recarregar para tentar novamente. Se o problema
+              persistir, verifique sua conexão.
+            </p>
+            <Button onClick={() => window.location.reload()}>
+              Recarregar página
+            </Button>
+          </div>
         </div>
       );
     }
