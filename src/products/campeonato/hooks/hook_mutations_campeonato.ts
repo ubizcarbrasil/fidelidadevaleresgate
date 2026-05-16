@@ -70,16 +70,35 @@ export function useCriarTemporadaCompleta() {
     },
     onError: (err: any, vars) => {
       const code = err?.code ?? err?.cause?.code;
+      const mes = NOMES_MESES[(vars?.month ?? 1) - 1] ?? `${vars?.month}`;
+      const ano = vars?.year ?? "";
+
+      // 1. Temporada ATIVA (não cancelada) já existe — pre-check JS detectou
+      if (code === "SEASON_ALREADY_ACTIVE") {
+        toast.error(
+          `Já existe uma temporada ATIVA para ${mes}/${ano}. Cancele a temporada existente antes de criar uma nova.`,
+        );
+        return;
+      }
+
+      // 2. Bug de configuração do DB: índice único ainda não é parcial
+      if (code === "DB_UNIQUE_NOT_PARTIAL") {
+        toast.error(
+          `Erro de configuração: temporadas canceladas ainda bloqueiam criação. Migration 20260514102435 precisa ser aplicada na Supabase. Contate o suporte.`,
+          { duration: 10000 },
+        );
+        return;
+      }
+
+      // 3. Erro 23505 genérico (fallback) — DB unique violou
       const detalhes: string =
         err?.details ?? err?.cause?.details ?? err?.message ?? "";
       const ehDuplicidadeMesAno =
         code === "23505" &&
-        (detalhes.includes("duelo_seasons_brand_id_branch_id_year_month_key") ||
+        (detalhes.includes("brand_id_branch_id_year_month_key") ||
           detalhes.includes("year") ||
           detalhes.includes("month"));
       if (ehDuplicidadeMesAno) {
-        const mes = NOMES_MESES[(vars?.month ?? 1) - 1] ?? `${vars?.month}`;
-        const ano = vars?.year ?? "";
         toast.error(
           `Já existe uma temporada para ${mes}/${ano} nesta cidade. Escolha outro mês ou cancele/exclua a temporada existente antes de criar uma nova.`,
         );
