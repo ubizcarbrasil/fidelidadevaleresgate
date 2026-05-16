@@ -267,6 +267,12 @@ export async function criarTemporadaCompleta(
   //
   // Bug reportado pelo usuário: cancelava 100% das temporadas mas continuava
   // recebendo "Já existe uma temporada para Maio/2026 nesta cidade".
+  // Busca temporada existente para o mesmo mês/ano sem filtro inicial,
+  // pra distinguir entre "ativa" (bloqueia) vs "cancelada/finalizada" (não bloqueia).
+  // Antes filtrávamos só por cancelled_at IS NULL, mas isso pegava finalizadas
+  // também (phase='finished' com cancelled_at NULL) — bug reportado pelo
+  // usuário: criava Agosto/2026 e dizia 'já existe ATIVA' mesmo só tendo uma
+  // finalizada antiga.
   const { data: existing, error: existingErr } = await supabase
     .from("campeonato_seasons")
     .select("id, name, phase, cancelled_at")
@@ -275,6 +281,7 @@ export async function criarTemporadaCompleta(
     .eq("year", input.year)
     .eq("month", input.month)
     .is("cancelled_at", null)
+    .not("phase", "eq", "finished") // exclui finalizadas (ciclo terminou OK)
     .limit(1)
     .maybeSingle();
 
@@ -282,14 +289,27 @@ export async function criarTemporadaCompleta(
     console.error("[criarTemporadaCompleta] pre-check falhou", existingErr);
     // Não bloqueia — segue tentando o insert. Pode ser RLS ou coluna ausente.
   } else if (existing) {
-    // Temporada ATIVA já existe — erro claro com ID pra UI oferecer "Cancelar
-    // e recriar" caso queira.
+    // Temporada ATIVA (não cancelada e não finalizada) já existe.
+    // Mensagem agora inclui nome + fase pra usuário entender exatamente
+    // qual está bloqueando, e como resolver.
+    const faseLegivel: Record<string, string> = {
+      draft: "rascunho",
+      classification: "em fase de classificação",
+      knockout_r16: "em oitavas de final",
+      knockout_qf: "em quartas de final",
+      knockout_sf: "em semifinal",
+      knockout_final: "em final",
+    };
+    const faseTxt = faseLegivel[existing.phase as string] ?? `na fase ${existing.phase}`;
     const err = new Error(
-      `Já existe uma temporada ativa para este mês/ano. Cancele ou exclua a temporada existente antes de criar uma nova.`,
+      `Já existe uma temporada ATIVA "${existing.name}" ${faseTxt}. ` +
+      `Cancele essa temporada antes de criar uma nova para o mesmo mês/ano. ` +
+      `Se ela já terminou mas está marcada errada, contate o suporte.`,
     );
     (err as any).code = "SEASON_ALREADY_ACTIVE";
     (err as any).existingSeasonId = existing.id;
     (err as any).existingSeasonName = existing.name;
+    (err as any).existingSeasonPhase = existing.phase;
     throw err;
   }
 
