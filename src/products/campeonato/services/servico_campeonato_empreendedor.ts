@@ -192,7 +192,27 @@ export async function obterResumoTemporada(
     p_season_id: seasonId,
   });
   if (error) throw error;
-  return (data as unknown as ResumoTemporadaAdmin | null) ?? null;
+  if (!data) return null;
+  // RPC retorna season_id/season_name. Normaliza pro tipo TS que espera id/name.
+  const r = data as unknown as any;
+  return {
+    id: r.season_id ?? r.id,
+    brand_id: r.brand_id,
+    branch_id: r.branch_id,
+    branch_name: r.branch_name ?? null,
+    name: r.season_name ?? r.name ?? "",
+    year: r.year,
+    month: r.month,
+    phase: r.phase,
+    paused_at: r.paused_at ?? null,
+    cancelled_at: r.cancelled_at ?? null,
+    cancellation_reason: r.cancellation_reason ?? null,
+    classification_starts_at: r.classification_starts_at,
+    classification_ends_at: r.classification_ends_at,
+    knockout_starts_at: r.knockout_starts_at,
+    knockout_ends_at: r.knockout_ends_at,
+    tiers: r.tiers ?? [],
+  } as ResumoTemporadaAdmin;
 }
 
 export async function listarMotoristasDisponiveis(
@@ -219,9 +239,18 @@ export async function trocarFormatoEngajamento(input: TrocarFormatoInput) {
 }
 
 export async function cancelarTemporada(input: CancelarTemporadaInput) {
+  // Guard: erro confuso "Could not find the function campeonato_cancel_season(p_reason)"
+  // acontece quando seasonId é undefined (Supabase remove o param do payload e
+  // PostgREST procura uma sobrecarga inexistente). Falha rápido com mensagem clara.
+  if (!input.seasonId) {
+    throw new Error("ID da temporada ausente — recarregue a página e tente de novo.");
+  }
+  if (!input.reason || input.reason.trim().length < 5) {
+    throw new Error("Motivo do cancelamento obrigatório (mínimo 5 caracteres).");
+  }
   const { data, error } = await supabase.rpc("campeonato_cancel_season", {
     p_season_id: input.seasonId,
-    p_reason: input.reason,
+    p_reason: input.reason.trim(),
   });
   if (error) throw error;
   return data;
