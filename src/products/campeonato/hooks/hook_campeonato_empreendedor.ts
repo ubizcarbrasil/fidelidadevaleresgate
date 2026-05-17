@@ -29,12 +29,13 @@ export function useDashboardCampeonato(
 export function useTemporadasMarca(
   brandId?: string | null,
   status: StatusFiltroSeason = "all",
+  branchId?: string | null,
 ) {
   return useQuery({
-    queryKey: ["empreendedor-seasons", brandId, status],
+    queryKey: ["empreendedor-seasons", brandId, status, branchId ?? null],
     enabled: !!brandId,
     staleTime: STALE_HISTORICO,
-    queryFn: () => listarTemporadasMarca(brandId!, status),
+    queryFn: () => listarTemporadasMarca(brandId!, status, branchId ?? null),
   });
 }
 
