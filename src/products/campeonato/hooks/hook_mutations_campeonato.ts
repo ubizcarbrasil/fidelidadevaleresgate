@@ -31,6 +31,7 @@ function invalidarTudo(qc: ReturnType<typeof useQueryClient>, brandId?: string) 
   qc.invalidateQueries({ queryKey: ["empreendedor-series-detail"] });
   qc.invalidateQueries({ queryKey: ["empreendedor-brackets-full"] });
   qc.invalidateQueries({ queryKey: ["empreendedor-prize-distributions"] });
+  qc.invalidateQueries({ queryKey: ["empreendedor-proximos-campeonatos"] });
   qc.invalidateQueries({ queryKey: ["duelo-engagement-format", brandId] });
   qc.invalidateQueries({ queryKey: ["check-season-conflict"] });
   qc.invalidateQueries({ queryKey: ["check-season-overlap"] });
