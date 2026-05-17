@@ -140,13 +140,27 @@ export async function listarTemporadasMarca(
     p_status: status,
   });
   if (error) throw error;
-  const all = (data as unknown as SeasonListItem[]) ?? [];
-  // FIX (bug temporadas zumbi): RPC brand_get_seasons_list filtra apenas
-  // por brand_id, retornando temporadas de TODAS as cidades. Filtramos
-  // localmente por branch_id quando o usuário quer ver apenas a cidade
-  // atual (mantém comportamento antigo quando branchId não passado).
+  // RPC retorna campos com prefixo (season_id, season_name). Normaliza
+  // pro formato esperado por SeasonListItem. Sem isso, s.id e s.name
+  // ficam undefined e quebra cancelamento (p_season_id sumia do payload).
+  const raw = (data as unknown as any[]) ?? [];
+  const all: SeasonListItem[] = raw.map((r) => ({
+    id: r.season_id ?? r.id,
+    name: r.season_name ?? r.name ?? "",
+    year: r.year,
+    month: r.month,
+    phase: r.phase,
+    paused_at: r.paused_at ?? null,
+    cancelled_at: r.cancelled_at ?? null,
+    cancellation_reason: r.cancellation_reason ?? null,
+    classification_starts_at: r.classification_starts_at,
+    knockout_ends_at: r.knockout_ends_at,
+    branch_id: r.branch_id,
+    branch_name: r.branch_name ?? null,
+    tiers_count: r.tiers_count ?? 0,
+  }));
   if (!branchId) return all;
-  return all.filter((s) => (s as unknown as { branch_id?: string }).branch_id === branchId);
+  return all.filter((s) => s.branch_id === branchId);
 }
 
 export async function obterDetalheSerie(
