@@ -5,6 +5,8 @@ import { useAuth } from "./AuthContext";
 import { getCurrentPosition, distanceKm, type Coords } from "@/lib/geolocation";
 import { useBrandTheme, type BrandTheme } from "@/hooks/useBrandTheme";
 import { setBootPhase } from "@/lib/bootState";
+import { getBootContext } from "@/lib/bootContext";
+import { bootMark } from "@/lib/bootMetrics";
 
 type Brand = Tables<"brands">;
 type Branch = Tables<"branches">;
@@ -56,6 +58,18 @@ async function withNetworkRetry<T>(fn: () => Promise<T>, maxAttempts = 3): Promi
  * falling back to the full brands table (works for authenticated users).
  */
 async function fetchBrandById(brandId: string): Promise<Brand | null> {
+  // FAST PATH: tenta cache do boot context (1 RPC unificada já trouxe a brand).
+  // Se hit, evita 1 round-trip ao Supabase no caminho crítico do boot.
+  try {
+    const boot = await getBootContext();
+    if (boot?.brand && boot.brand.id === brandId) {
+      bootMark("brand:from-cache");
+      return boot.brand as unknown as Brand;
+    }
+  } catch {
+    /* cache miss — segue pro caminho normal */
+  }
+
   // Try public view first (accessible to anonymous users)
   const { data: publicBrand } = await withNetworkRetry(async () => {
     const result = await supabase
@@ -68,6 +82,7 @@ async function fetchBrandById(brandId: string): Promise<Brand | null> {
   });
 
   if (publicBrand) {
+    bootMark("brand:from-public-view");
     // Cast — the public view has the same core fields
     return publicBrand as unknown as Brand;
   }
@@ -83,6 +98,7 @@ async function fetchBrandById(brandId: string): Promise<Brand | null> {
     return result;
   });
 
+  bootMark("brand:from-brands-table");
   return brand;
 }
 
