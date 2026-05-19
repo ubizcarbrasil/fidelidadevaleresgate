@@ -62,11 +62,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data = boot.roles as unknown as typeof data;
         bootMark("auth:roles-from-cache");
       } else {
-        const { data: queryData } = await supabase
-          .from("user_roles")
-          .select("id, role, tenant_id, brand_id, branch_id")
-          .eq("user_id", userId);
-        data = queryData;
+        // SLOW PATH: cache miss → query individual com retry exponential
+        // backoff. iOS Safari aborta HTTP/2 em 5G silenciosamente; sem
+        // retry, contextValue fica sem roles e guard bloqueia rota.
+        let lastErr: { message?: string } | null = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const { data: result, error } = await supabase
+            .from("user_roles")
+            .select("id, role, tenant_id, brand_id, branch_id")
+            .eq("user_id", userId);
+          if (!error) {
+            data = result as unknown as typeof data;
+            break;
+          }
+          lastErr = error;
+          const msg = (error.message || "").toLowerCase();
+          const isTransient = msg.includes("load failed") || msg.includes("failed to fetch")
+            || msg.includes("networkerror") || msg.includes("timeout");
+          if (!isTransient || attempt === 2) break;
+          // Backoff: 300ms, 900ms
+          await new Promise((r) => setTimeout(r, 300 * Math.pow(3, attempt)));
+        }
+        if (data === null && lastErr) throw lastErr;
         bootMark("auth:roles-from-query");
       }
       // Só aplica se ainda for o request mais recente e componente montado
