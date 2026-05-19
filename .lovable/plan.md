@@ -1,28 +1,36 @@
-Diagnóstico encontrado:
+Diagnóstico confirmado:
 
-- O problema não é o seu login de empreendedor.
-- O backend tem sim uma temporada ativa invisível/zumbi bloqueando a criação:
-  - Nome: Maio 2026
-  - ID: a9f2b1a5-de38-45b3-a478-aafc10173218
-  - Status técnico: phase = classification, cancelled_at = null
-  - Cidade/branch: aa1e7a2c-59e2-4eca-a39f-008412cfed09
-  - Ela não tem motoristas nem séries materializadas: 0 motoristas e 0 séries.
-- Existem 4 temporadas no banco:
-  - 1 ativa: Maio 2026
-  - 3 canceladas: Maio 2026, Maio 2026 e Janeiro 2027
-- A função de cancelar existe corretamente agora no backend:
-  - campeonato_cancel_season(p_season_id uuid, p_reason text)
-- O índice único também está no formato correto para permitir recriar temporada cancelada:
-  - único apenas quando cancelled_at IS NULL
-
-Causa provável:
-
-A temporada Maio 2026 foi recriada em 19/05/2026 às 16:05 UTC e ficou ativa em classificação, porém sem distribuição/séries. Como ela está ativa no banco, o pre-check do código está correto ao bloquear outra Maio 2026. O que parece estar falhando é a visibilidade/gestão dela no painel, porque o empreendedor não percebe essa temporada ativa ou não consegue cancelá-la claramente.
+- Não é problema do seu login de empreendedor.
+- Existe uma nova temporada ativa no banco: `Maio 2026`, id `121881cb-5773-432a-be23-d6631cce4280`, cidade `aa1e7a2c-59e2-4eca-a39f-008412cfed09`, marca `db15bd21-9137-4965-a0fb-540d8e8b26f1`.
+- Ela foi criada em `19/05/2026 21:39 UTC`, depois do cancelamento anterior.
+- Ela está em `phase = classification`, `cancelled_at = null`, mas tem `0 séries`, `0 motoristas` e `0 brackets`.
+- Portanto, é uma temporada zumbi ativa. O pre-check do código está certo em bloquear, mas a interface está errada ao mostrar “Tudo certo para criar a temporada” e não exibir essa temporada de forma acionável.
 
 Plano de correção:
 
-1. Corrigir a camada de listagem/histórico do empreendedor para garantir que temporadas ativas órfãs apareçam de forma explícita no histórico e no card ativo.
-2. Ajustar o painel para destacar quando a temporada ativa existe mas está sem séries/motoristas, mostrando ação clara de cancelar ou distribuir motoristas.
-3. Ajustar a lista de histórico para mostrar dados de cidade/branch mesmo quando a RPC não retorna branch_name, evitando parecer que a temporada não pertence à cidade atual.
-4. Melhorar a mensagem de bloqueio da criação para incluir o ID/nome da temporada ativa e orientar o usuário a cancelar no histórico.
-5. Após aprovado, posso também executar a correção operacional no banco cancelando especificamente a temporada zumbi Maio 2026, se você quiser liberar a criação imediatamente.
+1. Desbloqueio imediato no banco
+   - Cancelar a temporada zumbi ativa `121881cb-5773-432a-be23-d6631cce4280`.
+   - Marcar `phase = cancelled`, preencher `cancelled_at` e registrar motivo operacional.
+   - Validar que não sobra nenhuma temporada ativa para Maio/2026 nessa cidade.
+
+2. Corrigir a interface de criação
+   - Ajustar o formulário automático para nunca mostrar “Tudo certo” quando existir conflito ativo de mês/ano ou conflito de período.
+   - Fazer o estado de validação aguardar a checagem do backend antes de permitir criar.
+   - Mostrar explicitamente qual temporada está bloqueando, com nome, fase e botão de cancelamento quando permitido.
+
+3. Corrigir a listagem/painel do empreendedor
+   - Garantir que temporadas ativas sem séries/motoristas apareçam no painel/histórico como “temporada ativa sem distribuição”.
+   - Permitir cancelar essa temporada diretamente pela área do empreendedor.
+   - Evitar que ela fique invisível por não ter séries materializadas.
+
+4. Prevenir novas temporadas zumbi
+   - Revisar o fluxo `criarTemporadaCompleta`: hoje a temporada pode ser inserida e a distribuição falhar depois, deixando uma temporada ativa vazia.
+   - Ajustar para uma destas regras seguras:
+     - se a distribuição automática falhar, a temporada fica em rascunho/não publicada; ou
+     - se for criação automática publicada, falha a criação inteira em vez de deixar temporada ativa vazia.
+   - Manter a mensagem de erro clara para o empreendedor.
+
+5. Validação final
+   - Consultar o banco para confirmar ausência de temporadas ativas zumbi.
+   - Verificar que o formulário mostra bloqueio real quando existe conflito e “Tudo certo” somente quando a criação está liberada.
+   - Confirmar que Maio/2026 pode ser criado novamente após o cancelamento da temporada zumbi.
