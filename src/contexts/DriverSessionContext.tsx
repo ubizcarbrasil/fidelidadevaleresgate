@@ -51,7 +51,44 @@ function parseRow(row: any): DriverCustomer {
   };
 }
 
-async function fetchDriverByCpf(brandId: string, cpf: string): Promise<{ driver: DriverCustomer | null; rateLimited?: boolean }> {
+async function fetchDriverByCpf(
+  brandId: string,
+  cpf: string,
+): Promise<{ driver: DriverCustomer | null; rateLimited?: boolean }> {
+  // Tenta edge function `driver-cpf-login` primeiro pra ter:
+  // - Rate limit por IP (max 30 falhas/15min) — barra brute-force que
+  //   rotaciona CPFs (não pego pelo rate limit por cpf_hash do RPC).
+  // - Auditoria centralizada de tentativas por IP.
+  // - Mascaramento LGPD garantido (email/phone/money_balance = null/0).
+  // Se a edge function não estiver deployada (404) ou der erro de rede,
+  // cai pro fallback RPC direto (mantém compat durante deploy gradual).
+  try {
+    const { data, error } = await supabase.functions.invoke("driver-cpf-login", {
+      body: { brandId, cpf },
+    });
+    if (!error && data?.driver) {
+      return { driver: parseRow(data.driver) };
+    }
+    if (!error && data?.error === "rate_limited") {
+      return { driver: null, rateLimited: true };
+    }
+    if (!error && data?.error) {
+      // edge function respondeu com erro estruturado (not_found, etc.)
+      // — cai no fallback pra preservar comportamento legado caso ela
+      // esteja com bug
+      console.info("[DriverSession] edge function bloqueou:", data.error, data.message);
+    }
+    if (error) {
+      const isNotDeployed = (error as { context?: { status?: number } })?.context?.status === 404;
+      if (!isNotDeployed) {
+        console.warn("[DriverSession] login via edge function falhou, fallback RPC:", error.message);
+      }
+    }
+  } catch (err) {
+    console.warn("[DriverSession] exceção na edge function, fallback RPC:", err);
+  }
+
+  // Fallback: RPC direta (PR #21 já tem rate limit por cpf_hash + mascaramento)
   const { data, error } = await supabase
     .rpc("lookup_driver_by_cpf", { p_brand_id: brandId, p_cpf: cpf });
   // Migração 20260519002728 retorna erro P0001 quando rate limit é atingido.
