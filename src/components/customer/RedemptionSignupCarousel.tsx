@@ -1,3 +1,4 @@
+import { formatCPF } from "@/lib/formatters";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,13 +27,7 @@ interface Props {
 
 const STEPS = ["CPF", "Nome", "E-mail", "Telefone", "Código", "Senha"] as const;
 
-const formatCpf = (value: string) => {
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  return digits
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-};
+// formatCPF migrado pra @/lib/formatters
 
 const formatPhone = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -186,7 +181,7 @@ export default function RedemptionSignupCarousel({ primary, fg, fontHeading, onC
             {step === 0 && (
               <input
                 type="text" inputMode="numeric" value={data.cpf}
-                onChange={(e) => update("cpf", formatCpf(e.target.value))}
+                onChange={(e) => update("cpf", formatCPF(e.target.value))}
                 placeholder="000.000.000-00"
                 className="w-full text-center text-lg font-mono tracking-wider px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
                 style={{ borderColor: brandAlpha(fg, 0.08), color: '#000', backgroundColor: '#fff' }}
