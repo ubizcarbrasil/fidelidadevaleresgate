@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useFotoPerfilMotorista } from "../../hooks/useFotoPerfilMotorista";
+import { useDriverSession } from "@/contexts/DriverSessionContext";
 
 interface Props {
   onFotoCadastrada: () => void;
@@ -17,6 +18,8 @@ export default function BloqueioInscricaoSemFoto({
   driverId,
 }: Props) {
   const { customerId } = useFotoPerfilMotorista(driverId);
+  // brand_id é necessário pra validação cross-tenant na edge function
+  const { driver } = useDriverSession();
   const inputRef = useRef<HTMLInputElement>(null);
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -48,8 +51,15 @@ export default function BloqueioInscricaoSemFoto({
     setErro(null);
 
     try {
+      const brandId = driver?.brand_id;
+      if (!brandId) {
+        setErro("Sessão inválida. Faça login novamente.");
+        setUploading(false);
+        return;
+      }
       const formData = new FormData();
       formData.append("driver_id", customerId);
+      formData.append("brand_id", brandId); // Validação cross-tenant
       formData.append("file", arquivo);
 
       const { data, error } = await supabase.functions.invoke(

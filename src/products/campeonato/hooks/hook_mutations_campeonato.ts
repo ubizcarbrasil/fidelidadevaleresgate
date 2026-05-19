@@ -65,8 +65,19 @@ export function useCriarTemporadaCompleta() {
   return useMutation({
     mutationFn: (input: CriarTemporadaCompletaInput) =>
       criarTemporadaCompleta(input),
-    onSuccess: (_d, vars) => {
-      toast.success("Temporada criada com sucesso");
+    onSuccess: (data: any, vars) => {
+      // Se o seeding inicial falhou silenciosamente (sem motoristas
+      // elegíveis ou erro transient), informa o admin com toast warning
+      // em vez de só success genérico. Sem isso, ele clicava criar →
+      // via "sucesso" → tela mostrava temporada sem motoristas → confusão.
+      if (data?._seedWarning) {
+        toast.warning("Temporada criada, mas sem distribuição automática", {
+          description: data._seedWarning,
+          duration: 8000,
+        });
+      } else {
+        toast.success("Temporada criada com sucesso");
+      }
       invalidarTudo(qc, vars.brandId);
     },
     onError: (err: any, vars) => {

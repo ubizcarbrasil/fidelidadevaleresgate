@@ -1,3 +1,4 @@
+import { formatBRLOrNull } from "@/lib/formatters";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -110,7 +111,7 @@ export default function AiBannerDialog({ open, onOpenChange, deal, brandId }: Pr
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground line-clamp-2">{deal.title}</p>
           {deal.price != null && (
-            <p className="text-sm font-semibold">{formatPrice(deal.price)}</p>
+            <p className="text-sm font-semibold">{formatBRLOrNull(deal.price)}</p>
           )}
 
           {/* Original */}

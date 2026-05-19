@@ -1,6 +1,8 @@
 /**
- * Formatadores centralizados — consolida implementações inline duplicadas
- * de formatPrice/formatCpf/formatPhone espalhadas pelo codebase.
+ * Formatadores centralizados — consolida 9+ implementações inline de
+ * formatPrice/formatCurrency espalhadas pelo codebase (auditoria
+ * arquitetural identificou inconsistências: alguns retornam null em 0,
+ * outros mostram "R$ 0,00", outros usam currency hardcoded).
  *
  * Convenção:
  * - `formatBRL(value)` → string ("R$ 99,90") sempre; 0 vira "R$ 0,00"
@@ -37,16 +39,14 @@ export function formatBRLOrNull(value: number | null | undefined): string | null
 /**
  * Formata CPF aceitando string parcial (pra usar em inputs com
  * formatação on-the-fly). Aceita só dígitos e formata progressivamente.
- * Aceita null/undefined retornando "".
  *
  * "123" → "123"
  * "123456" → "123.456"
  * "12345678" → "123.456.78"
  * "12345678910" → "123.456.789-10"
  */
-export function formatCPF(raw: string | null | undefined): string {
-  if (!raw) return "";
-  const digits = String(raw).replace(/\D/g, "").slice(0, 11);
+export function formatCPF(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 11);
   if (digits.length <= 3) return digits;
   if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
   if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
@@ -54,12 +54,19 @@ export function formatCPF(raw: string | null | undefined): string {
 }
 
 /**
+ * Exibição de CPF com fallback. Retorna `fallback` se vazio/nulo.
+ */
+export function formatCPFDisplay(cpf: string | null | undefined, fallback = "—"): string {
+  if (!cpf || !String(cpf).trim()) return fallback;
+  return formatCPF(String(cpf));
+}
+
+/**
  * Valida que a string contém exatamente 11 dígitos numéricos.
  * NÃO valida dígitos verificadores (apenas formato).
  */
-export function isCPFFormatValid(raw: string | null | undefined): boolean {
-  if (!raw) return false;
-  return String(raw).replace(/\D/g, "").length === 11;
+export function isCPFFormatValid(raw: string): boolean {
+  return raw.replace(/\D/g, "").length === 11;
 }
 
 /**
@@ -68,9 +75,8 @@ export function isCPFFormatValid(raw: string | null | undefined): boolean {
  * "11999998888" → "(11) 99999-8888"
  * "1133334444" → "(11) 3333-4444"
  */
-export function formatPhone(raw: string | null | undefined): string {
-  if (!raw) return "";
-  const digits = String(raw).replace(/\D/g, "").slice(0, 11);
+export function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 11);
   if (digits.length <= 2) return digits.length ? `(${digits}` : "";
   if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
   if (digits.length <= 10) {
