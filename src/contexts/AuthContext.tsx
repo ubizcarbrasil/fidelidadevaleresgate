@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { AppRole, UserRole } from "@/modules/auth/types";
 import { logAudit } from "@/lib/auditLogger";
 import { setBootPhase } from "@/lib/bootState";
+import { getBootContext } from "@/lib/bootContext";
+import { bootMark } from "@/lib/bootMetrics";
 
 interface AuthContextType {
   session: Session | null;
@@ -52,29 +54,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     inFlightUserIdRef.current = userId;
     const promise = (async () => {
     try {
-      // Retry exponential backoff em erro de rede (iOS Safari aborta
-      // conexões HTTP/2 em 5G). Sem isso, falha silenciosa e contextValue
-      // fica sem roles → guard bloqueia rota mesmo pra usuário válido.
-      let data: any = null;
-      let lastErr: any = null;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        const { data: result, error } = await supabase
-          .from("user_roles")
-          .select("id, role, tenant_id, brand_id, branch_id")
-          .eq("user_id", userId);
-        if (!error) {
-          data = result;
-          break;
+      // FAST PATH: tenta pegar roles do boot context (1 RPC unificada).
+      // Se o RPC já resolveu, pula o SELECT individual (evita round-trip extra).
+      let data: Array<{ id: string; role: string; tenant_id: string | null; brand_id: string | null; branch_id: string | null }> | null = null;
+      const boot = await getBootContext();
+      if (boot?.user_id === userId && Array.isArray(boot.roles)) {
+        data = boot.roles as unknown as typeof data;
+        bootMark("auth:roles-from-cache");
+      } else {
+        // SLOW PATH: cache miss → query individual com retry exponential
+        // backoff. iOS Safari aborta HTTP/2 em 5G silenciosamente; sem
+        // retry, contextValue fica sem roles e guard bloqueia rota.
+        let lastErr: { message?: string } | null = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const { data: result, error } = await supabase
+            .from("user_roles")
+            .select("id, role, tenant_id, brand_id, branch_id")
+            .eq("user_id", userId);
+          if (!error) {
+            data = result as unknown as typeof data;
+            break;
+          }
+          lastErr = error;
+          const msg = (error.message || "").toLowerCase();
+          const isTransient = msg.includes("load failed") || msg.includes("failed to fetch")
+            || msg.includes("networkerror") || msg.includes("timeout");
+          if (!isTransient || attempt === 2) break;
+          // Backoff: 300ms, 900ms
+          await new Promise((r) => setTimeout(r, 300 * Math.pow(3, attempt)));
         }
-        lastErr = error;
-        const msg = (error.message || "").toLowerCase();
-        const isTransient = msg.includes("load failed") || msg.includes("failed to fetch")
-          || msg.includes("networkerror") || msg.includes("timeout");
-        if (!isTransient || attempt === 2) break;
-        // Backoff: 300ms, 900ms (total ~1.2s antes de desistir)
-        await new Promise((r) => setTimeout(r, 300 * Math.pow(3, attempt)));
+        if (data === null && lastErr) throw lastErr;
+        bootMark("auth:roles-from-query");
       }
-      if (data === null && lastErr) throw lastErr;
       // Só aplica se ainda for o request mais recente e componente montado
       if (mountedRef.current && fetchIdRef.current === requestId) {
         const newRoles = (data || []) as UserRole[];
@@ -118,9 +129,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Restauração inicial: sessão + roles antes de liberar loading
     const bootstrap = async () => {
+      bootMark("auth:bootstrap-start");
       setBootPhase("AUTH_LOADING");
       try {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
+        bootMark("auth:session-done");
         if (!mountedRef.current) return;
 
         setSession(currentSession);
@@ -143,6 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mountedRef.current) {
           setLoading(false);
           setBootPhase("AUTH_READY");
+          bootMark("auth:ready");
           initialLoadDone = true;
         }
       }
@@ -228,8 +242,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRolesCarregados(true);
   };
 
+  // Memoizado pra evitar cascade de re-renders dos 45 componentes que
+  // consomem useAuth(). Antes, objeto inline novo a cada render disparava
+  // re-render mesmo quando session/user/roles não mudavam.
+  const contextValue = React.useMemo(
+    () => ({ session, user, roles, loading, rolesCarregados, hasRole, isRootAdmin, signOut }),
+    [session, user, roles, loading, rolesCarregados, hasRole, isRootAdmin],
+  );
+
   return (
-    <AuthContext.Provider value={{ session, user, roles, loading, rolesCarregados, hasRole, isRootAdmin, signOut }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,33 +1,28 @@
-## Diagnóstico
+Diagnóstico encontrado:
 
-A tela azul não é mais um crash de chunk: o app carrega `App.tsx`, `AuthContext`, `BrandContext`, `AppLayout` e `Dashboard` sem erro fatal no console. O problema atual é um travamento visual por estado de boot/guard:
+- O problema não é o seu login de empreendedor.
+- O backend tem sim uma temporada ativa invisível/zumbi bloqueando a criação:
+  - Nome: Maio 2026
+  - ID: a9f2b1a5-de38-45b3-a478-aafc10173218
+  - Status técnico: phase = classification, cancelled_at = null
+  - Cidade/branch: aa1e7a2c-59e2-4eca-a39f-008412cfed09
+  - Ela não tem motoristas nem séries materializadas: 0 motoristas e 0 séries.
+- Existem 4 temporadas no banco:
+  - 1 ativa: Maio 2026
+  - 3 canceladas: Maio 2026, Maio 2026 e Janeiro 2027
+- A função de cancelar existe corretamente agora no backend:
+  - campeonato_cancel_season(p_season_id uuid, p_reason text)
+- O índice único também está no formato correto para permitir recriar temporada cancelada:
+  - único apenas quando cancelled_at IS NULL
 
-- `BrandContext` marca `BRAND_READY` cedo demais (`skip-local`).
-- Em seguida `AuthContext` volta a fase para `AUTH_LOADING`/`AUTH_READY`.
-- `useBootReady()` usa um “high-water mark” que fica pronto após `BRAND_READY`, mas `TelaCarregamento` lê a fase atual via `getBootPhase()` e continua mostrando loader em cima da aplicação.
-- Ao mesmo tempo, quando `AppLayout` entra com `consoleScope === "LOADING"`, ele renderiza um shell vazio sem conteúdo, parecendo uma página toda azul/preta.
+Causa provável:
 
-## Plano cirúrgico
+A temporada Maio 2026 foi recriada em 19/05/2026 às 16:05 UTC e ficou ativa em classificação, porém sem distribuição/séries. Como ela está ativa no banco, o pre-check do código está correto ao bloquear outra Maio 2026. O que parece estar falhando é a visibilidade/gestão dela no painel, porque o empreendedor não percebe essa temporada ativa ou não consegue cancelá-la claramente.
 
-1. Ajustar a máquina de boot em `src/lib/bootStateCore.ts`
-   - Tornar as fases monotônicas por prioridade.
-   - Impedir regressão visual de `BRAND_READY` para `AUTH_LOADING`/`AUTH_READY`.
-   - Quando o boot já estiver resolvido, `getBootPhase()` deve continuar em fase resolvida para não prender loaders antigos.
+Plano de correção:
 
-2. Ajustar o loader em `src/compartilhados/components/tela_carregamento.tsx`
-   - Se `isBootResolved()` já estiver true, não tratar `AUTH_LOADING`/`AUTH_READY` posterior como boot ativo.
-   - Evitar overlay fullscreen preso após a aplicação já ter montado.
-
-3. Ajustar fallback de `AppLayout` em `src/components/AppLayout.tsx`
-   - Para `consoleScope === "LOADING"`, mostrar o loader real/skeleton visível em vez de um shell vazio azul.
-   - Isso remove a sensação de “página toda azul” mesmo se permissões demorarem.
-
-4. Validar
-   - Rodar verificação TypeScript (`tsc --noEmit`) após a alteração.
-   - Abrir `/` e confirmar na prévia que a tela sai do azul e mostra `/auth`, dashboard ou conteúdo carregado conforme sessão.
-
-## O que não vou mexer
-
-- Nada em Campeonato/Motorista.
-- Nada em banco, RLS ou funções backend.
-- Nada em Service Worker/cache além do comportamento já existente.
+1. Corrigir a camada de listagem/histórico do empreendedor para garantir que temporadas ativas órfãs apareçam de forma explícita no histórico e no card ativo.
+2. Ajustar o painel para destacar quando a temporada ativa existe mas está sem séries/motoristas, mostrando ação clara de cancelar ou distribuir motoristas.
+3. Ajustar a lista de histórico para mostrar dados de cidade/branch mesmo quando a RPC não retorna branch_name, evitando parecer que a temporada não pertence à cidade atual.
+4. Melhorar a mensagem de bloqueio da criação para incluir o ID/nome da temporada ativa e orientar o usuário a cancelar no histórico.
+5. Após aprovado, posso também executar a correção operacional no banco cancelando especificamente a temporada zumbi Maio 2026, se você quiser liberar a criação imediatamente.

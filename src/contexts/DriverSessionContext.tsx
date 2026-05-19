@@ -51,12 +51,57 @@ function parseRow(row: any): DriverCustomer {
   };
 }
 
-async function fetchDriverByCpf(brandId: string, cpf: string): Promise<DriverCustomer | null> {
+async function fetchDriverByCpf(
+  brandId: string,
+  cpf: string,
+): Promise<{ driver: DriverCustomer | null; rateLimited?: boolean }> {
+  // Tenta edge function `driver-cpf-login` primeiro pra ter:
+  // - Rate limit por IP (max 30 falhas/15min) — barra brute-force que
+  //   rotaciona CPFs (não pego pelo rate limit por cpf_hash do RPC).
+  // - Auditoria centralizada de tentativas por IP.
+  // - Mascaramento LGPD garantido (email/phone/money_balance = null/0).
+  // Se a edge function não estiver deployada (404) ou der erro de rede,
+  // cai pro fallback RPC direto (mantém compat durante deploy gradual).
+  try {
+    const { data, error } = await supabase.functions.invoke("driver-cpf-login", {
+      body: { brandId, cpf },
+    });
+    if (!error && data?.driver) {
+      return { driver: parseRow(data.driver) };
+    }
+    if (!error && data?.error === "rate_limited") {
+      return { driver: null, rateLimited: true };
+    }
+    if (!error && data?.error) {
+      // edge function respondeu com erro estruturado (not_found, etc.)
+      // — cai no fallback pra preservar comportamento legado caso ela
+      // esteja com bug
+      console.info("[DriverSession] edge function bloqueou:", data.error, data.message);
+    }
+    if (error) {
+      const isNotDeployed = (error as { context?: { status?: number } })?.context?.status === 404;
+      if (!isNotDeployed) {
+        console.warn("[DriverSession] login via edge function falhou, fallback RPC:", error.message);
+      }
+    }
+  } catch (err) {
+    console.warn("[DriverSession] exceção na edge function, fallback RPC:", err);
+  }
+
+  // Fallback: RPC direta (PR #21 já tem rate limit por cpf_hash + mascaramento)
   const { data, error } = await supabase
     .rpc("lookup_driver_by_cpf", { p_brand_id: brandId, p_cpf: cpf });
-  if (error || !data || (Array.isArray(data) && data.length === 0)) return null;
+  // Migração 20260519002728 retorna erro P0001 quando rate limit é atingido.
+  if (error) {
+    const msg = (error as { message?: string }).message ?? "";
+    if (msg.includes("Muitas tentativas")) {
+      return { driver: null, rateLimited: true };
+    }
+    return { driver: null };
+  }
+  if (!data || (Array.isArray(data) && data.length === 0)) return { driver: null };
   const row = Array.isArray(data) ? data[0] : data;
-  return parseRow(row);
+  return { driver: parseRow(row) };
 }
 
 async function fetchDriverById(brandId: string, customerId: string): Promise<DriverCustomer | null> {
@@ -90,7 +135,8 @@ async function fetchDriverFromRequest(brandId: string, req: SessionRequest): Pro
     if (d) return d;
   }
   if (req.cpf) {
-    return fetchDriverByCpf(brandId, req.cpf);
+    const result = await fetchDriverByCpf(brandId, req.cpf);
+    return result.driver;
   }
   return null;
 }
@@ -127,8 +173,11 @@ export function DriverSessionProvider({
       if (!d) {
         const savedCpf = localStorage.getItem(storageKey(brandId));
         if (savedCpf) {
-          d = await fetchDriverByCpf(brandId, savedCpf);
-          if (!d) {
+          const result = await fetchDriverByCpf(brandId, savedCpf);
+          d = result.driver;
+          if (!d && !result.rateLimited) {
+            // Só remove se realmente não existe — não remove se foi rate limit
+            // (pra usuário poder tentar de novo depois sem precisar relogar)
             localStorage.removeItem(storageKey(brandId));
           }
         }
@@ -145,7 +194,10 @@ export function DriverSessionProvider({
     async (cpf: string): Promise<{ success: boolean; error?: string }> => {
       const clean = cleanCpf(cpf);
       if (clean.length !== 11) return { success: false, error: "CPF inválido" };
-      const d = await fetchDriverByCpf(brandId, clean);
+      const { driver: d, rateLimited } = await fetchDriverByCpf(brandId, clean);
+      if (rateLimited) {
+        return { success: false, error: "Muitas tentativas. Aguarde 15 minutos e tente novamente." };
+      }
       if (!d) return { success: false, error: "CPF não cadastrado" };
       setDriver(d);
       localStorage.setItem(storageKey(brandId), clean);
@@ -165,7 +217,8 @@ export function DriverSessionProvider({
     let d: DriverCustomer | null = null;
     d = await fetchDriverById(brandId, driver.id);
     if (!d && driver.cpf) {
-      d = await fetchDriverByCpf(brandId, cleanCpf(driver.cpf));
+      const result = await fetchDriverByCpf(brandId, cleanCpf(driver.cpf));
+      d = result.driver;
     }
     if (d) setDriver(d);
   }, [brandId, driver]);
@@ -197,7 +250,7 @@ export function DriverSessionProvider({
 
       if (savedCpf && savedCpf !== currentCpf) {
         setLoading(true);
-        fetchDriverByCpf(brandId, savedCpf).then((d) => {
+        fetchDriverByCpf(brandId, savedCpf).then(({ driver: d }) => {
           if (d) {
             setDriver(d);
             localStorage.setItem(storageKey(brandId), cleanCpf(savedCpf));
@@ -212,8 +265,15 @@ export function DriverSessionProvider({
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, [brandId, driver, sessionRequestKey]);
 
+  // Memoizado: 32 consumers de useDriverSession() não devem re-render
+  // quando value identity muda sem motivo.
+  const contextValue = React.useMemo(
+    () => ({ driver, loading, loginByCpf, logout, refreshDriver }),
+    [driver, loading, loginByCpf, logout, refreshDriver],
+  );
+
   return (
-    <DriverSessionContext.Provider value={{ driver, loading, loginByCpf, logout, refreshDriver }}>
+    <DriverSessionContext.Provider value={contextValue}>
       {children}
     </DriverSessionContext.Provider>
   );

@@ -68,8 +68,12 @@ export function useResolvedBusinessModels(
     queryKey,
     queryFn: () => fetchResolvedBusinessModels(brandId!, normalizedBranchId),
     enabled: !!brandId,
-    staleTime: CACHE.STALE_TIME_SHORT, // 30s — fallback caso Realtime caia
-    refetchOnWindowFocus: true,
+    // Aumentado de STALE_TIME_SHORT (30s) pra 5min: Realtime subscribe
+    // abaixo invalida automaticamente quando dados mudam, então não
+    // precisamos refetch agressivo no window focus (gerava spike de
+    // queries no boot em 5G/iOS Safari sem ganho real).
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
 
