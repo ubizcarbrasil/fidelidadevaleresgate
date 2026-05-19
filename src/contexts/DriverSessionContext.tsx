@@ -52,6 +52,36 @@ function parseRow(row: any): DriverCustomer {
 }
 
 async function fetchDriverByCpf(brandId: string, cpf: string): Promise<DriverCustomer | null> {
+  // Usa edge function `driver-cpf-login` em vez de RPC direta pra:
+  // - Rate limit por IP (max 30 falhas/15min) — barra brute-force que
+  //   rotaciona CPFs (não pego pelo rate limit por cpf_hash do RPC).
+  // - Auditoria centralizada de tentativas por IP.
+  // - Mascaramento LGPD garantido (email/phone/money_balance = null/0).
+  // Fallback pra RPC direta se edge function indisponível (compat
+  // durante deploy gradual).
+  try {
+    const { data, error } = await supabase.functions.invoke("driver-cpf-login", {
+      body: { brandId, cpf },
+    });
+    if (error) {
+      // Se a edge function não está deployada, cai pro fallback abaixo
+      const isNotDeployed = (error as { context?: { status?: number } })?.context?.status === 404;
+      if (!isNotDeployed) {
+        console.warn("[DriverSession] login via edge function falhou:", error.message);
+        return null;
+      }
+    } else if (data?.driver) {
+      return parseRow(data.driver);
+    } else if (data?.error) {
+      // edge function respondeu com erro estruturado (rate_limited, not_found, etc)
+      console.info("[DriverSession] login bloqueado:", data.error, data.message);
+      return null;
+    }
+  } catch (err) {
+    console.warn("[DriverSession] falha ao chamar edge function, usando fallback RPC:", err);
+  }
+
+  // Fallback: RPC direta (modo legado, mantido pra deploy gradual)
   const { data, error } = await supabase
     .rpc("lookup_driver_by_cpf", { p_brand_id: brandId, p_cpf: cpf });
   if (error || !data || (Array.isArray(data) && data.length === 0)) return null;
