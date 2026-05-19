@@ -106,57 +106,43 @@ async function resolveBrandByDomain(hostname: string): Promise<Brand | null> {
   // Sanitize hostname: remove protocol, trailing slash, lowercase
   hostname = hostname.replace(/^https?:\/\//, "").replace(/\/$/, "").toLowerCase().trim();
 
-  // 1) Try subdomain match first
+  // Monta as 3 possibilidades de match em PARALELO em vez de em série.
+  // Antes, em 5G/iOS, eram até 3 round-trips sequenciais (~3s desperdiçados).
+  // Agora um único round-trip resolve qualquer caminho (subdomain OU domain).
   const parts = hostname.split(".");
-  if (parts.length >= 2) {
-    const subdomain = parts[0];
-    // Skip "root", "www", "app" subdomains
-    if (!["root", "www", "app", "localhost"].includes(subdomain)) {
-      const { data: subdomainMatch } = await supabase
+  const subdomain = parts.length >= 2 ? parts[0] : "";
+  const skipSubdomain = ["root", "www", "app", "localhost", ""].includes(subdomain);
+  const hostnameNoWww = hostname.startsWith("www.") ? hostname.replace("www.", "") : hostname;
+  const hostnameWithWww = hostname.startsWith("www.") ? hostname : `www.${hostname}`;
+
+  const subdomainQuery = skipSubdomain
+    ? Promise.resolve({ data: null as { brand_id: string } | null })
+    : supabase
         .from("brand_domains")
         .select("brand_id")
         .eq("subdomain", subdomain)
         .eq("is_active", true)
-        .maybeSingle();
+        .maybeSingle()
+        .then((r) => ({ data: r.data as { brand_id: string } | null }));
 
-      if (subdomainMatch) {
-        return fetchBrandById(subdomainMatch.brand_id);
-      }
-    }
-  }
+  const domainQuery = supabase
+    .from("brand_domains")
+    .select("brand_id, domain")
+    .in("domain", [hostname, hostnameNoWww, hostnameWithWww])
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle()
+    .then((r) => ({ data: r.data as { brand_id: string } | null }));
 
-  // 2) Fallback: full domain match (try with and without www)
-  const domainsToTry = [hostname];
-  if (hostname.startsWith("www.")) {
-    domainsToTry.push(hostname.replace("www.", ""));
-  } else {
-    domainsToTry.push(`www.${hostname}`);
-  }
+  const [subRes, domRes] = await Promise.all([subdomainQuery, domainQuery]);
 
-  // Paralelizar as queries de domínio (eram sequenciais — 2x RTT no 5G).
-  // Em hostname com "www.", isso transforma 2x latência (300ms) em 1x.
-  const domainResults = await Promise.all(
-    domainsToTry.map((domain) =>
-      withNetworkRetry(async () => {
-        const result = await supabase
-          .from("brand_domains")
-          .select("brand_id")
-          .eq("domain", domain)
-          .eq("is_active", true)
-          .maybeSingle();
-        if (result.error && isTransientNetworkError(result.error)) throw result.error;
-        return result;
-      }).catch(() => ({ data: null })),
-    ),
-  );
+  // Subdomain match tem prioridade sobre domain match.
+  // Ambas as queries (subdomain + domain) já rodaram em paralelo via
+  // Promise.all acima — então 1 round-trip resolve qualquer caminho.
+  const brandId = subRes.data?.brand_id ?? domRes.data?.brand_id;
+  if (!brandId) return null;
 
-  for (const { data } of domainResults) {
-    if (data) {
-      return fetchBrandById(data.brand_id);
-    }
-  }
-
-  return null;
+  return fetchBrandById(brandId);
 }
 
 // Detecção síncrona executada uma única vez no carregamento do módulo.
@@ -215,12 +201,14 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Safety timeout reduzido: 800ms é suficiente porque o caminho lento
-      // é apenas a query a brand_domains (1 SELECT indexado).
+      // Safety timeout aumentado pra 2000ms (era 800ms). Em 5G iOS Safari,
+      // brand_domains pode demorar mais que 800ms se HTTP/2 abortar uma
+      // conexão. Liberar muito cedo causa app vazio por 20s+ esperando brand
+      // (loading false mas brand null = render bloqueado).
       const safetyTimeout = setTimeout(() => {
         setLoading(false);
         setBootPhase("BRAND_READY", "timeout");
-      }, 800);
+      }, 2000);
 
       setBootPhase("BRAND_LOADING");
       try {

@@ -16,6 +16,7 @@ import {
   distribuirTopNPorSerie,
   gerarAvisos,
   minimoDiasClassificacao,
+  type AvisoTemporada,
   type CalculoTemporadaResultado,
 } from "../../../utils/utilitarios_data_final_temporada";
 import type { DuracoesFasesHoras } from "../../../utils/utilitarios_campeonato";
@@ -45,6 +46,13 @@ interface Props {
   aoMudarHoras: (h: DuracoesFasesHoras) => void;
   aoMudarClassificacaoDias: (d: number) => void;
   aoMudar: (estado: PassoEstado) => void;
+  /**
+   * Avisos vindos do componente pai (ex: conflito de mês/ano detectado
+   * por outra query). Quando presente, suprime o "Tudo certo" e exibe
+   * esses avisos no PainelResumoTemporada, eliminando o conflito visual
+   * de status simultâneos (verde + vermelho).
+   */
+  avisosExternos?: AvisoTemporada[];
 }
 
 export default function PassoMotoristasESeries({
@@ -56,6 +64,7 @@ export default function PassoMotoristasESeries({
   aoMudarHoras,
   aoMudarClassificacaoDias,
   aoMudar,
+  avisosExternos,
 }: Props) {
   const [modo, setModo] = useState<ModoSelecaoMotoristas>("ranking");
   const [diasPeriodo, setDiasPeriodo] = useState<number>(30);
@@ -266,13 +275,19 @@ export default function PassoMotoristasESeries({
   );
 
   const avisos = useMemo(
-    () =>
-      gerarAvisos({
+    () => [
+      // Avisos externos (ex: conflito de mês/ano) entram PRIMEIRO pra
+      // serem destacados no topo do painel. Sem essa concatenação, o
+      // painel mostrava "Tudo certo" mesmo quando o pai já sabia que
+      // existe temporada conflitante (bug de status simultâneos verde+vermelho).
+      ...(avisosExternos ?? []),
+      ...gerarAvisos({
         classificacaoDias,
         series: seriesAlocadas,
         totalSelecionados: selecionados.size,
       }),
-    [classificacaoDias, seriesAlocadas, selecionados.size],
+    ],
+    [avisosExternos, classificacaoDias, seriesAlocadas, selecionados.size],
   );
 
   const bloqueado = avisos.some((a) => a.tipo === "erro");

@@ -77,12 +77,22 @@ return ({
         // Solução: navegação agora tenta a rede primeiro (5s timeout), cai
         // pra cache só se offline. Imagens saíram do precache (vão pelo
         // runtime cache CacheFirst quando solicitadas).
-        cacheId: "vale-resgate-v11",
+        // v12 (Precache slim) — precache só os entrypoints críticos (main +
+        // vendor chunks). Páginas/components lazy ficam pra runtime cache.
+        // Antes: 526 assets, ~7.7MB → primeira instalação do SW em 5G demorava
+        // 30-60s. Agora: ~30 assets, ~2-3MB → primeira install <10s.
+        cacheId: "vale-resgate-v12",
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        // Removido png/jpg/jpeg/webp do precache — reduz tamanho de ~7.7MB
-        // pra ~3MB. Imagens são cacheadas sob demanda via runtimeCaching.
-        globPatterns: ["**/*.{js,css,html,ico,svg,woff2}"],
+        globPatterns: [
+          "index.html",
+          "assets/index-*.{js,css}",
+          "assets/main-*.{js,css}",
+          "assets/vendor-*.{js,css}",
+          "*.ico",
+          "*.svg",
+          "**/*.woff2",
+        ],
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [
           /^\/~oauth/,
@@ -195,6 +205,10 @@ return ({
           if (id.match(/node_modules\/(clsx|tailwind-merge|class-variance-authority)\//)) {
             return 'vendor-utils';
           }
+          // Lucide icons — antes ficavam duplicados em chunks diferentes
+          // (chunk principal + chunk de página). Consolidando em chunk único
+          // reduz duplicação (~600KB extra de overhead em build anterior).
+          if (id.includes('lucide-react')) return 'vendor-icons';
 
           // IMPORTANTE: NÃO criar chunk catch-all aqui. Deixar Rollup decidir
           // o co-location entre lib e seu consumidor. Isso evita que libs
