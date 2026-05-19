@@ -133,12 +133,19 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
 
   const isDriver = !!(customer?.name && /\[MOTORISTA\]/i.test(customer.name));
 
-  const refetch = async () => {
+  const refetch = React.useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey });
-  };
+  }, [queryClient, queryKey]);
+
+  // Memoizado: 93 consumers de useCustomer() não devem re-render quando
+  // value identity muda sem motivo (objeto novo a cada provider render).
+  const contextValue = React.useMemo(
+    () => ({ customer, loading, isDriver, isImpersonating: canImpersonate, refetch }),
+    [customer, loading, isDriver, canImpersonate, refetch],
+  );
 
   return (
-    <CustomerContext.Provider value={{ customer, loading, isDriver, isImpersonating: canImpersonate, refetch }}>
+    <CustomerContext.Provider value={contextValue}>
       {children}
     </CustomerContext.Provider>
   );

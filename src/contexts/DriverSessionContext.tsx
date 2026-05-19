@@ -212,8 +212,15 @@ export function DriverSessionProvider({
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, [brandId, driver, sessionRequestKey]);
 
+  // Memoizado: 32 consumers de useDriverSession() não devem re-render
+  // quando value identity muda sem motivo.
+  const contextValue = React.useMemo(
+    () => ({ driver, loading, loginByCpf, logout, refreshDriver }),
+    [driver, loading, loginByCpf, logout, refreshDriver],
+  );
+
   return (
-    <DriverSessionContext.Provider value={{ driver, loading, loginByCpf, logout, refreshDriver }}>
+    <DriverSessionContext.Provider value={contextValue}>
       {children}
     </DriverSessionContext.Provider>
   );
