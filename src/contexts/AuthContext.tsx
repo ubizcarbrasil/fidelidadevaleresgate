@@ -209,8 +209,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRolesCarregados(true);
   };
 
+  // Memoizado pra evitar cascade de re-renders dos 45 componentes que
+  // consomem useAuth(). Antes, objeto inline novo a cada render disparava
+  // re-render mesmo quando session/user/roles não mudavam.
+  const contextValue = React.useMemo(
+    () => ({ session, user, roles, loading, rolesCarregados, hasRole, isRootAdmin, signOut }),
+    [session, user, roles, loading, rolesCarregados, hasRole, isRootAdmin],
+  );
+
   return (
-    <AuthContext.Provider value={{ session, user, roles, loading, rolesCarregados, hasRole, isRootAdmin, signOut }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

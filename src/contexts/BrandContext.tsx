@@ -352,23 +352,43 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timer);
   }, [brand, branches, selectedBranch, user]);
 
-  const detectBranchByLocation = async (): Promise<Branch | null> => {
-    const branchesWithCoords = branches.filter(b => b.latitude != null && b.longitude != null);
-    if (branchesWithCoords.length === 0) return null;
-    const coords = await getCurrentPosition();
-    if (!coords) return null;
-    return findNearestBranch(branchesWithCoords, coords);
-  };
-
-  const setSelectedBranch = async (branch: Branch) => {
+  // Memoizado pra evitar re-render em cascata dos 472 componentes que
+  // consomem useBrand(). Antes, objeto inline novo a cada render do
+  // provider causava cascata massiva de re-renders mesmo quando os
+  // valores eram idênticos.
+  const setSelectedBranch = React.useCallback(async (branch: Branch) => {
     setSelectedBranchState(branch);
     if (user) {
       await supabase.from("profiles").update({ selected_branch_id: branch.id }).eq("id", user.id);
     }
-  };
+  }, [user]);
+
+  const detectBranchByLocationCb = React.useCallback(async () => {
+    const branchesWithCoords = branches.filter(
+      (b) => b.latitude != null && b.longitude != null,
+    );
+    if (branchesWithCoords.length === 0) return null;
+    const coords = await getCurrentPosition();
+    if (!coords) return null;
+    return findNearestBranch(branchesWithCoords, coords);
+  }, [branches]);
+
+  const contextValue = React.useMemo(
+    () => ({
+      brand,
+      branches,
+      selectedBranch,
+      setSelectedBranch,
+      loading,
+      isWhiteLabel,
+      theme,
+      detectBranchByLocation: detectBranchByLocationCb,
+    }),
+    [brand, branches, selectedBranch, setSelectedBranch, loading, isWhiteLabel, theme, detectBranchByLocationCb],
+  );
 
   return (
-    <BrandContext.Provider value={{ brand, branches, selectedBranch, setSelectedBranch, loading, isWhiteLabel, theme, detectBranchByLocation }}>
+    <BrandContext.Provider value={contextValue}>
       {children}
     </BrandContext.Provider>
   );
@@ -450,34 +470,39 @@ export function BrandProviderOverride({
     autoDetect();
   }, [branches, selectedBranch, user]);
 
-  const detectBranchByLocation = async (): Promise<Branch | null> => {
+  // Mesma memoização do BrandProvider principal — evita re-render em
+  // cascata dos consumers de useBrand() dentro do white-label provider.
+  const setSelectedBranch = React.useCallback(async (branch: Branch) => {
+    setSelectedBranchState(branch);
+    if (user) {
+      await supabase.from("profiles").update({ selected_branch_id: branch.id }).eq("id", user.id);
+    }
+  }, [user]);
+
+  const detectBranchByLocation = React.useCallback(async (): Promise<Branch | null> => {
     const branchesWithCoords = branches.filter(b => b.latitude != null && b.longitude != null);
     if (branchesWithCoords.length === 0) return null;
     const coords = await getCurrentPosition();
     if (!coords) return null;
     return findNearestBranch(branchesWithCoords, coords);
-  };
+  }, [branches]);
 
-  const setSelectedBranch = async (branch: Branch) => {
-    setSelectedBranchState(branch);
-    if (user) {
-      await supabase.from("profiles").update({ selected_branch_id: branch.id }).eq("id", user.id);
-    }
-  };
+  const contextValue = React.useMemo(
+    () => ({
+      brand,
+      branches,
+      selectedBranch,
+      setSelectedBranch,
+      loading: false,
+      isWhiteLabel: true,
+      theme,
+      detectBranchByLocation,
+    }),
+    [brand, branches, selectedBranch, setSelectedBranch, theme, detectBranchByLocation],
+  );
 
   return (
-    <BrandContext.Provider
-      value={{
-        brand,
-        branches,
-        selectedBranch,
-        setSelectedBranch,
-        loading: false,
-        isWhiteLabel: true,
-        theme,
-        detectBranchByLocation,
-      }}
-    >
+    <BrandContext.Provider value={contextValue}>
       {children}
     </BrandContext.Provider>
   );
