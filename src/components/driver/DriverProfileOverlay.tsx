@@ -1,3 +1,4 @@
+import { formatCPFDisplay } from "@/lib/formatters";
 import React, { useEffect, useState } from "react";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,12 +23,7 @@ function displayName(name: string) {
   return name.replace(/\[MOTORISTA\]\s*/gi, "").trim();
 }
 
-function formatCpfDisplay(cpf: string | null) {
-  if (!cpf) return "—";
-  const d = cpf.replace(/\D/g, "");
-  if (d.length !== 11) return cpf;
-  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
-}
+// formatCpfDisplay migrado pra formatCPFDisplay de @/lib/formatters
 
 interface Props {
   fontHeading?: string;
@@ -88,7 +84,7 @@ export default function DriverProfileOverlay({ fontHeading, onBack }: Props) {
             Dados pessoais
           </h2>
           <InfoRow label="Nome" value={displayName(driver.name)} />
-          <InfoRow label="CPF" value={formatCpfDisplay(driver.cpf)} />
+          <InfoRow label="CPF" value={formatCPFDisplay(driver.cpf)} />
           <InfoRow label="E-mail" value={driver.email || "—"} />
           <InfoRow label="Telefone" value={driver.phone || "—"} />
           <InfoRow label="Cidade" value={(driver.branches as any)?.name || "—"} />

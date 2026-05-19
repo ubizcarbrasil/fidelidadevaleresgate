@@ -1,6 +1,10 @@
 /**
- * Formatadores reutilizáveis na ficha do motorista.
+ * Formatadores específicos da ficha do motorista. Mantido neste arquivo
+ * por ter constantes/rótulos extras (ROTULOS_PAGAMENTOS, etc) que só
+ * fazem sentido neste contexto. Funções genéricas (CPF, phone, BRL)
+ * vivem em @/lib/formatters.
  */
+import { formatCPFDisplay } from "@/lib/formatters";
 
 export const VAZIO = "—";
 
@@ -19,13 +23,12 @@ export function formatarBooleano(valor: boolean | null | undefined): string {
   return valor ? "Sim" : "Não";
 }
 
+/**
+ * @deprecated Use `formatCPFDisplay` de `@/lib/formatters` direto.
+ * Mantido como wrapper pra compat de imports existentes.
+ */
 export function formatarCpf(cpf: string | null): string {
-  if (!cpf) return VAZIO;
-  const digits = cpf.replace(/\D/g, "").padStart(11, "0");
-  if (digits.length === 11) {
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-  }
-  return cpf;
+  return formatCPFDisplay(cpf, VAZIO);
 }
 
 export function formatarData(data: string | null | undefined): string {
