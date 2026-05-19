@@ -1,3 +1,4 @@
+import { formatCPFDisplay } from "@/lib/formatters";
 import { useState } from "react";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -79,13 +80,7 @@ export default function DriverManagementPage() {
   const cleanName = (name: string | null) =>
     name?.replace(/\[MOTORISTA\]\s*/i, "").trim() || "Sem nome";
 
-  const formatCpf = (cpf: string | null) => {
-    if (!cpf) return "—";
-    const digits = cpf.replace(/\D/g, "").padStart(11, "0");
-    if (digits.length === 11)
-      return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-    return cpf;
-  };
+  // formatCpf migrado pra formatCPFDisplay de @/lib/formatters
 
   const handleExportCsv = () => {
     if (exportando) return;
@@ -246,7 +241,7 @@ export default function DriverManagementPage() {
                       </div>
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                         {driver.branch_name && <span>📍 {driver.branch_name}</span>}
-                        {driver.cpf && <span>CPF: {formatCpf(driver.cpf)}</span>}
+                        {driver.cpf && <span>CPF: {formatCPFDisplay(driver.cpf)}</span>}
                         {driver.phone && <span>Tel: {driver.phone}</span>}
                         {driver.email && <span className="hidden sm:inline">{driver.email}</span>}
                       </div>
