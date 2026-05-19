@@ -1,4 +1,4 @@
-import { formatCPFDisplay } from "@/lib/formatters";
+import { formatCPF } from "@/lib/formatters";
 import React, { useEffect, useState } from "react";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -84,7 +84,7 @@ export default function DriverProfileOverlay({ fontHeading, onBack }: Props) {
             Dados pessoais
           </h2>
           <InfoRow label="Nome" value={displayName(driver.name)} />
-          <InfoRow label="CPF" value={formatCPFDisplay(driver.cpf)} />
+          <InfoRow label="CPF" value={formatCPF(driver.cpf || "")} />
           <InfoRow label="E-mail" value={driver.email || "—"} />
           <InfoRow label="Telefone" value={driver.phone || "—"} />
           <InfoRow label="Cidade" value={(driver.branches as any)?.name || "—"} />
