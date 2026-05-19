@@ -141,10 +141,10 @@ function InterstitialBannerGroup({ banners }: { banners: Array<{ id: string; ima
     </div>
   );
 }
-export const formatPrice = (val: number | null | undefined) => {
-  if (val == null || val === 0) return null;
-  return Number(val).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-};
+// @deprecated — Use `formatBRLOrNull` de `@/lib/formatters` direto.
+// Mantido por compat com 5 componentes que ainda importam daqui.
+// Migrar gradualmente em PRs futuros.
+export { formatBRLOrNull as formatPrice } from "@/lib/formatters";
 
 export default function DriverMarketplace({ brand, branch, theme, initialCategoryId, initialDealId, isAdminSession, achadinhosEnabled = false, marketplaceEnabled = false, whatsappNumber: whatsappNumberProp }: Props) {
   // Derive city-level flags from branch settings

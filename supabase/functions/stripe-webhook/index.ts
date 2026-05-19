@@ -41,6 +41,43 @@ Deno.serve(async (req) => {
       const customerId = session.customer as string;
 
       if (brandId) {
+        // VALIDAÇÃO DE SEGURANÇA: garante que o brand_id da metadata
+        // corresponde ao stripe_customer_id da session. Sem isso, atacante
+        // que cria uma session de checkout via Stripe API (com sua conta
+        // própria) e passa metadata.brand_id = competitor_brand consegue
+        // ativar a assinatura de OUTRO brand. Como o customer_id do Stripe
+        // foi atrelado ao brand_id no create-checkout (gravado em
+        // brands.stripe_customer_id), basta verificar essa correspondência.
+        const { data: brandRow } = await adminClient
+          .from("brands")
+          .select("id, stripe_customer_id")
+          .eq("id", brandId)
+          .maybeSingle();
+
+        if (!brandRow) {
+          log.error("checkout.session.completed: brand_id da metadata não existe", { brandId });
+          return new Response(JSON.stringify({ received: true, ignored: "brand_not_found" }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // Se brand já tem stripe_customer_id, valida match. Se não tem
+        // (primeira assinatura), aceita E grava o customer_id (caminho
+        // legítimo: create-checkout cria customer mas em race condition
+        // pode ter falhado o UPDATE).
+        if (brandRow.stripe_customer_id && brandRow.stripe_customer_id !== customerId) {
+          log.error("checkout.session.completed: stripe_customer_id mismatch", {
+            brandId,
+            expected: brandRow.stripe_customer_id,
+            received: customerId,
+          });
+          return new Response(JSON.stringify({ received: true, ignored: "customer_mismatch" }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
         const { error } = await adminClient
           .from("brands")
           .update({
@@ -85,15 +122,35 @@ Deno.serve(async (req) => {
     if (event.type === "customer.subscription.deleted") {
       const subscription = event.data.object as Stripe.Subscription;
       const brandId = subscription.metadata?.brand_id;
+      const stripeCustomer = subscription.customer as string;
 
       if (brandId) {
-        const { error } = await adminClient
+        // Mesma validação do checkout: brand_id da metadata precisa
+        // corresponder ao stripe_customer_id armazenado no brand.
+        // Sem isso, atacante poderia cancelar assinatura alheia
+        // disparando webhook com metadata falsa.
+        const { data: brandRow } = await adminClient
           .from("brands")
-          .update({ subscription_status: "EXPIRED" })
-          .eq("id", brandId);
+          .select("id, stripe_customer_id")
+          .eq("id", brandId)
+          .maybeSingle();
 
-        if (error) log.error("Error expiring brand", { brandId, error });
-        else log.info("Brand subscription expired", { brandId });
+        if (!brandRow) {
+          log.error("subscription.deleted: brand não existe", { brandId });
+        } else if (brandRow.stripe_customer_id && brandRow.stripe_customer_id !== stripeCustomer) {
+          log.error("subscription.deleted: stripe_customer_id mismatch — ignorando", {
+            brandId,
+            expected: brandRow.stripe_customer_id,
+            received: stripeCustomer,
+          });
+        } else {
+          const { error } = await adminClient
+            .from("brands")
+            .update({ subscription_status: "EXPIRED" })
+            .eq("id", brandId);
+          if (error) log.error("Error expiring brand", { brandId, error });
+          else log.info("Brand subscription expired", { brandId });
+        }
       }
     }
 

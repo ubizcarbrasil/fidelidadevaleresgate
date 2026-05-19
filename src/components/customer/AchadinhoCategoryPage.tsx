@@ -1,3 +1,4 @@
+import { formatBRLOrNull } from "@/lib/formatters";
 import { useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -117,11 +118,7 @@ export default function AchadinhoCategoryPage({ category, onBack }: Props) {
   const handleClick = (deal: AffiliateDeal) => {
     setSelectedDeal(deal);
   };
-
-  const formatPrice = (val: number | null | undefined) => {
-    if (val == null || val === 0) return null;
-    return Number(val).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  };
+  // formatPrice migrado pra formatBRLOrNull de @/lib/formatters
 
   return (
     <motion.div
@@ -262,8 +259,8 @@ export default function AchadinhoCategoryPage({ category, onBack }: Props) {
                     const discountPercent = hasDiscount
                       ? Math.round(((deal.original_price! - deal.price!) / deal.original_price!) * 100)
                       : 0;
-                    const priceStr = formatPrice(deal.price);
-                    const originalPriceStr = formatPrice(deal.original_price);
+                    const priceStr = formatBRLOrNull(deal.price);
+                    const originalPriceStr = formatBRLOrNull(deal.original_price);
                     const badgeText = deal.badge_label || (hasDiscount && discountPercent > 0 ? `-${discountPercent}%` : null);
 
                     return (

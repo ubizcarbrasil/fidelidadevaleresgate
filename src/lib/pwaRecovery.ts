@@ -62,6 +62,33 @@ export async function clearRuntimeCaches() {
 }
 
 export async function recoverFromChunkError() {
+  // Se o app JÁ MONTOU (boot completou), evitamos reload completo.
+  // Erros isolados pós-mount podem ser tratados pelo BotaoAtualizarApp
+  // (notificação discreta), em vez de derrubar a sessão inteira.
+  //
+  // Reload via location.replace só faz sentido DURANTE o boot, quando o
+  // app ainda não consegue se recuperar sozinho. Pós-mount, vira sintoma
+  // pior que a doença — usuário perde estado, scroll, formulário aberto.
+  const appJaMontou =
+    typeof window !== "undefined" &&
+    Boolean((window as unknown as Record<string, unknown>).__APP_MOUNTED__);
+
+  if (appJaMontou) {
+    console.warn(
+      "[pwaRecovery] chunk error pós-mount — não recarregando (preserva sessão)",
+    );
+    showRecoveryOverlay();
+    // Limpeza de caches em background, mas SEM reload automático.
+    // O overlay fica até o usuário interagir (refresh manual ou navegar).
+    try {
+      await clearRuntimeCaches();
+    } catch {
+      /* ignore */
+    }
+    return;
+  }
+
+  // Boot: comportamento original — overlay + schedule reload.
   showRecoveryOverlay();
   // Agenda o reload antes da limpeza: em iOS/PWA algumas APIs de cache/SW
   // podem travar indefinidamente, deixando o usuário preso no overlay.
