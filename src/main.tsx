@@ -14,6 +14,15 @@ import { installRadixPointerEventsFix } from "@/lib/radixPointerEventsFix";
 import { isWebviewLitePath, startMonitoring } from "@/lib/bootMonitoring";
 import { installRouteDiagnostics } from "@/lib/routeDiagnostics";
 import TelaCarregamento from "@/compartilhados/components/tela_carregamento";
+import { startBootPrefetch } from "@/lib/bootContext";
+import { bootMark } from "@/lib/bootMetrics";
+
+// FAST BOOT: dispara a RPC unificada get_boot_context ANTES do React montar.
+// Em paralelo aos chunks JS terminando de baixar, a RPC já está rodando.
+// Quando AuthContext/BrandContext tentarem buscar roles/brand, encontram
+// no cache e pulam suas próprias queries. Resultado: 5-7 round-trips → 1.
+bootMark("main:start");
+startBootPrefetch();
 
 // Recuperação reativa apenas em erro real de chunk/import dinâmico.
 // Não limpamos mais SW/caches em toda abertura — isso degradava o boot.

@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { AppRole, UserRole } from "@/modules/auth/types";
 import { logAudit } from "@/lib/auditLogger";
 import { setBootPhase } from "@/lib/bootState";
+import { getBootContext } from "@/lib/bootContext";
+import { bootMark } from "@/lib/bootMetrics";
 
 interface AuthContextType {
   session: Session | null;
@@ -52,10 +54,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     inFlightUserIdRef.current = userId;
     const promise = (async () => {
     try {
-      const { data } = await supabase
-        .from("user_roles")
-        .select("id, role, tenant_id, brand_id, branch_id")
-        .eq("user_id", userId);
+      // FAST PATH: tenta pegar roles do boot context (1 RPC unificada).
+      // Se o RPC já resolveu, pula o SELECT individual (evita round-trip extra).
+      let data: Array<{ id: string; role: string; tenant_id: string | null; brand_id: string | null; branch_id: string | null }> | null = null;
+      const boot = await getBootContext();
+      if (boot?.user_id === userId && Array.isArray(boot.roles)) {
+        data = boot.roles as typeof data;
+        bootMark("auth:roles-from-cache");
+      } else {
+        const { data: queryData } = await supabase
+          .from("user_roles")
+          .select("id, role, tenant_id, brand_id, branch_id")
+          .eq("user_id", userId);
+        data = queryData;
+        bootMark("auth:roles-from-query");
+      }
       // Só aplica se ainda for o request mais recente e componente montado
       if (mountedRef.current && fetchIdRef.current === requestId) {
         const newRoles = (data || []) as UserRole[];
@@ -99,9 +112,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Restauração inicial: sessão + roles antes de liberar loading
     const bootstrap = async () => {
+      bootMark("auth:bootstrap-start");
       setBootPhase("AUTH_LOADING");
       try {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
+        bootMark("auth:session-done");
         if (!mountedRef.current) return;
 
         setSession(currentSession);
@@ -124,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mountedRef.current) {
           setLoading(false);
           setBootPhase("AUTH_READY");
+          bootMark("auth:ready");
           initialLoadDone = true;
         }
       }
@@ -209,8 +225,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRolesCarregados(true);
   };
 
+  // Memoizado pra evitar cascade de re-renders dos 45 componentes que
+  // consomem useAuth(). Antes, objeto inline novo a cada render disparava
+  // re-render mesmo quando session/user/roles não mudavam.
+  const contextValue = React.useMemo(
+    () => ({ session, user, roles, loading, rolesCarregados, hasRole, isRootAdmin, signOut }),
+    [session, user, roles, loading, rolesCarregados, hasRole, isRootAdmin],
+  );
+
   return (
-    <AuthContext.Provider value={{ session, user, roles, loading, rolesCarregados, hasRole, isRootAdmin, signOut }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
