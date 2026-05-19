@@ -270,6 +270,7 @@ export default function AchadinhoSection({ onOpenAllCategories, onOpenCategory }
     setSelectedDeal(deal);
   };
   // formatPrice migrado pra formatBRLOrNull de @/lib/formatters
+  const formatPrice = formatBRLOrNull;
 
   if (loading) {
     return (
