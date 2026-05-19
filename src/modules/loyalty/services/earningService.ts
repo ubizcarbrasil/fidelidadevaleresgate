@@ -65,7 +65,10 @@ export async function checkDailyLimits(params: {
   today.setHours(0, 0, 0, 0);
   const todayISO = today.toISOString();
 
-  const [{ data: custToday }, { data: storeToday }] = await Promise.all([
+  const [
+    { data: custToday, error: custErr },
+    { data: storeToday, error: storeErr },
+  ] = await Promise.all([
     supabase
       .from("earning_events")
       .select("points_earned")
@@ -79,6 +82,12 @@ export async function checkDailyLimits(params: {
       .eq("status", "APPROVED")
       .gte("created_at", todayISO),
   ]);
+
+  // Antes, erro em qualquer uma das queries deixava data undefined e
+  // .reduce() crashava com "Cannot read property 'reduce' of undefined"
+  // sem mensagem útil. Agora propaga pra mutation tratar com toast.
+  if (custErr) throw custErr;
+  if (storeErr) throw storeErr;
 
   const custDayTotal = (custToday || []).reduce((s: number, e: { points_earned: number }) => s + e.points_earned, 0);
   if (custDayTotal + params.pointsToAdd > params.maxCustomerDay) {
