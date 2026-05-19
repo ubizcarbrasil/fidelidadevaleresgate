@@ -52,15 +52,52 @@ function logAudit(
     });
 }
 
-async function findIntegration(sb: any, req: Request, body: Record<string, unknown>) {
+/**
+ * Valida HMAC SHA-256 do body usando webhook_secret da integração.
+ * Provedor deve enviar header `x-signature-sha256` com o hex digest.
+ */
+async function verifyHmacSignature(
+  rawBody: string,
+  signatureHeader: string | null,
+  secret: string,
+): Promise<boolean> {
+  if (!signatureHeader) return false;
+  try {
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      enc.encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+    const sig = await crypto.subtle.sign("HMAC", key, enc.encode(rawBody));
+    const hex = Array.from(new Uint8Array(sig))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    // Comparação tempo-constante simples (entradas curtas; OK pra HMAC)
+    return hex.length === signatureHeader.length &&
+      hex.toLowerCase() === signatureHeader.toLowerCase();
+  } catch {
+    return false;
+  }
+}
+
+async function findIntegration(
+  sb: any,
+  req: Request,
+  body: Record<string, unknown>,
+  rawBody: string,
+): Promise<{ integration: any; reason?: string }> {
   const apiSecret = req.headers.get("x-api-secret") || req.headers.get("x-api-key");
+  const signature = req.headers.get("x-signature-sha256");
   const url = new URL(req.url);
   const queryBrandId = url.searchParams.get("brand_id");
   const queryBranchId = url.searchParams.get("branch_id");
   const bodyBrandId = typeof body.brand_id === "string" ? body.brand_id : null;
   const bodyBranchId = typeof body.branch_id === "string" ? body.branch_id : null;
 
-  // 1. Try by api_key first
+  // 1. Try by api_key first (path mais seguro)
   if (apiSecret) {
     const { data } = await sb
       .from("machine_integrations")
@@ -69,13 +106,28 @@ async function findIntegration(sb: any, req: Request, body: Record<string, unkno
       .eq("is_active", true)
       .limit(1)
       .maybeSingle();
-    if (data) return data;
+    if (data) {
+      // Se a integração exige HMAC, valida a assinatura
+      if (data.webhook_secret) {
+        const valid = await verifyHmacSignature(rawBody, signature, data.webhook_secret);
+        if (!valid) {
+          return { integration: null, reason: "invalid_hmac_signature" };
+        }
+        // Incrementa contador de assinaturas verificadas (best-effort)
+        sb.from("machine_integrations")
+          .update({ signature_verified_count: (data.signature_verified_count ?? 0) + 1 })
+          .eq("id", data.id)
+          .then(() => {});
+      }
+      return { integration: data };
+    }
   }
 
-  // 2. Try by brand_id + branch_id
+  // Pra fallbacks (brand_id/branch_id), busca primeiro pra checar require_api_key
   const brandId = bodyBrandId || queryBrandId;
   const branchId = bodyBranchId || queryBranchId;
 
+  // 2. Try by brand_id + branch_id (só se NÃO require_api_key)
   if (brandId && branchId) {
     const { data } = await sb
       .from("machine_integrations")
@@ -85,7 +137,12 @@ async function findIntegration(sb: any, req: Request, body: Record<string, unkno
       .eq("is_active", true)
       .limit(1)
       .maybeSingle();
-    if (data) return data;
+    if (data) {
+      if (data.require_api_key) {
+        return { integration: null, reason: "api_key_required" };
+      }
+      return { integration: data };
+    }
   }
 
   // 3. Fallback: brand_id only — pick first active integration for this brand
@@ -97,7 +154,12 @@ async function findIntegration(sb: any, req: Request, body: Record<string, unkno
       .eq("is_active", true)
       .limit(1)
       .maybeSingle();
-    if (data) return data;
+    if (data) {
+      if (data.require_api_key) {
+        return { integration: null, reason: "api_key_required" };
+      }
+      return { integration: data };
+    }
   }
 
   // 4. Legacy: single active integration across all brands
@@ -108,10 +170,13 @@ async function findIntegration(sb: any, req: Request, body: Record<string, unkno
     .limit(2);
 
   if (activeIntegrations && activeIntegrations.length === 1) {
-    return activeIntegrations[0];
+    if (activeIntegrations[0].require_api_key) {
+      return { integration: null, reason: "api_key_required" };
+    }
+    return { integration: activeIntegrations[0] };
   }
 
-  return null;
+  return { integration: null };
 }
 
 const TIER_THRESHOLDS = [
@@ -1102,22 +1167,32 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const body = await req.json();
-    const { request_id, status_code } = body;
+    // Lê body como texto pra poder usar em verificação HMAC (sem reparsing)
+    const rawBody = await req.text();
+    let body: Record<string, unknown>;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return json({ error: "Invalid JSON body" }, 400);
+    }
+    const { request_id, status_code } = body as { request_id?: string; status_code?: string };
 
     // Log full raw payload to identify alternative ID fields and client data
-    logger.info("Raw webhook payload", { payload: JSON.stringify(body).slice(0, 2000) });
+    logger.info("Raw webhook payload", { payload: rawBody.slice(0, 2000) });
 
     if (!request_id || !status_code) {
       logAudit(sb, "MACHINE_WEBHOOK_REJECTED", { ip, details: { reason: "missing_fields", request_id, status_code } });
       return json({ error: "Missing request_id or status_code" }, 400);
     }
 
-    // Find integration
-    const integration = await findIntegration(sb, req, body);
+    // Find integration (now validates HMAC + require_api_key flags)
+    const { integration, reason } = await findIntegration(sb, req, body, rawBody);
     if (!integration) {
-      logAudit(sb, "MACHINE_WEBHOOK_AUTH_FAILED", { ip, details: { request_id, reason: "integration_not_found" } });
-      return json({ error: "Integration not found or inactive" }, 401);
+      logAudit(sb, "MACHINE_WEBHOOK_AUTH_FAILED", { ip, details: { request_id, reason: reason ?? "integration_not_found" } });
+      const errorMsg = reason === "invalid_hmac_signature" ? "Invalid signature"
+        : reason === "api_key_required" ? "API key required"
+        : "Integration not found or inactive";
+      return json({ error: errorMsg }, 401);
     }
 
     const brandId = integration.brand_id;
