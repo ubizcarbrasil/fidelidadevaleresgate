@@ -51,12 +51,20 @@ function parseRow(row: any): DriverCustomer {
   };
 }
 
-async function fetchDriverByCpf(brandId: string, cpf: string): Promise<DriverCustomer | null> {
+async function fetchDriverByCpf(brandId: string, cpf: string): Promise<{ driver: DriverCustomer | null; rateLimited?: boolean }> {
   const { data, error } = await supabase
     .rpc("lookup_driver_by_cpf", { p_brand_id: brandId, p_cpf: cpf });
-  if (error || !data || (Array.isArray(data) && data.length === 0)) return null;
+  // Migração 20260519002728 retorna erro P0001 quando rate limit é atingido.
+  if (error) {
+    const msg = (error as { message?: string }).message ?? "";
+    if (msg.includes("Muitas tentativas")) {
+      return { driver: null, rateLimited: true };
+    }
+    return { driver: null };
+  }
+  if (!data || (Array.isArray(data) && data.length === 0)) return { driver: null };
   const row = Array.isArray(data) ? data[0] : data;
-  return parseRow(row);
+  return { driver: parseRow(row) };
 }
 
 async function fetchDriverById(brandId: string, customerId: string): Promise<DriverCustomer | null> {
@@ -90,7 +98,8 @@ async function fetchDriverFromRequest(brandId: string, req: SessionRequest): Pro
     if (d) return d;
   }
   if (req.cpf) {
-    return fetchDriverByCpf(brandId, req.cpf);
+    const result = await fetchDriverByCpf(brandId, req.cpf);
+    return result.driver;
   }
   return null;
 }
@@ -127,8 +136,11 @@ export function DriverSessionProvider({
       if (!d) {
         const savedCpf = localStorage.getItem(storageKey(brandId));
         if (savedCpf) {
-          d = await fetchDriverByCpf(brandId, savedCpf);
-          if (!d) {
+          const result = await fetchDriverByCpf(brandId, savedCpf);
+          d = result.driver;
+          if (!d && !result.rateLimited) {
+            // Só remove se realmente não existe — não remove se foi rate limit
+            // (pra usuário poder tentar de novo depois sem precisar relogar)
             localStorage.removeItem(storageKey(brandId));
           }
         }
@@ -145,7 +157,10 @@ export function DriverSessionProvider({
     async (cpf: string): Promise<{ success: boolean; error?: string }> => {
       const clean = cleanCpf(cpf);
       if (clean.length !== 11) return { success: false, error: "CPF inválido" };
-      const d = await fetchDriverByCpf(brandId, clean);
+      const { driver: d, rateLimited } = await fetchDriverByCpf(brandId, clean);
+      if (rateLimited) {
+        return { success: false, error: "Muitas tentativas. Aguarde 15 minutos e tente novamente." };
+      }
       if (!d) return { success: false, error: "CPF não cadastrado" };
       setDriver(d);
       localStorage.setItem(storageKey(brandId), clean);
@@ -165,7 +180,8 @@ export function DriverSessionProvider({
     let d: DriverCustomer | null = null;
     d = await fetchDriverById(brandId, driver.id);
     if (!d && driver.cpf) {
-      d = await fetchDriverByCpf(brandId, cleanCpf(driver.cpf));
+      const result = await fetchDriverByCpf(brandId, cleanCpf(driver.cpf));
+      d = result.driver;
     }
     if (d) setDriver(d);
   }, [brandId, driver]);
@@ -197,7 +213,7 @@ export function DriverSessionProvider({
 
       if (savedCpf && savedCpf !== currentCpf) {
         setLoading(true);
-        fetchDriverByCpf(brandId, savedCpf).then((d) => {
+        fetchDriverByCpf(brandId, savedCpf).then(({ driver: d }) => {
           if (d) {
             setDriver(d);
             localStorage.setItem(storageKey(brandId), cleanCpf(savedCpf));
