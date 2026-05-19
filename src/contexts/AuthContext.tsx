@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       let data: Array<{ id: string; role: string; tenant_id: string | null; brand_id: string | null; branch_id: string | null }> | null = null;
       const boot = await getBootContext();
       if (boot?.user_id === userId && Array.isArray(boot.roles)) {
-        data = boot.roles as typeof data;
+        data = boot.roles as unknown as typeof data;
         bootMark("auth:roles-from-cache");
       } else {
         const { data: queryData } = await supabase
