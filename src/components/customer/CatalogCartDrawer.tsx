@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Minus, Plus, Trash2, ShoppingBag, MessageCircle, Sparkles, User } from "lucide-react";
 import { brandAlpha } from "@/lib/utils";
 import { openLink } from "@/lib/openLink";
+import { toast } from "sonner";
 
 export interface CartItem {
   id: string;
@@ -96,7 +97,7 @@ export default function CatalogCartDrawer({
         await supabase.from("customers").update({ cpf: cleanCpf }).eq("id", customerId);
       }
 
-      await supabase.from("catalog_cart_orders").insert({
+      const { error: insertError } = await supabase.from("catalog_cart_orders").insert({
         store_id: storeId,
         brand_id: brandId,
         branch_id: branchId,
@@ -109,7 +110,17 @@ export default function CatalogCartDrawer({
         customer_name: customerName || null,
         customer_cpf: cleanCpf || null,
       });
-    } catch {}
+      if (insertError) {
+        // Pedido não foi registrado no servidor. Não bloqueia o WhatsApp
+        // (cliente pode confirmar com a loja), mas avisa pra ele saber
+        // que pode precisar recontatar caso a loja não receba notificação.
+        console.error("[CatalogCart] falha ao salvar pedido:", insertError);
+        toast.error("Pedido enviado pelo WhatsApp, mas não foi registrado. Confirme com a loja.");
+      }
+    } catch (err) {
+      console.error("[CatalogCart] erro inesperado:", err);
+      toast.error("Erro ao registrar pedido. Confirme o envio com a loja.");
+    }
 
     setSending(false);
     await openLink({

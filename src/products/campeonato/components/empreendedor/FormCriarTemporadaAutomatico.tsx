@@ -253,6 +253,16 @@ export default function FormCriarTemporadaAutomatico({
         aoMudarHoras={setHoras}
         aoMudarClassificacaoDias={setClassificacaoDias}
         aoMudar={setPasso}
+        avisosExternos={
+          temConflitoMesAno && temporadaConflitante
+            ? [
+                {
+                  tipo: "erro",
+                  mensagem: `Já existe a temporada "${temporadaConflitante.name}" para este mês/ano. Cancele a existente ou ajuste a data antes de criar.`,
+                },
+              ]
+            : undefined
+        }
       />
 
       {temConflitoMesAno && (

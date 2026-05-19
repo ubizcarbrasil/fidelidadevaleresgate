@@ -45,8 +45,8 @@ interface PropsTelaCarregamento {
   acompanharBoot?: boolean;
   /**
    * Tempo em segundos até considerar o boot "travado" e exibir o
-   * botão de emergência. Padrão: 20s — só aparece em casos extremos,
-   * jamais em rede móvel lenta normal.
+   * botão de emergência. Padrão: 10s — antes era 20s mas em 5G ruim
+   * com HTTP/2 abort, usuário ficava preso sem escape por tempo demais.
    */
   segundosAteBotaoEmergencia?: number;
 }
@@ -60,7 +60,7 @@ export default function TelaCarregamento({
   logoUrl,
   mostrarBotaoEmergencia = true,
   acompanharBoot = true,
-  segundosAteBotaoEmergencia = 20,
+  segundosAteBotaoEmergencia = 10,
 }: PropsTelaCarregamento) {
   const [indiceEtapa, setIndiceEtapa] = useState(0);
   const [travado, setTravado] = useState(false);

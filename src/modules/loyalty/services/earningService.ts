@@ -94,13 +94,17 @@ export async function checkDailyLimits(params: {
 }
 
 export async function checkReceiptUniqueness(storeId: string, receiptCode: string): Promise<boolean> {
-  const { data } = await supabase
+  // Antes: se a query falhasse (rede/RLS/timeout), retornava `true` (único)
+  // silenciosamente, permitindo creditação de pontos em recibo duplicado.
+  // Agora propaga erro pra mutation tratar (vai virar toast pro caixa retentar).
+  const { data, error } = await supabase
     .from("earning_events")
     .select("id")
     .eq("store_id", storeId)
     .eq("receipt_code", receiptCode)
     .limit(1);
 
+  if (error) throw error;
   return !data || data.length === 0;
 }
 
