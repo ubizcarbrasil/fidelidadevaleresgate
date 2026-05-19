@@ -444,14 +444,20 @@ export async function criarTemporadaCompleta(
   // Materializa as séries e distribui automaticamente os motoristas elegíveis.
   // Se falhar (ex.: nenhum motorista elegível), a temporada permanece criada
   // e o empreendedor pode disparar manualmente em "Distribuir motoristas agora".
+  let seedWarning: string | null = null;
   try {
     await executarSeedingTemporada((season as any).id);
   } catch (seedErr) {
     // Não propaga: a temporada já foi criada com sucesso.
     console.warn("[criarTemporadaCompleta] seed inicial falhou:", seedErr);
+    seedWarning = (seedErr as { message?: string })?.message
+      ?? "Distribuição automática de motoristas falhou. Use 'Distribuir agora' no painel.";
   }
 
-  return season;
+  // Retorna season com warning opcional anexado pro hook poder mostrar
+  // toast informativo (antes ficava só em console.warn — usuário via
+  // "sucesso" e temporada sem motoristas, sem entender por quê).
+  return { ...(season as any), _seedWarning: seedWarning } as typeof season;
 }
 
 /**
