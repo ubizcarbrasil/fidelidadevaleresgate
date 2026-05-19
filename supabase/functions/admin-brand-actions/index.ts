@@ -799,7 +799,23 @@ Deno.serve(async (req) => {
         "campeonato_materialize_and_seed_season",
         { p_season_id: season_id, p_caller: user.id },
       );
-      if (error) throw error;
+      if (error) {
+        // Idempotência: se a temporada já foi semeada, não é um erro real —
+        // o client deve tratar como sucesso silencioso para não quebrar UI
+        // com 500 + blank screen quando o usuário clica "Distribuir" de novo.
+        const msg = (error as any)?.message ?? String(error);
+        const jaSemeada =
+          /já foi semeada|already seeded|duelo_season_tiers_season_id_tier_order_key|duplicate key/i.test(
+            msg,
+          );
+        if (jaSemeada) {
+          return new Response(
+            JSON.stringify({ ok: true, result: { already_seeded: true }, already_seeded: true }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+        throw error;
+      }
       return new Response(JSON.stringify({ ok: true, result: data }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
