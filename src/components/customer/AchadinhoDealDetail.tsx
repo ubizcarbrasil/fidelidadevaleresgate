@@ -1,3 +1,4 @@
+import { formatBRLOrNull } from "@/lib/formatters";
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,11 +43,7 @@ interface Props {
   onBack: () => void;
   onSelectDeal?: (deal: AffiliateDeal) => void;
 }
-
-const formatPrice = (val: number | null | undefined) => {
-  if (val == null || val === 0) return null;
-  return Number(val).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-};
+  // formatPrice migrado pra formatBRLOrNull de @/lib/formatters
 
 export default function AchadinhoDealDetail({
   deal,
@@ -95,8 +92,8 @@ export default function AchadinhoDealDetail({
   const discountPercent = hasDiscount
     ? Math.round(((deal.original_price! - deal.price!) / deal.original_price!) * 100)
     : 0;
-  const priceStr = formatPrice(deal.price);
-  const originalPriceStr = formatPrice(deal.original_price);
+  const priceStr = formatBRLOrNull(deal.price);
+  const originalPriceStr = formatBRLOrNull(deal.original_price);
   const badgeText = deal.badge_label || (hasDiscount && discountPercent > 0 ? `-${discountPercent}%` : null);
 
   // Similar deals
@@ -367,8 +364,8 @@ export default function AchadinhoDealDetail({
                 <div className="px-4 space-y-2">
                   {similarDeals.map((s) => {
                     const sDiscount = s.original_price && s.price && s.original_price > s.price;
-                    const sPrice = formatPrice(s.price);
-                    const sOriginal = formatPrice(s.original_price);
+                    const sPrice = formatBRLOrNull(s.price);
+                    const sOriginal = formatBRLOrNull(s.original_price);
 
                     return (
                       <div

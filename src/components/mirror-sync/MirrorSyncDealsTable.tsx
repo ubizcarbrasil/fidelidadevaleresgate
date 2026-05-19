@@ -1,3 +1,4 @@
+import { formatBRLOrNull } from "@/lib/formatters";
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Eye, EyeOff, Star, Zap, ExternalLink, ToggleLeft, ToggleRight, Copy, FolderSync, ImagePlus } from "lucide-react";
@@ -267,9 +268,9 @@ function DesktopTable({ deals, selected, toggleAll, toggleOne, toggleField, form
                 </Select>
               </TableCell>
               <TableCell>
-                <div className="text-sm font-semibold">{formatPrice(deal.price)}</div>
+                <div className="text-sm font-semibold">{formatBRLOrNull(deal.price)}</div>
                 {deal.original_price && (
-                  <div className="text-xs text-muted-foreground line-through">{formatPrice(deal.original_price)}</div>
+                  <div className="text-xs text-muted-foreground line-through">{formatBRLOrNull(deal.original_price)}</div>
                 )}
               </TableCell>
               <TableCell>
@@ -324,9 +325,9 @@ function MobileCardList({ deals, selected, toggleOne, toggleField, formatPrice, 
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium line-clamp-2">{deal.title}</p>
               <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-sm font-bold">{formatPrice(deal.price)}</span>
+                <span className="text-sm font-bold">{formatBRLOrNull(deal.price)}</span>
                 {deal.original_price && (
-                  <span className="text-xs text-muted-foreground line-through">{formatPrice(deal.original_price)}</span>
+                  <span className="text-xs text-muted-foreground line-through">{formatBRLOrNull(deal.original_price)}</span>
                 )}
               </div>
             </div>
