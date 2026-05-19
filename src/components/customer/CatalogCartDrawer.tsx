@@ -1,3 +1,4 @@
+import { formatCPF, isCPFFormatValid } from "@/lib/formatters";
 import { useState } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
@@ -36,17 +37,7 @@ interface Props {
   onOrderSent?: () => void;
 }
 
-function formatCpf(v: string) {
-  const digits = v.replace(/\D/g, "").slice(0, 11);
-  if (digits.length <= 3) return digits;
-  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-}
-
-function isValidCpf(v: string) {
-  return v.replace(/\D/g, "").length === 11;
-}
+// formatCPF + isValidCpf migrados pra @/lib/formatters (formatCPF + isCPFFormatValid)
 
 export default function CatalogCartDrawer({
   open, onOpenChange, items, onUpdateQty, onRemove,
@@ -65,14 +56,14 @@ export default function CatalogCartDrawer({
   const handleSendWhatsApp = async () => {
     if (!whatsapp) return;
     const cleanCpf = cpf.replace(/\D/g, "");
-    if (!isValidCpf(cpf)) return;
+    if (!isCPFFormatValid(cpf)) return;
 
     setSending(true);
 
     const lines = [
       `📋 *Pedido - ${storeName}*`,
       customerName ? `👤 Cliente: ${customerName}` : "",
-      `🪪 CPF: ${formatCpf(cleanCpf)}`,
+      `🪪 CPF: ${formatCPF(cleanCpf)}`,
       "",
       ...items.map(i => {
         const halfLabel = i.is_half ? " (MEIA)" : "";
@@ -189,11 +180,11 @@ export default function CatalogCartDrawer({
           <Input
             placeholder="000.000.000-00"
             value={cpf}
-            onChange={e => setCpf(formatCpf(e.target.value))}
+            onChange={e => setCpf(formatCPF(e.target.value))}
             className="rounded-xl h-10 border-0 bg-muted/50"
             inputMode="numeric"
           />
-          {cpf && !isValidCpf(cpf) && (
+          {cpf && !isCPFFormatValid(cpf) && (
             <p className="text-[10px] text-destructive mt-1">CPF deve ter 11 dígitos</p>
           )}
         </div>
@@ -225,7 +216,7 @@ export default function CatalogCartDrawer({
           </div>
           <Button
             onClick={handleSendWhatsApp}
-            disabled={!whatsapp || !isValidCpf(cpf) || sending}
+            disabled={!whatsapp || !isCPFFormatValid(cpf) || sending}
             className="w-full h-14 rounded-2xl text-base font-bold gap-2"
             style={{ backgroundColor: "#25D366", color: "white" }}
           >

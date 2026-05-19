@@ -1,3 +1,4 @@
+import { formatCPF } from "@/lib/formatters";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { recordGanhaGanhaBillingEvent } from "@/lib/ganhaGanhaBilling";
@@ -87,13 +88,8 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
     if (data) onOpenStore(data);
   };
 
-  const formatCpf = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-    return digits
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-  };
+  // formatCPF migrado pra @/lib/formatters
+
 
   const isValidCpf = (v: string) => v.replace(/\D/g, "").length === 11;
 
@@ -848,7 +844,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     fg={fg}
                     fontHeading={fontHeading}
                     onComplete={(cpfFromSignup) => {
-                      setCpf(formatCpf(cpfFromSignup));
+                      setCpf(formatCPF(cpfFromSignup));
                       setIsSigningUp(false);
                       setRedemptionStep("cpf");
                       toast({ title: "Conta criada!", description: "Agora confirme o resgate." });
@@ -1018,7 +1014,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     fg={fg}
                     fontHeading={fontHeading}
                     onComplete={(cpfFromSignup) => {
-                      setCpf(formatCpf(cpfFromSignup));
+                      setCpf(formatCPF(cpfFromSignup));
                       setIsSigningUp(false);
                       setRedemptionStep("cpf");
                       toast({ title: "Conta criada!", description: "Agora confirme o resgate." });
@@ -1103,7 +1099,7 @@ export default function CustomerOfferDetailPage({ offer, onBack, onOfferClick, o
                     <label className="text-xs font-semibold block mb-1.5 text-muted-foreground">CPF (obrigatório)</label>
                     <input
                       type="text" inputMode="numeric" value={cpf}
-                      onChange={e => setCpf(formatCpf(e.target.value))}
+                      onChange={e => setCpf(formatCPF(e.target.value))}
                       placeholder="000.000.000-00"
                       className="w-full text-center text-lg font-mono tracking-wider px-4 py-3 rounded-2xl border focus:outline-none focus:ring-2"
                       style={{ borderColor: brandAlpha(fg, 0.09), color: "#000", backgroundColor: "#fff" }}

@@ -1,3 +1,4 @@
+import { formatCPF } from "@/lib/formatters";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,13 +27,7 @@ interface RedemptionResult {
   expires_at: string | null;
 }
 
-const formatCpf = (value: string) => {
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  return digits
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-};
+// formatCPF migrado pra @/lib/formatters
 
 const maskCpf = (cpf: string) => {
   if (!cpf || cpf.length < 11) return cpf || "—";
@@ -143,7 +138,7 @@ export default function OperatorRedeemPage() {
             <Input
               placeholder="000.000.000-00"
               value={cpf}
-              onChange={e => setCpf(formatCpf(e.target.value))}
+              onChange={e => setCpf(formatCPF(e.target.value))}
               onKeyDown={e => e.key === "Enter" && canSearch && lookup.mutate({ pinInput: pin, cpfInput: cpf })}
               className="font-mono text-lg tracking-wider text-center h-12"
               maxLength={14}
