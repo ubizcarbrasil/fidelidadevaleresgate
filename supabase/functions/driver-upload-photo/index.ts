@@ -25,10 +25,11 @@ Deno.serve(async (req) => {
   try {
     const form = await req.formData();
     const driverId = String(form.get("driver_id") ?? "");
+    const brandId = String(form.get("brand_id") ?? ""); // OBRIGATÓRIO: vincula upload à brand
     const file = form.get("file");
 
-    if (!driverId || !(file instanceof File)) {
-      return json(400, { error: "invalid_payload" });
+    if (!driverId || !brandId || !(file instanceof File)) {
+      return json(400, { error: "invalid_payload", message: "driver_id, brand_id e file são obrigatórios" });
     }
     if (!ALLOWED_MIME.includes(file.type)) {
       return json(400, { error: "invalid_file", message: "Formato inválido. Use JPG, PNG ou WEBP." });
@@ -42,15 +43,18 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Validar motorista
+    // Validar motorista E que pertence à brand_id passada (defense in depth
+    // pra impedir cross-tenant upload — atacante de Brand A não consegue
+    // fazer upload pra motorista de Brand B passando só o driver_id).
     const { data: customer, error: cErr } = await supabase
       .from("customers")
       .select("id, name, brand_id")
       .eq("id", driverId)
+      .eq("brand_id", brandId)
       .maybeSingle();
 
     if (cErr) return json(500, { error: "lookup_failed", message: cErr.message });
-    if (!customer) return json(404, { error: "driver_not_found" });
+    if (!customer) return json(404, { error: "driver_not_found", message: "Motorista não encontrado nesta marca." });
     if (!String(customer.name ?? "").includes("[MOTORISTA]")) {
       return json(403, { error: "not_a_driver" });
     }

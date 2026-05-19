@@ -51,8 +51,13 @@ function SecaoMinhaConta({ driverId }: { driverId: string }) {
     e.target.value = "";
     if (!file) return;
 
+    const brandId = driver?.brand_id;
+    if (!brandId) {
+      toast.error("Sessão inválida. Faça login novamente.");
+      return;
+    }
     setEnviando(true);
-    const res = await uploadFotoMotorista({ driverId, file });
+    const res = await uploadFotoMotorista({ driverId, brandId, file });
     setEnviando(false);
 
     if (!res.sucesso) {
