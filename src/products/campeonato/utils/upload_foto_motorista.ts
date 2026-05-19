@@ -13,11 +13,12 @@ export interface ResultadoUploadFoto {
  */
 export async function uploadFotoMotorista(params: {
   driverId: string;
+  brandId: string;
   file: File;
 }): Promise<ResultadoUploadFoto> {
-  const { driverId, file } = params;
+  const { driverId, brandId, file } = params;
 
-  if (!driverId) {
+  if (!driverId || !brandId) {
     return { sucesso: false, mensagemErro: "Sessão inválida. Faça login novamente." };
   }
   if (!file) {
@@ -27,6 +28,7 @@ export async function uploadFotoMotorista(params: {
   try {
     const formData = new FormData();
     formData.append("driver_id", driverId);
+    formData.append("brand_id", brandId); // Validação cross-tenant na edge function
     formData.append("file", file);
 
     const { data, error } = await supabase.functions.invoke(
