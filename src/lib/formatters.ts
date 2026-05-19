@@ -54,6 +54,14 @@ export function formatCPF(raw: string): string {
 }
 
 /**
+ * Exibição de CPF com fallback. Retorna `fallback` se vazio/nulo.
+ */
+export function formatCPFDisplay(cpf: string | null | undefined, fallback = "—"): string {
+  if (!cpf || !String(cpf).trim()) return fallback;
+  return formatCPF(String(cpf));
+}
+
+/**
  * Valida que a string contém exatamente 11 dígitos numéricos.
  * NÃO valida dígitos verificadores (apenas formato).
  */
