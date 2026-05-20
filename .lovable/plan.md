@@ -1,36 +1,52 @@
-Diagnóstico confirmado:
+## Diagnóstico
 
-- Não é problema do seu login de empreendedor.
-- Existe uma nova temporada ativa no banco: `Maio 2026`, id `121881cb-5773-432a-be23-d6631cce4280`, cidade `aa1e7a2c-59e2-4eca-a39f-008412cfed09`, marca `db15bd21-9137-4965-a0fb-540d8e8b26f1`.
-- Ela foi criada em `19/05/2026 21:39 UTC`, depois do cancelamento anterior.
-- Ela está em `phase = classification`, `cancelled_at = null`, mas tem `0 séries`, `0 motoristas` e `0 brackets`.
-- Portanto, é uma temporada zumbi ativa. O pre-check do código está certo em bloquear, mas a interface está errada ao mostrar “Tudo certo para criar a temporada” e não exibir essa temporada de forma acionável.
+O problema está no código/backend, não no login do empreendedor.
 
-Plano de correção:
+O que encontrei:
+- A temporada **foi criada** no banco: `Maio 2026`, fase `classification`, cidade `aa1e7a2c...`.
+- A distribuição automática **alocou 74 motoristas** em `campeonato_tier_memberships`.
+- Porém a tela do empreendedor lê as séries usando `campeonato_season_standings`, e essa tabela ficou com **0 motoristas**.
+- Resultado: a UI mostra mensagens contraditórias:
+  - “temporada criada”
+  - “sem motoristas no campeonato”
+  - botão “Distribuir motoristas agora”
+  - ao clicar, retorna “já foi semeada”, porque a distribuição já marcou `tier_seeding_completed_at`.
 
-1. Desbloqueio imediato no banco
-   - Cancelar a temporada zumbi ativa `121881cb-5773-432a-be23-d6631cce4280`.
-   - Marcar `phase = cancelled`, preencher `cancelled_at` e registrar motivo operacional.
-   - Validar que não sobra nenhuma temporada ativa para Maio/2026 nessa cidade.
+Além disso, o modo automático ignora a seleção manual/top 60 feita na tela: ele mostra a seleção no preview, mas o backend redistribui sozinho por regra própria ao criar.
 
-2. Corrigir a interface de criação
-   - Ajustar o formulário automático para nunca mostrar “Tudo certo” quando existir conflito ativo de mês/ano ou conflito de período.
-   - Fazer o estado de validação aguardar a checagem do backend antes de permitir criar.
-   - Mostrar explicitamente qual temporada está bloqueando, com nome, fase e botão de cancelamento quando permitido.
+## Plano de correção
 
-3. Corrigir a listagem/painel do empreendedor
-   - Garantir que temporadas ativas sem séries/motoristas apareçam no painel/histórico como “temporada ativa sem distribuição”.
-   - Permitir cancelar essa temporada diretamente pela área do empreendedor.
-   - Evitar que ela fique invisível por não ter séries materializadas.
+1. **Corrigir a função de seeding no banco**
+   - Atualizar `campeonato_seed_initial_tier_memberships` para, ao distribuir motoristas nas séries, também criar linhas iniciais em `campeonato_season_standings` com 0 pontos.
+   - Assim o dashboard, cards de série e KPIs enxergam imediatamente os motoristas alocados.
 
-4. Prevenir novas temporadas zumbi
-   - Revisar o fluxo `criarTemporadaCompleta`: hoje a temporada pode ser inserida e a distribuição falhar depois, deixando uma temporada ativa vazia.
-   - Ajustar para uma destas regras seguras:
-     - se a distribuição automática falhar, a temporada fica em rascunho/não publicada; ou
-     - se for criação automática publicada, falha a criação inteira em vez de deixar temporada ativa vazia.
-   - Manter a mensagem de erro clara para o empreendedor.
+2. **Tornar o seeding idempotente de verdade**
+   - Ajustar `campeonato_materialize_and_seed_season` para não tratar “já foi semeada” como erro.
+   - Se a temporada já foi semeada, retornar sucesso com contagem real de séries, motoristas alocados e standings.
+   - Isso elimina o erro ao clicar de novo em “Distribuir motoristas agora”.
 
-5. Validação final
-   - Consultar o banco para confirmar ausência de temporadas ativas zumbi.
-   - Verificar que o formulário mostra bloqueio real quando existe conflito e “Tudo certo” somente quando a criação está liberada.
-   - Confirmar que Maio/2026 pode ser criado novamente após o cancelamento da temporada zumbi.
+3. **Corrigir a leitura do dashboard**
+   - Atualizar `brand_get_campeonato_dashboard` e `brand_get_season_summary` para contarem motoristas por `campeonato_tier_memberships`, não só por `campeonato_season_standings`.
+   - O ranking/top continua usando standings, mas a contagem de motoristas passa a refletir os motoristas realmente inscritos nas séries.
+
+4. **Corrigir o alerta da UI**
+   - Ajustar a tela para mostrar “distribuir motoristas agora” apenas quando não houver séries ou não houver memberships.
+   - Se já houver motoristas alocados mas ainda sem pontuação, mostrar texto correto como “motoristas distribuídos, aguardando corridas pontuarem”, em vez de “sem motoristas”.
+
+5. **Reparar a temporada já criada**
+   - Criar os standings iniciais para a temporada `Maio 2026` já existente, com base nos 74 motoristas já alocados.
+   - Isso deve fazer a temporada aparecer corretamente sem precisar recriar tudo.
+
+6. **Validar**
+   - Confirmar no banco que a temporada ativa tem:
+     - séries criadas
+     - motoristas alocados
+     - standings iniciais criados
+   - Confirmar que o dashboard não deve mais mostrar “sem motoristas” nem erro de “já foi semeada”.
+
+## Arquivos/áreas afetadas
+
+- Migrations SQL do campeonato.
+- Serviço de temporada do empreendedor.
+- Tela `pagina_campeonato_empreendedor.tsx`.
+- Tipagens/normalização de dados do dashboard, se necessário.
