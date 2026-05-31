@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { createLogger } from "@/lib/logger";
+import { todayStartISO, DEFAULT_TZ } from "@/lib/dateTz";
 import type { PointsRule, EarningResult, RuleSnapshot, EarningSource, EarningStatus, LedgerEntryType } from "../types";
 import { calculateEarning, clampStorePointsPerReal } from "../types";
 
@@ -60,10 +61,16 @@ export async function checkDailyLimits(params: {
   pointsToAdd: number;
   maxCustomerDay: number;
   maxStoreDay: number;
+  /** Timezone do branch/store. Default America/Sao_Paulo. */
+  timezone?: string;
 }): Promise<{ allowed: boolean; reason?: string }> {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayISO = today.toISOString();
+  // FIX timezone (auditoria BI): `new Date().setHours(0)` + `.toISOString()`
+  // convertia 00h LOCAL pra UTC, causando query buscar eventos de 21h-23h
+  // do DIA ANTERIOR (UTC-3 do Brasil). Resultado: limite diário rejeitava
+  // compras válidas E permitia ultrapassar limite real.
+  // Agora usa `todayStartISO(tz)` que retorna ISO UTC do início do dia
+  // na TZ correta (default Brasil).
+  const todayISO = todayStartISO(params.timezone ?? DEFAULT_TZ);
 
   const [
     { data: custToday, error: custErr },
