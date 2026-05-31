@@ -27,8 +27,11 @@ interface Props {
   onSuccess: () => void;
 }
 
-// Generate a random 6-digit code
-const generateOtpCode = () => String(Math.floor(100000 + Math.random() * 900000));
+// OTP server-side via edge functions send-otp-code + verify-otp-code.
+// Substitui generateOtpCode() client-side (vulnerabilidade CRÍTICA da
+// auditoria: Math.random() no client + validação no client = atacante
+// via DevTools resgatava produtos sem identidade verificada).
+const OTP_PURPOSE = "customer_checkout";
 
 export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Props) {
   const { customer, refetch } = useCustomer();
@@ -39,7 +42,7 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
 
   // OTP verification state
   const [step, setStep] = useState<"form" | "otp">("form");
-  const [otpCode, setOtpCode] = useState("");
+  // otpCode/setOtpCode removidos: validação agora é server-side via edge function
   const [otpInput, setOtpInput] = useState(["", "", "", "", "", ""]);
   const [otpError, setOtpError] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
@@ -87,7 +90,7 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
     setCepLoading(false);
   };
 
-  const handleProceedToOtp = () => {
+  const handleProceedToOtp = async () => {
     if (!customer) return;
     if (!canAfford) {
       toast.error("Saldo de pontos insuficiente!");
@@ -97,19 +100,36 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
       toast.error("Preencha todos os campos obrigatórios!");
       return;
     }
-    // Generate OTP code and show verification screen
-    const code = generateOtpCode();
-    setOtpCode(code);
+    // SECURITY: chama edge function send-otp-code (server-side).
+    // Identifier = email do customer. Código gerado, hasheado e armazenado
+    // server-side; client nunca vê. Validação posterior via verify-otp-code.
+    const customerEmail = customer.email;
+    if (!customerEmail) {
+      toast.error("Email não cadastrado. Atualize seu cadastro antes de resgatar.");
+      return;
+    }
+    setOtpLoading(true);
+    const { data, error } = await supabase.functions.invoke("send-otp-code", {
+      body: {
+        identifier: customerEmail,
+        identifierType: "email",
+        purpose: OTP_PURPOSE,
+        brandId: customer.brand_id,
+      },
+    });
+    setOtpLoading(false);
+    if (error || data?.error) {
+      const reason = data?.error ?? "";
+      if (reason === "rate_limited") {
+        toast.error("Muitos envios. Aguarde 15 minutos.");
+      } else {
+        toast.error("Erro ao enviar código. Tente novamente.");
+      }
+      return;
+    }
     setOtpInput(["", "", "", "", "", ""]);
     setOtpError(false);
     setStep("otp");
-    // TODO[CRÍTICO]: Integrar envio real de OTP via e-mail/SMS antes de produção.
-    // O código é gerado client-side e validado client-side — não há proteção real.
-    // Em DEV exibe o código no toast para permitir testes; em PROD a verificação
-    // de identidade está efetivamente desabilitada.
-    if (import.meta.env.DEV) {
-      toast.info(`[DEV] Código OTP: ${code}`, { duration: 10000 });
-    }
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -139,10 +159,30 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
   };
 
   const verifyAndSubmit = async (code: string) => {
-    if (code !== otpCode) {
+    if (!customer?.email) return;
+    // SECURITY: validação server-side via edge function verify-otp-code.
+    // Hash comparison + UPDATE atômico + rate limit por tentativas.
+    setOtpLoading(true);
+    const { data, error } = await supabase.functions.invoke("verify-otp-code", {
+      body: {
+        identifier: customer.email,
+        identifierType: "email",
+        code,
+        purpose: OTP_PURPOSE,
+      },
+    });
+    setOtpLoading(false);
+    if (error || !data?.valid) {
       setOtpError(true);
       haptics.error();
-      toast.error("Código incorreto. Tente novamente.");
+      const reason = data?.reason ?? "invalid";
+      const msg = {
+        expired_or_missing: "Código expirado. Solicite um novo.",
+        invalid: "Código incorreto. Tente novamente.",
+        used: "Este código já foi usado.",
+        max_attempts: "Muitas tentativas. Solicite um novo código.",
+      }[reason as string] ?? "Código inválido.";
+      toast.error(msg);
       return;
     }
     await processRedemption();

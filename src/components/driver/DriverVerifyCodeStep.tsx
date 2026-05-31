@@ -6,50 +6,54 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, ShieldCheck, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 
-function generateCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
 interface Props {
   onVerified: () => void;
   onBack: () => void;
 }
 
+const OTP_PURPOSE = "driver_verify";
+
 export default function DriverVerifyCodeStep({ onVerified, onBack }: Props) {
   const { driver } = useDriverSession();
   const [code, setCode] = useState("");
-  const [expectedCode, setExpectedCode] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const sendCode = useCallback(async () => {
-    if (!driver) return;
+    if (!driver?.email) {
+      setError("Email não cadastrado. Atualize seu cadastro.");
+      return;
+    }
     setSending(true);
     setError(null);
 
-    const newCode = generateCode();
+    // SECURITY: código gerado e enviado SERVER-SIDE via edge function.
+    // Antes: generateCode() client + INSERT direto + validação client.
+    // DevTools via expectedCode no React state e burlava a verificação.
+    const { data, error: invokeErr } = await supabase.functions.invoke("send-otp-code", {
+      body: {
+        identifier: driver.email,
+        identifierType: "email",
+        purpose: OTP_PURPOSE,
+        brandId: driver.brand_id,
+      },
+    });
 
-    const { error: insertErr } = await supabase
-      .from("driver_verification_codes")
-      .insert({
-        customer_id: driver.id,
-        code: newCode,
-        email: driver.email,
-      });
-
-    if (insertErr) {
-      setError("Erro ao gerar código. Tente novamente.");
+    if (invokeErr || data?.error) {
+      const reason = data?.error ?? invokeErr?.message ?? "unknown";
+      if (reason === "rate_limited") {
+        setError("Muitos envios. Aguarde 15 minutos e tente novamente.");
+      } else {
+        setError("Erro ao enviar código. Tente novamente.");
+      }
       setSending(false);
       return;
     }
 
-    setExpectedCode(newCode);
     setCodeSent(true);
     setSending(false);
-
-    // Code stored in DB and state — no local exposure for security
   }, [driver]);
 
   // Auto-send on mount
@@ -58,37 +62,39 @@ export default function DriverVerifyCodeStep({ onVerified, onBack }: Props) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleVerify = async () => {
-    if (!driver || !expectedCode) return;
+    if (!driver?.email) return;
     setVerifying(true);
     setError(null);
 
-    const trimmed = code.trim();
+    // SECURITY: validação SERVER-SIDE atômica (edge function verify-otp-code).
+    // Compara hash do código digitado vs hash armazenado no DB. UPDATE atômico
+    // marca used=true apenas pro request que ganhou a corrida (double-click
+    // safe). Conta verify_attempts pra bloquear bruteforce após 5 tentativas.
+    const { data, error: invokeErr } = await supabase.functions.invoke("verify-otp-code", {
+      body: {
+        identifier: driver.email,
+        identifierType: "email",
+        code: code.trim(),
+        purpose: OTP_PURPOSE,
+      },
+    });
 
-    if (trimmed !== expectedCode) {
-      setError("Código incorreto. Verifique e tente novamente.");
+    if (invokeErr) {
+      setError("Erro ao verificar. Tente novamente.");
       setVerifying(false);
       return;
     }
 
-    // FIX (race condition): UPDATE com .select().single() pra garantir que
-    // o código é marcado como usado ATOMICAMENTE. Sem isso, double-click
-    // ou network retry permitia 2 requests passarem (ambos validavam,
-    // ambos marcavam used=true), levando a resgate processado em
-    // duplicata (cliente perdia pontos 2x).
-    //
-    // Se .single() retorna error/null, código já foi usado por outro
-    // request — bloqueia esta tentativa.
-    const { data: updated, error: updateErr } = await supabase
-      .from("driver_verification_codes")
-      .update({ used: true })
-      .eq("customer_id", driver.id)
-      .eq("code", expectedCode)
-      .eq("used", false)
-      .select("id")
-      .maybeSingle();
-
-    if (updateErr || !updated) {
-      setError("Este código já foi usado. Solicite um novo.");
+    if (!data?.valid) {
+      const reason = data?.reason ?? "invalid";
+      const msg = {
+        expired_or_missing: "Código expirado. Solicite um novo.",
+        invalid: "Código incorreto. Verifique e tente novamente.",
+        used: "Este código já foi usado.",
+        max_attempts: "Muitas tentativas. Solicite um novo código.",
+        invalid_format: "Código deve ter 6 dígitos.",
+      }[reason as string] ?? "Código inválido.";
+      setError(msg);
       setVerifying(false);
       return;
     }
