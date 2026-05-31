@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { createEdgeLogger } from "../_shared/edgeLogger.ts";
+import { checkRateLimit, rateLimitKey, rateLimitResponse } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,6 +13,19 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Rate limit: scraping faz fetch externo (custo de banda + tempo).
+    // 20 chamadas / 10min por IP — generoso pra import legítimo.
+    const supabaseRL = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const rl = await checkRateLimit(
+      supabaseRL,
+      rateLimitKey("scrape-product", req),
+      { maxRequests: 20, windowSeconds: 600 },
+    );
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+
     const { url, brand_id } = await req.json();
 
     if (!url) {

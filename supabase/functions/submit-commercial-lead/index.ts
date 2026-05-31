@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { z } from "https://esm.sh/zod@3.23.8";
+import { checkRateLimit, rateLimitKey, rateLimitResponse } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -61,6 +62,15 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
+
+    // Rate limit: 3 leads / hora por IP. Form público sem auth, alvo
+    // óbvio de spam. Limite generoso pra usuário legítimo retentar.
+    const rl = await checkRateLimit(
+      supabase,
+      rateLimitKey("submit-commercial-lead", req),
+      { maxRequests: 3, windowSeconds: 3600 },
+    );
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
 
     const ipAddress =
       req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
