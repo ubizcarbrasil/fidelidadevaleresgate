@@ -10842,6 +10842,10 @@ export type Database = {
         Returns: boolean
       }
       finalize_duel: { Args: { p_duel_id: string }; Returns: Json }
+      get_boot_context: {
+        Args: { p_brand_id?: string; p_hostname?: string }
+        Returns: Json
+      }
       get_branch_dashboard_stats: {
         Args: { p_branch_id: string }
         Returns: {
@@ -11158,6 +11162,19 @@ export type Database = {
       }
       redeem_prize_campaign: {
         Args: { p_campaign_id: string; p_customer_id: string }
+        Returns: Json
+      }
+      refund_customer_points: {
+        Args: {
+          p_brand_id: string
+          p_branch_id: string
+          p_created_by_user_id: string
+          p_customer_id: string
+          p_points: number
+          p_reason: string
+          p_reference_id: string
+          p_reference_type: string
+        }
         Returns: Json
       }
       reprocess_missing_driver_points: {

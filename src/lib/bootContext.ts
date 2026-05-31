@@ -70,10 +70,10 @@ export function startBootPrefetch(brandIdHint?: string): Promise<BootContext | n
       // (HTTP/2 abort silencioso). Sem timeout, contexts ficam esperando
       // a promise pra sempre e app trava em "Carregando seu painel...".
       // 6s é generoso pra rede ruim mas evita boot infinito.
-      const rpcPromise = supabase.rpc("get_boot_context" as never, {
-        p_hostname: hostname,
-        p_brand_id: brandIdHint ?? null,
-      } as never);
+      const rpcPromise = supabase.rpc("get_boot_context", {
+        p_hostname: hostname ?? undefined,
+        p_brand_id: brandIdHint ?? undefined,
+      });
       const timeoutPromise = new Promise<{ data: null; error: { message: string } }>(
         (resolve) => setTimeout(
           () => resolve({ data: null, error: { message: "boot_rpc_timeout_6s" } }),
