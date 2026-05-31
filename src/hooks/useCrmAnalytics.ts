@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
@@ -189,118 +190,137 @@ export function useCrmAnalytics() {
     enabled: !!currentBrandId,
   });
 
-  const allCustomers = data?.customers || [];
-  const monthlyData = data?.monthlyData || [];
+  // Tudo abaixo derivado de `data.customers` em UM único useMemo. Antes,
+  // 25+ filters/sorts/reduces rodavam a cada render do consumer (5 páginas
+  // CRM destructuram subsets diferentes), gerando trabalho repetido O(n*k)
+  // mesmo quando data não mudava. Agora roda 1x por fetch, e a identidade
+  // do objeto retornado é estável → consumers só re-renderizam quando os
+  // dados realmente mudam.
+  return useMemo(() => {
+    const allCustomers = data?.customers || EMPTY_CUSTOMERS;
+    const monthlyData = data?.monthlyData || EMPTY_MONTHLY;
 
-  const summary: CrmSummary = {
-    total: allCustomers.length,
-    active: allCustomers.filter((c) => c.status === "active").length,
-    atRisk: allCustomers.filter((c) => c.status === "at_risk").length,
-    lost: allCustomers.filter((c) => c.status === "lost").length,
-    newCustomers: allCustomers.filter((c) => c.status === "new").length,
-    avgPointsBalance: allCustomers.length > 0
-      ? Math.round(allCustomers.reduce((s, c) => s + c.points_balance, 0) / allCustomers.length)
-      : 0,
-    healthScore: calcHealthScore({
-      active: allCustomers.filter((c) => c.status === "active" || c.status === "new").length,
-      atRisk: allCustomers.filter((c) => c.status === "at_risk").length,
-      lost: allCustomers.filter((c) => c.status === "lost").length,
+    const activeCount = allCustomers.filter((c) => c.status === "active").length;
+    const atRiskCount = allCustomers.filter((c) => c.status === "at_risk").length;
+    const lostCount = allCustomers.filter((c) => c.status === "lost").length;
+    const newCount = allCustomers.filter((c) => c.status === "new").length;
+
+    const summary: CrmSummary = {
       total: allCustomers.length,
-    }),
-  };
+      active: activeCount,
+      atRisk: atRiskCount,
+      lost: lostCount,
+      newCustomers: newCount,
+      avgPointsBalance: allCustomers.length > 0
+        ? Math.round(allCustomers.reduce((s, c) => s + c.points_balance, 0) / allCustomers.length)
+        : 0,
+      healthScore: calcHealthScore({
+        active: activeCount + newCount,
+        atRisk: atRiskCount,
+        lost: lostCount,
+        total: allCustomers.length,
+      }),
+    };
 
-  const lostCustomers = allCustomers.filter((c) => c.status === "lost").sort((a, b) => b.days_inactive - a.days_inactive);
-  const atRiskCustomers = allCustomers.filter((c) => c.status === "at_risk").sort((a, b) => b.days_inactive - a.days_inactive);
-  const potentialCustomers = allCustomers
-    .filter((c) => c.points_balance > 0 && c.total_redemptions === 0)
-    .sort((a, b) => b.points_balance - a.points_balance);
-  const highFrequency = allCustomers
-    .filter((c) => c.total_earnings >= 5)
-    .sort((a, b) => b.total_earnings - a.total_earnings);
-  const newCustomers = allCustomers.filter((c) => c.status === "new").sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const lostCustomers = allCustomers.filter((c) => c.status === "lost").sort((a, b) => b.days_inactive - a.days_inactive);
+    const atRiskCustomers = allCustomers.filter((c) => c.status === "at_risk").sort((a, b) => b.days_inactive - a.days_inactive);
+    const potentialCustomers = allCustomers
+      .filter((c) => c.points_balance > 0 && c.total_redemptions === 0)
+      .sort((a, b) => b.points_balance - a.points_balance);
+    const highFrequency = allCustomers
+      .filter((c) => c.total_earnings >= 5)
+      .sort((a, b) => b.total_earnings - a.total_earnings);
+    const newCustomers = allCustomers.filter((c) => c.status === "new").sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-  // Pareto: top 20% by total_earnings generating bulk of activity
-  const sortedByEarnings = [...allCustomers].sort((a, b) => b.total_earnings - a.total_earnings);
-  const paretoCount = Math.max(1, Math.ceil(allCustomers.length * 0.2));
-  const paretoCustomers = sortedByEarnings.slice(0, paretoCount);
-  const totalEarningsAll = allCustomers.reduce((s, c) => s + c.total_earnings, 0);
-  const paretoEarningsTotal = paretoCustomers.reduce((s, c) => s + c.total_earnings, 0);
-  const paretoPercentage = totalEarningsAll > 0 ? Math.round((paretoEarningsTotal / totalEarningsAll) * 100) : 0;
+    // Pareto: top 20% por total_earnings
+    const sortedByEarnings = [...allCustomers].sort((a, b) => b.total_earnings - a.total_earnings);
+    const paretoCount = Math.max(1, Math.ceil(allCustomers.length * 0.2));
+    const paretoCustomers = sortedByEarnings.slice(0, paretoCount);
+    const totalEarningsAll = allCustomers.reduce((s, c) => s + c.total_earnings, 0);
+    const paretoEarningsTotal = paretoCustomers.reduce((s, c) => s + c.total_earnings, 0);
+    const paretoPercentage = totalEarningsAll > 0 ? Math.round((paretoEarningsTotal / totalEarningsAll) * 100) : 0;
 
-  // Opportunity segments
-  const opportunitySegments: OpportunitySegment[] = [
-    {
-      key: "high_balance_no_redemption",
-      label: "Alto saldo sem resgate",
-      description: "Clientes com pontos acumulados que nunca resgataram",
-      icon: "Target",
-      color: "text-primary",
-      customers: allCustomers.filter(c => c.points_balance >= 50 && c.total_redemptions === 0).sort((a, b) => b.points_balance - a.points_balance),
-    },
-    {
-      key: "high_frequency_no_redemption",
-      label: "Alta frequência sem resgate",
-      description: "Clientes que pontuam frequentemente mas não resgatam",
-      icon: "Zap",
-      color: "text-amber-500",
-      customers: allCustomers.filter(c => c.total_earnings >= 5 && c.total_redemptions === 0).sort((a, b) => b.total_earnings - a.total_earnings),
-    },
-    {
-      key: "cooling_redeemer",
-      label: "Resgatador esfriando",
-      description: "Clientes que resgatavam mas estão ficando inativos",
-      icon: "TrendingDown",
-      color: "text-destructive",
-      customers: allCustomers.filter(c => c.total_redemptions >= 2 && c.days_inactive >= 20 && c.days_inactive <= 60).sort((a, b) => b.days_inactive - a.days_inactive),
-    },
-    {
-      key: "promising_new",
-      label: "Novo cliente promissor",
-      description: "Clientes novos com boa frequência inicial",
-      icon: "Sparkles",
-      color: "text-green-500",
-      customers: allCustomers.filter(c => {
-        const daysAgo = Math.floor((Date.now() - new Date(c.created_at).getTime()) / (1000 * 60 * 60 * 24));
-        return daysAgo <= 30 && c.total_earnings >= 3;
-      }).sort((a, b) => b.total_earnings - a.total_earnings),
-    },
-  ];
+    // Today snapshot pra promising_new (estável durante o memo)
+    const nowMs = Date.now();
 
-  // Journey stages
-  const journeyStages = {
-    new: allCustomers.filter(c => c.journey_stage === "new"),
-    engaging: allCustomers.filter(c => c.journey_stage === "engaging"),
-    loyal: allCustomers.filter(c => c.journey_stage === "loyal"),
-    at_risk: allCustomers.filter(c => c.journey_stage === "at_risk"),
-    lost: allCustomers.filter(c => c.journey_stage === "lost"),
-  };
+    const opportunitySegments: OpportunitySegment[] = [
+      {
+        key: "high_balance_no_redemption",
+        label: "Alto saldo sem resgate",
+        description: "Clientes com pontos acumulados que nunca resgataram",
+        icon: "Target",
+        color: "text-primary",
+        customers: allCustomers.filter(c => c.points_balance >= 50 && c.total_redemptions === 0).sort((a, b) => b.points_balance - a.points_balance),
+      },
+      {
+        key: "high_frequency_no_redemption",
+        label: "Alta frequência sem resgate",
+        description: "Clientes que pontuam frequentemente mas não resgatam",
+        icon: "Zap",
+        color: "text-amber-500",
+        customers: allCustomers.filter(c => c.total_earnings >= 5 && c.total_redemptions === 0).sort((a, b) => b.total_earnings - a.total_earnings),
+      },
+      {
+        key: "cooling_redeemer",
+        label: "Resgatador esfriando",
+        description: "Clientes que resgatavam mas estão ficando inativos",
+        icon: "TrendingDown",
+        color: "text-destructive",
+        customers: allCustomers.filter(c => c.total_redemptions >= 2 && c.days_inactive >= 20 && c.days_inactive <= 60).sort((a, b) => b.days_inactive - a.days_inactive),
+      },
+      {
+        key: "promising_new",
+        label: "Novo cliente promissor",
+        description: "Clientes novos com boa frequência inicial",
+        icon: "Sparkles",
+        color: "text-green-500",
+        customers: allCustomers.filter(c => {
+          const daysAgo = Math.floor((nowMs - new Date(c.created_at).getTime()) / (1000 * 60 * 60 * 24));
+          return daysAgo <= 30 && c.total_earnings >= 3;
+        }).sort((a, b) => b.total_earnings - a.total_earnings),
+      },
+    ];
 
-  // Critical scenario buckets
-  const criticalScenario = {
-    warm: allCustomers.filter(c => c.days_inactive >= 30 && c.days_inactive < 45),
-    cold: allCustomers.filter(c => c.days_inactive >= 45 && c.days_inactive < 60),
-    lost60: allCustomers.filter(c => c.days_inactive >= 60 && c.days_inactive < 90),
-    lost90: allCustomers.filter(c => c.days_inactive >= 90),
-    neverConverted: allCustomers.filter(c => c.total_redemptions === 0 && c.total_earnings > 0),
-  };
+    const journeyStages = {
+      new: allCustomers.filter(c => c.journey_stage === "new"),
+      engaging: allCustomers.filter(c => c.journey_stage === "engaging"),
+      loyal: allCustomers.filter(c => c.journey_stage === "loyal"),
+      at_risk: allCustomers.filter(c => c.journey_stage === "at_risk"),
+      lost: allCustomers.filter(c => c.journey_stage === "lost"),
+    };
 
-  return {
-    isLoading,
-    allCustomers,
-    summary,
-    lostCustomers,
-    atRiskCustomers,
-    potentialCustomers,
-    highFrequency,
-    newCustomers,
-    monthlyData,
-    paretoCustomers,
-    paretoCount,
-    paretoPercentage,
-    paretoEarningsTotal,
-    totalEarningsAll,
-    opportunitySegments,
-    journeyStages,
-    criticalScenario,
-  };
+    const criticalScenario = {
+      warm: allCustomers.filter(c => c.days_inactive >= 30 && c.days_inactive < 45),
+      cold: allCustomers.filter(c => c.days_inactive >= 45 && c.days_inactive < 60),
+      lost60: allCustomers.filter(c => c.days_inactive >= 60 && c.days_inactive < 90),
+      lost90: allCustomers.filter(c => c.days_inactive >= 90),
+      neverConverted: allCustomers.filter(c => c.total_redemptions === 0 && c.total_earnings > 0),
+    };
+
+    return {
+      isLoading,
+      allCustomers,
+      summary,
+      lostCustomers,
+      atRiskCustomers,
+      potentialCustomers,
+      highFrequency,
+      newCustomers,
+      monthlyData,
+      paretoCustomers,
+      paretoCount,
+      paretoPercentage,
+      paretoEarningsTotal,
+      totalEarningsAll,
+      opportunitySegments,
+      journeyStages,
+      criticalScenario,
+    };
+  }, [data, isLoading]);
 }
+
+// Singletons reaproveitados quando data ainda não chegou — evita criar
+// nova referência de [] a cada render, que invalidaria os useMemo
+// downstream nos consumers.
+const EMPTY_CUSTOMERS: CrmCustomer[] = [];
+const EMPTY_MONTHLY: MonthlyData[] = [];
