@@ -70,13 +70,28 @@ export default function DriverVerifyCodeStep({ onVerified, onBack }: Props) {
       return;
     }
 
-    // Mark code as used
-    await supabase
+    // FIX (race condition): UPDATE com .select().single() pra garantir que
+    // o código é marcado como usado ATOMICAMENTE. Sem isso, double-click
+    // ou network retry permitia 2 requests passarem (ambos validavam,
+    // ambos marcavam used=true), levando a resgate processado em
+    // duplicata (cliente perdia pontos 2x).
+    //
+    // Se .single() retorna error/null, código já foi usado por outro
+    // request — bloqueia esta tentativa.
+    const { data: updated, error: updateErr } = await supabase
       .from("driver_verification_codes")
       .update({ used: true })
       .eq("customer_id", driver.id)
       .eq("code", expectedCode)
-      .eq("used", false);
+      .eq("used", false)
+      .select("id")
+      .maybeSingle();
+
+    if (updateErr || !updated) {
+      setError("Este código já foi usado. Solicite um novo.");
+      setVerifying(false);
+      return;
+    }
 
     setVerifying(false);
     onVerified();
