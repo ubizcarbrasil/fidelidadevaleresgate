@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { recordGanhaGanhaBillingEvent } from "@/lib/ganhaGanhaBilling";
+import { todayStartISO } from "@/lib/dateTz";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -134,9 +135,10 @@ export default function EarnPointsPage() {
       if (!branchId || !currentBrandId) throw new Error("Contexto inválido");
 
       // Anti-fraud: check daily limits
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayISO = today.toISOString();
+      // FIX timezone (auditoria BI): usa helper que respeita TZ Brasil
+      // em vez de `new Date().setHours(0).toISOString()` que pegava
+      // dia errado (21h-23h UTC = dia seguinte Brasil).
+      const todayISO = todayStartISO();
 
       // Customer daily limit
       const { data: custToday } = await supabase

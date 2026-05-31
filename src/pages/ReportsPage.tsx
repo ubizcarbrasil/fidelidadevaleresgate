@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { dateRangeISO } from "@/lib/dateTz";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -383,8 +384,12 @@ function ProductRedemptionSummary({ data }: { data: Record<string, any>[] }) {
 
 // --- Anti-fraud Report ---
 function AntiFraudReport({ brandId, dateFrom, dateTo }: { brandId: string | null; dateFrom: string; dateTo: string }) {
-  const from = new Date(dateFrom); from.setHours(0, 0, 0, 0);
-  const to = new Date(dateTo); to.setHours(23, 59, 59, 999);
+  // FIX timezone (auditoria BI): usa helper que respeita TZ Brasil.
+  // Antes: new Date("2026-05-31") → 00:00 UTC = 21h BR do dia 30, query
+  // pegava eventos de outro dia.
+  const { fromISO, toISO } = dateRangeISO(dateFrom, dateTo);
+  const from = new Date(fromISO);
+  const to = new Date(toISO);
 
   // Duplicate receipt codes
   const { data: duplicateReceipts, isLoading: loadingReceipts } = useQuery({
@@ -529,8 +534,12 @@ function SegmentIconPreview({ name, className = "h-4 w-4" }: { name: string | nu
 
 // --- Segment Reports Tab ---
 function SegmentReportsTab({ brandId, dateFrom, dateTo }: { brandId: string | null; dateFrom: string; dateTo: string }) {
-  const from = new Date(dateFrom); from.setHours(0, 0, 0, 0);
-  const to = new Date(dateTo); to.setHours(23, 59, 59, 999);
+  // FIX timezone (auditoria BI): usa helper que respeita TZ Brasil.
+  // Antes: new Date("2026-05-31") → 00:00 UTC = 21h BR do dia 30, query
+  // pegava eventos de outro dia.
+  const { fromISO, toISO } = dateRangeISO(dateFrom, dateTo);
+  const from = new Date(fromISO);
+  const to = new Date(toISO);
 
   const { data: segmentData, isLoading } = useQuery({
     queryKey: ["segment-reports", dateFrom, dateTo, brandId],
@@ -784,8 +793,12 @@ const CHART_COLORS = [
 ];
 
 function ChartsTab({ brandId, dateFrom, dateTo }: { brandId: string | null; dateFrom: string; dateTo: string }) {
-  const from = new Date(dateFrom); from.setHours(0, 0, 0, 0);
-  const to = new Date(dateTo); to.setHours(23, 59, 59, 999);
+  // FIX timezone (auditoria BI): usa helper que respeita TZ Brasil.
+  // Antes: new Date("2026-05-31") → 00:00 UTC = 21h BR do dia 30, query
+  // pegava eventos de outro dia.
+  const { fromISO, toISO } = dateRangeISO(dateFrom, dateTo);
+  const from = new Date(fromISO);
+  const to = new Date(toISO);
 
   // Redemptions over time (daily)
   const { data: redemptionsByDay, isLoading: loadingR } = useQuery({
@@ -1027,8 +1040,12 @@ function ChartsTab({ brandId, dateFrom, dateTo }: { brandId: string | null; date
 
 // --- Product Redemption Charts ---
 function ProductRedemptionCharts({ brandId, dateFrom, dateTo }: { brandId: string | null; dateFrom: string; dateTo: string }) {
-  const from = new Date(dateFrom); from.setHours(0, 0, 0, 0);
-  const to = new Date(dateTo); to.setHours(23, 59, 59, 999);
+  // FIX timezone (auditoria BI): usa helper que respeita TZ Brasil.
+  // Antes: new Date("2026-05-31") → 00:00 UTC = 21h BR do dia 30, query
+  // pegava eventos de outro dia.
+  const { fromISO, toISO } = dateRangeISO(dateFrom, dateTo);
+  const from = new Date(fromISO);
+  const to = new Date(toISO);
 
   const { data: prodOrders, isLoading } = useQuery({
     queryKey: ["chart-product-redemptions", dateFrom, dateTo, brandId],
@@ -1178,8 +1195,12 @@ function ProductRedemptionCharts({ brandId, dateFrom, dateTo }: { brandId: strin
 
 // --- Fetch report data ---
 async function fetchReport(reportType: ReportType, dateFrom: string, dateTo: string, currentBrandId: string | null) {
-  const from = new Date(dateFrom); from.setHours(0, 0, 0, 0);
-  const to = new Date(dateTo); to.setHours(23, 59, 59, 999);
+  // FIX timezone (auditoria BI): usa helper que respeita TZ Brasil.
+  // Antes: new Date("2026-05-31") → 00:00 UTC = 21h BR do dia 30, query
+  // pegava eventos de outro dia.
+  const { fromISO, toISO } = dateRangeISO(dateFrom, dateTo);
+  const from = new Date(fromISO);
+  const to = new Date(toISO);
 
   switch (reportType) {
     case "redemptions": {

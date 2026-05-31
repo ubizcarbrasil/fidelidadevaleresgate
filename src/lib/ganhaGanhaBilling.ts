@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { yearMonthInTz } from "@/lib/dateTz";
 
 /**
  * Records a billing event for the Ganha-Ganha module if the module is active for the brand.
@@ -46,7 +47,11 @@ export async function recordGanhaGanhaBillingEvent(params: {
   }
 
   const feeTotal = pointsAmount * feePerPoint;
-  const periodMonth = new Date().toISOString().slice(0, 7);
+  // FIX timezone CRÍTICO (auditoria BI): `new Date().toISOString().slice(0,7)`
+  // pega mês em UTC. 31/05 23h Brasil = 02h UTC de 01/06 → billing event
+  // gravado como "2026-06" quando compra foi em "2026-05". Cobrança no
+  // mês errado = disputa de cliente + inadimplência/sobrefaturamento.
+  const periodMonth = yearMonthInTz();
 
   await supabase.from("ganha_ganha_billing_events").insert({
     brand_id: brandId,
