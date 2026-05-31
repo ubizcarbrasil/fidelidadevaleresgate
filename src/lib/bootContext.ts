@@ -66,15 +66,27 @@ export function startBootPrefetch(brandIdHint?: string): Promise<BootContext | n
   bootPromise = (async () => {
     try {
       const hostname = typeof window !== "undefined" ? window.location.hostname : null;
-      const { data, error } = await supabase.rpc("get_boot_context" as never, {
+      // Timeout 6s — em 5G/iOS ruim, RPC pode travar indefinidamente
+      // (HTTP/2 abort silencioso). Sem timeout, contexts ficam esperando
+      // a promise pra sempre e app trava em "Carregando seu painel...".
+      // 6s é generoso pra rede ruim mas evita boot infinito.
+      const rpcPromise = supabase.rpc("get_boot_context" as never, {
         p_hostname: hostname,
         p_brand_id: brandIdHint ?? null,
       } as never);
+      const timeoutPromise = new Promise<{ data: null; error: { message: string } }>(
+        (resolve) => setTimeout(
+          () => resolve({ data: null, error: { message: "boot_rpc_timeout_6s" } }),
+          6000,
+        ),
+      );
+
+      const { data, error } = await Promise.race([rpcPromise, timeoutPromise]);
 
       bootMark("boot:rpc-done");
 
       if (error) {
-        console.warn("[bootContext] RPC falhou, contexts usarão fallback:", error.message);
+        console.warn("[bootContext] RPC falhou ou timeout, contexts usarão fallback:", error.message);
         return null;
       }
       return data as unknown as BootContext;
