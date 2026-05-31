@@ -102,20 +102,23 @@ const RankingPontuacao = memo(function RankingPontuacao({ brandId, isDriverEnabl
     enabled: !!brandId,
   });
 
-  // Realtime: invalidar ao receber novas corridas
+  // Realtime: filter por brand_id (FIX escala — antes recebia INSERTs de
+  // todas as brands globalmente, ~$5k/mês overage Supabase em 1M users)
   useEffect(() => {
+    if (!brandId) return;
     const channel = supabase
-      .channel("ranking-pontuacao-realtime")
+      .channel(`ranking-pontuacao-realtime-${brandId}`)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",
         table: "machine_rides",
+        filter: `brand_id=eq.${brandId}`,
       }, () => {
         queryClient.invalidateQueries({ queryKey: ["ranking-pontuacao"] });
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [queryClient]);
+  }, [brandId, queryClient]);
 
   return (
     <Card>

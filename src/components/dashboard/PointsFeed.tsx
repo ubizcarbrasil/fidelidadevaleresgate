@@ -58,14 +58,16 @@ const PointsFeed = memo(function PointsFeed({ brandId, isDriverEnabled = true, i
     },
   });
 
-  // Realtime subscription
+  // Realtime subscription — filter por brand_id (FIX escala)
   useEffect(() => {
+    if (!brandId) return;
     const channel = supabase
-      .channel("points-feed-realtime")
+      .channel(`points-feed-realtime-${brandId}`)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",
         table: "machine_rides",
+        filter: `brand_id=eq.${brandId}`,
       }, () => {
         setLiveCount((c) => c + 1);
         queryClient.invalidateQueries({ queryKey: ["dashboard-points-feed"] });
@@ -73,7 +75,7 @@ const PointsFeed = memo(function PointsFeed({ brandId, isDriverEnabled = true, i
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [queryClient]);
+  }, [brandId, queryClient]);
 
   const visibleRides = (rides || []).filter((ride) => {
     const hasPassengerPoints = isPassengerEnabled && ride.points_credited > 0;

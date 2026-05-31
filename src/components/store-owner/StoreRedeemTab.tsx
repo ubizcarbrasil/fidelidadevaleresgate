@@ -69,11 +69,18 @@ export default function StoreRedeemTab({ store }: StoreRedeemTabProps) {
     refetchInterval: 15000,
   });
 
-  // Realtime
+  // Realtime — filter por store_id (FIX escala: antes recebia eventos de
+  // TODAS as redemptions globais, agora só da loja atual)
   useEffect(() => {
+    if (!store.id) return;
     const channel = supabase
-      .channel("store-redemptions-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "redemptions" }, () => {
+      .channel(`store-redemptions-realtime-${store.id}`)
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "redemptions",
+        filter: `store_id=eq.${store.id}`,
+      }, () => {
         qc.invalidateQueries({ queryKey: ["store-pending-redemptions", store.id] });
       })
       .subscribe();
