@@ -803,11 +803,25 @@ Deno.serve(async (req) => {
         // Idempotência: se a temporada já foi semeada, não é um erro real —
         // o client deve tratar como sucesso silencioso para não quebrar UI
         // com 500 + blank screen quando o usuário clica "Distribuir" de novo.
+        //
+        // HOTFIX (regressão de cac5f88): regex anterior matcheava qualquer
+        // "duplicate key" — incluindo erros de RLS/permissão que continham
+        // essa string no contexto. Resultado: erro de permissão silenciado e
+        // UI mostrava "✓ Distribuído" sem nada ter acontecido.
+        //
+        // Agora restringe a UNIQUE violation NA TABELA de tier_memberships
+        // (campeonato_tier_memberships_season_id_tier_order_key) — único
+        // caso legítimo de "já foi semeada".
         const msg = (error as any)?.message ?? String(error);
+        const code = (error as any)?.code ?? "";
+        const details = (error as any)?.details ?? "";
+        const fullText = `${msg} ${code} ${details}`;
         const jaSemeada =
-          /já foi semeada|already seeded|duelo_season_tiers_season_id_tier_order_key|duplicate key/i.test(
-            msg,
-          );
+          /já foi semeada|already seeded/i.test(fullText) ||
+          (/23505/.test(code) &&
+            /(campeonato_tier_memberships|duelo_season_tiers)_season_id_tier_order_key/i.test(
+              fullText,
+            ));
         if (jaSemeada) {
           return new Response(
             JSON.stringify({ ok: true, result: { already_seeded: true }, already_seeded: true }),
