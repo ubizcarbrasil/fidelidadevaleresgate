@@ -90,13 +90,20 @@ function useDashboardKpis(brandFilter?: string, periodStart?: Date) {
 }
 
 /** Componente-gate que registra o realtime apenas quando habilitado (após idle). */
-function RealtimeRefreshGate({ enabled }: { enabled: boolean }) {
+function RealtimeRefreshGate({ enabled, brandId }: { enabled: boolean; brandId?: string | null }) {
   const queryClient = useQueryClient();
   const pendingKeys = useRef<Set<string>>(new Set());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
+    // FIX escala (auditoria): subscribe sem filter recebia eventos de TODAS
+    // as brands — em 100k+ users vira custo Realtime gigante (~$5k/mês overage)
+    // e processa eventos inúteis no client. Com filter `brand_id=eq.${brandId}`,
+    // cliente só recebe o que importa pra brand atual.
+    // root_admin (sem brand específico) cai pro modo legacy (sem filter) —
+    // necessário pra visão global. Em escala 100k+, root_admin será raro.
+    if (!brandId) return; // sem brand definida, não inscreve (evita custo)
     const flush = () => {
       const keys = Array.from(pendingKeys.current);
       pendingKeys.current.clear();
@@ -109,18 +116,19 @@ function RealtimeRefreshGate({ enabled }: { enabled: boolean }) {
       queryKeys.forEach((k) => pendingKeys.current.add(k));
       if (!timerRef.current) timerRef.current = setTimeout(flush, 120);
     };
+    const brandFilter = `brand_id=eq.${brandId}`;
     const channel = supabase
-      .channel("dashboard-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "redemptions" }, () => {
+      .channel(`dashboard-realtime-${brandId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "redemptions", filter: brandFilter }, () => {
         enqueue("dashboard-kpis", "redemptions-chart");
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "machine_rides" }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "machine_rides", filter: brandFilter }, () => {
         enqueue("dashboard-kpis", "earnings-chart", "ranking-pontuacao");
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "customers" }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "customers", filter: brandFilter }, () => {
         enqueue("dashboard-kpis");
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "offers" }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "offers", filter: brandFilter }, () => {
         enqueue("dashboard-kpis");
       })
       .subscribe();
@@ -128,7 +136,7 @@ function RealtimeRefreshGate({ enabled }: { enabled: boolean }) {
       supabase.removeChannel(channel);
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [enabled, queryClient]);
+  }, [enabled, brandId, queryClient]);
   return null;
 }
 
@@ -201,7 +209,7 @@ export default function Dashboard() {
     const id = ric(() => setRealtimeReady(true));
     return () => { try { cancelRic(id); } catch { /* noop */ } };
   }, []);
-  RealtimeRefreshGate({ enabled: realtimeReady });
+  RealtimeRefreshGate({ enabled: realtimeReady, brandId: currentBrandId });
 
   const isRoot = consoleScope === "ROOT";
   const showTenant = ["ROOT", "TENANT"].includes(consoleScope);
