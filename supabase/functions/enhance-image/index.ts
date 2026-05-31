@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { checkRateLimit, rateLimitKey, rateLimitResponse } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +24,20 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limit AGRESSIVO: vision AI custa caro (Lovable AI / OpenAI).
+    // Sem isso, 1 atacante esgota cota mensal em minutos.
+    // 5 chamadas / 10min por IP = enhancement legítimo continua, abuse barra.
+    const supabaseRL = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const rl = await checkRateLimit(
+      supabaseRL,
+      rateLimitKey("enhance-image", req),
+      { maxRequests: 5, windowSeconds: 600 },
+    );
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(

@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { hashOtpCode, normalizeIdentifier } from "../_shared/otpHelpers.ts";
+import { checkRateLimit, rateLimitKey, rateLimitResponse } from "../_shared/rateLimiter.ts";
 
 /**
  * Edge function: verify-otp-code
@@ -69,6 +70,16 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // Rate limit defense in depth (verify_attempts no DB já barra
+    // brute force por código; este barra brute force por IP em
+    // múltiplos identifiers).
+    const rl = await checkRateLimit(
+      supabase,
+      rateLimitKey("verify-otp-code", req),
+      { maxRequests: 30, windowSeconds: 600 },
+    );
+    if (!rl.allowed) return rateLimitResponse(rl, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
 
     // Busca código mais recente não usado e não expirado
     const { data: otpRow } = await supabase

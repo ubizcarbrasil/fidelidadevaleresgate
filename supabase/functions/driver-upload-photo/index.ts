@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { checkRateLimit, rateLimitKey, rateLimitResponse } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +24,20 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    // Rate limit por IP — 10 uploads / 5min. Sem isso, atacante pode
+    // esgotar storage Supabase + driver de custo de processamento.
+    const rl = await checkRateLimit(
+      supabase,
+      rateLimitKey("driver-upload-photo", req),
+      { maxRequests: 10, windowSeconds: 300 },
+    );
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+
     const form = await req.formData();
     const driverId = String(form.get("driver_id") ?? "");
     const brandId = String(form.get("brand_id") ?? ""); // OBRIGATÓRIO: vincula upload à brand
@@ -37,11 +52,6 @@ Deno.serve(async (req) => {
     if (file.size > MAX_BYTES) {
       return json(400, { error: "invalid_file", message: "Arquivo muito grande (máx 5MB)." });
     }
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
 
     // Validar motorista E que pertence à brand_id passada (defense in depth
     // pra impedir cross-tenant upload — atacante de Brand A não consegue

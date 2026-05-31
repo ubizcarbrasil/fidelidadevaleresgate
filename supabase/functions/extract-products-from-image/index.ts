@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { checkRateLimit, rateLimitKey, rateLimitResponse } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +12,18 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // Rate limit: vision AI CARO. 5 chamadas / 10min por IP.
+    const supabaseRL = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const rl = await checkRateLimit(
+      supabaseRL,
+      rateLimitKey("extract-products-from-image", req),
+      { maxRequests: 5, windowSeconds: 600 },
+    );
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
+
     const { image_base64 } = await req.json();
     if (!image_base64) {
       return new Response(JSON.stringify({ error: "image_base64 is required" }), {

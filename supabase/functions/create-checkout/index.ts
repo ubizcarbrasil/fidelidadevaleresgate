@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createEdgeLogger } from "../_shared/edgeLogger.ts";
+import { checkRateLimit, rateLimitKey, rateLimitResponse } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,6 +21,16 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // Rate limit: criar checkout dispara session no Stripe (custo por
+    // request + risco de duplicar pagamento). 10 / 10min por IP.
+    const supabaseRL = createClient(supabaseUrl, serviceRoleKey);
+    const rl = await checkRateLimit(
+      supabaseRL,
+      rateLimitKey("create-checkout", req),
+      { maxRequests: 10, windowSeconds: 600 },
+    );
+    if (!rl.allowed) return rateLimitResponse(rl, corsHeaders);
 
     // Auth: get user from JWT
     const authHeader = req.headers.get("Authorization");
