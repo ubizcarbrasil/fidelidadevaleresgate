@@ -302,12 +302,17 @@ Deno.serve(async (req) => {
     let updated = 0;
     let skipped = 0;
     let processed = 0;
+    let chunkFailures = 0;
 
     const CHUNK = 500;
 
     for (let off = 0; off < rows.length; off += CHUNK) {
       const chunk = rows.slice(off, off + CHUNK);
 
+      // F5.4: cada chunk envelopado em try/catch — falha de 1 chunk não
+      // mata o job. Antes, exceção não-tratada deixava status='running'
+      // pra sempre e linhas pré-chunk em estado parcial.
+      try {
       // Para cada linha do chunk, decide insert ou update
       const insertsCustomers: any[] = [];
       const updatesCustomers: { id: string; patch: Record<string, unknown> }[] = [];
@@ -371,32 +376,49 @@ Deno.serve(async (req) => {
         }
       }
 
-      // UPDATEs (um a um — necessário pois cada linha tem patch diferente)
+      // UPDATEs em LOTE via RPC — F5.4: antes era 1 HTTP por motorista,
+      // até 500 round-trips por chunk sem rollback. Agora vira 1 statement
+      // SQL atômico (1 transação) com COALESCE preservando campos vazios.
       const toUpdate = planos.filter((p) => p.kind === "update");
+      const updatePayload: Array<Record<string, unknown>> = [];
       for (const p of toUpdate) {
         const r = p.row;
-        const patch: Record<string, unknown> = {};
+        const item: Record<string, unknown> = { id: p.id };
         const cpf = limparCpf(r.cpf);
-        if (cpf && cpf.length === 11) patch.cpf = cpf;
-        if (r.phone) patch.phone = r.phone.trim();
-        if (r.email) patch.email = r.email.trim();
-        if (r.name) patch.name = `[MOTORISTA] ${r.name.trim()}`;
+        if (cpf && cpf.length === 11) item.cpf = cpf;
+        if (r.phone) item.phone = r.phone.trim();
+        if (r.email) item.email = r.email.trim();
+        if (r.name) item.name = `[MOTORISTA] ${r.name.trim()}`;
         // Reforço: sempre que CSV trouxer external_id, sobrescreve no customer.
         // Costura registros criados pela primeira corrida (que podem ter ext_id diferente/nulo)
         // com a fonte de verdade do CSV — evita duplicatas.
-        if (r.external_id) patch.external_driver_id = r.external_id;
+        if (r.external_id) item.external_driver_id = r.external_id;
 
-        if (Object.keys(patch).length === 0) {
+        // id sempre presente; se nada mais, pula
+        if (Object.keys(item).length === 1) {
           skipped++;
         } else {
-          const { error: upErr } = await admin.from("customers").update(patch).eq("id", p.id!);
-          if (upErr) {
-            erros.push({ linha: p.idx, nome: r.name, motivo: "Update: " + upErr.message });
-          } else {
-            updated++;
-          }
+          updatePayload.push(item);
         }
         profilesUpserts.push({ customer_id: p.id!, data: r });
+      }
+
+      if (updatePayload.length > 0) {
+        const { data: updatedCount, error: updErr } = await admin.rpc(
+          "import_drivers_update_batch" as any,
+          { p_updates: updatePayload }
+        );
+        if (updErr) {
+          // Falha do batch inteiro — registra erro por linha mas não
+          // crasha o chunk (profiles ainda upsertam abaixo).
+          toUpdate.forEach((p) => erros.push({
+            linha: p.idx,
+            nome: p.row.name,
+            motivo: "Update batch: " + updErr.message,
+          }));
+        } else {
+          updated += Number(updatedCount ?? updatePayload.length);
+        }
       }
 
       // Erros do plano
@@ -496,6 +518,21 @@ Deno.serve(async (req) => {
       }
 
       processed += chunk.length;
+      } catch (chunkErr: any) {
+        // F5.4: chunk inteiro falhou — registra como erro e continua o job
+        // pros próximos chunks. Antes, exception escapava e job ficava
+        // travado em status='running' (cleanup_stuck_driver_import_jobs
+        // pega esses jobs órfãos via cron, mas o ideal é não chegar lá).
+        chunkFailures++;
+        chunk.forEach((row, i) => {
+          erros.push({
+            linha: off + i + 2,
+            nome: row.name,
+            motivo: "Chunk failed: " + (chunkErr?.message ?? String(chunkErr)),
+          });
+        });
+        processed += chunk.length;
+      }
 
       // Atualiza progresso
       await admin
@@ -511,10 +548,14 @@ Deno.serve(async (req) => {
         .eq("id", jobId);
     }
 
+    // F5.4: status final reflete o que aconteceu. Se ALGUM chunk falhou
+    // ou houve linhas com erro, status='partial' em vez de 'done' — UI
+    // alerta que importação não foi 100% limpa.
+    const finalStatus = (chunkFailures > 0 || erros.length > 0) ? "partial" : "done";
     await admin
       .from("driver_import_jobs")
       .update({
-        status: "done",
+        status: finalStatus,
         finished_at: new Date().toISOString(),
         processed_rows: processed,
         created_count: created,
