@@ -39,8 +39,10 @@ export function useBrandScoringModels() {
       return { isDriverEnabled, isPassengerEnabled };
     },
     enabled: !!currentBrandId,
-    staleTime: 5 * 60_000, // 5 min — scoring_model raramente muda
-    gcTime: 10 * 60_000,
+    // scoring_model muda só em reconfig admin (raríssimo). 30 min é seguro
+    // e corta refetch entre navegação de páginas.
+    staleTime: 30 * 60_000,
+    gcTime: 60 * 60_000,
     refetchOnWindowFocus: false,
   });
 

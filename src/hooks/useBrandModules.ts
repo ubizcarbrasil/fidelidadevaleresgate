@@ -20,6 +20,9 @@ export function useBrandModules() {
       return data.brand_id;
     },
     enabled: !currentBrandId && !!currentBranchId && !isRoot,
+    // brand_id de uma branch é imutável (FK NOT NULL) → cache infinito
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 
   const effectiveBrandId = currentBrandId || resolvedBrandId || null;
@@ -35,6 +38,10 @@ export function useBrandModules() {
       return data;
     },
     enabled: !!effectiveBrandId && !isRoot,
+    // Módulos da brand mudam só quando admin habilita/desabilita (rare).
+    // Cache 30min reduz drasticamente refetch em navegação entre páginas.
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
   });
 
   /**
