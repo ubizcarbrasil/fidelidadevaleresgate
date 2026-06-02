@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -79,6 +79,8 @@ export default function CustomersPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.customers.list(debouncedSearch, page, currentBrandId, tierFilter, crmFilter),
+    // Sem flash de skeleton ao paginar/filtrar — UX mais suave em listas grandes
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       let query = supabase.from("customers").select("*, brands(name), branches(name)", { count: "exact" }) as any;
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);

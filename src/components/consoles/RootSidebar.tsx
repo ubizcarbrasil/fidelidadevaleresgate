@@ -206,7 +206,10 @@ export function RootSidebar() {
       const { data } = await supabase.from("brands").select("id, name, slug").eq("is_active", true).order("name");
       return data ?? [];
     },
-    staleTime: 5 * 60 * 1000,
+    // Lista de brands no sidebar do root muda apenas quando admin
+    // cadastra/desativa brand. 30min cobre sessão típica sem refetch.
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
   });
 
   return (

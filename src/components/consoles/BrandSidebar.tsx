@@ -151,7 +151,10 @@ export function BrandSidebar() {
       return null;
     },
     enabled: !!effectiveBrandId,
-    staleTime: 60_000,
+    // sidebar_group_order vive em brand_settings_json — só muda quando
+    // admin edita BrandSettings. 30min é seguro e corta refetch ao navegar.
+    staleTime: 30 * 60_000,
+    gcTime: 60 * 60_000,
   });
 
   const isBasicPlan = !subscriptionPlan || subscriptionPlan === "basic" || subscriptionPlan === "free";
