@@ -146,6 +146,13 @@
     <link rel="preconnect" href="https://rwhhabwgnkqjxcqwpcev.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://rwhhabwgnkqjxcqwpcev.supabase.co" />
 
+    <!-- Preconnect ao Google Fonts: o CSS importa Bebas Neue + Barlow Condensed
+         (tema Campeonato). Sem preconnect, o browser só descobre fonts.gstatic
+         depois de parsear o CSS principal, atrasando display do texto custom em
+         150-300ms. Crossorigin obrigatório em fonts.gstatic (woff2 = CORS). -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
     <link rel="apple-touch-icon" href="/pwa-192x192.png" />
 
     <meta property="og:type" content="website" />
