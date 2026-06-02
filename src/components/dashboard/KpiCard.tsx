@@ -1,8 +1,12 @@
-import { memo, forwardRef } from "react";
+import { lazy, memo, forwardRef, Suspense } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { ResponsiveContainer, AreaChart, Area } from "recharts";
+
+// Recharts (~85KB gzip) só baixa quando o primeiro KpiCard renderiza
+// um sparkline — não no boot do Dashboard. KPI value + label aparecem
+// instantaneamente; sparkline aparece depois do recharts download.
+const KpiSparkline = lazy(() => import("./KpiSparkline"));
 
 interface KpiCardProps {
   title: string;
@@ -52,17 +56,9 @@ const KpiCard = memo(forwardRef<HTMLDivElement, KpiCardProps>(function KpiCard({
         </div>
         {sparkData && sparkData.length > 1 && (
           <div className="absolute bottom-0 left-0 right-0 h-12 opacity-40">
-            <ResponsiveContainer width="100%" height={48} minWidth={0} minHeight={0}>
-              <AreaChart data={sparkData.map((v, i) => ({ v, i }))} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                <defs>
-                  <linearGradient id={`spark-${color}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={c.stroke} stopOpacity={0.4} />
-                    <stop offset="95%" stopColor={c.stroke} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <Area type="monotone" dataKey="v" stroke={c.stroke} fill={`url(#spark-${color})`} strokeWidth={1.5} dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
+            <Suspense fallback={null}>
+              <KpiSparkline data={sparkData} stroke={c.stroke} gradientId={`spark-${color}`} />
+            </Suspense>
           </div>
         )}
       </CardContent>

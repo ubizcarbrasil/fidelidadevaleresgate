@@ -27,8 +27,10 @@ export function useBrandInfo(): {
   const { data } = useQuery({
     queryKey: ["brand-info", brandId],
     enabled: !!brandId,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    // Nome/logo da brand mudam só em edição admin (raríssimo). 30 min
+    // reduz refetch durante navegação. Realtime invalida quando necessário.
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
     queryFn: async () => {
       // Reaproveita do contexto se for o mesmo brand (evita ida ao banco)
       if (ctxBrand && ctxBrand.id === brandId) {
