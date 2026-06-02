@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -24,6 +24,9 @@ export default function RedemptionsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.redemptions.list(debouncedSearch, page, currentBrandId),
+    // Sem flash de skeleton ao trocar página — mantém anterior visível
+    // até a nova chegar.
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       let query = supabase.from("redemptions")
         .select("*, offers(title), customers(name), branches(name)", { count: "exact" });

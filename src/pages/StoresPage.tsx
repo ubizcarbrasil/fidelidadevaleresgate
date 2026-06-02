@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -72,6 +72,8 @@ export default function StoresPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.stores.list(debouncedSearch, page, currentBrandId, statusTab),
+    // Mantém lista anterior durante fetch da próxima página (sem flash).
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       let query = supabase.from("stores").select("*, brands(name), branches(name)", { count: "exact" });
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,9 @@ export default function OffersPage() {
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.offers.list(debouncedSearch, page, currentBrandId, filtroMotorista),
     enabled: !!currentBrandId || isRootAdmin,
+    // Mantém dados da página anterior visíveis durante fetch da próxima —
+    // evita flash de loading skeleton ao navegar entre páginas.
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       let query = supabase.from("offers").select("*, brands(name), branches(name), stores(name)", { count: "exact" });
       if (!isRootAdmin && currentBrandId) query = query.eq("brand_id", currentBrandId);
