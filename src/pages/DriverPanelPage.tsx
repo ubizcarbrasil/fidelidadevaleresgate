@@ -20,13 +20,7 @@ import DriverCityPartnersPage from "@/components/driver/DriverCityPartnersPage";
 import DriverCityRedemptionHistory from "@/components/driver/DriverCityRedemptionHistory";
 import AchadinhoDealDetail from "@/components/customer/AchadinhoDealDetail";
 import DriverCategoryPage from "@/components/driver/DriverCategoryPage";
-import {
-  BadgeNotificacoes,
-  OverlayNotificacoes,
-} from "@/compartilhados/components/notificacoes_campeonato";
 import { ContextualHelpDrawer } from "@/components/ContextualHelpDrawer";
-import { useDueloCampeonatoHabilitado } from "@/compartilhados/hooks/hook_duelo_campeonato_habilitado";
-import { useCampeonatoStandalone } from "@/compartilhados/hooks/hook_campeonato_standalone";
 
 function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, initialDealId, isAdminSession }: {
   brand: any;
@@ -115,19 +109,13 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
   const isCityRedemptionEnabled = (effectiveBranch as any)?.is_city_redemption_enabled === true;
 
   // Campeonato flags (decisão de redirect quando é o único módulo ativo)
-  const { campeonatoHabilitado, isLoading: loadingCampHab } =
-    useDueloCampeonatoHabilitado(brand.id) as any;
-  const { standalone: campeonatoStandalone, isLoading: loadingCampStand } =
-    useCampeonatoStandalone(brand.id);
-  const showCampeonato = !!(campeonatoHabilitado || campeonatoStandalone);
+  const showCampeonato = false;
   const hasOtherModules =
     achadinhosEnabled ||
     marketplaceEnabled ||
     buyPointsEnabled ||
     isCityRedemptionEnabled;
-  const campeonatoFlagsLoading = !!(loadingCampHab || loadingCampStand);
-  const campeonatoOnly =
-    modulesLoaded && !campeonatoFlagsLoading && showCampeonato && !hasOtherModules;
+  const campeonatoOnly = false;
 
   // Derive whatsappNumber filtered by city toggle
   const rawWhatsappNumber = settings?.whatsapp_number as string | undefined;
@@ -316,32 +304,6 @@ function DriverGate({ brand, branch: branchFromUrl, theme, initialCategoryId, in
             onBack={() => setHubOverlay(null)}
           />
         )}
-        {/* Badge de notificações fixo no topo direito */}
-        <div className="fixed top-2 right-2 z-50">
-          <BadgeNotificacoes
-            brandId={brand.id}
-            driverId={driver?.id}
-            onOpen={() => setNotifOpen(true)}
-            className="bg-background/80 backdrop-blur shadow-md hover:bg-background"
-          />
-        </div>
-
-        <OverlayNotificacoes
-          brandId={brand.id}
-          driverId={driver?.id}
-          open={notifOpen}
-          onOpenChange={setNotifOpen}
-          onNavigate={(url) => {
-            if (url.includes("campeonato=1")) {
-              const params = new URLSearchParams(window.location.search);
-              const qs = new URLSearchParams();
-              qs.set("brandId", brand.id);
-              const sk = params.get("sessionKey");
-              if (sk) qs.set("sessionKey", sk);
-              navigate(`/motorista/campeonato?${qs.toString()}`);
-            }
-          }}
-        />
     </div>
   );
 }

@@ -78,10 +78,6 @@ export const brandGroupDefs: DefinicaoGrupoSidebar[] = [
     ],
   },
   {
-    label: "Gamificação",
-    items: ["sidebar.gamificacao"],
-  },
-  {
     label: "Cashback Inteligente",
     items: [
       "sidebar.gg_config",

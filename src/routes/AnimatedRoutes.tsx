@@ -48,7 +48,6 @@ import {
   EmitterJourneyGuidePage,
   EmitterRequestsPage,
   FeatureFlagsPage,
-  GamificacaoAdminPage,
   GanhaGanhaBillingPage,
   GanhaGanhaClosingReportsPage,
   GanhaGanhaConfigPage,
@@ -77,7 +76,6 @@ import {
   PaginaAdminUbizOfertas,
   PaginaAgendarDemonstracao,
   PaginaAuditoriaDuplicacoes,
-  PaginaCampeonatoStandalone,
   PaginaCatalogoProdutos,
   PaginaCentralModulos,
   PaginaConfigurarGanhaGanha,
@@ -87,7 +85,6 @@ import {
   PaginaDetalhesLead,
   PaginaDiagnosticoMarca,
   PaginaDominiosMarca,
-  PaginaHallDaFama,
   PaginaLandingProduto,
   PaginaLeadsComerciais,
   PaginaLinks,
@@ -117,7 +114,6 @@ import {
   ReportsPage,
   ResetPassword,
   RootJourneyGuidePage,
-  RotaCampeonatoMotorista,
   SectionTemplatesPage,
   SendNotificationPage,
   SponsoredPlacementsPage,
@@ -173,13 +169,11 @@ export function AnimatedRoutes() {
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/links" element={<PaginaLinks />} />
         <Route path="/driver" element={<DriverPanelPage />} />
-        <Route path="/motorista/campeonato" element={<RotaCampeonatoMotorista />} />
         <Route path="/mcp-dashboard" element={<McpDashboardPage />} />
         <Route path="/:slug/parceiro" element={<PartnerLandingPage />} />
         <Route path="/register-store" element={<StoreRegistrationWizard />} />
         <Route path="/loja/:slug" element={<PaginaLojaPublica />} />
         <Route path="/ofertas" element={<PaginaUbizOfertas />} />
-        <Route path="/campeonato/:brandSlug/hall-da-fama" element={<PaginaHallDaFama />} />
         <Route path="/install" element={<InstallPwaPage />} />
         <Route path="/store-panel" element={<ProtectedRoute><StoreOwnerPanel /></ProtectedRoute>} />
         <Route
@@ -307,8 +301,6 @@ export function AnimatedRoutes() {
           <Route path="city-onboarding" element={<PaginaOnboardingCidade />} />
           <Route path="configuracao-cidade" element={<PaginaConfiguracaoCidade />} />
           <Route path="configuracao-modulos-cidade" element={<PaginaConfiguracaoModulosCidade />} />
-          <Route path="gamificacao-admin" element={<ModuleGuard moduleKey="achadinhos_motorista"><GamificacaoAdminPage /></ModuleGuard>} />
-          <Route path="campeonato" element={<PaginaCampeonatoStandalone />} />
           <Route path="points-packages" element={<PaginaPacotesPontos />} />
           <Route path="points-packages-store" element={<PaginaLojaPacotes />} />
         </Route>
