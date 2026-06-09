@@ -20,7 +20,6 @@ export const PaginaDiagnosticoMarca = lazyWithRetry(() => import("@/features/dia
 export const PaginaConfigurarGanhaGanha = lazyWithRetry(() => import("@/features/painel_modelos_negocio/pagina_configurar_ganha_ganha"));
 export const PaginaModelosPorCidadeBranch = lazyWithRetry(() => import("@/features/painel_modelos_negocio/pagina_modelos_por_cidade_branch"));
 export const PaginaLinks = lazyWithRetry(() => import("@/features/pagina_links/pagina_links"));
-export const PaginaHallDaFama = lazyWithRetry(() => import("@/features/hall_da_fama/pagina_hall_da_fama"));
 export const PaginaProdutosComerciais = lazyWithRetry(() => import("@/features/produtos_comerciais/pagina_produtos_comerciais"));
 export const PaginaAuditoriaDuplicacoes = lazyWithRetry(() => import("@/features/auditoria_duplicacoes/pagina_auditoria_duplicacoes"));
 export const PaginaLandingProduto = lazyWithRetry(() => import("@/features/landing_produto/pagina_landing_produto"));
@@ -170,17 +169,8 @@ export const PartnerLandingConfigPage = lazyWithRetry(() => import("@/pages/Part
 export const AccessHubPage = lazyWithRetry(() => import("@/pages/AccessHubPage"));
 export const CrmEmbedPage = lazyWithRetry(() => import("@/pages/CrmEmbedPage"));
 
-// Campeonato
-export const RotaCampeonatoMotorista = lazyWithRetry(
-  () => import("@/products/campeonato/pages/rota_campeonato_motorista"),
-);
-export const PaginaCampeonatoStandalone = lazyWithRetry(
-  () => import("@/products/campeonato/pages/pagina_campeonato_standalone"),
-);
-
 // MCP / misc
 export const McpDashboardPage = lazyWithRetry(() => import("@/pages/McpDashboardPage"));
-export const GamificacaoAdminPage = lazyWithRetry(() => import("@/pages/GamificacaoAdminPage"));
 export const ManuaisPage = lazyWithRetry(() => import("@/pages/ManuaisPage"));
 export const BrandBranchesPage = lazyWithRetry(() => import("@/pages/BrandBranchesPage"));
 export const BrandBranchForm = lazyWithRetry(() => import("@/pages/BrandBranchForm"));

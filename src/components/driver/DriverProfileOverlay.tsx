@@ -7,7 +7,6 @@ import { ArrowLeft, LogOut, Coins, Loader2, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import ConquistasMotoristaSheet from "./duels/ConquistasMotoristaSheet";
 
 interface LedgerEntry {
   id: string;
@@ -145,12 +144,6 @@ export default function DriverProfileOverlay({ fontHeading, onBack }: Props) {
           </Button>
         </div>
 
-        <ConquistasMotoristaSheet
-          open={conquistasOpen}
-          onOpenChange={setConquistasOpen}
-          customerId={driver?.id}
-          fontHeading={fontHeading}
-        />
       </div>
     </div>
   );

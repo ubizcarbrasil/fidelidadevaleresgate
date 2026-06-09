@@ -7,16 +7,14 @@ import { shouldUseFastTrack } from "@/lib/routeConditions";
 import {
   DriverPanelPage,
   PaginaUbizOfertas,
-  RotaCampeonatoMotorista,
   WebviewPage,
 } from "@/lib/lazyPages";
 import { PageLoader } from "./PageLoader";
 
 /**
- * Short-circuit para a vitrine pública /ofertas e variantes (webview, /driver,
- * /motorista/campeonato). Pula AuthProvider/BrandProvider/Sentry para abrir
- * < 2s em in-app browsers (Instagram, Facebook, WhatsApp, iOS WebView), onde
- * getSession() pode travar.
+ * Short-circuit para a vitrine pública /ofertas e variantes (webview, /driver).
+ * Pula AuthProvider/BrandProvider/Sentry para abrir < 2s em in-app browsers
+ * (Instagram, Facebook, WhatsApp, iOS WebView), onde getSession() pode travar.
  *
  * Se o pathname não casar com nenhuma rota de fast-track, renderiza
  * `children` (a árvore normal com providers de auth/brand).
@@ -25,8 +23,6 @@ export function OfertasFastTrack({ children }: { children: ReactNode }) {
   const pathname = typeof window !== "undefined" ? window.location.pathname : "";
 
   if (!shouldUseFastTrack(pathname)) return <>{children}</>;
-
-  const isCampeonatoMotorista = pathname === "/motorista/campeonato";
 
   return (
     <TooltipProvider>
@@ -43,11 +39,7 @@ export function OfertasFastTrack({ children }: { children: ReactNode }) {
             <Route path="/webview" element={<WebviewPage />} />
             <Route path="/ofertas" element={<PaginaUbizOfertas />} />
             <Route path="/driver" element={<DriverPanelPage />} />
-            <Route path="/motorista/campeonato" element={<RotaCampeonatoMotorista />} />
-            <Route
-              path="*"
-              element={isCampeonatoMotorista ? <RotaCampeonatoMotorista /> : <PaginaUbizOfertas />}
-            />
+            <Route path="*" element={<PaginaUbizOfertas />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

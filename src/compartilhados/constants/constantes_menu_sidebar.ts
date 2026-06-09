@@ -228,11 +228,6 @@ export const MENU_REGISTRY: Record<string, RegistroItemMenu> = {
     key: "sidebar.relatorios_cidade", defaultTitle: "Relatórios", url: "/branch-reports", icon: BarChart3, moduleKey: "branch_reports",
   },
 
-  // ─── Gamificação ───
-  "sidebar.gamificacao": {
-    key: "sidebar.gamificacao", defaultTitle: "Duelos & Ranking", url: "/gamificacao-admin", icon: Swords, moduleKey: "achadinhos_motorista", scoringFilter: "DRIVER",
-  },
-
   // ─── Cashback Inteligente ───
   "sidebar.gg_dashboard": {
     key: "sidebar.gg_dashboard", defaultTitle: "Painel Cashback", url: "/ganha-ganha-dashboard", icon: Handshake, moduleKey: "gg_dashboard",

@@ -26,14 +26,7 @@ import DriverDealCardGrid from "./DriverDealCardGrid";
 import SecaoResgateCidade, { type OfertaCidade } from "./SecaoResgateCidade";
 import CityOfferDetailOverlay from "./CityOfferDetailOverlay";
 import DriverCityPartnersPage from "./DriverCityPartnersPage";
-import DuelsHub from "./duels/DuelsHub";
 import DriverCityRedemptionHistory from "./DriverCityRedemptionHistory";
-import SecaoDuelosCidade from "./duels/SecaoDuelosCidade";
-import { useConfigDuelos } from "./duels/hook_config_duelos";
-import BannerPromoDuelos from "./duels/BannerPromoDuelos";
-import BannerDueloAoVivo from "./duels/BannerDueloAoVivo";
-import { useEscutaDesafiosRecebidos } from "./duels/hook_escuta_desafios_recebidos";
-import PopupDesafioRecebido from "./duels/PopupDesafioRecebido";
 import DriverBuyPointsOverlay from "./DriverBuyPointsOverlay";
 
 export interface AffiliateDeal {
@@ -166,7 +159,6 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
   const [selectedCityOffer, setSelectedCityOffer] = useState<OfertaCidade | null>(null);
   const [showCityPartners, setShowCityPartners] = useState(false);
   const [showCityRedemptions, setShowCityRedemptions] = useState(false);
-  const [showDuels, setShowDuels] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
@@ -176,8 +168,7 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
 
   const highlight = "hsl(var(--primary))";
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
-  const configDuelos = useConfigDuelos(branch);
-  const { desafioPendente, fecharPopup } = useEscutaDesafiosRecebidos();
+  const configDuelos = { duelosAtivos: false, visualizacaoPublica: false };
 
   const settings = brand.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
@@ -478,15 +469,6 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              {driver && configDuelos.duelosAtivos && (
-                <button
-                  onClick={() => setShowDuels(true)}
-                  className="h-9 w-9 flex items-center justify-center rounded-xl"
-                  style={{ backgroundColor: "hsl(var(--muted))" }}
-                >
-                  <Swords className="h-4.5 w-4.5 text-foreground" />
-                </button>
-              )}
               {driver && (
                 <button
                   onClick={() => setShowProfile(true)}
@@ -615,22 +597,6 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
       {/* Banners */}
       {achadinhosEnabled && showBanners && <DriverBannerCarousel brandId={brand.id} />}
 
-      {/* Banner duelo ao vivo — visível para todos */}
-      {!debouncedSearch.trim() && configDuelos.duelosAtivos && (
-        <BannerDueloAoVivo branchId={branch?.id} fontHeading={fontHeading} />
-      )}
-
-      {/* Banner promo Duelos */}
-      {!debouncedSearch.trim() && driver && configDuelos.duelosAtivos && (
-        <div className="px-5 pt-4">
-          <BannerPromoDuelos
-            fontHeading={fontHeading}
-            onAbrir={() => setShowDuels(true)}
-            temDesafioPendente={!!desafioPendente}
-          />
-        </div>
-      )}
-
       {/* Redeemable section — visible when marketplace (Compre com Pontos) is enabled at city level */}
       {effectiveMarketplaceEnabled && !debouncedSearch.trim() && redeemableDeals.length > 0 && (
         <section className="pt-4">
@@ -704,15 +670,6 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
             );
           })()}
         </section>
-      )}
-
-      {/* Duelos rolando na cidade */}
-      {!debouncedSearch.trim() && configDuelos.visualizacaoPublica && (
-        <SecaoDuelosCidade
-          branchId={branch?.id}
-          fontHeading={fontHeading}
-          onVerTodos={configDuelos.duelosAtivos ? () => setShowDuels(true) : undefined}
-        />
       )}
 
       {/* Resgate na Cidade */}
@@ -1003,11 +960,6 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         />
       )}
 
-      {/* Duels overlay */}
-      {showDuels && configDuelos.duelosAtivos && (
-        <DuelsHub onBack={() => setShowDuels(false)} configDuelos={configDuelos} />
-      )}
-
       {/* Meus Resgates overlay */}
       {showCityRedemptions && (
         <DriverCityRedemptionHistory
@@ -1026,12 +978,6 @@ export default function DriverMarketplace({ brand, branch, theme, initialCategor
         />
       )}
 
-      {/* Popup de desafio recebido em tempo real */}
-      <PopupDesafioRecebido
-        desafio={desafioPendente}
-        onFechar={fecharPopup}
-        onVerDesafio={() => setShowDuels(true)}
-      />
     </div>
   );
 }

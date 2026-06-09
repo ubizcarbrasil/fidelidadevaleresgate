@@ -15,7 +15,6 @@ import {
 } from "@/compartilhados/hooks/hook_brand_business_models";
 import type { ResolvedBusinessModel } from "@/compartilhados/hooks/hook_brand_plan_business_models";
 import { useBrandGuard } from "@/hooks/useBrandGuard";
-import ConfiguradorFormatosDuelo from "./configurador_formatos_duelo";
 import FeatureToggle from "./feature_toggle";
 
 interface Props {
@@ -152,11 +151,6 @@ export default function CardModeloBrand({ brandId, resolved }: Props) {
             </>
           )}
         </div>
-
-        {/* Bloco Root-only: formatos de engajamento liberados para a marca */}
-        {isRootAdmin && isDueloMotorista && !isLocked && (
-          <ConfiguradorFormatosDuelo brandId={brandId} />
-        )}
 
         {/* Bloco "Inclui no Duelo" — features consolidadas (Sprint 3) */}
         {isDueloMotorista && isActive && !isLocked && (

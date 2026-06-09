@@ -22,9 +22,7 @@ export const PUBLIC_PATHS = [
   "/driver",
   "/d/",
   "/loja/",
-  "/campeonato/",
   "/ofertas",
-  "/motorista/",
 ] as const;
 
 export function isPublicPath(pathname: string): boolean {
@@ -41,10 +39,6 @@ export function isWebviewPath(pathname: string): boolean {
 
 export function isDriverPath(pathname: string): boolean {
   return pathname === "/driver" || pathname.startsWith("/driver/");
-}
-
-export function isCampeonatoMotoristaPath(pathname: string): boolean {
-  return pathname === "/motorista/campeonato";
 }
 
 /** Regex testada contra strings de path — landing de parceiro: `/<slug>/parceiro` */
@@ -64,7 +58,6 @@ export function shouldUseFastTrack(pathname: string): boolean {
   return (
     isOfertasPath(pathname) ||
     isWebviewPath(pathname) ||
-    isDriverPath(pathname) ||
-    isCampeonatoMotoristaPath(pathname)
+    isDriverPath(pathname)
   );
 }

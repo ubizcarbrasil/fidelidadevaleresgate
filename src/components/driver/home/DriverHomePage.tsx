@@ -3,8 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Gift, Sparkles, MapPin } from "lucide-react";
 import { useDriverSession } from "@/contexts/DriverSessionContext";
-import { useDueloCampeonatoHabilitado } from "@/compartilhados/hooks/hook_duelo_campeonato_habilitado";
-import { useCampeonatoStandalone } from "@/compartilhados/hooks/hook_campeonato_standalone";
 import { shareDriverUrl } from "@/lib/publicShareUrl";
 import HomeHeader from "./HomeHeader";
 import UserPointsCard from "./UserPointsCard";
@@ -47,9 +45,7 @@ export default function DriverHomePage({
   buyPointsEnabled = false, whatsappNumber, onOpenCampeonato,
 }: Props) {
   const { driver } = useDriverSession();
-  const { campeonatoHabilitado } = useDueloCampeonatoHabilitado(brand.id);
-  const { standalone: campeonatoStandalone } = useCampeonatoStandalone(brand.id);
-  const showCampeonato = campeonatoHabilitado || campeonatoStandalone;
+  const showCampeonato = false;
   const settings = brand.brand_settings_json as any;
   const logoUrl = settings?.logo_url;
   const marketplaceTitle = settings?.driver_marketplace_title || "Achadinhos";
