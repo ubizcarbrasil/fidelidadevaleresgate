@@ -9,6 +9,8 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { BrandProvider, useBrand } from "@/contexts/BrandContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { usePWA } from "@/hooks/usePWA";
+import { useTrackPageView } from "@/hooks/useTrackPageView";
+import { initAnalytics } from "@/lib/analytics";
 import PWAUpdateBanner from "@/components/pwa/PWAUpdateBanner";
 import PWAInstallBanner from "@/components/pwa/PWAInstallBanner";
 import { queryClient } from "@/lib/queryClient";
@@ -32,6 +34,10 @@ import { PageLoader } from "@/routes/PageLoader";
 
 // Initialize event bus → query bridge for automatic cache invalidation
 initEventBusQueryBridge(queryClient);
+
+// Initialize PostHog analytics. Idempotente + silent if VITE_POSTHOG_KEY
+// não está setado (modo dev sem env config). Não bloqueia boot.
+initAnalytics();
 
 function PWABanners() {
   const { needRefresh, updateServiceWorker, dismissUpdate, canInstall, installApp, dismissInstall } = usePWA();
@@ -87,6 +93,10 @@ function AppContent() {
   const { isWhiteLabel, brand } = useBrand();
   const { user, roles, loading: authLoading } = useAuth();
   const location = useLocation();
+
+  // Dispara $pageview no PostHog a cada mudança de rota (SPA nav não
+  // gera reload, então autocapture nativo não cobre).
+  useTrackPageView();
 
   if (isPartnerLandingPath(location.pathname)) {
     return (
