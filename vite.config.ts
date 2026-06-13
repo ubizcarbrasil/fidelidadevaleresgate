@@ -1,11 +1,15 @@
-import { defineConfig } from "vite";
+import { defineConfig, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
+import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
 const isDevelopment = mode === "development";
+// Gera dist/stats.html (sunburst do bundle) quando ANALYZE=1.
+// Uso: ANALYZE=1 npm run build && open dist/stats.html
+const shouldAnalyze = process.env.ANALYZE === "1";
 
 return ({
   server: {
@@ -17,6 +21,13 @@ return ({
   },
   plugins: [
     react(),
+    shouldAnalyze && visualizer({
+      filename: "dist/stats.html",
+      template: "sunburst",
+      gzipSize: true,
+      brotliSize: true,
+      open: false,
+    }),
     !isDevelopment && VitePWA({
       injectRegister: false,
       registerType: "autoUpdate",
@@ -185,7 +196,7 @@ return ({
         ],
       },
     }),
-  ].filter(Boolean),
+  ].filter(Boolean) as PluginOption[],
   build: {
     rollupOptions: {
       output: {
@@ -214,10 +225,16 @@ return ({
           if (id.match(/node_modules\/(clsx|tailwind-merge|class-variance-authority)\//)) {
             return 'vendor-utils';
           }
-          // Lucide icons — antes ficavam duplicados em chunks diferentes
-          // (chunk principal + chunk de página). Consolidando em chunk único
-          // reduz duplicação (~600KB extra de overhead em build anterior).
-          if (id.includes('lucide-react')) return 'vendor-icons';
+          // Lucide icons: NÃO chunkar manualmente.
+          // Antes: chunk consolidado vendor-icons de ~780KB carregava
+          // EAGERLY em qualquer rota que importasse 1 ícone — incluindo
+          // landing pública. Rollup perdia precision de tree-shaking
+          // por causa da chunk boundary forçada.
+          // Agora: Rollup co-loca cada ícone com a rota que o consome
+          // via splitChunks padrão. Ícones repetidos viram chunk shared
+          // pequeno automaticamente; ícones únicos ficam in-line.
+          // Trade-off: pode haver dedup imperfeito (alguns KB extras
+          // espalhados), mas elimina o eager-load gigante do landing.
 
           // IMPORTANTE: NÃO criar chunk catch-all aqui. Deixar Rollup decidir
           // o co-location entre lib e seu consumidor. Isso evita que libs
@@ -228,9 +245,10 @@ return ({
         },
       },
     },
-    // Aviso de chunk size — reduzido de 500 (default) para 600 já que com
-    // splitting agressivo só recharts/xlsx ficam grandes (sob demanda).
-    chunkSizeWarningLimit: 600,
+    // Aviso de chunk size. Entry chunk fica ~600KB (inclui lucide icons
+    // usados eagerly, sem dedup forçada). Demais grandes (recharts/jspdf/
+    // xlsx) são sob demanda em rotas específicas, não bloqueiam boot.
+    chunkSizeWarningLimit: 700,
   },
   resolve: {
     alias: {
