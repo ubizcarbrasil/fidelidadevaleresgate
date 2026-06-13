@@ -34,6 +34,8 @@ export function normalizeIdentifier(identifier: string, type: "email" | "phone" 
   return identifier.replace(/\D/g, "");
 }
 
+import { sendEmail } from "./email.ts";
+
 /**
  * Envia email via Resend se RESEND_API_KEY estiver setado.
  * Fallback: loga warning (em dev/preview o admin pode ler do log).
@@ -46,30 +48,15 @@ export async function sendOtpEmail(opts: {
   code: string;
   brandName?: string;
 }): Promise<{ sent: boolean; provider: string }> {
-  const apiKey = Deno.env.get("RESEND_API_KEY");
-
-  if (!apiKey) {
-    console.warn(
-      "[otp] RESEND_API_KEY não setado — código não enviado. " +
-        "Configure no Supabase: Dashboard → Edge Functions → Secrets.",
-    );
+  if (!Deno.env.get("RESEND_API_KEY")) {
     console.info(`[otp] Código DEV pra ${opts.to}: ${opts.code}`);
-    return { sent: false, provider: "none" };
   }
-
   const brandPrefix = opts.brandName ? `[${opts.brandName}] ` : "";
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: Deno.env.get("OTP_FROM_EMAIL") ?? "no-reply@valeresgate.com.br",
-        to: opts.to,
-        subject: `${brandPrefix}Seu código de verificação`,
-        html: `
+  const result = await sendEmail({
+    to: opts.to,
+    subject: `${brandPrefix}Seu código de verificação`,
+    tag: "otp",
+    html: `
 <!doctype html>
 <html><body style="font-family:system-ui,sans-serif;padding:24px;max-width:480px;margin:0 auto;">
 <h2 style="color:#1a6cfa;">${brandPrefix}Verificação de identidade</h2>
@@ -79,16 +66,6 @@ ${opts.code}
 </div>
 <p style="color:#666;font-size:13px;">Se você não solicitou este código, ignore este email.</p>
 </body></html>`.trim(),
-      }),
-    });
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error("[otp] Resend falhou:", res.status, errText);
-      return { sent: false, provider: "resend_error" };
-    }
-    return { sent: true, provider: "resend" };
-  } catch (err) {
-    console.error("[otp] Resend exceção:", err);
-    return { sent: false, provider: "resend_exception" };
-  }
+  });
+  return { sent: result.sent, provider: result.provider };
 }
