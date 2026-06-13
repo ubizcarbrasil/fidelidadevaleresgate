@@ -37,3 +37,4 @@ jscpd-report/
 
 # TypeScript --build incremental output (project references)
 *.tsbuildinfo
+coverage/
