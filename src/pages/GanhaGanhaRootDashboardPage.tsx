@@ -149,6 +149,11 @@ export default function GanhaGanhaRootDashboardPage() {
     a.href = url;
     a.download = `gg-consolidado-${periodMonth}.csv`;
     a.click();
+    // Revoga URL após download iniciado — sem isso, cada export vazava
+    // o CSV inteiro no heap até reload. Em admin que exporta 10x/dia,
+    // soma rápido. setTimeout cobre browser que ainda está processando
+    // o click() async.
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   };
 
   if (isLoading) {

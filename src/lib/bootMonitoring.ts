@@ -34,7 +34,13 @@ export function startMonitoring(
   if (isWebviewLitePath(pathname)) {
     return false;
   }
-  loaders.loadSentry().then(({ initSentry }) => initSentry()).catch(() => {});
-  loaders.loadWebVitals().then(({ reportWebVitals }) => reportWebVitals()).catch(() => {});
+  // Falha de monitoring NÃO deve quebrar o boot (swallow é OK), mas
+  // logar via console.debug ajuda quando observability some "do nada".
+  loaders.loadSentry().then(({ initSentry }) => initSentry()).catch((err) => {
+    console.debug("[boot] Sentry load failed:", err);
+  });
+  loaders.loadWebVitals().then(({ reportWebVitals }) => reportWebVitals()).catch((err) => {
+    console.debug("[boot] WebVitals load failed:", err);
+  });
   return true;
 }
