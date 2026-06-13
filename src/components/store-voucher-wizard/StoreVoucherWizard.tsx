@@ -217,7 +217,13 @@ export default function StoreVoucherWizard({ storeId, branchId, brandId, editOff
 
     let error: any;
     if (editOffer) {
-      const res = await supabase.from("offers").update(payload).eq("id", editOffer.id);
+      // Defense-in-depth: força brand_id no WHERE pra impedir edição cross-tenant
+      // mesmo se RLS falhar.
+      const res = await supabase
+        .from("offers")
+        .update(payload)
+        .eq("id", editOffer.id)
+        .eq("brand_id", brandId);
       error = res.error;
     } else {
       const res = await supabase.from("offers").insert([{

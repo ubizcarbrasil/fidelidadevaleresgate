@@ -62,7 +62,13 @@ export default function OperatorRedeemPage() {
 
       // Anti-fraud: check PIN expiration
       if (data.expires_at && new Date(data.expires_at) < new Date()) {
-        await supabase.from("redemptions").update({ status: "EXPIRED" as any }).eq("id", data.id);
+        // Defense-in-depth: força brand_id do registro recuperado pra impedir
+        // que update afete redemption de outra brand caso RLS falhe.
+        await supabase
+          .from("redemptions")
+          .update({ status: "EXPIRED" as any })
+          .eq("id", data.id)
+          .eq("brand_id", (data as any).brand_id);
         throw new Error("PIN expirado. Este resgate não pode mais ser utilizado.");
       }
 

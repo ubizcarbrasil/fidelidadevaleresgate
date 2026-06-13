@@ -87,7 +87,14 @@ export default function OffersPage() {
         value_rescue: Number(form.value_rescue), min_purchase: Number(form.min_purchase), status: form.status,
         max_daily_redemptions: form.max_daily_redemptions ? Number(form.max_daily_redemptions) : null,
       };
-      if (editId) { const { error } = await supabase.from("offers").update(payload).eq("id", editId); if (error) throw error; }
+      if (editId) {
+        // Defense-in-depth: força brand_id no WHERE pra não-root, impedindo
+        // que RLS bug eventual permita edição cross-tenant.
+        let q = supabase.from("offers").update(payload).eq("id", editId);
+        if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);
+        const { error } = await q;
+        if (error) throw error;
+      }
       else { const { error } = await supabase.from("offers").insert(payload); if (error) throw error; }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.offers.all }); toast.success(editId ? "Oferta atualizada!" : "Oferta criada!"); closeDialog(); },
@@ -95,7 +102,12 @@ export default function OffersPage() {
   });
 
   const remove = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("offers").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => {
+      let q = supabase.from("offers").delete().eq("id", id);
+      if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);
+      const { error } = await q;
+      if (error) throw error;
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.offers.all }); toast.success("Oferta removida!"); },
     onError: (e: Error) => toast.error(e.message),
   });
