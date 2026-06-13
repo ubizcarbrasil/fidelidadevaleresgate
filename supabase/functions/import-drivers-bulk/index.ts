@@ -265,33 +265,126 @@ Deno.serve(async (req) => {
   const branchId = effectiveBranchId;
   const rows = payload.rows;
 
-  // Carrega TODOS os motoristas da marca em uma única query (paginado)
+  // Targeted lookup: busca SÓ motoristas que possam matchar pelos
+  // identifiers presentes no CSV. Substitui o "load all" antigo que
+  // causava heap exhaustion em brand com 100k+ motoristas (50MB+ no
+  // Deno só pra montar matchMap, frequentemente OOM).
+  //
+  // Trade-off: matching por nome agora é "best effort" via ILIKE em
+  // chunks pequenos. CPF/external_id/phone (matches mais confiáveis)
+  // são cobertos via IN()/in-clause. Nome é fallback e geralmente já
+  // tem ext_id ou CPF no CSV moderno.
   const carregarMotoristasExistentes = async () => {
     const map = new Map<string, { id: string; cpf: string | null; phone: string | null; name: string | null; external_id: string | null }>();
-    let offset = 0;
-    const pageSize = 1000;
-    while (true) {
+
+    // Coleta identifiers do CSV
+    const cpfs = new Set<string>();
+    const phones = new Set<string>();
+    const extIds = new Set<string>();
+    const namesNorm = new Set<string>();
+    for (const r of rows) {
+      const cpf = limparCpf(r.cpf);
+      if (cpf) cpfs.add(cpf);
+      const tel = limparTel(r.phone);
+      if (tel) phones.add(tel);
+      if (r.external_id) extIds.add(r.external_id);
+      const n = normNome(r.name);
+      if (n) namesNorm.add(n);
+    }
+
+    // Função helper pra registrar no map
+    const registrar = (rec: { id: string; cpf: string | null; phone: string | null; name: string | null; external_driver_id: string | null }) => {
+      const cpfClean = limparCpf(rec.cpf || undefined);
+      const telClean = limparTel(rec.phone || undefined);
+      const nome = normNome(rec.name || undefined);
+      const ext = rec.external_driver_id || null;
+      const item = { id: rec.id, cpf: cpfClean, phone: telClean, name: nome, external_id: ext };
+      if (cpfClean) map.set("cpf:" + cpfClean, item);
+      if (telClean) map.set("tel:" + telClean, item);
+      if (nome) map.set("nome:" + nome, item);
+      if (ext) map.set("ext:" + ext, item);
+    };
+
+    // Postgres IN() aceita até ~32k items confortavelmente. CSV importa
+    // até 5000 linhas, então max 5000 IDs por lookup. Safe.
+    const CHUNK = 1000; // chunks pra IN() não explodir query plan
+
+    // 1. CPF (match mais forte) — chunkado pra plan estável
+    const cpfArr = [...cpfs];
+    for (let i = 0; i < cpfArr.length; i += CHUNK) {
+      const slice = cpfArr.slice(i, i + CHUNK);
       const { data } = await admin
         .from("customers")
         .select("id, cpf, phone, name, external_driver_id")
         .eq("brand_id", brandId)
-        .ilike("name", "%[MOTORISTA]%")
-        .range(offset, offset + pageSize - 1);
-      if (!data || data.length === 0) break;
-      data.forEach((d) => {
-        const cpfClean = limparCpf(d.cpf || undefined);
-        const telClean = limparTel(d.phone || undefined);
-        const nome = normNome(d.name || undefined);
-        const ext = d.external_driver_id || null;
-        const rec = { id: d.id, cpf: cpfClean, phone: telClean, name: nome, external_id: ext };
-        if (cpfClean) map.set("cpf:" + cpfClean, rec);
-        if (telClean) map.set("tel:" + telClean, rec);
-        if (nome) map.set("nome:" + nome, rec);
-        if (ext) map.set("ext:" + ext, rec);
-      });
-      if (data.length < pageSize) break;
-      offset += pageSize;
+        .in("cpf", slice);
+      (data || []).forEach(registrar);
     }
+
+    // 2. external_driver_id
+    const extArr = [...extIds];
+    for (let i = 0; i < extArr.length; i += CHUNK) {
+      const slice = extArr.slice(i, i + CHUNK);
+      const { data } = await admin
+        .from("customers")
+        .select("id, cpf, phone, name, external_driver_id")
+        .eq("brand_id", brandId)
+        .in("external_driver_id", slice);
+      (data || []).forEach(registrar);
+    }
+
+    // 3. Phone (último identifier forte)
+    const phoneArr = [...phones];
+    for (let i = 0; i < phoneArr.length; i += CHUNK) {
+      const slice = phoneArr.slice(i, i + CHUNK);
+      const { data } = await admin
+        .from("customers")
+        .select("id, cpf, phone, name, external_driver_id")
+        .eq("brand_id", brandId)
+        .in("phone", slice);
+      (data || []).forEach(registrar);
+    }
+
+    // 4. Names (fallback fuzzy) — apenas pras linhas que NÃO tem ext/cpf/phone
+    // No matchMap. Evita re-query desnecessária. Usa OR via .or() chunked
+    // só pra essas linhas restantes.
+    const nameOnlyRows = rows.filter((r) => {
+      const cpf = limparCpf(r.cpf);
+      const tel = limparTel(r.phone);
+      const ext = r.external_id;
+      const n = normNome(r.name);
+      if (!n) return false;
+      // Se já matchou por outros identifiers, skip
+      if (ext && map.has("ext:" + ext)) return false;
+      if (cpf && map.has("cpf:" + cpf)) return false;
+      if (tel && map.has("tel:" + tel)) return false;
+      return true;
+    });
+
+    if (nameOnlyRows.length > 0) {
+      // Pra name matching, faz query por brand+pattern e normaliza local.
+      // Filtra por OR de ILIKE com até 50 nomes por query (Postgres OR
+      // chains ficam pesados acima disso).
+      const NAME_CHUNK = 50;
+      const uniqueNames = [...new Set(nameOnlyRows.map(r => r.name!.trim()).filter(Boolean))];
+      for (let i = 0; i < uniqueNames.length; i += NAME_CHUNK) {
+        const slice = uniqueNames.slice(i, i + NAME_CHUNK);
+        // Constrói OR pattern: name.ilike.%foo%,name.ilike.%bar%
+        // Escapa wildcards básicos. Names em CSV não contêm % normalmente.
+        const orFilter = slice
+          .map(n => `name.ilike.%${n.replace(/[%_]/g, '')}%`)
+          .join(",");
+        const { data } = await admin
+          .from("customers")
+          .select("id, cpf, phone, name, external_driver_id")
+          .eq("brand_id", brandId)
+          .ilike("name", "%[MOTORISTA]%")
+          .or(orFilter)
+          .limit(500); // safety: nunca trazer mais de 500 por chunk
+        (data || []).forEach(registrar);
+      }
+    }
+
     return map;
   };
 
