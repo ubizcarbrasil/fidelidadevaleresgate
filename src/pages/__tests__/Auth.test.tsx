@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render } from "@testing-library/react";
+import { render, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Auth from "../Auth";
 
@@ -22,6 +22,15 @@ vi.mock("sonner", () => ({
   toast: { error: vi.fn(), success: vi.fn() },
 }));
 
+vi.mock("@/contexts/BrandContext", () => ({
+  useBrand: () => ({ brand: null, theme: null }),
+}));
+
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({ user: null, roles: [] }),
+  AUTH_RETURN_TO_KEY: "auth:returnTo",
+}));
+
 function renderAuth() {
   return render(
     <MemoryRouter>
@@ -40,14 +49,14 @@ describe("Auth Page", () => {
 
   it("switches to signup mode", () => {
     const { getByText, getByLabelText, getByRole } = renderAuth();
-    getByText(/não tem conta/i).click();
+    fireEvent.click(getByText(/não tem conta/i));
     expect(getByLabelText("Nome completo")).toBeInTheDocument();
     expect(getByRole("button", { name: /criar conta/i })).toBeInTheDocument();
   });
 
   it("shows forgot password form", () => {
     const { getByText, getByRole, queryByLabelText } = renderAuth();
-    getByText(/esqueceu a senha/i).click();
+    fireEvent.click(getByText(/esqueceu a senha/i));
     expect(getByRole("button", { name: /enviar email/i })).toBeInTheDocument();
     expect(queryByLabelText("Senha")).not.toBeInTheDocument();
   });
