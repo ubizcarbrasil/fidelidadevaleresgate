@@ -81,7 +81,16 @@ return ({
         // vendor chunks). Páginas/components lazy ficam pra runtime cache.
         // Antes: 526 assets, ~7.7MB → primeira instalação do SW em 5G demorava
         // 30-60s. Agora: ~30 assets, ~2-3MB → primeira install <10s.
-        cacheId: "vale-resgate-v12",
+        // v13 (Pós-auditoria mega-batch) — invalida SW após 20+ PRs em sequência
+        // (#34-#59 + correções pós-merge) que renomearam quase todos os chunks
+        // hash-based. User reportou em iPhone PWA "Carregando aplicativo" de
+        // 30s a cada navegação E logout aleatório — sintoma clássico de SW
+        // servindo HTML cacheado que aponta pra chunks que já não existem
+        // no server. lazyWithRetry tentava, falhava, e disparava reload completo
+        // a cada nav. Bump força clientes a baixar SW novo (skipWaiting+clientsClaim
+        // já estão ativos), descartam todos os caches antigos e renavegam contra
+        // o bundle atual.
+        cacheId: "vale-resgate-v13",
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globPatterns: [
