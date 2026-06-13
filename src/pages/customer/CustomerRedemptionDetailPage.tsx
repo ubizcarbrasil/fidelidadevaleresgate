@@ -75,7 +75,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
       if (debitEntry && debitEntry.points_amount > 0) {
         const userId = (await supabase.auth.getUser()).data.user?.id;
         if (userId) {
-          await supabase.rpc("refund_customer_points", {
+          await supabase.rpc("refund_customer_points" as any, {
             p_customer_id: debitEntry.customer_id,
             p_brand_id: debitEntry.brand_id,
             p_branch_id: debitEntry.branch_id,

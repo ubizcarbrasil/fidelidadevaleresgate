@@ -10636,6 +10636,10 @@ export type Database = {
         }
         Returns: Json
       }
+      cleanup_stuck_driver_import_jobs: {
+        Args: { p_max_age_minutes?: number }
+        Returns: number
+      }
       collect_duel_ride_ids: {
         Args: {
           p_branch_id: string
@@ -11057,6 +11061,17 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      import_drivers_update_batch: {
+        Args: { p_updates: Json }
+        Returns: number
+      }
+      increment_customer_balance: {
+        Args: { p_customer_id: string; p_money?: number; p_points?: number }
+        Returns: {
+          new_money_balance: number
+          new_points_balance: number
+        }[]
       }
       list_branch_drivers_for_duels: {
         Args: { p_branch_id: string; p_exclude_customer_id: string }

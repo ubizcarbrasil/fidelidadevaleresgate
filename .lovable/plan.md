@@ -1,52 +1,36 @@
-## Diagnóstico
+# Plano de execução — Performance & bug fixes Supabase
 
-O problema está no código/backend, não no login do empreendedor.
+Os arquivos das migrations já existem em `supabase/migrations/` e os módulos do `mirror-sync` já estão refatorados em 9 arquivos. As edge functions `earn-webhook` e `import-drivers-bulk` também já têm o código novo. Mas no banco **nenhuma das 3 RPCs novas existe ainda** (`import_drivers_update_batch`, `cleanup_stuck_driver_import_jobs`, `increment_customer_balance`) — confirmado por consulta ao `information_schema`. Então preciso aplicar as migrations agora e redeployar as functions pra garantir versão ativa.
 
-O que encontrei:
-- A temporada **foi criada** no banco: `Maio 2026`, fase `classification`, cidade `aa1e7a2c...`.
-- A distribuição automática **alocou 74 motoristas** em `campeonato_tier_memberships`.
-- Porém a tela do empreendedor lê as séries usando `campeonato_season_standings`, e essa tabela ficou com **0 motoristas**.
-- Resultado: a UI mostra mensagens contraditórias:
-  - “temporada criada”
-  - “sem motoristas no campeonato”
-  - botão “Distribuir motoristas agora”
-  - ao clicar, retorna “já foi semeada”, porque a distribuição já marcou `tier_seeding_completed_at`.
+## Passo 1 — Aplicar 2 migrations
+Como os arquivos em `supabase/migrations/` são read-only, vou re-emitir o SQL através do tool de migration (que pede sua aprovação antes de rodar), em 2 chamadas separadas:
 
-Além disso, o modo automático ignora a seleção manual/top 60 feita na tela: ele mostra a seleção no preview, mas o backend redistribui sozinho por regra própria ao criar.
+1.1. `import_drivers_update_batch(...)` + `cleanup_stuck_driver_import_jobs(...)`
+1.2. `increment_customer_balance(p_customer_id, p_points, p_money)`
 
-## Plano de correção
+Após cada uma, validar com `SELECT routine_name FROM information_schema.routines ...`.
 
-1. **Corrigir a função de seeding no banco**
-   - Atualizar `campeonato_seed_initial_tier_memberships` para, ao distribuir motoristas nas séries, também criar linhas iniciais em `campeonato_season_standings` com 0 pontos.
-   - Assim o dashboard, cards de série e KPIs enxergam imediatamente os motoristas alocados.
+## Passo 2 — Deploy de 3 edge functions
+- `earn-webhook`
+- `import-drivers-bulk`
+- `mirror-sync`
 
-2. **Tornar o seeding idempotente de verdade**
-   - Ajustar `campeonato_materialize_and_seed_season` para não tratar “já foi semeada” como erro.
-   - Se a temporada já foi semeada, retornar sucesso com contagem real de séries, motoristas alocados e standings.
-   - Isso elimina o erro ao clicar de novo em “Distribuir motoristas agora”.
+Deploy via `supabase--deploy_edge_functions` (uma única chamada com as 3). Confirmo sucesso pelo retorno do tool.
 
-3. **Corrigir a leitura do dashboard**
-   - Atualizar `brand_get_campeonato_dashboard` e `brand_get_season_summary` para contarem motoristas por `campeonato_tier_memberships`, não só por `campeonato_season_standings`.
-   - O ranking/top continua usando standings, mas a contagem de motoristas passa a refletir os motoristas realmente inscritos nas séries.
+## Passo 3 — Verificar `RESEND_API_KEY`
+Chamo `secrets--fetch_secrets` e reporto se está presente. Se faltar, **paro e te aviso** — não tenho como adicionar valor de secret sozinho (precisa de input seu via `add_secret`).
 
-4. **Corrigir o alerta da UI**
-   - Ajustar a tela para mostrar “distribuir motoristas agora” apenas quando não houver séries ou não houver memberships.
-   - Se já houver motoristas alocados mas ainda sem pontuação, mostrar texto correto como “motoristas distribuídos, aguardando corridas pontuarem”, em vez de “sem motoristas”.
+## Passo 4 — Agendar cleanup via pg_cron (opcional)
+Tento agendar via `supabase--insert` (SQL com `cron.schedule`). Se o ambiente não tiver `pg_cron`/`pg_net`, registro o erro e sigo — cleanup fica manual.
 
-5. **Reparar a temporada já criada**
-   - Criar os standings iniciais para a temporada `Maio 2026` já existente, com base nos 74 motoristas já alocados.
-   - Isso deve fazer a temporada aparecer corretamente sem precisar recriar tudo.
+Pergunta: quer que eu use `SUPABASE_ANON_KEY` na chamada cron (padrão do projeto, conforme memória "Cron Auth Pattern") ou prefere chamada direta via `SELECT public.cleanup_stuck_driver_import_jobs(30)` por `pg_cron` sem HTTP? A versão SQL pura é mais simples e não precisa de auth — vou nessa salvo objeção.
 
-6. **Validar**
-   - Confirmar no banco que a temporada ativa tem:
-     - séries criadas
-     - motoristas alocados
-     - standings iniciais criados
-   - Confirmar que o dashboard não deve mais mostrar “sem motoristas” nem erro de “já foi semeada”.
+## Passo 5 — Smoke tests
+5.1 `SELECT * FROM increment_customer_balance('<uuid>', 0, 0)` — preciso de um `customer_id` real. Vou pegar 1 com `SELECT id FROM customers LIMIT 1` via `read_query`.
+5.2 `SELECT cleanup_stuck_driver_import_jobs(60)` — espera-se 0.
 
-## Arquivos/áreas afetadas
+## Política de parada
+Em qualquer falha (migration, deploy, smoke test) eu paro imediatamente e te mostro o erro exato antes de seguir, conforme você pediu.
 
-- Migrations SQL do campeonato.
-- Serviço de temporada do empreendedor.
-- Tela `pagina_campeonato_empreendedor.tsx`.
-- Tipagens/normalização de dados do dashboard, se necessário.
+## Reporte final
+Resumo com: migrations OK, functions deployadas (com timestamp), status do `RESEND_API_KEY`, status do pg_cron, resultados dos smoke tests.
