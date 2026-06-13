@@ -191,6 +191,13 @@ export function useBrandTheme(settings: Json | null | undefined) {
       };
 
       const blob = new Blob([JSON.stringify(dynamicManifest)], { type: "application/json" });
+      // Revoga manifest URL anterior antes de criar nova — sem isso, cada
+      // troca de brand vazava ~50KB do Blob no heap. Em root_admin
+      // alternando brands em sessão longa, podia chegar a 100MB+ vazados.
+      const previousManifestHref = (document.querySelector("link[rel='manifest']") as HTMLLinkElement | null)?.href;
+      if (previousManifestHref?.startsWith("blob:")) {
+        URL.revokeObjectURL(previousManifestHref);
+      }
       const manifestUrl = URL.createObjectURL(blob);
 
       let manifestLink = document.querySelector("link[rel='manifest']") as HTMLLinkElement | null;
@@ -219,6 +226,12 @@ export function useBrandTheme(settings: Json | null | undefined) {
 
     return () => {
       appliedVars.forEach((v) => root.style.removeProperty(v));
+      // Cleanup do manifest Blob na desmontagem/efeito refazer — evita
+      // vazamento permanente se hook desmontar antes de outra montagem.
+      const link = document.querySelector("link[rel='manifest']") as HTMLLinkElement | null;
+      if (link?.href.startsWith("blob:")) {
+        URL.revokeObjectURL(link.href);
+      }
     };
   }, [settings, isDark]);
 

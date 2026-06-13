@@ -156,6 +156,8 @@ export default function GanhaGanhaBillingPage() {
     a.href = url;
     a.download = `ganha-ganha-${periodMonth}.csv`;
     a.click();
+    // Revoga URL após download iniciado pra liberar Blob do heap.
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   };
 
   if (isLoading || ggLoading) {
