@@ -34,3 +34,6 @@ dist-ssr
 *.sln
 *.sw?
 jscpd-report/
+
+# TypeScript --build incremental output (project references)
+*.tsbuildinfo

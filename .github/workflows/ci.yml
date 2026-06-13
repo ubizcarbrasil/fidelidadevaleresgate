@@ -25,7 +25,10 @@ jobs:
         run: npm ci
 
       - name: TypeScript check
-        run: npx tsc --noEmit
+        # `tsc --build` segue project references e roda a config strict
+        # (tsconfig.app.json + tsconfig.node.json) em vez do tsconfig.json
+        # raiz, que tem strict=false pra suporte de Lovable/IDE.
+        run: npx tsc --build
 
       - name: Lint
         run: npm run lint

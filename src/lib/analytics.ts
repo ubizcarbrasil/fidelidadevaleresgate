@@ -110,13 +110,10 @@ export function initAnalytics(): Promise<PostHogLike | null> {
     return initPromise;
   }
 
-  // Dynamic import. ts-expect-error porque tsc não vê posthog-js
-  // até `npm install` rodar — Lovable cuida disso da package.json.
-  // Runtime check em getEnv() já garante que só chama se a key existe.
-  initPromise = (
-    // @ts-expect-error — posthog-js installed via package.json
-    import("posthog-js")
-  )
+  // Dynamic import só quando init é chamado. Carrega o SDK fora do
+  // crítico do boot (~70KB). Runtime check em getEnv() garante que
+  // só chama se a key existe.
+  initPromise = import("posthog-js")
     .then((mod: { default: PostHogLike }) => {
       const ph = mod.default;
       ph.init(key, {
