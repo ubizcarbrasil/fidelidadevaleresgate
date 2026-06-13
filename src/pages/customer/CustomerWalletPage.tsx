@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
@@ -11,7 +11,6 @@ import AppIcon from "@/components/customer/AppIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import EmptyState from "@/components/customer/EmptyState";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
 import { hslToCss, withAlpha } from "@/lib/utils";
 import { formatPoints } from "@/lib/formatPoints";
 import { queryKeys } from "@/lib/queryKeys";
@@ -23,26 +22,39 @@ const PAGE_SIZE = 30;
 export default function CustomerWalletPage() {
   const { customer, loading: customerLoading } = useCustomer();
   const { theme } = useBrand();
-  const [page, setPage] = useState(0);
 
   const primary = hslToCss(theme?.colors?.secondary, "") || hslToCss(theme?.colors?.primary, "hsl(var(--primary))");
   const fontHeading = theme?.font_heading ? `"${theme.font_heading}", sans-serif` : "inherit";
 
-  // Fetch all pages up to current page
-  const { data: entries = [], isLoading: loading } = useQuery({
-    queryKey: queryKeys.customerWallet.ledger(customer?.id, page),
+  // useInfiniteQuery: cada "página" busca apenas seu range próprio. Anterior:
+  // .range(0, (page+1)*PAGE_SIZE-1) refetchava do início a cada Load more,
+  // pagando rede O(n²) pra renderizar O(n) rows. Agora cada chamada é O(PAGE_SIZE).
+  const {
+    data,
+    isLoading: loading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: queryKeys.customerWallet.ledger(customer?.id),
     enabled: !!customer,
-    queryFn: async () => {
-      const to = (page + 1) * PAGE_SIZE - 1;
-      const { data } = await supabase
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }: { pageParam: number }) => {
+      const from = pageParam * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      const { data: rows } = await supabase
         .from("points_ledger")
         .select("*")
         .eq("customer_id", customer!.id)
         .order("created_at", { ascending: false })
-        .range(0, to);
-      return (data || []) as LedgerEntry[];
+        .range(from, to);
+      return (rows || []) as LedgerEntry[];
     },
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length < PAGE_SIZE ? undefined : allPages.length,
   });
+
+  const entries: LedgerEntry[] = data?.pages.flat() ?? [];
 
   const { data: totalCount = 0 } = useQuery({
     queryKey: queryKeys.customerWallet.count(customer?.id),
@@ -56,15 +68,11 @@ export default function CustomerWalletPage() {
     },
   });
 
-  const hasMore = entries.length < totalCount;
-  const [loadingMore, setLoadingMore] = useState(false);
+  const hasMore = hasNextPage ?? entries.length < totalCount;
 
-  const loadMore = useCallback(async () => {
-    setLoadingMore(true);
-    setPage((p) => p + 1);
-    // React Query will refetch with new page
-    setTimeout(() => setLoadingMore(false), 300);
-  }, []);
+  const loadMore = useCallback(() => {
+    if (!isFetchingNextPage && hasNextPage) fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const queryClient = useQueryClient();
   const handleRefresh = useCallback(async () => {
@@ -172,10 +180,10 @@ export default function CustomerWalletPage() {
                 variant="outline"
                 size="sm"
                 onClick={loadMore}
-                disabled={loadingMore}
+                disabled={isFetchingNextPage}
                 className="rounded-full"
               >
-                {loadingMore ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                {isFetchingNextPage ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Carregar mais
               </Button>
             </div>
