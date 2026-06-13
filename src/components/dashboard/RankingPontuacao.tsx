@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -102,8 +102,11 @@ const RankingPontuacao = memo(function RankingPontuacao({ brandId, isDriverEnabl
     enabled: !!brandId,
   });
 
-  // Realtime: filter por brand_id (FIX escala — antes recebia INSERTs de
-  // todas as brands globalmente, ~$5k/mês overage Supabase em 1M users)
+  // Realtime: filter por brand_id + debounce 500ms.
+  // Ranking não precisa atualizar a cada ride — burst de inserts é
+  // coalescido em 1 invalidate por janela. Reduz re-renders de top-10
+  // de potencialmente 100/min pra 2/min em pico.
+  const rankDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!brandId) return;
     const channel = supabase
@@ -114,10 +117,20 @@ const RankingPontuacao = memo(function RankingPontuacao({ brandId, isDriverEnabl
         table: "machine_rides",
         filter: `brand_id=eq.${brandId}`,
       }, () => {
-        queryClient.invalidateQueries({ queryKey: ["ranking-pontuacao"] });
+        if (rankDebounceRef.current) return;
+        rankDebounceRef.current = setTimeout(() => {
+          rankDebounceRef.current = null;
+          queryClient.invalidateQueries({ queryKey: ["ranking-pontuacao"] });
+        }, 500);
       })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (rankDebounceRef.current) {
+        clearTimeout(rankDebounceRef.current);
+        rankDebounceRef.current = null;
+      }
+      supabase.removeChannel(channel);
+    };
   }, [brandId, queryClient]);
 
   return (

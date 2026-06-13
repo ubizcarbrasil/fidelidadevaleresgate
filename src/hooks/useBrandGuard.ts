@@ -101,14 +101,30 @@ export function useBrandGuard() {
     return "BRANCH";
   }, [isRootAdmin, isImpersonating, brand, roles, authLoading, user, rolesCarregados]);
 
-  return {
-    isRootAdmin,
-    currentBrandId,
-    currentBranchId,
-    consoleScope,
-    applyBrandFilter,
-    applyBranchFilter,
-    enforceBrandId,
-    enforceBranchId,
-  };
+  // Memoiza o objeto de retorno pra identidade estável quando os valores
+  // não mudaram. 109 componentes consomem useBrandGuard. Sem este memo, o
+  // objeto era novo a cada render do consumer — se algum hook recebia
+  // `guard` como dep (raro mas acontece), disparava re-render em cascata.
+  return useMemo(
+    () => ({
+      isRootAdmin,
+      currentBrandId,
+      currentBranchId,
+      consoleScope,
+      applyBrandFilter,
+      applyBranchFilter,
+      enforceBrandId,
+      enforceBranchId,
+    }),
+    [
+      isRootAdmin,
+      currentBrandId,
+      currentBranchId,
+      consoleScope,
+      applyBrandFilter,
+      applyBranchFilter,
+      enforceBrandId,
+      enforceBranchId,
+    ],
+  );
 }

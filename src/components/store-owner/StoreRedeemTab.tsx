@@ -73,6 +73,9 @@ export default function StoreRedeemTab({ store }: StoreRedeemTabProps) {
   // TODAS as redemptions globais, agora só da loja atual)
   useEffect(() => {
     if (!store.id) return;
+    // Debounce 400ms — em pico de resgates em loja movimentada, evita
+    // 20+ invalidações por minuto que travavam a UI.
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     const channel = supabase
       .channel(`store-redemptions-realtime-${store.id}`)
       .on("postgres_changes", {
@@ -81,10 +84,17 @@ export default function StoreRedeemTab({ store }: StoreRedeemTabProps) {
         table: "redemptions",
         filter: `store_id=eq.${store.id}`,
       }, () => {
-        qc.invalidateQueries({ queryKey: ["store-pending-redemptions", store.id] });
+        if (debounceTimer) return;
+        debounceTimer = setTimeout(() => {
+          debounceTimer = null;
+          qc.invalidateQueries({ queryKey: ["store-pending-redemptions", store.id] });
+        }, 400);
       })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      supabase.removeChannel(channel);
+    };
   }, [store.id, qc]);
 
   const handleLoadMore = async () => {
