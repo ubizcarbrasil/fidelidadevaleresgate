@@ -187,7 +187,7 @@ export default function DialogEditorTemplate({
                             onCheckedChange={() => {
                               setSelectedIds((prev) => {
                                 const next = new Set(prev);
-                                checked ? next.delete(m.id) : next.add(m.id);
+                                if (checked) next.delete(m.id); else next.add(m.id);
                                 return next;
                               });
                             }}

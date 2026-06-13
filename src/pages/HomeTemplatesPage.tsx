@@ -201,7 +201,11 @@ export default function HomeTemplatesPage() {
     },
     onSuccess: (r) => {
       qc.invalidateQueries({ queryKey: ["home-templates"] });
-      r.errorCount > 0 ? toast.warning(`${r.errorCount} erro(s), ${r.successCount} sucesso(s).`) : toast.success(`Aplicado em ${r.successCount} brand(s)!`);
+      if (r.errorCount > 0) {
+        toast.warning(`${r.errorCount} erro(s), ${r.successCount} sucesso(s).`);
+      } else {
+        toast.success(`Aplicado em ${r.successCount} brand(s)!`);
+      }
       setApplyOpen(false);
     },
     onError: (e: Error) => toast.error(e.message),

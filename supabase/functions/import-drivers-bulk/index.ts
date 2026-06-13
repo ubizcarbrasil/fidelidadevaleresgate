@@ -661,9 +661,9 @@ Deno.serve(async (req) => {
   };
 
   // Dispara em background
-  // @ts-ignore - EdgeRuntime existe no Deno deploy do Supabase
+  // @ts-expect-error — EdgeRuntime existe no Deno deploy do Supabase, fora dos tipos
   if (typeof EdgeRuntime !== "undefined") {
-    // @ts-ignore
+    // @ts-expect-error — idem
     EdgeRuntime.waitUntil(processar().catch(async (e) => {
       console.error("Erro processamento:", e);
       await admin

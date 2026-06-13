@@ -33,4 +33,12 @@ export default tseslint.config(
       "no-console": ["warn", { allow: ["warn", "error", "info"] }],
     },
   },
+  // Config files (Tailwind/PostCSS/etc) rodam em Node e usam require().
+  // Override permite o padrão sem afastar do baseline pra src/.
+  {
+    files: ["*.config.{ts,js}", "*.config.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 );

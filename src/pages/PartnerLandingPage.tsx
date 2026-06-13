@@ -455,7 +455,11 @@ export default function PartnerLandingPage() {
         <div className="max-w-6xl mx-auto px-5 flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
              {logoUrl ? (
-              <img src={logoUrl} alt={brand.name} className="h-9 w-auto max-w-[140px] rounded-xl object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling && ((e.target as HTMLImageElement).nextElementSibling as HTMLElement).removeAttribute('hidden'); }} />
+              <img src={logoUrl} alt={brand.name} className="h-9 w-auto max-w-[140px] rounded-xl object-contain shrink-0" onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                img.style.display = 'none';
+                (img.nextElementSibling as HTMLElement | null)?.removeAttribute('hidden');
+              }} />
             ) : null}
             <span className={logoUrl ? "font-bold text-lg text-white" : "font-bold text-lg text-white"} {...(logoUrl ? { hidden: true } : {})}>{brand.name}</span>
           </div>
@@ -971,7 +975,11 @@ export default function PartnerLandingPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               {logoUrl ? (
-                <img src={logoUrl} alt={brand.name} className="h-8 w-auto max-w-[120px] rounded-xl object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling && ((e.target as HTMLImageElement).nextElementSibling as HTMLElement).removeAttribute('hidden'); }} />
+                <img src={logoUrl} alt={brand.name} className="h-8 w-auto max-w-[120px] rounded-xl object-contain shrink-0" onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  img.style.display = 'none';
+                  (img.nextElementSibling as HTMLElement | null)?.removeAttribute('hidden');
+                }} />
               ) : null}
               <span className="font-bold text-white" {...(logoUrl ? { hidden: true } : {})}>{brand.name}</span>
             </div>

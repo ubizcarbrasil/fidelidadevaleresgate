@@ -88,7 +88,7 @@ export default function PortaoAcessoOfertas({ modo, whitelist, fontHeading, chil
     if (lista.includes(n)) {
       try {
         localStorage.setItem(STORAGE_KEY, n);
-      } catch {}
+      } catch { /* localStorage indisponível (modo privado / quota) */ }
       setLiberadoLocal(true);
       setErro(null);
     } else {

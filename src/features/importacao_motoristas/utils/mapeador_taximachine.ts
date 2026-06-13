@@ -61,7 +61,7 @@ function parseInt2(v: string | undefined): number | undefined {
 
 function parseFloat2(v: string | undefined): number | undefined {
   if (!v) return undefined;
-  const cleaned = v.toString().replace(/\./g, "").replace(",", ".").replace(/[^0-9.\-]/g, "");
+  const cleaned = v.toString().replace(/\./g, "").replace(",", ".").replace(/[^0-9.-]/g, "");
   const n = parseFloat(cleaned);
   return Number.isFinite(n) ? n : undefined;
 }

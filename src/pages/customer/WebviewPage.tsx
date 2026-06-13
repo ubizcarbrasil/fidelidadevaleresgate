@@ -78,7 +78,7 @@ export default function WebviewPage() {
       if (target.origin === window.location.origin) {
         return `${target.pathname}${target.search}${target.hash}`;
       }
-    } catch {}
+    } catch { /* URL inválida — trata como external link */ }
     return null;
   })();
 
@@ -131,7 +131,7 @@ export default function WebviewPage() {
     if (navigator.share) {
       try {
         await navigator.share({ title: title || "Link", url });
-      } catch {}
+      } catch { /* usuário cancelou ou navegador rejeitou — silencioso é melhor UX */ }
     } else {
       await navigator.clipboard.writeText(url);
     }
