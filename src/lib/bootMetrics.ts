@@ -43,7 +43,7 @@ export function bootMark(name: string): void {
 
   // Console log pra dev tools (vermelho se muito lento)
   const color = elapsed > 5000 ? "color:red" : elapsed > 2000 ? "color:orange" : "color:gray";
-  // eslint-disable-next-line no-console
+   
   console.info(
     `%c[boot] ${name.padEnd(24)} +${elapsed}ms`,
     color,

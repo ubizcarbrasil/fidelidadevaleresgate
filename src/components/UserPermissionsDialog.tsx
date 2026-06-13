@@ -185,7 +185,8 @@ export default function UserPermissionsDialog({ open, onOpenChange, userId, bran
                   <div className="flex items-center gap-2 mb-2">
                     <Checkbox
                       checked={allChecked}
-                      // @ts-ignore
+                      // @ts-expect-error — Checkbox upstream não tipa
+                      // `indeterminate`, mas a prop é passada pro Radix.
                       indeterminate={someChecked && !allChecked}
                       onCheckedChange={() => toggleModule(module, keys)}
                     />

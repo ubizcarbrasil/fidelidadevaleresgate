@@ -85,19 +85,16 @@ export default function WebviewPage() {
   const [loading, setLoading] = useState(true);
   const [blocked, setBlocked] = useState(false);
 
+  // Todos os useEffect declarados ANTES de qualquer early return —
+  // Rules of Hooks exige ordem estável a cada render. O early return
+  // por `internalRedirect` está abaixo.
   useEffect(() => {
     if (internalRedirect) window.location.replace(internalRedirect);
   }, [internalRedirect]);
 
-  if (internalRedirect) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <IconSpinner />
-      </div>
-    );
-  }
-
   useEffect(() => {
+    // Sai cedo se for redirecionar; mantém ordem do hook estável.
+    if (internalRedirect) return;
     // Timeout to detect if iframe is blocked
     const timer = setTimeout(() => {
       if (loading) {
@@ -106,10 +103,11 @@ export default function WebviewPage() {
       }
     }, 8000);
     return () => clearTimeout(timer);
-  }, [loading]);
+  }, [loading, internalRedirect]);
 
   // bfcache fix: in-app browsers restoram a página congelada ao voltar.
   useEffect(() => {
+    if (internalRedirect) return;
     const handler = (e: PageTransitionEvent) => {
       if (e.persisted) window.location.reload();
     };
@@ -138,6 +136,14 @@ export default function WebviewPage() {
       await navigator.clipboard.writeText(url);
     }
   };
+
+  if (internalRedirect) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <IconSpinner />
+      </div>
+    );
+  }
 
   if (!url) {
     return (

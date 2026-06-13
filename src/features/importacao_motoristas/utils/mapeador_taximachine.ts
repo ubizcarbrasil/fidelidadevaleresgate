@@ -17,9 +17,10 @@ function parseDataBR(v: string | undefined): string | undefined {
   const s = v.trim();
   if (!s) return undefined;
   // 12/03/1985 ou 12-03-1985
-  const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  const m = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
   if (m) {
-    let [, d, mo, y] = m;
+    const [, d, mo] = m;
+    let y = m[3];
     if (y.length === 2) y = "20" + y;
     return `${y.padStart(4, "0")}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
@@ -33,9 +34,10 @@ function parseDataHora(v: string | undefined): string | undefined {
   if (!v) return undefined;
   const s = v.trim();
   if (!s) return undefined;
-  const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  const m = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
   if (m) {
-    let [, d, mo, y, h, mi, se] = m;
+    const [, d, mo, , h, mi, se] = m;
+    let y = m[3];
     if (y.length === 2) y = "20" + y;
     return `${y.padStart(4, "0")}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}T${h.padStart(2, "0")}:${mi}:${(se || "00").padStart(2, "0")}`;
   }

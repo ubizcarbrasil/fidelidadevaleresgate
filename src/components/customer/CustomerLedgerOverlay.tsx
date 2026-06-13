@@ -131,8 +131,8 @@ export default function CustomerLedgerOverlay({ open, onBack }: CustomerLedgerOv
       .filter(e => e.reference_type === "EARNING_EVENT" && e.reference_id)
       .map(e => e.reference_id!);
 
-    let storeMap: Record<string, { name: string; logo_url: string | null; purchase_value?: number }> = {};
-    let redemptionMap: Record<string, { name: string; logo_url: string | null; offer_title: string; status: string; credit_value_applied: number | null; purchase_value: number | null }> = {};
+    const storeMap: Record<string, { name: string; logo_url: string | null; purchase_value?: number }> = {};
+    const redemptionMap: Record<string, { name: string; logo_url: string | null; offer_title: string; status: string; credit_value_applied: number | null; purchase_value: number | null }> = {};
 
     if (earningIds.length > 0) {
       const { data: earnings } = await supabase
