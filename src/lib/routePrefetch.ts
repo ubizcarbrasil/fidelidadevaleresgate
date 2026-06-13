@@ -52,13 +52,62 @@ const ROUTE_PREFETCH: Record<string, Prefetch> = {
   "/send-notification": () => import("@/pages/SendNotificationPage"),
 };
 
+// Dedupe: cada rota só é importada UMA vez por sessão. Browser cacheia
+// o módulo no SystemJS internal, mas evitar chamar `import()` 2x já corta
+// overhead de promise + revalidation.
+const PREFETCHED = new Set<string>();
+
+// Debounce: agenda o prefetch só DEPOIS de o mouse ficar 150ms parado
+// sobre o link. Mouse só passando rapidamente não dispara. Cancelado se
+// outro hover/blur acontecer antes.
+let pendingTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingPath: string | null = null;
+
+function shouldSkipPrefetch(): boolean {
+  // Não prefetch em conexão lenta ou data saver ativo. A nav vai baixar
+  // o chunk no clique mesmo (suspense fallback aparece) — preferível a
+  // hammers de hover.
+  const nav = (navigator as any).connection;
+  if (!nav) return false;
+  if (nav.saveData) return true;
+  if (nav.effectiveType === "slow-2g" || nav.effectiveType === "2g") return true;
+  return false;
+}
+
 /**
- * Dispara prefetch da rota se mapeada. Idempotente — promises cacheadas
- * pelo browser (mesmo URL pendente vira o mesmo fetch).
+ * Agenda prefetch da rota com debounce (150ms). Mouse só passando
+ * rapidamente sobre links NÃO dispara — só com intent de pousar.
+ * Idempotente — cada rota baixa no máximo 1x por sessão.
  */
 export function prefetchRoute(path: string): void {
   const fn = ROUTE_PREFETCH[path];
   if (!fn) return;
-  // Silencioso: falha de prefetch nunca é mostrada (não bloqueia navegação)
-  fn().catch(() => { /* noop */ });
+  if (PREFETCHED.has(path)) return;
+  if (shouldSkipPrefetch()) return;
+
+  // Se outro path estava agendado, cancela
+  if (pendingTimer) {
+    clearTimeout(pendingTimer);
+    pendingTimer = null;
+  }
+  pendingPath = path;
+  pendingTimer = setTimeout(() => {
+    pendingTimer = null;
+    if (pendingPath !== path) return; // outro hover sobrescreveu
+    pendingPath = null;
+    PREFETCHED.add(path);
+    fn().catch(() => {
+      // Falha silenciosa mas remove do dedupe pra permitir retry no clique
+      PREFETCHED.delete(path);
+    });
+  }, 150);
+}
+
+/** Cancela prefetch pendente quando mouse sai antes do timeout. */
+export function cancelPrefetch(): void {
+  if (pendingTimer) {
+    clearTimeout(pendingTimer);
+    pendingTimer = null;
+    pendingPath = null;
+  }
 }
