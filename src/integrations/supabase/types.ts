@@ -11062,6 +11062,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_customer_balance: {
+        Args: {
+          p_customer_id: string
+          p_money?: number
+          p_points?: number
+        }
+        Returns: {
+          new_money_balance: number
+          new_points_balance: number
+        }[]
+      }
       list_branch_drivers_for_duels: {
         Args: { p_branch_id: string; p_exclude_customer_id: string }
         Returns: {
