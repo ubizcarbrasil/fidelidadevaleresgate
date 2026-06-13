@@ -1,13 +1,20 @@
 import { useCallback, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrand } from "@/contexts/BrandContext";
 
-/** Check if root admin is impersonating a brand via ?brandId= URL param */
+/**
+ * Check if root admin is impersonating a brand via ?brandId= URL param.
+ *
+ * IMPORTANTE: usa `useSearchParams` do React Router em vez de
+ * `window.location.search` direto. Antes, `useMemo(..., [])` lia
+ * window 1x no mount e cacheava — se URL mudasse via SPA navigation
+ * (ex: root admin clicando "abrir Brand X"), valor ficava stale e
+ * scope errado vazava em queries posteriores.
+ */
 function useImpersonatingBrand(): boolean {
-  return useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-    return !!params.get("brandId");
-  }, []);
+  const [searchParams] = useSearchParams();
+  return useMemo(() => !!searchParams.get("brandId"), [searchParams]);
 }
 /**
  * Hook that provides brand-scoped query helpers.
