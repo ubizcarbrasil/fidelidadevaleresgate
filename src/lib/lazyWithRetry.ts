@@ -27,7 +27,8 @@ export function lazyWithRetry<T extends ComponentType<any>>(
   return lazy(() => loadWithRetry(factory));
 }
 
-function isChunkLoadError(err: unknown): boolean {
+/** Exposed pra testes — não importar diretamente em código de produção. */
+export function isChunkLoadError(err: unknown): boolean {
   const errMsg = err instanceof Error ? err.message : String(err);
   return (
     errMsg.includes("Failed to fetch dynamically imported module") ||
@@ -38,10 +39,16 @@ function isChunkLoadError(err: unknown): boolean {
   );
 }
 
-async function loadWithRetry<T extends ComponentType<any>>(
+const DEFAULT_RETRY_DELAYS = [250, 800] as const; // 2 retries com backoff
+
+/** Exposed pra testes — não importar diretamente em código de produção.
+ * `_delays` é override SÓ pra testes (real-timers em vez de fake-timers).
+ */
+export async function loadWithRetry<T extends ComponentType<any>>(
   factory: () => Promise<{ default: T }>,
+  _delays: readonly number[] = DEFAULT_RETRY_DELAYS,
 ): Promise<{ default: T }> {
-  const delays = [250, 800]; // 2 retries com backoff
+  const delays = _delays;
 
   try {
     return await factory();
