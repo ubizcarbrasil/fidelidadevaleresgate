@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 // Cache to avoid repeated queries during same session
-let cachedBaseUrls: Record<string, string> = {};
+const cachedBaseUrls: Record<string, string> = {};
 
 const PUBLISHED_ORIGIN = "https://fidelidadevaleresgate.lovable.app";
 

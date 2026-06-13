@@ -86,7 +86,7 @@ export default function ScoredDriversPanel({ brandId }: { brandId: string }) {
 
       // Fetch emails from profiles
       const userIds = custData.filter((c: any) => c.user_id).map((c: any) => c.user_id);
-      let emailMap: Record<string, string> = {};
+      const emailMap: Record<string, string> = {};
       if (userIds.length > 0) {
         const { data: profilesData } = await (supabase as any)
           .from("profiles")

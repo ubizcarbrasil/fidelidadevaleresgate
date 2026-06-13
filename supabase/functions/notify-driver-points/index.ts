@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
     const sinceDate = lastNotif?.created_at || "1970-01-01T00:00:00Z";
 
     // Query rides since last notification
-    let ridesQuery = sb
+    const ridesQuery = sb
       .from("machine_rides")
       .select("id, driver_points_credited")
       .eq("brand_id", brand_id)

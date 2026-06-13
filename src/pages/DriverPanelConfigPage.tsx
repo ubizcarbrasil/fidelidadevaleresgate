@@ -404,7 +404,7 @@ export default function DriverPanelConfigPage() {
               defaultValue={brandSettings?.driver_public_base_url || ""}
               placeholder={window.location.origin}
               onBlur={(e) => {
-                let val = e.target.value.trim().replace(/\/+$/, "");
+                const val = e.target.value.trim().replace(/\/+$/, "");
                 if (val !== (brandSettings?.driver_public_base_url || "")) {
                   settingsMutation.mutate({ driver_public_base_url: val || null });
                 }

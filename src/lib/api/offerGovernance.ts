@@ -97,7 +97,7 @@ export async function bulkDeactivateDeals(ids: string[]) {
 // ---- Reports ----
 
 export async function fetchOfferReports(brandId: string, origin?: SourceSystem) {
-  let q = supabase
+  const q = supabase
     .from("offer_reports")
     .select("id, offer_id, user_id, reason, note, screenshot_url, status, created_at")
     .order("created_at", { ascending: false })

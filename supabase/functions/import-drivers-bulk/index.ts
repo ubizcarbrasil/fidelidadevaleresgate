@@ -328,7 +328,7 @@ Deno.serve(async (req) => {
         const nome = normNome(row.name);
         const ext = row.external_id;
 
-        let match = (ext && matchMap.get("ext:" + ext))
+        const match = (ext && matchMap.get("ext:" + ext))
           || (cpf && matchMap.get("cpf:" + cpf))
           || (tel && matchMap.get("tel:" + tel))
           || (nome && matchMap.get("nome:" + nome))

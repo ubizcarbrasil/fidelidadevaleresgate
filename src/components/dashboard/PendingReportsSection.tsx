@@ -43,7 +43,7 @@ export default function PendingReportsSection({ brandId }: Props) {
   const { data: reports, isLoading } = useQuery({
     queryKey: ["dashboard-pending-reports", brandId ?? "global"],
     queryFn: async () => {
-      let q = supabase
+      const q = supabase
         .from("offer_reports")
         .select("id, offer_id, reason, note, status, created_at, affiliate_deals(title, affiliate_url, origin_url, price, original_price, marketplace, is_active)")
         .eq("status", "pending")

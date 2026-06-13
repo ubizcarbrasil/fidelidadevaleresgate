@@ -79,7 +79,7 @@ export default function ScoredCustomersPanel({ brandId }: { brandId: string }) {
       });
 
       // Fetch emails from profiles
-      let emailMap: Record<string, string> = {};
+      const emailMap: Record<string, string> = {};
       if (userIds.length > 0) {
         const { data: profilesData } = await (supabase as any)
           .from("profiles")
