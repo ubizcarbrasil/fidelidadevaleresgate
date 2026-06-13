@@ -44,7 +44,7 @@ export default function CustomerRedemptionDetailPage({ redemption, onBack, onCan
       await navigator.clipboard.writeText(redemption.token);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {}
+    } catch { /* clipboard pode ser bloqueado em iframe / contexto sem HTTPS */ }
   };
   const hoursSinceCreation = (Date.now() - new Date(redemption.created_at).getTime()) / (1000 * 60 * 60);
   const canCancel = redemption.status === "PENDING" && hoursSinceCreation <= 24;

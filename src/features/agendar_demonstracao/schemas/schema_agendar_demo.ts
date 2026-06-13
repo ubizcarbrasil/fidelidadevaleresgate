@@ -17,7 +17,7 @@ export const schemaAgendarDemo = z.object({
     .trim()
     .min(10, "Informe um telefone com DDD")
     .max(20, "Máximo 20 caracteres")
-    .regex(/^[\d\s()+\-]+$/, "Use apenas números, espaços, +, ( ou )"),
+    .regex(/^[\d\s()+-]+$/, "Use apenas números, espaços, +, ( ou )"),
   company_name: z
     .string()
     .trim()

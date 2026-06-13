@@ -20,7 +20,7 @@ const NotFound = () => {
         const regs = await navigator.serviceWorker.getRegistrations();
         await Promise.all(regs.map((r) => r.unregister()));
       }
-    } catch {}
+    } catch { /* SW unregister é best-effort — reload em seguida limpa o que sobrou */ }
     window.location.replace(location.pathname + location.search);
   };
 

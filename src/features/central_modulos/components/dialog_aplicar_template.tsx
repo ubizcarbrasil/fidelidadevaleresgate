@@ -154,7 +154,7 @@ export default function DialogAplicarTemplate({
                           onCheckedChange={() => {
                             setBrandIds((prev) => {
                               const next = new Set(prev);
-                              checked ? next.delete(b.id) : next.add(b.id);
+                              if (checked) next.delete(b.id); else next.add(b.id);
                               return next;
                             });
                           }}
@@ -207,7 +207,7 @@ export default function DialogAplicarTemplate({
                           onCheckedChange={() => {
                             setBranchIds((prev) => {
                               const next = new Set(prev);
-                              checked ? next.delete(b.id) : next.add(b.id);
+                              if (checked) next.delete(b.id); else next.add(b.id);
                               return next;
                             });
                           }}

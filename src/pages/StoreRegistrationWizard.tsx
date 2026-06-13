@@ -87,7 +87,9 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
           return (
             <button
               key={i}
-              onClick={() => { if (isDone) {} }}
+              type="button"
+              disabled
+              aria-label={`Etapa ${i + 1}: ${s.label}`}
               className={`flex-1 flex flex-col items-center gap-1.5 py-2 px-1 rounded-xl transition-all duration-200 ${
                 isActive
                   ? "bg-primary/10"

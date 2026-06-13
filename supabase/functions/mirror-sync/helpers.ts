@@ -2,7 +2,7 @@
 
 export function cleanPrice(raw: string | null | undefined): number | null {
   if (!raw) return null;
-  const cleaned = raw.replace(/[^\d,\.]/g, "").replace(/\./g, "").replace(",", ".");
+  const cleaned = raw.replace(/[^\d,.]/g, "").replace(/\./g, "").replace(",", ".");
   const val = parseFloat(cleaned);
   return isNaN(val) ? null : val;
 }
@@ -10,7 +10,7 @@ export function cleanPrice(raw: string | null | undefined): number | null {
 /** US-format price parser for DVLinks (dot = decimal, comma = thousands) */
 export function cleanPriceDvlinks(raw: string | null | undefined): number | null {
   if (!raw) return null;
-  const cleaned = raw.replace(/[^\d,\.]/g, "");
+  const cleaned = raw.replace(/[^\d,.]/g, "");
   const noDots = cleaned.replace(/,/g, "");
   const val = parseFloat(noDots);
   return isNaN(val) || val <= 0 ? null : val;
