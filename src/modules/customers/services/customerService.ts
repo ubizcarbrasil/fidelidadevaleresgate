@@ -56,12 +56,14 @@ export async function createCustomer(form: CustomerForm) {
 export async function updateCustomer(id: string, form: CustomerForm) {
   log.info("Updating customer", { id });
 
+  // Defense-in-depth: força brand_id do form no WHERE pra impedir
+  // que ID de outra brand seja editado caso RLS falhe.
   const { error } = await supabase.from("customers").update({
     name: form.name,
     phone: form.phone || null,
     brand_id: form.brand_id,
     branch_id: form.branch_id,
-  }).eq("id", id);
+  }).eq("id", id).eq("brand_id", form.brand_id);
 
   if (error) {
     log.error("Failed to update customer", error);

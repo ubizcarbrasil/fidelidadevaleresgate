@@ -101,8 +101,14 @@ export default function VoucherForm() {
       ...(isEdit ? {} : { created_by: user?.id }),
     };
 
+    // Defense-in-depth: força branch_id no WHERE pra impedir edição cross-branch
+    // mesmo se RLS falhar (vouchers são tenantes por branch, não brand).
     const { error } = isEdit
-      ? await supabase.from("vouchers").update(payload as any).eq("id", id!)
+      ? await supabase
+          .from("vouchers")
+          .update(payload as any)
+          .eq("id", id!)
+          .eq("branch_id", branchId)
       : await supabase.from("vouchers").insert(payload as any);
 
     if (error) toast.error(error.message);

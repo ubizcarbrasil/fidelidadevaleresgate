@@ -81,12 +81,17 @@ export default function VoucherRedeem() {
     }
 
     // Update voucher uses count
+    // TODO(perf/race): increment não-atômico, susceptível a race em uso
+    // concorrente. Migrar pra RPC atomic UPDATE eventualmente.
+    // Defense-in-depth: força branch_id no WHERE pra impedir update
+    // cross-tenant caso código colida e RLS falhe.
     const newUses = voucher.current_uses + 1;
     const newStatus = newUses >= voucher.max_uses ? "depleted" : "active";
     await supabase
       .from("vouchers")
       .update({ current_uses: newUses, status: newStatus })
-      .eq("id", voucher.id);
+      .eq("id", voucher.id)
+      .eq("branch_id", (voucher as any).branch_id);
 
     setRedeemed(true);
     setVoucher({ ...voucher, current_uses: newUses, status: newStatus });

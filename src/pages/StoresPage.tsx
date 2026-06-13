@@ -93,7 +93,12 @@ export default function StoresPage() {
   const save = useMutation({
     mutationFn: async () => {
       const payload = { name: form.name, slug: form.slug, category: form.category || null, address: form.address || null, whatsapp: form.whatsapp || null, brand_id: form.brand_id, branch_id: form.branch_id, is_active: form.is_active, logo_url: form.logo_url || null };
-      if (editId) { const { error } = await supabase.from("stores").update(payload).eq("id", editId); if (error) throw error; }
+      if (editId) {
+        let q = supabase.from("stores").update(payload).eq("id", editId);
+        if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);
+        const { error } = await q;
+        if (error) throw error;
+      }
       else { const { error } = await supabase.from("stores").insert(payload); if (error) throw error; }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.stores.all }); toast.success(editId ? "Parceiro atualizado!" : "Parceiro criado!"); closeDialog(); },
@@ -101,7 +106,12 @@ export default function StoresPage() {
   });
 
   const remove = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("stores").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => {
+      let q = supabase.from("stores").delete().eq("id", id);
+      if (!isRootAdmin && currentBrandId) q = q.eq("brand_id", currentBrandId);
+      const { error } = await q;
+      if (error) throw error;
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.stores.all }); toast.success("Parceiro removido!"); },
     onError: (e: Error) => toast.error(e.message),
   });
