@@ -30,6 +30,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: RLS migration lint
+        # Detecta tabelas novas com ENABLE RLS mas sem CREATE POLICY
+        # (deny-all efetivo). Allowlist em scripts/lint-rls-migrations.ts
+        # pra tabelas service-role-only legítimas.
+        run: npx tsx scripts/lint-rls-migrations.ts
+
       - name: Run tests with coverage
         # Thresholds em vitest.config.ts. CI quebra se cair abaixo.
         # Threshold atual é baseline (~4%); sobe a cada quarter.
