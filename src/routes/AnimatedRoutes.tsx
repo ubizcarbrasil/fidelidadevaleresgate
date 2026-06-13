@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import ModuleGuard from "@/components/ModuleGuard";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RootGuard from "@/components/RootGuard";
@@ -154,6 +155,13 @@ import { PageLoader } from "./PageLoader";
 export function AnimatedRoutes() {
   return (
     <Suspense fallback={<PageLoader />}>
+      {/* RouteErrorBoundary com reset automático em mudança de rota.
+          Antes: ErrorBoundary só no nível do App. Quando uma rota falhava
+          em runtime (chunk error, exception), ficava em estado de erro
+          e travava as próximas navegações via NavLink.
+          Agora: cada navegação cria boundary fresca (key=pathname).
+          Erro em /customers não polui /offers. */}
+      <RouteErrorBoundary>
       <Routes>
         <Route path="/index" element={<Navigate to="/" replace />} />
         <Route path="/index.html" element={<Navigate to="/" replace />} />
@@ -306,6 +314,7 @@ export function AnimatedRoutes() {
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </RouteErrorBoundary>
     </Suspense>
   );
 }
