@@ -219,14 +219,19 @@ export default function EarnPointsPage() {
       });
       if (creditErr) throw creditErr;
 
-      // Update money_balance separately (RPC handles points_balance)
+      // B3.5 fix: money_balance via RPC atomic (RPC `credit_customer_points`
+      // só atualiza points_balance). Antes: read+add+write tinha race em
+      // 2 atendimentos paralelos do mesmo customer (operador A e B no PDV).
       const newPoints = (selectedCustomer?.points_balance || 0) + (preview!.points ?? 0);
-      const newMoney = (selectedCustomer?.money_balance || 0) + (preview!.money ?? 0);
       if ((preview!.money ?? 0) > 0) {
-        await supabase
-          .from("customers")
-          .update({ money_balance: newMoney })
-          .eq("id", selectedCustomerId);
+        const { error: incErr } = await (supabase as any).rpc("increment_customer_balance", {
+          p_customer_id: selectedCustomerId,
+          p_points: 0,
+          p_money: preview!.money ?? 0,
+        });
+        if (incErr) {
+          console.warn("[EarnPointsPage] increment_customer_balance error:", incErr);
+        }
       }
 
       // Record Ganha-Ganha billing event (fire-and-forget)

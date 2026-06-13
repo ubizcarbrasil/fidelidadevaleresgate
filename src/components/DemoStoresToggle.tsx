@@ -193,13 +193,16 @@ export default function DemoStoresToggle({ brandId, branchId, compact = false }:
       );
       if (ledgerError) throw ledgerError;
 
-      // Atualiza saldos em paralelo (Supabase não suporta UPDATE multi-linha com valores distintos)
+      // B3.5 fix: cada bonificação via RPC atomic (substitui read+add+write).
+      // Mesmo em demo, o padrão é o correto — se cliente real cair nesse
+      // path em paralelo a outro ride, evita perda de pontos.
       await Promise.all(
         toCredit.map((cust) =>
-          supabase
-            .from("customers")
-            .update({ points_balance: (cust.points_balance || 0) + 1000 })
-            .eq("id", cust.id),
+          (supabase as any).rpc("increment_customer_balance", {
+            p_customer_id: cust.id,
+            p_points: 1000,
+            p_money: 0,
+          }),
         ),
       );
 

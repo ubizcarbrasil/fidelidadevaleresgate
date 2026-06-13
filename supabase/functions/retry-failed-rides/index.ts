@@ -238,10 +238,17 @@ async function retryRide(
       reference_type: "MACHINE_RIDE",
     });
 
-    await sb
-      .from("customers")
-      .update({ points_balance: (customer.points_balance || 0) + points })
-      .eq("id", customer.id);
+    // B3.5 fix: usa RPC atomic em vez de read-then-write (padrão #56).
+    // Antes: read + add + write tinha race em retries paralelos do mesmo
+    // ride. Agora: UPDATE atômico no Postgres SET balance = balance + N.
+    const { error: incErr } = await (sb as any).rpc("increment_customer_balance", {
+      p_customer_id: customer.id,
+      p_points: points,
+      p_money: 0,
+    });
+    if (incErr) {
+      console.warn("[retry-failed-rides] increment_customer_balance error:", incErr);
+    }
 
     pointsCredited = true;
   }
