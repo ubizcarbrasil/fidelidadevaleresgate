@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Necessário pra gitleaks comparar com história completa
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -27,8 +30,37 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Run tests
-        run: npm test
+      - name: Run tests with coverage
+        # Thresholds em vitest.config.ts. CI quebra se cair abaixo.
+        # Threshold atual é baseline (~4%); sobe a cada quarter.
+        run: npm test -- --coverage
+
+      - name: Upload coverage artifact
+        # Mesmo se test falhar, sobe o relatório pra análise offline
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
 
       - name: Build
         run: npm run build
+
+  security:
+    runs-on: ubuntu-latest
+    # Roda em paralelo ao test job. Falha de security NÃO bloqueia
+    # build (continue-on-error), mas aparece em vermelho no PR e
+    # gera report no Security tab.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks — secret scan
+        # Detecta chaves/tokens/credenciais que vazaram no commit.
+        # Allowlist opcional em `.gitleaks.toml`.
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

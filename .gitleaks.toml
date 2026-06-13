@@ -1,0 +1,44 @@
+# Config do gitleaks (https://github.com/gitleaks/gitleaks)
+#
+# Roda em CI via .github/workflows/ci.yml (job security).
+# Detecta vazamento de API keys, tokens, credenciais.
+#
+# Esta config:
+# 1. Herda regras padrão do gitleaks (todas as detecções built-in)
+# 2. Adiciona allowlist pra evitar false positives conhecidos
+
+title = "Gitleaks config — fidelidadevaleresgate"
+
+# Herda regras padrão. Sem isso teria que redefinir tudo.
+[extend]
+useDefault = true
+
+# ── Allowlist: o que NÃO contar como vazamento ──────────────────────
+
+[allowlist]
+description = "Allowlist de paths e padrões conhecidos seguros"
+
+paths = [
+  # Tipos auto-gerados do Supabase — contém UUIDs/refs que matcham
+  # patterns de API key falsamente. NUNCA contém credencial real.
+  '''src/integrations/supabase/types\.ts''',
+  # Lockfile — tem hashes de pacotes que parecem token
+  '''package-lock\.json''',
+  # Coverage report
+  '''coverage/.*''',
+  # Build output
+  '''dist/.*''',
+  # Migrations — UUIDs de objetos do banco, não secrets
+  '''supabase/migrations/.*\.sql''',
+]
+
+regexes = [
+  # Public Supabase URLs são públicos por design (não-secret).
+  # O que é secret: service_role key. Public anon key é OK em frontend
+  # (RLS protege os dados).
+  '''https://[a-z0-9]+\.supabase\.co''',
+  # CSS HSL colors `hsl(NNN, NN%, NN%)` em design tokens.
+  '''hsl\([0-9 ,.%-]+\)''',
+  # CSS hex colors em design tokens.
+  '''#[0-9a-fA-F]{3,8}''',
+]
