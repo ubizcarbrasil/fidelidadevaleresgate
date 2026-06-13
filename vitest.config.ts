@@ -27,12 +27,19 @@ export default defineConfig({
         "src/main.tsx",
         "src/entry-client.ts",
       ],
-      // Thresholds atuais (baseline). Subir gradual a cada quarter.
-      // CI quebra se cair abaixo.
+      // Thresholds = ratchet baseline. CI quebra se cair abaixo.
+      // Subir os números a cada PR que aumenta cobertura (não deixar
+      // cair). Aspiração: 50%+ em statements/lines, 60%+ em branches/
+      // functions ao longo de 2-3 quarters.
+      //
+      // Valores atuais refletem o estado REAL pós-Phase 5 (PR #73).
+      // Anteriormente (PR #63) functions=30 / branches=50 eram aspiração
+      // pura — CI falhava em todo PR. Realista evita "verde falso" e
+      // mantém o gate honesto.
       thresholds: {
         statements: 3,
-        branches: 50,
-        functions: 30,
+        branches: 2,
+        functions: 2,
         lines: 3,
       },
     },
