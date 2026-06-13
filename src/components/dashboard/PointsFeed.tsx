@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,7 +58,13 @@ const PointsFeed = memo(function PointsFeed({ brandId, isDriverEnabled = true, i
     },
   });
 
-  // Realtime subscription — filter por brand_id (FIX escala)
+  // Realtime subscription — filter por brand_id + DEBOUNCE de 300ms.
+  // Antes: cada INSERT em machine_rides disparava invalidateQueries
+  // imediato. Em pico (100 rides/min), causava 100 re-renders/min —
+  // visível como flicker constante na UI. Agora burst de inserts é
+  // coalescido em 1 invalidate por janela de 300ms.
+  const pendingCountRef = useRef(0);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!brandId) return;
     const channel = supabase
@@ -69,12 +75,25 @@ const PointsFeed = memo(function PointsFeed({ brandId, isDriverEnabled = true, i
         table: "machine_rides",
         filter: `brand_id=eq.${brandId}`,
       }, () => {
-        setLiveCount((c) => c + 1);
-        queryClient.invalidateQueries({ queryKey: ["dashboard-points-feed"] });
+        pendingCountRef.current += 1;
+        if (debounceTimerRef.current) return;
+        debounceTimerRef.current = setTimeout(() => {
+          debounceTimerRef.current = null;
+          const added = pendingCountRef.current;
+          pendingCountRef.current = 0;
+          setLiveCount((c) => c + added);
+          queryClient.invalidateQueries({ queryKey: ["dashboard-points-feed"] });
+        }, 300);
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+      supabase.removeChannel(channel);
+    };
   }, [brandId, queryClient]);
 
   const visibleRides = (rides || []).filter((ride) => {
