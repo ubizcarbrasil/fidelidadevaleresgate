@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole, UserRole } from "@/modules/auth/types";
 import { logAudit } from "@/lib/auditLogger";
+import { identify, resetIdentity } from "@/lib/analytics";
 import { setBootPhase } from "@/lib/bootState";
 import { getBootContext } from "@/lib/bootContext";
 import { bootMark } from "@/lib/bootMetrics";
@@ -144,6 +145,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Fire-and-forget: libera o loading sem esperar roles
           // (UI já consegue decidir rota com user; roles chegam logo em seguida)
           void fetchRoles(currentSession.user.id, reqId);
+          // Identify ao retomar sessão (PWA reopen, refresh, etc.)
+          identify(currentSession.user.id);
         } else {
           // Sem sessão: já podemos considerar permissões "carregadas"
           // (vazias) — guards públicos liberam imediatamente.
@@ -176,10 +179,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const reqId = ++fetchIdRef.current;
           void fetchRoles(newSession.user.id, reqId);
           Sentry.setUser({ id: newSession.user.id, email: newSession.user.email });
+          // Identify admin no PostHog. Não enviamos email no payload custom
+          // (PostHog próprio armazena via auth integration se configurada).
+          identify(newSession.user.id);
         } else {
           setRoles([]);
           setRolesCarregados(true);
           Sentry.setUser(null);
+          // Reset PostHog identity em logout pra não vazar entre contas
+          // no mesmo browser.
+          resetIdentity();
         }
 
         // Só libera loading se o bootstrap inicial ainda não terminou

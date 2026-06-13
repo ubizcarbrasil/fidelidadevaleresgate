@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/contexts/CustomerContext";
@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { haptics } from "@/lib/haptics";
 import { formatPoints } from "@/lib/formatPoints";
 import { sendRedemptionTelegramNotification } from "@/lib/sendRedemptionTelegram";
+import { track } from "@/lib/analytics";
 
 interface RedeemDeal {
   id: string;
@@ -42,6 +43,21 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
 
   // OTP verification state
   const [step, setStep] = useState<"form" | "otp">("form");
+  // Marca início do funnel pra medir duração (telemetria PostHog).
+  const flowStartRef = useRef<number>(Date.now());
+
+  // Telemetria de produto: marca início do funnel de resgate. Dispara
+  // 1x quando o checkout monta.
+  useEffect(() => {
+    if (!customer) return;
+    track("redemption_started", {
+      brand_id: customer.brand_id,
+      offer_id: deal.id,
+      customer_id: customer.id,
+      points_required: deal.redeem_points_cost,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // otpCode/setOtpCode removidos: validação agora é server-side via edge function
   const [otpInput, setOtpInput] = useState(["", "", "", "", "", ""]);
   const [otpError, setOtpError] = useState(false);
@@ -242,6 +258,16 @@ export default function CustomerRedeemCheckout({ deal, onClose, onSuccess }: Pro
 
       setSuccess(true);
       toast.success("Resgate solicitado com sucesso! 🎉");
+      // Telemetria de produto: marca conclusão do funnel de resgate.
+      // duration_ms ajuda a identificar quando o fluxo está lento ou
+      // user travou em alguma etapa.
+      track("redemption_completed", {
+        brand_id: customer.brand_id,
+        offer_id: deal.id,
+        redemption_id: typeof orderId === "string" ? orderId : "",
+        customer_id: customer.id,
+        duration_ms: Date.now() - flowStartRef.current,
+      });
     } catch (err: any) {
       haptics.error();
       toast.error(err.message || "Erro ao processar resgate");
