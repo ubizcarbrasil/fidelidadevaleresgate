@@ -102,9 +102,11 @@ describe("Offers CRUD E2E", () => {
   it("opens create dialog", async () => {
     renderOffers();
     fireEvent.click(screen.getByRole("button", { name: /nova oferta/i }));
+    // Dialog do shadcn renderiza role="dialog" via Radix. Verifica que
+    // abriu vendo o "Salvar" do form interno (não existe fora do dialog).
     await waitFor(() => {
-      expect(screen.getByText("Nova Oferta")).toBeInTheDocument();
-      expect(screen.getByLabelText("Título")).toBeInTheDocument();
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /salvar/i })).toBeInTheDocument();
     });
   });
 

@@ -38,6 +38,11 @@ vi.mock("@/contexts/BrandContext", () => ({
   useBrand: () => ({ brand: null, theme: null }),
 }));
 
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({ user: null, roles: [] }),
+  AUTH_RETURN_TO_KEY: "auth:returnTo",
+}));
+
 function renderAuth() {
   return render(
     <MemoryRouter>
@@ -53,17 +58,10 @@ describe("Auth Flow E2E", () => {
 
   // ── Login ──────────────────────────────────────────────
   describe("Login", () => {
-    it("successful login as admin redirects to /", async () => {
+    it("successful login navigates to default returnTo (/)", async () => {
       mockSignIn.mockResolvedValue({
         data: { user: { id: "user-1" } },
         error: null,
-      });
-      mockFrom.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            data: [{ role: "brand_admin" }],
-          }),
-        }),
       });
 
       renderAuth();
@@ -73,31 +71,29 @@ describe("Auth Flow E2E", () => {
 
       await waitFor(() => {
         expect(mockSignIn).toHaveBeenCalledWith({ email: "admin@test.com", password: "password123" });
-        expect(mockNavigate).toHaveBeenCalledWith("/");
+        // PR #65: navega com { replace: true } e respeita sessionStorage[AUTH_RETURN_TO_KEY]
+        // (vazio aqui → default "/")
+        expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
       });
     });
 
-    it("successful login as store_admin redirects to /store-panel", async () => {
+    it("successful login restores returnTo from sessionStorage", async () => {
+      sessionStorage.setItem("auth:returnTo", "/customers/123");
       mockSignIn.mockResolvedValue({
-        data: { user: { id: "store-user-1" } },
+        data: { user: { id: "user-1" } },
         error: null,
-      });
-      mockFrom.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            data: [{ role: "store_admin" }],
-          }),
-        }),
       });
 
       renderAuth();
-      fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "store@test.com" } });
+      fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "admin@test.com" } });
       fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "password123" } });
       fireEvent.click(screen.getByRole("button", { name: /entrar/i }));
 
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith("/store-panel");
+        expect(mockNavigate).toHaveBeenCalledWith("/customers/123", { replace: true });
       });
+      // Limpa pra próximo teste não herdar
+      expect(sessionStorage.getItem("auth:returnTo")).toBeNull();
     });
 
     it("login error shows toast", async () => {
