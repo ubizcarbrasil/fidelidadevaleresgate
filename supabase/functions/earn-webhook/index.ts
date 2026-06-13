@@ -528,13 +528,25 @@ Deno.serve(async (req) => {
     createEdgeLogger("earn-webhook").error("points_ledger insert error", { error: ledgerErr });
   }
 
-  // 11. Update customer balance
-  const newPoints = Number(customer.points_balance) + points;
-  const newMoney = Number(customer.money_balance) + money;
-  await sb
-    .from("customers")
-    .update({ points_balance: newPoints, money_balance: newMoney })
-    .eq("id", customer.id);
+  // 11. Update customer balance — ATOMIC via RPC
+  //
+  // Padrão antigo (read-then-write) tinha race condition:
+  //   const newPoints = customer.points_balance + points;
+  //   await sb.from("customers").update({ points_balance: newPoints }).eq("id", X);
+  //
+  // 2 webhooks paralelos pro mesmo customer podiam perder créditos.
+  // Agora usamos RPC `increment_customer_balance` que faz UPDATE atômico
+  // `SET balance = balance + N` num único statement Postgres
+  // (serializable em row level, sem lock explícito necessário).
+  const { error: incErr } = await (sb as any).rpc("increment_customer_balance", {
+    p_customer_id: customer.id,
+    p_points: points,
+    p_money: money,
+  });
+
+  if (incErr) {
+    createEdgeLogger("earn-webhook").error("increment_customer_balance error", { error: incErr });
+  }
 
   // 12. Ganha-Ganha billing (fire-and-forget)
   processGanhaGanhaBilling(sb, brandId, store_id, points, event.id);
