@@ -1,3 +1,26 @@
+# Supabase Audits
+
+Scripts pra auditar saúde do schema Supabase (segurança + performance).
+
+## Scripts disponíveis
+
+| Script | Quando rodar | O que mede |
+|---|---|---|
+| `rls-audit.sql` | Trimestral | Cobertura RLS, policies, tenant filtering |
+| `perf-audit.sql` | Trimestral, ou quando "está lento" | Queries lentas, sequential scans, índices não usados, cache hit, dead tuples, conexões |
+
+Ambos rodam no SQL Editor do Dashboard Supabase, consultando catálogos do
+postgres (`pg_policies`, `pg_stat_statements`, `pg_stat_user_tables`, etc.)
+contra a base live — fonte de verdade absoluta.
+
+Pré-requisito do `perf-audit.sql`: `pg_stat_statements` ativo. No Supabase
+managed geralmente já vem; se não:
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+```
+
+---
+
 # RLS Audit
 
 Ferramentas pra auditar Row Level Security do schema Supabase.
