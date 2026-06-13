@@ -31,6 +31,7 @@ import {
 import { AnimatedRoutes } from "@/routes/AnimatedRoutes";
 import { OfertasFastTrack } from "@/routes/OfertasFastTrack";
 import { PageLoader } from "@/routes/PageLoader";
+import { SessionExpiredDialog } from "@/components/SessionExpiredDialog";
 
 // Initialize event bus → query bridge for automatic cache invalidation
 initEventBusQueryBridge(queryClient);
@@ -71,6 +72,7 @@ const App = () => (
                 }}
               >
                 <AppContent />
+                <SessionExpiredDialog />
               </BrowserRouter>
               <PWABanners />
             </TooltipProvider>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, AUTH_RETURN_TO_KEY } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -67,10 +67,20 @@ export default function Auth() {
         toast.error(error.message);
         setLoading(false);
       } else {
+        // Se sessão expirou no meio de uma navegação, devolve o usuário
+        // pra rota onde estava em vez de cair sempre em "/".
+        let returnTo = "/";
+        try {
+          const stored = sessionStorage.getItem(AUTH_RETURN_TO_KEY);
+          if (stored && stored.startsWith("/") && !stored.startsWith("/auth")) {
+            returnTo = stored;
+          }
+          sessionStorage.removeItem(AUTH_RETURN_TO_KEY);
+        } catch { /* sessionStorage indisponível */ }
         // Navega imediatamente. AppLayout/useEffect com authRoles
         // redirecionam store_admin para /store-panel quando os roles
         // chegarem, sem precisar bloquear o login com SELECT extra.
-        navigate("/", { replace: true });
+        navigate(returnTo, { replace: true });
         // Mantém botão desabilitado por um curto período enquanto
         // o AppLayout monta os chunks lazy, evitando duplo clique.
         setTimeout(() => setLoading(false), 1500);

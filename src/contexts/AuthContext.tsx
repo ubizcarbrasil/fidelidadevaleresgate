@@ -25,7 +25,18 @@ interface AuthContextType {
   hasRole: (role: AppRole) => boolean;
   isRootAdmin: boolean;
   signOut: () => Promise<void>;
+  /**
+   * True quando o usuário foi deslogado INVOLUNTARIAMENTE (token expirou,
+   * refresh falhou). False em logout explícito ou quando nunca logou.
+   * Usado pelo <SessionExpiredDialog/> para mostrar UX clara em vez do
+   * redirect-silencioso pra /auth.
+   */
+  sessionExpired: boolean;
+  dismissSessionExpired: () => void;
 }
+
+export const AUTH_RETURN_TO_KEY = "auth:returnTo";
+const RETURN_TO_KEY = AUTH_RETURN_TO_KEY;
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -38,6 +49,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [rolesCarregados, setRolesCarregados] = useState(false);
   const mountedRef = useRef(true);
   const fetchIdRef = useRef(0);
+  // Marca true antes de chamar supabase.auth.signOut() no logout explícito.
+  // O handler de SIGNED_OUT lê esta ref pra distinguir logout voluntário
+  // (não mostra dialog) de token expirado (mostra dialog).
+  const isVoluntaryLogoutRef = useRef(false);
+  // Snapshot do último user logado. Usado pra detectar transição
+  // SIGNED_IN→SIGNED_OUT (sessão expirou) vs reload em página pública
+  // (nunca teve sessão; não mostra dialog).
+  const hadSessionRef = useRef(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
   // Deduplica fetchRoles em curso para o mesmo userId.
   // Quando bootstrap e onAuthStateChange disparam para o mesmo
   // usuário (caso comum no SIGNED_IN logo após login), a segunda
@@ -176,6 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(newSession?.user ?? null);
 
         if (newSession?.user) {
+          hadSessionRef.current = true;
           const reqId = ++fetchIdRef.current;
           void fetchRoles(newSession.user.id, reqId);
           Sentry.setUser({ id: newSession.user.id, email: newSession.user.email });
@@ -189,6 +210,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Reset PostHog identity em logout pra não vazar entre contas
           // no mesmo browser.
           resetIdentity();
+
+          // Detecta sessão expirada vs logout voluntário vs visitante.
+          // Só dispara dialog se tinha sessão E o logout não foi pedido.
+          if (event === "SIGNED_OUT" && hadSessionRef.current && !isVoluntaryLogoutRef.current) {
+            try {
+              const path = window.location.pathname + window.location.search;
+              // Não armazena returnTo se já está em /auth (loop) ou rotas públicas
+              if (!path.startsWith("/auth")) {
+                sessionStorage.setItem(RETURN_TO_KEY, path);
+              }
+            } catch { /* sessionStorage indisponível */ }
+            // Limpa cache pra que o próximo login (mesmo user ou outro)
+            // não reveja dados do anterior. Mesma proteção do signOut().
+            try { queryClient.clear(); } catch { /* noop */ }
+            setSessionExpired(true);
+          }
+          // Reset dos flags após processar
+          if (event === "SIGNED_OUT") {
+            hadSessionRef.current = false;
+            isVoluntaryLogoutRef.current = false;
+          }
         }
 
         // Só libera loading se o bootstrap inicial ainda não terminou
@@ -238,6 +280,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isRootAdmin = hasRole("root_admin");
 
   const signOut = async () => {
+    // Marca como voluntário ANTES do signOut() pra que o handler do
+    // onAuthStateChange não dispare sessionExpired dialog.
+    isVoluntaryLogoutRef.current = true;
     // Limpa o cache do React Query antes do signOut para evitar que
     // dados sensíveis do usuário anterior (incluindo branding/marca)
     // vazem para o próximo login na mesma aba.
@@ -246,17 +291,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* noop */
     }
+    try {
+      sessionStorage.removeItem(RETURN_TO_KEY);
+    } catch { /* noop */ }
     await supabase.auth.signOut();
     setRoles([]);
     setRolesCarregados(true);
   };
 
+  const dismissSessionExpired = React.useCallback(() => {
+    setSessionExpired(false);
+  }, []);
+
   // Memoizado pra evitar cascade de re-renders dos 45 componentes que
   // consomem useAuth(). Antes, objeto inline novo a cada render disparava
   // re-render mesmo quando session/user/roles não mudavam.
   const contextValue = React.useMemo(
-    () => ({ session, user, roles, loading, rolesCarregados, hasRole, isRootAdmin, signOut }),
-    [session, user, roles, loading, rolesCarregados, hasRole, isRootAdmin],
+    () => ({
+      session, user, roles, loading, rolesCarregados,
+      hasRole, isRootAdmin, signOut,
+      sessionExpired, dismissSessionExpired,
+    }),
+    [session, user, roles, loading, rolesCarregados, hasRole, isRootAdmin, sessionExpired, dismissSessionExpired],
   );
 
   return (
