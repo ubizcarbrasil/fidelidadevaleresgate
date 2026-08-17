@@ -10418,6 +10418,7 @@ export type Database = {
       }
     }
     Functions: {
+      __docs_dump: { Args: { p_kind: string }; Returns: string }
       _campeonato_check_tier_capacity: {
         Args: { p_new_target: number; p_tier_id: string }
         Returns: boolean
