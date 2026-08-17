@@ -113,12 +113,12 @@ arquivo quando existe; caso contrario, dos simbolos exportados.
 ```text
 
 src/
-  App.css                                               rebuild
-  App.tsx                                               rebuild-trigger v2026-04-02a
+  App.css                                               estilos legados residuais da aplicacao.
+  App.tsx                                               raiz da aplicacao: providers globais (QueryClient, Auth, Brand, Tooltip) e orquestrador de qual arvore de rotas renderizar.
   entry-client.ts                                       Entry client — Vite uses this as the static entry point. Marks boot phase then imports main.tsx.
-  index.css                                             modulo TypeScript
+  index.css                                             design system: tokens CSS (cores semanticas, raios, sombras) e camadas base do Tailwind.
   main.tsx                                              Entry point — mounts a minimal shell instantly, then lazy-loads App. Sentry and web-vitals are deferred to avoid blocking the first render.
-  vite-env.d.ts                                         / <reference types="vite/client" />
+  vite-env.d.ts                                         tipos de ambiente do Vite.
 
 src/__tests__/audit/
   brandUtils.test.ts                                    suite de testes
@@ -129,8 +129,8 @@ src/__tests__/audit/
   sendEmail.test.ts                                     `_shared/email.ts` sendEmail — wrapper Resend usado por: - otpHelpers.sendOtpEmail (auth) - trial-reminders-cron (subscription growth) - futuros transactional emails Bug aqui = emails de OTP não saem (login motorista que
 
 src/assets/
-  banner-vitrine-teste.jpg                              modulo TypeScript
-  logo-pizzaria-do-joao.png                             modulo TypeScript
+  banner-vitrine-teste.jpg                              modulo TypeScript `banner-vitrine-teste`
+  logo-pizzaria-do-joao.png                             modulo TypeScript `logo-pizzaria-do-joao`
 
 src/compartilhados/components/
   badge_duplicado.tsx                                   Badge visual "DUPLICADO" exibido ao lado de itens de menu que aparecem em mais de um lugar dos consoles. É puramente informativo — clicar nele não remove nada. Visível apenas para Root Admin (controle no chamador).
@@ -216,7 +216,7 @@ src/components/
   ImageUploadField.tsx                                  componente React — exporta: ImageUploadField
   ModuleGuard.tsx                                       componente React — exporta: ModuleGuard
   MountSignal.tsx                                       componente React — exporta: MountSignal
-  NavLink.tsx                                           componente React
+  NavLink.tsx                                           componente React `NavLink` — usa useCallback
   OfferCardConfigSection.tsx                            componente React — exporta: OfferCardConfigSection
   PageHeader.tsx                                        componente React — exporta: PageHeader
   PlatformLogo.tsx                                      componente React — exporta: PlatformLogo
@@ -313,7 +313,7 @@ src/components/dashboard/
   RedemptionOrderDetailDialog.tsx                       componente React — exporta: RedemptionOrderDetailDialog
   RidesCounterCard.tsx                                  componente React — exporta: RidesCounterCard
   TasksSection.tsx                                      componente React — exporta: TasksSection
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index`
 
 src/components/dashboard/branch/
   BranchApostasResumo.tsx                               Resumo de apostas (side bets) da cidade para o painel admin.
@@ -511,49 +511,49 @@ src/components/store-voucher-wizard/steps/
   StepValueConfig.tsx                                   componente React — exporta: StepValueConfig
 
 src/components/ui/
-  accordion.tsx                                         componente React
-  alert-dialog.tsx                                      componente React
-  alert.tsx                                             componente React
+  accordion.tsx                                         componente React `accordion`
+  alert-dialog.tsx                                      componente React `alert-dialog`
+  alert.tsx                                             componente React `alert`
   animated-counter.tsx                                  componente React — exporta: AnimatedCounter
   badge.tsx                                             componente React — exporta: BadgeProps
-  breadcrumb.tsx                                        componente React
+  breadcrumb.tsx                                        componente React `breadcrumb`
   button.tsx                                            componente React — exporta: ButtonProps
   calendar.tsx                                          componente React — exporta: CalendarProps
-  card.tsx                                              componente React
+  card.tsx                                              componente React `card`
   chart.tsx                                             componente React — exporta: ChartConfig
-  checkbox.tsx                                          componente React
-  collapsible.tsx                                       componente React
-  command.tsx                                           componente React
+  checkbox.tsx                                          componente React `checkbox`
+  collapsible.tsx                                       componente React `collapsible`
+  command.tsx                                           componente React `command`
   confirm-dialog.tsx                                    componente React — exporta: ConfirmDialog
-  dialog.tsx                                            componente React
-  drawer.tsx                                            componente React
-  dropdown-menu.tsx                                     componente React
-  input.tsx                                             componente React
-  label.tsx                                             componente React
+  dialog.tsx                                            componente React `dialog`
+  drawer.tsx                                            componente React `drawer`
+  dropdown-menu.tsx                                     componente React `dropdown-menu`
+  input.tsx                                             componente React `input`
+  label.tsx                                             componente React `label`
   loading-button.tsx                                    componente React — exporta: LoadingButtonProps
-  pagination.tsx                                        componente React
-  popover.tsx                                           componente React
-  progress.tsx                                          componente React
+  pagination.tsx                                        componente React `pagination`
+  popover.tsx                                           componente React `popover`
+  progress.tsx                                          componente React `progress`
   pull-to-refresh.tsx                                   componente React — exporta: PullToRefresh
-  radio-group.tsx                                       componente React
-  resizable.tsx                                         componente React
-  scroll-area.tsx                                       componente React
-  select.tsx                                            componente React
-  separator.tsx                                         componente React
-  sheet.tsx                                             componente React
-  sidebar.tsx                                           componente React
-  skeleton.tsx                                          componente React
-  slider.tsx                                            componente React
-  sonner.tsx                                            componente React
-  switch.tsx                                            componente React
-  table.tsx                                             componente React
-  tabs.tsx                                              componente React
+  radio-group.tsx                                       componente React `radio-group`
+  resizable.tsx                                         componente React `resizable`
+  scroll-area.tsx                                       componente React `scroll-area`
+  select.tsx                                            componente React `select`
+  separator.tsx                                         componente React `separator`
+  sheet.tsx                                             componente React `sheet`
+  sidebar.tsx                                           componente React `sidebar` — usa useCallback, useContext, useEffect, useIsMobile
+  skeleton.tsx                                          componente React `skeleton`
+  slider.tsx                                            componente React `slider`
+  sonner.tsx                                            componente React `sonner` — usa useTheme
+  switch.tsx                                            componente React `switch`
+  table.tsx                                             componente React `table`
+  tabs.tsx                                              componente React `tabs`
   textarea.tsx                                          componente React — exporta: TextareaProps
-  toast.tsx                                             componente React
+  toast.tsx                                             componente React `toast`
   toaster.tsx                                           componente React — exporta: Toaster
-  toggle.tsx                                            componente React
-  tooltip.tsx                                           componente React
-  use-toast.ts                                          modulo TypeScript
+  toggle.tsx                                            componente React `toggle`
+  tooltip.tsx                                           componente React `tooltip`
+  use-toast.ts                                          modulo TypeScript `use-toast` — usa useToast
 
 src/components/voucher-wizard/
   VoucherWizard.tsx                                     componente React — exporta: VoucherWizardData, VoucherWizard
@@ -1217,7 +1217,7 @@ src/lib/api/__tests__/
   offerGovernance.test.ts                               offerGovernance — governança de ofertas afiliadas (sync/reports/bulk). Bug aqui: - KPIs errados (admin vê números de outra brand) - Bulk actions sem filtro de brand_id (cross-tenant damage) - Auto-hide threshold quebrado
 
 src/modules/auth/
-  compat.ts                                             modulo TypeScript
+  compat.ts                                             modulo TypeScript `compat` — usa usePermissions
   index.ts                                              Auth Module — barrel export.
   types.ts                                              Auth Module — tipos e constantes compartilhados.
 
@@ -1451,34 +1451,34 @@ supabase/functions/_shared/
   rateLimiter.ts                                        Database-backed sliding window rate limiter for Edge Functions. Usage: import { checkRateLimit } from "../_shared/rateLimiter.ts"; const rl = await checkRateLimit(supabaseAdmin, identifier, { maxRequests: 60, windowSecon
 
 supabase/functions/admin-brand-actions/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: audit_logs, branch_points_wallet, branch_wallet_transactions, branches, brand_business_models; RPCs: campeonato_materialize_and_seed_season
 
 supabase/functions/agent-api/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: coupons, crm_tiers, customers, offers, points_ledger
 
 supabase/functions/apply-plan-template/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: brand_modules, brands, module_definitions, plan_module_templates, subscription_plans
 
 supabase/functions/check-expiring-favorites/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: customer_favorites, customer_notifications, push_subscriptions
 
 supabase/functions/check-onboarding-alerts/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: branch_points_wallet, branches, driver_points_rules, machine_integrations, offers
 
 supabase/functions/create-branch-admin/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: branch_points_wallet, brands, profiles, user_roles
 
 supabase/functions/create-checkout/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: brands, subscription_plans
 
 supabase/functions/driver-cpf-login/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: driver_login_ip_attempts; RPCs: lookup_driver_by_cpf
 
 supabase/functions/driver-notifications-cron/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: customers, error_logs, machine_integrations, machine_ride_notifications, machine_rides
 
 supabase/functions/driver-upload-photo/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: avatars, customers
 
 supabase/functions/duelo-cron-advance/
   index.ts                                              Cron — avanço de fases do Campeonato Duelo. Roda a cada hora (UTC). Mantemos o schedule horário porque o RPC `campeonato_advance_phases` já lê `branches.timezone` por temporada e decide o avanço com base em `now()` compa
@@ -1487,34 +1487,34 @@ supabase/functions/duelo-cron-reconcile/
   index.ts                                              Cron — reconciliação diária do motor de pontuação do Campeonato Duelo. Recalcula pontos de classificações nas últimas 48h.
 
 supabase/functions/earn-webhook/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: audit_logs, brand_api_keys, customers, earning_events, ganha_ganha_billing_events; RPCs: increment_customer_balance
 
 supabase/functions/enhance-image/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index`
 
 supabase/functions/expire-pending-pins/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: redemptions
 
 supabase/functions/extract-products-from-image/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index`
 
 supabase/functions/finalize-duels-cron/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: customer_notifications, driver_duels; RPCs: finalize_duel, grant_duel_achievements, update_city_belt
 
 supabase/functions/import-drivers-bulk/
   index.ts                                              supabase/functions/import-drivers-bulk/index.ts
 
 supabase/functions/invite-brand-user/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: user_permission_overrides, user_roles
 
 supabase/functions/machine-webhook/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: audit_logs, branches, brands, crm_contacts, customers; RPCs: credit_customer_points, debit_branch_wallet
 
 supabase/functions/match-taxonomy/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: segment_synonym_logs, taxonomy_segments
 
 supabase/functions/mcp-server/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index`
 
 supabase/functions/mirror-sync/
   auto-categorization.ts                                Pós-sync: classifica ofertas em categorias, ativa categorias com volume
@@ -1529,61 +1529,61 @@ supabase/functions/mirror-sync/
   types.ts                                              Tipos compartilhados entre os módulos de mirror-sync.
 
 supabase/functions/mobility-webhook/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: crm_contacts, crm_events
 
 supabase/functions/notify-driver-points/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: customers, error_logs, machine_integrations, machine_ride_notifications, machine_rides
 
 supabase/functions/provision-brand/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: affiliate_deal_categories, affiliate_deals, branch_points_wallet, branches, brand_domains; RPCs: has_role, seed_affiliate_categories
 
 supabase/functions/provision-trial/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: affiliate_deal_categories, affiliate_deals, branch_points_wallet, branches, brand_business_models; RPCs: seed_affiliate_categories
 
 supabase/functions/register-machine-webhook/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: audit_logs, brands, machine_integrations, user_roles
 
 supabase/functions/reset-duelo-ciclo/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: branches, customers, duel_cycle_reset_history, machine_rides, points_ledger
 
 supabase/functions/retry-failed-rides/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: branches, brands, customers, machine_integrations, machine_ride_notifications; RPCs: increment_customer_balance
 
 supabase/functions/scrape-product/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: affiliate_deal_categories
 
 supabase/functions/seed-demo-stores/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: affiliate_deal_categories, affiliate_deals, branches, brand_modules, brand_sections; RPCs: seed_affiliate_categories
 
 supabase/functions/send-driver-message/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: branches, customers, driver_message_flows, driver_message_logs, driver_message_templates
 
 supabase/functions/send-otp-code/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: otp_codes
 
 supabase/functions/send-push-notification/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: customer_notifications, customers
 
 supabase/functions/send-telegram-ride-notification/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index`
 
 supabase/functions/stripe-webhook/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: brand_modules, brands, module_definitions, plan_module_templates
 
 supabase/functions/submit-commercial-lead/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: admin_notifications, brands, commercial_leads
 
 supabase/functions/test-machine-credentials/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: machine_integrations
 
 supabase/functions/trial-reminders-cron/
   index.ts                                              deno-lint-ignore-file no-explicit-any
 
 supabase/functions/validar-aposta-duelo/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: branches
 
 supabase/functions/verify-otp-code/
-  index.ts                                              modulo TypeScript
+  index.ts                                              modulo TypeScript `index` — tabelas: otp_codes
 ```
 
 ### Testes end-to-end — `tests/`
@@ -1598,8 +1598,8 @@ tests/e2e/campeonato/
 
 tests/e2e/fixtures/
   constants.ts                                          Constantes determinísticas para o ambiente E2E. UUIDs fixos garantem que o seed seja idempotente (UPSERT) e o teardown possa remover os mesmos registros sem ambiguidade. CPF de teste padrão "00000000000" não é válido em 
-  seed.sql                                              modulo TypeScript
-  teardown.sql                                          modulo TypeScript
+  seed.sql                                              modulo TypeScript `seed`
+  teardown.sql                                          modulo TypeScript `teardown`
 
 tests/e2e/helpers/
   driver-login.ts                                       modulo TypeScript — exporta: seedDriverSession, clearDriverSession
@@ -1617,33 +1617,33 @@ scripts/
 ### Arquivos de configuracao na raiz
 
 ```text
-  .env                                      variaveis publicas do frontend (gerado pela plataforma — nao editar).
-  .gitleaks.toml                            regras de varredura de segredos.
-  ARCHITECTURE_DECISION_RECORD.md           registro historico de decisoes de arquitetura.
-  AUDIT_REPORT.md                           relatorio de auditoria tecnica.
-  BUSINESS_MODELS_ARCHITECTURE.md           arquitetura dos modelos de negocio (Ganha-Ganha, mobilidade etc.).
-  DEPRECATION_LOG.md                        itens depreciados e substituicoes.
-  README.md                                 visao geral do repositorio.
-  REMEDIATION_PLAN.md                       plano de correcoes tecnicas.
-  TAXIMACHINE_FLOW.md                       modulo TypeScript
-  TECH_DEBT.md                              debitos tecnicos conhecidos.
-  components.json                           config do shadcn/ui (aliases e estilo dos componentes base).
-  eslint.config.js                          regras de lint do projeto.
-  index.html                                HTML raiz: metadados SEO/PWA, meta app-version e guarda que limpa Service Worker/caches antigos.
-  package-lock.json                         modulo TypeScript
-  package.json                              dependencias, versoes e scripts npm.
-  playwright.audit.config.ts                config dos smoke tests de auditoria.
-  playwright.config.ts                      config dos testes end-to-end.
-  postcss.config.js                         pipeline PostCSS (tailwind + autoprefixer).
-  tailwind.config.ts                        tokens de design do Tailwind (cores semanticas, raios, sombras, animacoes) — base do design system.
-  tsconfig.app.json                         config TS da aplicacao (paths, strictness).
-  tsconfig.json                             referencias de projeto TypeScript.
-  tsconfig.node.json                        config TS dos arquivos de build/config.
-  vite.config.ts                            config do Vite: alias @ -> src, porta 8080, plugin PWA (Service Worker, cacheId, runtime caching) e analise de bundle.
-  vitest.config.ts                          config dos testes unitarios (Vitest + jsdom).
-  supabase/config.toml                      config das edge functions (verify_jwt por funcao) — gerado/gerido pela plataforma.
-  public/manifest.json                      manifest PWA servido estaticamente.
-  public/robots.txt                         diretivas para crawlers.
-  supabase/migrations/                      364 migrations historicas do banco (fonte: 01-BANCO.sql tem o estado atual).
-  supabase/audit/                           scripts SQL de auditoria de RLS e performance.
+  .env                                                  variaveis publicas do frontend (gerado pela plataforma — nao editar).
+  .gitleaks.toml                                        regras de varredura de segredos.
+  ARCHITECTURE_DECISION_RECORD.md                       registro historico de decisoes de arquitetura.
+  AUDIT_REPORT.md                                       relatorio de auditoria tecnica.
+  BUSINESS_MODELS_ARCHITECTURE.md                       arquitetura dos modelos de negocio (Ganha-Ganha, mobilidade etc.).
+  DEPRECATION_LOG.md                                    itens depreciados e substituicoes.
+  README.md                                             visao geral do repositorio.
+  REMEDIATION_PLAN.md                                   plano de correcoes tecnicas.
+  TAXIMACHINE_FLOW.md                                   modulo TypeScript `TAXIMACHINE_FLOW`
+  TECH_DEBT.md                                          debitos tecnicos conhecidos.
+  components.json                                       config do shadcn/ui (aliases e estilo dos componentes base).
+  eslint.config.js                                      regras de lint do projeto.
+  index.html                                            HTML raiz: metadados SEO/PWA, meta app-version e guarda que limpa Service Worker/caches antigos.
+  package-lock.json                                     modulo TypeScript `package-lock`
+  package.json                                          dependencias, versoes e scripts npm.
+  playwright.audit.config.ts                            config dos smoke tests de auditoria.
+  playwright.config.ts                                  config dos testes end-to-end.
+  postcss.config.js                                     pipeline PostCSS (tailwind + autoprefixer).
+  tailwind.config.ts                                    tokens de design do Tailwind (cores semanticas, raios, sombras, animacoes) — base do design system.
+  tsconfig.app.json                                     config TS da aplicacao (paths, strictness).
+  tsconfig.json                                         referencias de projeto TypeScript.
+  tsconfig.node.json                                    config TS dos arquivos de build/config.
+  vite.config.ts                                        config do Vite: alias @ -> src, porta 8080, plugin PWA (Service Worker, cacheId, runtime caching) e analise de bundle.
+  vitest.config.ts                                      config dos testes unitarios (Vitest + jsdom).
+  supabase/config.toml                                  config das edge functions (verify_jwt por funcao) — gerado/gerido pela plataforma.
+  public/manifest.json                                  manifest PWA servido estaticamente.
+  public/robots.txt                                     diretivas para crawlers.
+  supabase/migrations/                                  364 migrations historicas do banco (fonte: 01-BANCO.sql tem o estado atual).
+  supabase/audit/                                       scripts SQL de auditoria de RLS e performance.
 ```
