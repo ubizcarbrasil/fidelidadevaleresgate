@@ -16249,7 +16249,8 @@ CREATE TRIGGER update_vouchers_updated_at BEFORE UPDATE ON public.vouchers FOR E
 -- JOBS pg_cron
 -- =====================================================================
 
--- jobid 1 (check-expiring-favorites-hourly, active=t)\nSELECT cron.schedule('check-expiring-favorites-hourly', '0 * * * *', '
+-- jobid 1 (check-expiring-favorites-hourly, active=t)
+SELECT cron.schedule('check-expiring-favorites-hourly', '0 * * * *', '
   SELECT net.http_post(
     url:=''https://rwhhabwgnkqjxcqwpcev.supabase.co/functions/v1/check-expiring-favorites'',
     headers:=''{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aGhhYndnbmtxanhjcXdwY2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDQ0MzcsImV4cCI6MjA4NzgyMDQzN30.ZirJ3cZXvJx_3EJIMDy0K8qpzfwwBWQpwB_nVjElwUw"}''::jsonb,
@@ -16257,7 +16258,8 @@ CREATE TRIGGER update_vouchers_updated_at BEFORE UPDATE ON public.vouchers FOR E
   ) AS request_id;
   ');
 
--- jobid 2 (expire-pending-pins-cron, active=t)\nSELECT cron.schedule('expire-pending-pins-cron', '*/15 * * * *', '
+-- jobid 2 (expire-pending-pins-cron, active=t)
+SELECT cron.schedule('expire-pending-pins-cron', '*/15 * * * *', '
   SELECT net.http_post(
     url:=''https://rwhhabwgnkqjxcqwpcev.supabase.co/functions/v1/expire-pending-pins'',
     headers:=''{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aGhhYndnbmtxanhjcXdwY2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDQ0MzcsImV4cCI6MjA4NzgyMDQzN30.ZirJ3cZXvJx_3EJIMDy0K8qpzfwwBWQpwB_nVjElwUw"}''::jsonb,
@@ -16265,7 +16267,8 @@ CREATE TRIGGER update_vouchers_updated_at BEFORE UPDATE ON public.vouchers FOR E
   ) AS request_id;
   ');
 
--- jobid 3 (mirror-sync-auto, active=t)\nSELECT cron.schedule('mirror-sync-auto', '*/10 * * * *', '
+-- jobid 3 (mirror-sync-auto, active=t)
+SELECT cron.schedule('mirror-sync-auto', '*/10 * * * *', '
   SELECT net.http_post(
     url := ''https://rwhhabwgnkqjxcqwpcev.supabase.co/functions/v1/mirror-sync'',
     headers := ''{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aGhhYndnbmtxanhjcXdwY2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDQ0MzcsImV4cCI6MjA4NzgyMDQzN30.ZirJ3cZXvJx_3EJIMDy0K8qpzfwwBWQpwB_nVjElwUw"}''::jsonb,
@@ -16273,7 +16276,8 @@ CREATE TRIGGER update_vouchers_updated_at BEFORE UPDATE ON public.vouchers FOR E
   ) AS request_id;
   ');
 
--- jobid 6 (check-onboarding-alerts-6h, active=t)\nSELECT cron.schedule('check-onboarding-alerts-6h', '0 */6 * * *', '
+-- jobid 6 (check-onboarding-alerts-6h, active=t)
+SELECT cron.schedule('check-onboarding-alerts-6h', '0 */6 * * *', '
   SELECT net.http_post(
     url:=''https://rwhhabwgnkqjxcqwpcev.supabase.co/functions/v1/check-onboarding-alerts'',
     headers:=''{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aGhhYndnbmtxanhjcXdwY2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDQ0MzcsImV4cCI6MjA4NzgyMDQzN30.ZirJ3cZXvJx_3EJIMDy0K8qpzfwwBWQpwB_nVjElwUw"}''::jsonb,
@@ -16281,7 +16285,8 @@ CREATE TRIGGER update_vouchers_updated_at BEFORE UPDATE ON public.vouchers FOR E
   ) AS request_id;
   ');
 
--- jobid 7 (check-onboarding-alerts, active=t)\nSELECT cron.schedule('check-onboarding-alerts', '0 */6 * * *', '
+-- jobid 7 (check-onboarding-alerts, active=t)
+SELECT cron.schedule('check-onboarding-alerts', '0 */6 * * *', '
   SELECT net.http_post(
     url := ''https://rwhhabwgnkqjxcqwpcev.supabase.co/functions/v1/check-onboarding-alerts'',
     headers := ''{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aGhhYndnbmtxanhjcXdwY2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDQ0MzcsImV4cCI6MjA4NzgyMDQzN30.ZirJ3cZXvJx_3EJIMDy0K8qpzfwwBWQpwB_nVjElwUw"}''::jsonb,
@@ -16289,7 +16294,8 @@ CREATE TRIGGER update_vouchers_updated_at BEFORE UPDATE ON public.vouchers FOR E
   ) AS request_id;
   ');
 
--- jobid 9 (driver-notifications-cron, active=t)\nSELECT cron.schedule('driver-notifications-cron', '*/5 * * * *', '
+-- jobid 9 (driver-notifications-cron, active=t)
+SELECT cron.schedule('driver-notifications-cron', '*/5 * * * *', '
   SELECT net.http_post(
     url := ''https://rwhhabwgnkqjxcqwpcev.supabase.co/functions/v1/driver-notifications-cron'',
     headers := ''{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aGhhYndnbmtxanhjcXdwY2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDQ0MzcsImV4cCI6MjA4NzgyMDQzN30.ZirJ3cZXvJx_3EJIMDy0K8qpzfwwBWQpwB_nVjElwUw"}''::jsonb,
@@ -16297,7 +16303,8 @@ CREATE TRIGGER update_vouchers_updated_at BEFORE UPDATE ON public.vouchers FOR E
   );
   ');
 
--- jobid 10 (finalize-duels-every-5-min, active=t)\nSELECT cron.schedule('finalize-duels-every-5-min', '*/5 * * * *', '
+-- jobid 10 (finalize-duels-every-5-min, active=t)
+SELECT cron.schedule('finalize-duels-every-5-min', '*/5 * * * *', '
   SELECT net.http_post(
     url := ''https://rwhhabwgnkqjxcqwpcev.supabase.co/functions/v1/finalize-duels-cron'',
     headers := ''{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aGhhYndnbmtxanhjcXdwY2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDQ0MzcsImV4cCI6MjA4NzgyMDQzN30.ZirJ3cZXvJx_3EJIMDy0K8qpzfwwBWQpwB_nVjElwUw"}''::jsonb,
@@ -16305,7 +16312,8 @@ CREATE TRIGGER update_vouchers_updated_at BEFORE UPDATE ON public.vouchers FOR E
   ) AS request_id;
   ');
 
--- jobid 11 (mirror-sync-00h, active=t)\nSELECT cron.schedule('mirror-sync-00h', '0 0 * * *', '
+-- jobid 11 (mirror-sync-00h, active=t)
+SELECT cron.schedule('mirror-sync-00h', '0 0 * * *', '
   SELECT net.http_post(
     url := ''https://rwhhabwgnkqjxcqwpcev.supabase.co/functions/v1/mirror-sync'',
     headers := ''{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aGhhYndnbmtxanhjcXdwY2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDQ0MzcsImV4cCI6MjA4NzgyMDQzN30.ZirJ3cZXvJx_3EJIMDy0K8qpzfwwBWQpwB_nVjElwUw"}''::jsonb,
@@ -16313,7 +16321,8 @@ CREATE TRIGGER update_vouchers_updated_at BEFORE UPDATE ON public.vouchers FOR E
   ) AS request_id;
   ');
 
--- jobid 12 (mirror-sync-12h, active=t)\nSELECT cron.schedule('mirror-sync-12h', '0 12 * * *', '
+-- jobid 12 (mirror-sync-12h, active=t)
+SELECT cron.schedule('mirror-sync-12h', '0 12 * * *', '
   SELECT net.http_post(
     url := ''https://rwhhabwgnkqjxcqwpcev.supabase.co/functions/v1/mirror-sync'',
     headers := ''{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aGhhYndnbmtxanhjcXdwY2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDQ0MzcsImV4cCI6MjA4NzgyMDQzN30.ZirJ3cZXvJx_3EJIMDy0K8qpzfwwBWQpwB_nVjElwUw"}''::jsonb,
@@ -16321,7 +16330,8 @@ CREATE TRIGGER update_vouchers_updated_at BEFORE UPDATE ON public.vouchers FOR E
   ) AS request_id;
   ');
 
--- jobid 13 (mirror-sync-18h, active=t)\nSELECT cron.schedule('mirror-sync-18h', '0 18 * * *', '
+-- jobid 13 (mirror-sync-18h, active=t)
+SELECT cron.schedule('mirror-sync-18h', '0 18 * * *', '
   SELECT net.http_post(
     url := ''https://rwhhabwgnkqjxcqwpcev.supabase.co/functions/v1/mirror-sync'',
     headers := ''{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aGhhYndnbmtxanhjcXdwY2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDQ0MzcsImV4cCI6MjA4NzgyMDQzN30.ZirJ3cZXvJx_3EJIMDy0K8qpzfwwBWQpwB_nVjElwUw"}''::jsonb,
@@ -16329,7 +16339,8 @@ CREATE TRIGGER update_vouchers_updated_at BEFORE UPDATE ON public.vouchers FOR E
   ) AS request_id;
   ');
 
--- jobid 14 (reset-duelo-ciclo-daily, active=t)\nSELECT cron.schedule('reset-duelo-ciclo-daily', '5 0 * * *', '
+-- jobid 14 (reset-duelo-ciclo-daily, active=t)
+SELECT cron.schedule('reset-duelo-ciclo-daily', '5 0 * * *', '
   SELECT net.http_post(
     url := ''https://rwhhabwgnkqjxcqwpcev.supabase.co/functions/v1/reset-duelo-ciclo'',
     headers := ''{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aGhhYndnbmtxanhjcXdwY2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDQ0MzcsImV4cCI6MjA4NzgyMDQzN30.ZirJ3cZXvJx_3EJIMDy0K8qpzfwwBWQpwB_nVjElwUw"}''::jsonb,
@@ -16337,7 +16348,8 @@ CREATE TRIGGER update_vouchers_updated_at BEFORE UPDATE ON public.vouchers FOR E
   ) AS request_id;
   ');
 
--- jobid 15 (duelo-cron-reconcile-daily, active=t)\nSELECT cron.schedule('duelo-cron-reconcile-daily', '0 4 * * *', '
+-- jobid 15 (duelo-cron-reconcile-daily, active=t)
+SELECT cron.schedule('duelo-cron-reconcile-daily', '0 4 * * *', '
   SELECT net.http_post(
     url := ''https://rwhhabwgnkqjxcqwpcev.supabase.co/functions/v1/duelo-cron-reconcile'',
     headers := ''{"Content-Type":"application/json","Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aGhhYndnbmtxanhjcXdwY2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDQ0MzcsImV4cCI6MjA4NzgyMDQzN30.ZirJ3cZXvJx_3EJIMDy0K8qpzfwwBWQpwB_nVjElwUw"}''::jsonb,
@@ -16345,7 +16357,8 @@ CREATE TRIGGER update_vouchers_updated_at BEFORE UPDATE ON public.vouchers FOR E
   );
   ');
 
--- jobid 16 (duelo-cron-advance-hourly, active=t)\nSELECT cron.schedule('duelo-cron-advance-hourly', '0 * * * *', '
+-- jobid 16 (duelo-cron-advance-hourly, active=t)
+SELECT cron.schedule('duelo-cron-advance-hourly', '0 * * * *', '
   SELECT net.http_post(
     url := ''https://rwhhabwgnkqjxcqwpcev.supabase.co/functions/v1/duelo-cron-advance'',
     headers := ''{"Content-Type":"application/json","Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3aGhhYndnbmtxanhjcXdwY2V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDQ0MzcsImV4cCI6MjA4NzgyMDQzN30.ZirJ3cZXvJx_3EJIMDy0K8qpzfwwBWQpwB_nVjElwUw"}''::jsonb,
@@ -16353,7 +16366,8 @@ CREATE TRIGGER update_vouchers_updated_at BEFORE UPDATE ON public.vouchers FOR E
   );
   ');
 
--- jobid 17 (cleanup-stuck-driver-jobs, active=t)\nSELECT cron.schedule('cleanup-stuck-driver-jobs', '*/5 * * * *', 'SELECT public.cleanup_stuck_driver_import_jobs(30)');
+-- jobid 17 (cleanup-stuck-driver-jobs, active=t)
+SELECT cron.schedule('cleanup-stuck-driver-jobs', '*/5 * * * *', 'SELECT public.cleanup_stuck_driver_import_jobs(30)');
 
 
 -- =====================================================================
