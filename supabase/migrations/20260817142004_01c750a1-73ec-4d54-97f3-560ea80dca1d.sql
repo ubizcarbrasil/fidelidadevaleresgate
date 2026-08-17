@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.__docs_dump(text);
